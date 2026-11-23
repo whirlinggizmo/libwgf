@@ -156,9 +156,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets whether the voice loops.
 
-	    A looping voice goes on from the start at its end, and is never COMPLETE. With a negative
-	    pitch, it goes from the start back to the end. Turning looping on while COMPLETE leaves the
-	    voice COMPLETE until the next play. Returns false only for a handle that isn't a voice.
+	    See Voice.setLoop for the rest.
 	**/
 	public inline function isLoop():Bool
 		return Raw.wgf_voice_is_loop(this);
@@ -178,11 +176,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the voice's volume.
 
-	    - 1 plays the sound as the file is.
-	    - 0 is silent.
-	    - Above 1 is louder, and may clip.
-
-	    Returns false for a negative or non-finite volume.
+	    See Voice.setVolume for the rest.
 	**/
 	public inline function getVolume():Float
 		return Raw.wgf_voice_get_volume(this);
@@ -204,13 +198,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the voice's pitch: its speed and tone together, clamped to [-16, 16].
 
-	    - 1 plays as recorded.
-	    - 2 plays an octave up, at twice the speed.
-	    - 0 holds it where it is. It is still PLAYING: that is not a pause.
-	    - A negative pitch plays backwards.
-
-	    Returns false for a non-finite pitch. Also returns false for a negative pitch on a streamed
-	    sound (its decoders run forwards only) or on a pushed voice.
+	    See Voice.setPitch for the rest.
 	**/
 	public inline function getPitch():Float
 		return Raw.wgf_voice_get_pitch(this);
@@ -231,12 +219,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the voice's pan, its balance, clamped to [-1, 1] (default: 0).
 
-	    - -1 plays the left only.
-	    - 0 plays both.
-	    - 1 plays the right only.
-	    - Between, the other side fades.
-
-	    Returns false for a non-finite pan.
+	    See Voice.setPan for the rest.
 	**/
 	public inline function getPan():Float
 		return Raw.wgf_voice_get_pan(this);
@@ -254,9 +237,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the bus the voice is heard through (wgf_bus.h).
 
-	    It is the effects bus until set. Once the bus set is destroyed, it is that bus's parent. A
-	    play (wgf_sound_play) is on its sound's bus instead. Returns false for a handle that isn't a
-	    voice, or a bus that isn't one.
+	    See Voice.setBus for the rest.
 	**/
 	public inline function getBus():Bus
 		return Raw.wgf_voice_get_bus(this);
@@ -282,17 +263,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets whether the voice is spatial, and its place and range.
 
-	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
-	    volume and pan.
-	    - It is at full volume within its range's near distance (default: 1).
-	    - It falls off evenly to silent at its far distance (default: 50).
-	    - It is panned by which side of the listener it is on.
-	    - An actor's voice component that is spatial is placed at its actor each frame.
-
-	    The place reads back as x, y, z, and the range as near, far.
-
-	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
-	    non-finite place, and set_range for a near below 0 or a far not above the near.
+	    See Voice.setSpatial for the rest.
 	**/
 	public inline function isSpatial():Bool
 		return Raw.wgf_voice_is_spatial(this);
@@ -300,17 +271,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets whether the voice is spatial, and its place and range.
 
-	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
-	    volume and pan.
-	    - It is at full volume within its range's near distance (default: 1).
-	    - It falls off evenly to silent at its far distance (default: 50).
-	    - It is panned by which side of the listener it is on.
-	    - An actor's voice component that is spatial is placed at its actor each frame.
-
-	    The place reads back as x, y, z, and the range as near, far.
-
-	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
-	    non-finite place, and set_range for a near below 0 or a far not above the near.
+	    See Voice.setSpatial for the rest.
 	**/
 	public inline function setPlace(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_voice_set_place(this, x, y, z);
@@ -318,17 +279,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets whether the voice is spatial, and its place and range.
 
-	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
-	    volume and pan.
-	    - It is at full volume within its range's near distance (default: 1).
-	    - It falls off evenly to silent at its far distance (default: 50).
-	    - It is panned by which side of the listener it is on.
-	    - An actor's voice component that is spatial is placed at its actor each frame.
-
-	    The place reads back as x, y, z, and the range as near, far.
-
-	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
-	    non-finite place, and set_range for a near below 0 or a far not above the near.
+	    See Voice.setSpatial for the rest.
 	**/
 	public inline function getPlace(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_voice_get_place(this, into);
@@ -336,17 +287,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets whether the voice is spatial, and its place and range.
 
-	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
-	    volume and pan.
-	    - It is at full volume within its range's near distance (default: 1).
-	    - It falls off evenly to silent at its far distance (default: 50).
-	    - It is panned by which side of the listener it is on.
-	    - An actor's voice component that is spatial is placed at its actor each frame.
-
-	    The place reads back as x, y, z, and the range as near, far.
-
-	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
-	    non-finite place, and set_range for a near below 0 or a far not above the near.
+	    See Voice.setSpatial for the rest.
 	**/
 	public inline function setRange(near_distance:Float, far_distance:Float):Bool
 		return Raw.wgf_voice_set_range(this, near_distance, far_distance);
@@ -354,17 +295,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets whether the voice is spatial, and its place and range.
 
-	    A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
-	    volume and pan.
-	    - It is at full volume within its range's near distance (default: 1).
-	    - It falls off evenly to silent at its far distance (default: 50).
-	    - It is panned by which side of the listener it is on.
-	    - An actor's voice component that is spatial is placed at its actor each frame.
-
-	    The place reads back as x, y, z, and the range as near, far.
-
-	    Returns false only for a handle that isn't a voice. Also, set_place returns false for a
-	    non-finite place, and set_range for a near below 0 or a far not above the near.
+	    See Voice.setSpatial for the rest.
 	**/
 	public inline function getRange(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_voice_get_range(this, into);
@@ -391,18 +322,7 @@ abstract Voice(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets where the voice is, in seconds from the sound's start, in any state.
 
-	    When it plays a segment, the position is from the segment's start.
-	    - On a looping voice, the position wraps into the sound (or the segment).
-	    - On a voice that isn't looping, it is clamped to [0, its length].
-	    - Set while PLAYING, the voice plays on from there. A non-looping voice set to its end is
-	      COMPLETE at the next step.
-	    - Set while STOPPED, PAUSED, or COMPLETE, it moves and the state stays.
-	    - A streamed sound whose file is still arriving, and doesn't state its length
-	      (wgf_sound_get_duration returns 0), bounds the position only below, by 0. Set past what
-	      has arrived, the voice waits there for it.
-
-	    Setting returns false for a non-finite position, for any position while the sound isn't
-	    READY, and for any on a pushed voice. Getting returns 0 for a handle that isn't a voice.
+	    See Voice.setPosition for the rest.
 	**/
 	public inline function getPosition():Float
 		return Raw.wgf_voice_get_position(this);

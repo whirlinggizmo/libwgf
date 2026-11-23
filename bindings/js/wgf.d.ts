@@ -1625,30 +1625,21 @@ export declare function wgf_collide2d_point_in_rect(px: number, py: number, rx: 
 /**
  * Point tests. Each returns whether the point px, py is inside the shape.
  *
- * - A rectangle: its left and top edges count as inside, its right and bottom edges don't.
- * - A circle.
- * - A triangle.
- * - A polygon, convex or not, tested by counting crossings.
+ * See wgf_collide2d_point_in_rect for the rest.
  */
 export declare function wgf_collide2d_point_in_circle(px: number, py: number, cx: number, cy: number, r: number): boolean;
 
 /**
  * Point tests. Each returns whether the point px, py is inside the shape.
  *
- * - A rectangle: its left and top edges count as inside, its right and bottom edges don't.
- * - A circle.
- * - A triangle.
- * - A polygon, convex or not, tested by counting crossings.
+ * See wgf_collide2d_point_in_rect for the rest.
  */
 export declare function wgf_collide2d_point_in_triangle(px: number, py: number, x0: number, y0: number, x1: number, y1: number, x2: number, y2: number): boolean;
 
 /**
  * Point tests. Each returns whether the point px, py is inside the shape.
  *
- * - A rectangle: its left and top edges count as inside, its right and bottom edges don't.
- * - A circle.
- * - A triangle.
- * - A polygon, convex or not, tested by counting crossings.
+ * See wgf_collide2d_point_in_rect for the rest.
  */
 export declare function wgf_collide2d_point_in_polygon(px: number, py: number, points: readonly number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1671,8 +1662,7 @@ export declare function wgf_collide2d_ray_rect(ox: number, oy: number, dx: numbe
 /**
  * Casts a ray from ox, oy along dx, dy against a rectangle or a circle.
  *
- * The ray is dx, dy long: time 1 is its end. The hit holds the time, the point, and the
- * normal.
+ * See wgf_collide2d_ray_rect for the rest.
  */
 export declare function wgf_collide2d_ray_circle(ox: number, oy: number, dx: number, dy: number, cx: number, cy: number, r: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1687,8 +1677,7 @@ export declare function wgf_collide2d_sweep_rect_rect(ax: number, ay: number, aw
 /**
  * Sweeps a rectangle, or a circle, by dx, dy, and tests whether it meets another on the way.
  *
- * The hit holds the time, the moving shape's top-left (for a circle, its center) at that
- * time, and the normal. If they already overlap, the time is 0 and there is no normal.
+ * See wgf_collide2d_sweep_rect_rect for the rest.
  */
 export declare function wgf_collide2d_sweep_circle_circle(ax: number, ay: number, ar: number, dx: number, dy: number, bx: number, by: number, br: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1717,22 +1706,7 @@ export declare function wgf_collide2d_move_rects(x: number, y: number, w: number
 /**
  * Moves a box by dx, dy and slides it along the solids it meets.
  *
- * The box's top-left is at x, y, and it is w by h. It moves across first, and stops at the
- * nearest solid's side in the direction it moves. Then it moves down or up at its new x, in
- * the same way. A box that starts inside a solid is left where it is on that axis.
- *
- * As many of these values as fit in `out_count` are written to `out`:
- * - 0, 1: where the box ended, x and y.
- * - 2 to 5: whether its left, right, top, and bottom met a solid, 1 or 0. A bottom of 1
- *   means the box is standing on a solid.
- *
- * The solids are one of these:
- * - move_rects: solid rectangles in `rects`, four floats each, `count` floats in all.
- * - move_cells: a grid of `count` cells in `cells`, row by row from the top, `columns` to a
- *   row. A nonzero cell is solid. Each cell is `size` square, and cell 0's top-left is at
- *   0, 0. Outside the grid is open.
- *
- * Returns false if there is no `out` (NULL, or an `out_count` of 0).
+ * See wgf_collide2d_move_rects for the rest.
  */
 export declare function wgf_collide2d_move_cells(x: number, y: number, w: number, h: number, dx: number, dy: number, size: number, cells: readonly number[] | Int32Array | null, columns: number, out: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1756,14 +1730,14 @@ export declare function wgf_collide3d_box_box(ax0: number, ay0: number, az0: num
 /**
  * Overlap tests: two boxes, two spheres, or a sphere and a box.
  *
- * Touching doesn't count as overlapping.
+ * See wgf_collide3d_box_box for the rest.
  */
 export declare function wgf_collide3d_sphere_sphere(ax: number, ay: number, az: number, ar: number, bx: number, by: number, bz: number, br: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
 /**
  * Overlap tests: two boxes, two spheres, or a sphere and a box.
  *
- * Touching doesn't count as overlapping.
+ * See wgf_collide3d_box_box for the rest.
  */
 export declare function wgf_collide3d_sphere_box(cx: number, cy: number, cz: number, r: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1782,24 +1756,14 @@ export declare function wgf_collide3d_ray_sphere(ox: number, oy: number, oz: num
 /**
  * Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
  *
- * - Only a meeting at or after the ray's origin counts.
- * - A triangle is its points in order, and either face is hit.
- * - The ray goes on without end. The time in the hit says how far it went, so a game that
- *   wants a segment keeps only a time of 1 or less.
- *
- * Returns false if the ray meets none.
+ * See wgf_collide3d_ray_sphere for the rest.
  */
 export declare function wgf_collide3d_ray_box(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, hit: number[] | Float32Array | Float64Array | null): boolean;
 
 /**
  * Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
  *
- * - Only a meeting at or after the ray's origin counts.
- * - A triangle is its points in order, and either face is hit.
- * - The ray goes on without end. The time in the hit says how far it went, so a game that
- *   wants a segment keeps only a time of 1 or less.
- *
- * Returns false if the ray meets none.
+ * See wgf_collide3d_ray_sphere for the rest.
  */
 export declare function wgf_collide3d_ray_triangle(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, points: readonly number[] | Float32Array | Float64Array | null, hit: number[] | Float32Array | Float64Array | null): boolean;
 
@@ -1838,46 +1802,14 @@ export declare function wgf_trig_sin(radians: number): number;
 /**
  * Returns the sine, cosine, or tangent of an angle in radians, with the same bits on every target.
  *
- * The results match natively, under Windows, and in a browser. So a simulation started from
- * the same numbers runs the same everywhere. The rotations (wgf_quat.h) and the generated
- * meshes are made with these calls.
- *
- * The C library's sinf and cosf don't match. glibc's and Emscripten's (musl's) differ in the
- * last bit for some angles. That is enough for a pile of a thousand physics boxes, each turned
- * as it is made, to come apart within seconds. A binding's own functions (Haxe's Math on hxcpp
- * and on JS) differ in the same way.
- *
- * Each result is within an ulp of the C library's, and usually equal to it.
- *
- * The results are exact in this way for angles up to about 1.6 million radians. A larger angle
- * is first brought within one turn. Its result is always within -1..1, but it loses accuracy
- * as the angle grows.
- *
- * Returns NaN for an infinite or NaN angle, as the C library does. asin and acos also return
- * NaN past -1..1.
+ * See wgf_trig_sin for the rest.
  */
 export declare function wgf_trig_cos(radians: number): number;
 
 /**
  * Returns the sine, cosine, or tangent of an angle in radians, with the same bits on every target.
  *
- * The results match natively, under Windows, and in a browser. So a simulation started from
- * the same numbers runs the same everywhere. The rotations (wgf_quat.h) and the generated
- * meshes are made with these calls.
- *
- * The C library's sinf and cosf don't match. glibc's and Emscripten's (musl's) differ in the
- * last bit for some angles. That is enough for a pile of a thousand physics boxes, each turned
- * as it is made, to come apart within seconds. A binding's own functions (Haxe's Math on hxcpp
- * and on JS) differ in the same way.
- *
- * Each result is within an ulp of the C library's, and usually equal to it.
- *
- * The results are exact in this way for angles up to about 1.6 million radians. A larger angle
- * is first brought within one turn. Its result is always within -1..1, but it loses accuracy
- * as the angle grows.
- *
- * Returns NaN for an infinite or NaN angle, as the C library does. asin and acos also return
- * NaN past -1..1.
+ * See wgf_trig_sin for the rest.
  */
 export declare function wgf_trig_tan(radians: number): number;
 
@@ -1939,16 +1871,14 @@ export declare function wgf_version_get_major(): number;
 /**
  * Returns one part of the libwgf version as a number.
  *
- * A binding checks these numbers at start against the version it was built for. It refuses
- * a library of another major or minor version. A different patch number is compatible.
+ * See wgf_version_get_major for the rest.
  */
 export declare function wgf_version_get_minor(): number;
 
 /**
  * Returns one part of the libwgf version as a number.
  *
- * A binding checks these numbers at start against the version it was built for. It refuses
- * a library of another major or minor version. A different patch number is compatible.
+ * See wgf_version_get_major for the rest.
  */
 export declare function wgf_version_get_patch(): number;
 
@@ -1991,13 +1921,7 @@ export declare function wgf_fs_set_root(root: string | null): boolean;
 /**
  * Sets or gets the root that paths resolve against.
  *
- * - Natively the root is a directory, absolute or relative to the working directory. The
- *   default is the program's own directory, where its executable is. Where that can't be
- *   told, the default is the working directory.
- * - On the web the default is "/wgf". Another root is another browser store, and requests
- *   wait while it opens.
- *
- * The setter returns false if core isn't running.
+ * See wgf_fs_set_root for the rest.
  */
 export declare function wgf_fs_get_root(): string;
 
@@ -2021,18 +1945,14 @@ export declare function wgf_fs_write(path: string | null, data: Uint8Array | Arr
 /**
  * Writes `data` to `path`, making the parent directories.
  *
- * `data` is copied before the call returns. The task is DONE once the file is written, so
- * a read of the path then gives the new bytes. On the web, the copy kept between visits is
- * stored in the background after that.
+ * See wgf_fs_write for the rest.
  */
 export declare function wgf_fs_exists(path: string | null): wgf_fs_task_t;
 
 /**
  * Writes `data` to `path`, making the parent directories.
  *
- * `data` is copied before the call returns. The task is DONE once the file is written, so
- * a read of the path then gives the new bytes. On the web, the copy kept between visits is
- * stored in the background after that.
+ * See wgf_fs_write for the rest.
  */
 export declare function wgf_fs_remove(path: string | null): wgf_fs_task_t;
 
@@ -2086,16 +2006,14 @@ export declare function wgf_fs_task_get_data(task: wgf_fs_task_t | 0): Uint8Arra
 /**
  * Returns a DONE read's bytes, or a list's text, and their size.
  *
- * The bytes end in a NUL, so they also read as text. They are valid until the task is
- * destroyed. Any other task gives NULL, 0, and "".
+ * See wgf_fs_task_get_data for the rest.
  */
 export declare function wgf_fs_task_get_size(task: wgf_fs_task_t | 0): number;
 
 /**
  * Returns a DONE read's bytes, or a list's text, and their size.
  *
- * The bytes end in a NUL, so they also read as text. They are valid until the task is
- * destroyed. Any other task gives NULL, 0, and "".
+ * See wgf_fs_task_get_data for the rest.
  */
 export declare function wgf_fs_task_get_text(task: wgf_fs_task_t | 0): string;
 
@@ -2135,84 +2053,21 @@ export declare function wgf_identity_set_company(company: string | null): boolea
 /**
  * Sets or gets the program's identity: its company and product names.
  *
- * On the desktop, the identity names the program's own directories:
- * - Its saved files ("user:" paths, wgf_fs.h) go under <the user's data>/<company>/<product>.
- * - Its downloaded assets (wgf_asset.h) go under <the user's cache>/<company>/<product>.
- * - The company is "DefaultCompany" until set, so that no unset name looks like anyone's.
- * - The product is the executable's name without its extension. Where that can't be
- *   told, it is "DefaultApp".
- *
- * Set both for anything you ship. Two programs left with the defaults and the same name
- * share a cache, and renaming the executable would leave its cache behind. Set them before
- * libwgf keeps any files.
- *
- * Each name is made safe as one path component:
- * - Separators, and the characters Windows refuses, become "_".
- * - Leading and trailing dots and spaces are removed.
- * - A Windows device name, such as "CON", gets a "_" in front.
- *
- * NULL or "" puts the default back. A setter returns false, and keeps the last name, if
- * nothing is left of the name after that, or if it is 128 bytes or more. A long name is
- * refused, never cut short.
- *
- * On the web nothing is kept by these names, since the browser keeps each site's files
- * apart itself.
+ * See wgf_identity_set_company for the rest.
  */
 export declare function wgf_identity_get_company(): string;
 
 /**
  * Sets or gets the program's identity: its company and product names.
  *
- * On the desktop, the identity names the program's own directories:
- * - Its saved files ("user:" paths, wgf_fs.h) go under <the user's data>/<company>/<product>.
- * - Its downloaded assets (wgf_asset.h) go under <the user's cache>/<company>/<product>.
- * - The company is "DefaultCompany" until set, so that no unset name looks like anyone's.
- * - The product is the executable's name without its extension. Where that can't be
- *   told, it is "DefaultApp".
- *
- * Set both for anything you ship. Two programs left with the defaults and the same name
- * share a cache, and renaming the executable would leave its cache behind. Set them before
- * libwgf keeps any files.
- *
- * Each name is made safe as one path component:
- * - Separators, and the characters Windows refuses, become "_".
- * - Leading and trailing dots and spaces are removed.
- * - A Windows device name, such as "CON", gets a "_" in front.
- *
- * NULL or "" puts the default back. A setter returns false, and keeps the last name, if
- * nothing is left of the name after that, or if it is 128 bytes or more. A long name is
- * refused, never cut short.
- *
- * On the web nothing is kept by these names, since the browser keeps each site's files
- * apart itself.
+ * See wgf_identity_set_company for the rest.
  */
 export declare function wgf_identity_set_product(name: string | null): boolean;
 
 /**
  * Sets or gets the program's identity: its company and product names.
  *
- * On the desktop, the identity names the program's own directories:
- * - Its saved files ("user:" paths, wgf_fs.h) go under <the user's data>/<company>/<product>.
- * - Its downloaded assets (wgf_asset.h) go under <the user's cache>/<company>/<product>.
- * - The company is "DefaultCompany" until set, so that no unset name looks like anyone's.
- * - The product is the executable's name without its extension. Where that can't be
- *   told, it is "DefaultApp".
- *
- * Set both for anything you ship. Two programs left with the defaults and the same name
- * share a cache, and renaming the executable would leave its cache behind. Set them before
- * libwgf keeps any files.
- *
- * Each name is made safe as one path component:
- * - Separators, and the characters Windows refuses, become "_".
- * - Leading and trailing dots and spaces are removed.
- * - A Windows device name, such as "CON", gets a "_" in front.
- *
- * NULL or "" puts the default back. A setter returns false, and keeps the last name, if
- * nothing is left of the name after that, or if it is 128 bytes or more. A long name is
- * refused, never cut short.
- *
- * On the web nothing is kept by these names, since the browser keeps each site's files
- * apart itself.
+ * See wgf_identity_set_company for the rest.
  */
 export declare function wgf_identity_get_product(): string;
 
@@ -2258,15 +2113,7 @@ export declare function wgf_log_set_history(count: number): boolean;
  * Keeps the last lines logged for the program to read, such as for a game's console or a
  * bug report.
  *
- * - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
- *   the lines already kept. It returns false for a count outside 0 to 1024.
- * - get_history_line returns a line as the console shows it, without its level, such as
- *   "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
- * - get_history_level returns that line's level.
- * - For an index outside the lines kept, they return "" and TRACE.
- *
- * A line read is a copy, valid until the next read. Lines below the level aren't kept,
- * just as they aren't shown.
+ * See wgf_log_set_history for the rest.
  */
 export declare function wgf_log_get_history(): number;
 
@@ -2274,15 +2121,7 @@ export declare function wgf_log_get_history(): number;
  * Keeps the last lines logged for the program to read, such as for a game's console or a
  * bug report.
  *
- * - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
- *   the lines already kept. It returns false for a count outside 0 to 1024.
- * - get_history_line returns a line as the console shows it, without its level, such as
- *   "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
- * - get_history_level returns that line's level.
- * - For an index outside the lines kept, they return "" and TRACE.
- *
- * A line read is a copy, valid until the next read. Lines below the level aren't kept,
- * just as they aren't shown.
+ * See wgf_log_set_history for the rest.
  */
 export declare function wgf_log_get_history_count(): number;
 
@@ -2290,15 +2129,7 @@ export declare function wgf_log_get_history_count(): number;
  * Keeps the last lines logged for the program to read, such as for a game's console or a
  * bug report.
  *
- * - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
- *   the lines already kept. It returns false for a count outside 0 to 1024.
- * - get_history_line returns a line as the console shows it, without its level, such as
- *   "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
- * - get_history_level returns that line's level.
- * - For an index outside the lines kept, they return "" and TRACE.
- *
- * A line read is a copy, valid until the next read. Lines below the level aren't kept,
- * just as they aren't shown.
+ * See wgf_log_set_history for the rest.
  */
 export declare function wgf_log_get_history_line(index: number): string;
 
@@ -2306,15 +2137,7 @@ export declare function wgf_log_get_history_line(index: number): string;
  * Keeps the last lines logged for the program to read, such as for a game's console or a
  * bug report.
  *
- * - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
- *   the lines already kept. It returns false for a count outside 0 to 1024.
- * - get_history_line returns a line as the console shows it, without its level, such as
- *   "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
- * - get_history_level returns that line's level.
- * - For an index outside the lines kept, they return "" and TRACE.
- *
- * A line read is a copy, valid until the next read. Lines below the level aren't kept,
- * just as they aren't shown.
+ * See wgf_log_set_history for the rest.
  */
 export declare function wgf_log_get_history_level(index: number): wgf_log_level_t;
 
@@ -2322,15 +2145,7 @@ export declare function wgf_log_get_history_level(index: number): wgf_log_level_
  * Keeps the last lines logged for the program to read, such as for a game's console or a
  * bug report.
  *
- * - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
- *   the lines already kept. It returns false for a count outside 0 to 1024.
- * - get_history_line returns a line as the console shows it, without its level, such as
- *   "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
- * - get_history_level returns that line's level.
- * - For an index outside the lines kept, they return "" and TRACE.
- *
- * A line read is a copy, valid until the next read. Lines below the level aren't kept,
- * just as they aren't shown.
+ * See wgf_log_set_history for the rest.
  */
 export declare function wgf_log_clear_history(): void;
 
@@ -2381,15 +2196,7 @@ export declare function wgf_probe_set_text(name: string | null, text: string | n
 /**
  * Sets or gets probe `name` as text (UTF-8, at most 255 bytes).
  *
- * set_text adds the probe the first time. From then on the probe is text, and its number
- * is 0, until a number is set again. It returns false, and sets nothing, if:
- * - `name` breaks the rules above.
- * - `text` is NULL or longer than 255 bytes.
- * - It would be a 257th probe.
- * - Core isn't running, or memory runs out.
- *
- * get_text returns the probe's text, borrowed until the probe next changes. It returns ""
- * for a probe that is a number or was never set.
+ * See wgf_probe_set_text for the rest.
  */
 export declare function wgf_probe_get_text(name: string | null): string;
 
@@ -2404,8 +2211,7 @@ export declare function wgf_probe_get_count(): number;
 /**
  * Returns how many probes there are, and each one's name, in the order they were first set.
  *
- * A name is borrowed, valid until core stops. get_name returns "" for an index out of
- * range.
+ * See wgf_probe_get_count for the rest.
  */
 export declare function wgf_probe_get_name(index: number): string;
 
@@ -2457,11 +2263,7 @@ export declare function wgf_random_create(seed: number): wgf_generator_t;
 /**
  * Creates a generator of the game's own, seeded with `seed`, and destroys one.
  *
- * Use one where a part of the game should draw its own numbers, such as a world's layout.
- * Then the program's sequence, which an autopilot seeds, stays the game's. A generator
- * takes the same steps as the program's, so a seed gives the same numbers everywhere.
- *
- * Returns 0 if there are already 4096 generators.
+ * See wgf_random_create for the rest.
  */
 export declare function wgf_random_destroy(generator: wgf_generator_t | 0): void;
 
@@ -2558,20 +2360,7 @@ export declare function wgf_resource_set_load_budget(milliseconds: number): bool
  * Sets or gets the load budget: the milliseconds each frame may spend on loading, so that
  * loading doesn't stall the frames it runs beside (default: 4).
  *
- * - The budget covers finishing loads on the main thread, such as GPU uploads.
- * - On the web, where there are no worker threads, it also covers preparing the
- *   resources that prepare in steps, such as an environment.
- * - At least one step runs each frame, however small the budget. So one large file can
- *   exceed it: a 4096x4096 texture is one upload of about 45 ms.
- * - 0 finishes one step a frame.
- * - It applies to every load, whether the file is bundled, cached, or fetched.
- *
- * The smaller the budget, the longer loading takes, and more so where frames are slow. A
- * loading screen, with nothing else to draw, can raise it (to 16 ms, say) and set it back
- * once loaded. A measurement of every frame of a run, such as tools/bench/measure_frames.py,
- * counts those as slow frames too.
- *
- * The setter returns false, and changes nothing, for a negative or non-finite value.
+ * See wgf_resource_set_load_budget for the rest.
  */
 export declare function wgf_resource_get_load_budget(): number;
 
@@ -2614,12 +2403,7 @@ export declare function wgf_input_set_pointer_captured(captured: boolean): void;
  * Sets or gets whether a UI has the pointer or the keyboard, so game controls should leave it
  * alone.
  *
- * Game controls are camera drags, selection, and hotkeys. The flags are advisory: input keeps
- * reporting everything, and game code checks these first.
- *
- * Each is captured while the game's UI says so, and a setting stays until it is set again.
- * libwgf's UI (wgf_ui.h) sets both from its own hit testing and focus in every frame it is
- * drawn. It lets them go in a frame it isn't drawn.
+ * See wgf_input_set_pointer_captured for the rest.
  */
 export declare function wgf_input_is_pointer_captured(): boolean;
 
@@ -2627,12 +2411,7 @@ export declare function wgf_input_is_pointer_captured(): boolean;
  * Sets or gets whether a UI has the pointer or the keyboard, so game controls should leave it
  * alone.
  *
- * Game controls are camera drags, selection, and hotkeys. The flags are advisory: input keeps
- * reporting everything, and game code checks these first.
- *
- * Each is captured while the game's UI says so, and a setting stays until it is set again.
- * libwgf's UI (wgf_ui.h) sets both from its own hit testing and focus in every frame it is
- * drawn. It lets them go in a frame it isn't drawn.
+ * See wgf_input_set_pointer_captured for the rest.
  */
 export declare function wgf_input_set_keyboard_captured(captured: boolean): void;
 
@@ -2640,12 +2419,7 @@ export declare function wgf_input_set_keyboard_captured(captured: boolean): void
  * Sets or gets whether a UI has the pointer or the keyboard, so game controls should leave it
  * alone.
  *
- * Game controls are camera drags, selection, and hotkeys. The flags are advisory: input keeps
- * reporting everything, and game code checks these first.
- *
- * Each is captured while the game's UI says so, and a setting stays until it is set again.
- * libwgf's UI (wgf_ui.h) sets both from its own hit testing and focus in every frame it is
- * drawn. It lets them go in a frame it isn't drawn.
+ * See wgf_input_set_pointer_captured for the rest.
  */
 export declare function wgf_input_is_keyboard_captured(): boolean;
 
@@ -2664,12 +2438,7 @@ export declare function wgf_input_set_clipboard(text: string | null): boolean;
 /**
  * Sets or gets the text on the system's clipboard.
  *
- * - Text is UTF-8, at most 64 KB.
- * - The string read is valid until the next clipboard call.
- * - On the web, a copy works only in the frame of an input, as browsers allow. A read returns
- *   what the page last copied or was pasted.
- *
- * wgf_input_set_clipboard returns false for NULL.
+ * See wgf_input_set_clipboard for the rest.
  */
 export declare function wgf_input_get_clipboard(): string;
 
@@ -2696,24 +2465,21 @@ export declare function wgf_gamepad_get_button_state(pad: number, button: wgf_ga
 /**
  * Returns the state of `button`: UP, PRESSED, DOWN, or RELEASED, as for keys.
  *
- * A pad unplugged while a button is held releases that button. Returns UP for a pad or button
- * that isn't one.
+ * See wgf_gamepad_get_button_state for the rest.
  */
 export declare function wgf_gamepad_is_down(pad: number, button: wgf_gamepad_button_t): boolean;
 
 /**
  * Returns the state of `button`: UP, PRESSED, DOWN, or RELEASED, as for keys.
  *
- * A pad unplugged while a button is held releases that button. Returns UP for a pad or button
- * that isn't one.
+ * See wgf_gamepad_get_button_state for the rest.
  */
 export declare function wgf_gamepad_is_pressed(pad: number, button: wgf_gamepad_button_t): boolean;
 
 /**
  * Returns the state of `button`: UP, PRESSED, DOWN, or RELEASED, as for keys.
  *
- * A pad unplugged while a button is held releases that button. Returns UP for a pad or button
- * that isn't one.
+ * See wgf_gamepad_get_button_state for the rest.
  */
 export declare function wgf_gamepad_is_released(pad: number, button: wgf_gamepad_button_t): boolean;
 
@@ -2756,7 +2522,7 @@ export declare function wgf_gamepad_set_deadzone(radius: number): void;
 /**
  * Sets or gets the dead zone: how far from the middle a stick still counts as the middle.
  *
- * It is the same for every pad, clamped to 0 to 0.9 (default: 0.15).
+ * See wgf_gamepad_set_deadzone for the rest.
  */
 export declare function wgf_gamepad_get_deadzone(): number;
 
@@ -2888,65 +2654,35 @@ export declare function wgf_action_bind_key(action: string | null, key: wgf_keyb
 /**
  * Adds a binding to `action`, making the action with its first binding.
  *
- * Returns false for any of these:
- * - a name that breaks the rule above
- * - a 65th action, or a 17th binding
- * - a key, button, or axis that isn't one
- * - a direction that isn't -1, 0, or 1
- * - a threshold outside 0 to 1
- * - a region with no area
+ * See wgf_action_bind_key for the rest.
  */
 export declare function wgf_action_bind_keys(action: string | null, negative: wgf_keyboard_key_t, positive: wgf_keyboard_key_t): boolean;
 
 /**
  * Adds a binding to `action`, making the action with its first binding.
  *
- * Returns false for any of these:
- * - a name that breaks the rule above
- * - a 65th action, or a 17th binding
- * - a key, button, or axis that isn't one
- * - a direction that isn't -1, 0, or 1
- * - a threshold outside 0 to 1
- * - a region with no area
+ * See wgf_action_bind_key for the rest.
  */
 export declare function wgf_action_bind_pad_button(action: string | null, button: wgf_gamepad_button_t): boolean;
 
 /**
  * Adds a binding to `action`, making the action with its first binding.
  *
- * Returns false for any of these:
- * - a name that breaks the rule above
- * - a 65th action, or a 17th binding
- * - a key, button, or axis that isn't one
- * - a direction that isn't -1, 0, or 1
- * - a threshold outside 0 to 1
- * - a region with no area
+ * See wgf_action_bind_key for the rest.
  */
 export declare function wgf_action_bind_pad_buttons(action: string | null, negative: wgf_gamepad_button_t, positive: wgf_gamepad_button_t): boolean;
 
 /**
  * Adds a binding to `action`, making the action with its first binding.
  *
- * Returns false for any of these:
- * - a name that breaks the rule above
- * - a 65th action, or a 17th binding
- * - a key, button, or axis that isn't one
- * - a direction that isn't -1, 0, or 1
- * - a threshold outside 0 to 1
- * - a region with no area
+ * See wgf_action_bind_key for the rest.
  */
 export declare function wgf_action_bind_pad_axis(action: string | null, axis: wgf_gamepad_axis_t, direction: number, threshold: number): boolean;
 
 /**
  * Adds a binding to `action`, making the action with its first binding.
  *
- * Returns false for any of these:
- * - a name that breaks the rule above
- * - a 65th action, or a 17th binding
- * - a key, button, or axis that isn't one
- * - a direction that isn't -1, 0, or 1
- * - a threshold outside 0 to 1
- * - a region with no area
+ * See wgf_action_bind_key for the rest.
  */
 export declare function wgf_action_bind_touch(action: string | null, x: number, y: number, width: number, height: number): boolean;
 
@@ -2977,48 +2713,14 @@ export declare function wgf_action_bind_touch_stick(action_x: string | null, act
 /**
  * Binds an on-screen stick to `action_x` (across) and `action_y` (up).
  *
- * A finger landing in the region (logical pixels) makes a stick where it landed. Its pull, up
- * to `radius` away, is read as `action_x` and `action_y`, each -1 to 1 and held within the
- * circle. That is how a pad's left stick bound to them reads. The stick ends when the finger
- * lifts.
- *
- * - At most 4 sticks are bound at once.
- * - A stick whose actions are cleared (wgf_action_clear) is gone.
- * - Bound again, as a game does as the screen changes, it is the same stick. A finger
- *   holding it keeps holding it.
- *
- * Returns false for two actions alike, a region with no area, a radius not above 0, or a
- * fifth stick. It is also refused for the reasons the other bindings are.
- *
- * For drawing the stick, the getters take its across action:
- * - is_stick_held: whether a finger holds it.
- * - get_stick_origin: where the finger landed.
- * - get_stick_knob: where its knob is.
- * Positions are in logical pixels, and 0, 0 while no finger holds it.
+ * See wgf_action_bind_touch_stick for the rest.
  */
 export declare function wgf_action_is_stick_held(action_x: string | null): boolean;
 
 /**
  * Binds an on-screen stick to `action_x` (across) and `action_y` (up).
  *
- * A finger landing in the region (logical pixels) makes a stick where it landed. Its pull, up
- * to `radius` away, is read as `action_x` and `action_y`, each -1 to 1 and held within the
- * circle. That is how a pad's left stick bound to them reads. The stick ends when the finger
- * lifts.
- *
- * - At most 4 sticks are bound at once.
- * - A stick whose actions are cleared (wgf_action_clear) is gone.
- * - Bound again, as a game does as the screen changes, it is the same stick. A finger
- *   holding it keeps holding it.
- *
- * Returns false for two actions alike, a region with no area, a radius not above 0, or a
- * fifth stick. It is also refused for the reasons the other bindings are.
- *
- * For drawing the stick, the getters take its across action:
- * - is_stick_held: whether a finger holds it.
- * - get_stick_origin: where the finger landed.
- * - get_stick_knob: where its knob is.
- * Positions are in logical pixels, and 0, 0 while no finger holds it.
+ * See wgf_action_bind_touch_stick for the rest.
  */
 export declare function wgf_action_get_stick_origin<T extends number[] | Float32Array | Float64Array>(action_x: string | null, into: T): T;
 export declare function wgf_action_get_stick_origin(action_x: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -3026,24 +2728,7 @@ export declare function wgf_action_get_stick_origin(action_x: string | null, int
 /**
  * Binds an on-screen stick to `action_x` (across) and `action_y` (up).
  *
- * A finger landing in the region (logical pixels) makes a stick where it landed. Its pull, up
- * to `radius` away, is read as `action_x` and `action_y`, each -1 to 1 and held within the
- * circle. That is how a pad's left stick bound to them reads. The stick ends when the finger
- * lifts.
- *
- * - At most 4 sticks are bound at once.
- * - A stick whose actions are cleared (wgf_action_clear) is gone.
- * - Bound again, as a game does as the screen changes, it is the same stick. A finger
- *   holding it keeps holding it.
- *
- * Returns false for two actions alike, a region with no area, a radius not above 0, or a
- * fifth stick. It is also refused for the reasons the other bindings are.
- *
- * For drawing the stick, the getters take its across action:
- * - is_stick_held: whether a finger holds it.
- * - get_stick_origin: where the finger landed.
- * - get_stick_knob: where its knob is.
- * Positions are in logical pixels, and 0, 0 while no finger holds it.
+ * See wgf_action_bind_touch_stick for the rest.
  */
 export declare function wgf_action_get_stick_knob<T extends number[] | Float32Array | Float64Array>(action_x: string | null, into: T): T;
 export declare function wgf_action_get_stick_knob(action_x: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -3066,35 +2751,35 @@ export declare function wgf_action_get_axis(action: string | null): number;
 /**
  * Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
  *
- * Returns 0, 0, and UP for an action that doesn't exist.
+ * See wgf_action_get_axis for the rest.
  */
 export declare function wgf_action_get_value(action: string | null): number;
 
 /**
  * Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
  *
- * Returns 0, 0, and UP for an action that doesn't exist.
+ * See wgf_action_get_axis for the rest.
  */
 export declare function wgf_action_get_state(action: string | null): wgf_input_state_t;
 
 /**
  * Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
  *
- * Returns 0, 0, and UP for an action that doesn't exist.
+ * See wgf_action_get_axis for the rest.
  */
 export declare function wgf_action_is_down(action: string | null): boolean;
 
 /**
  * Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
  *
- * Returns 0, 0, and UP for an action that doesn't exist.
+ * See wgf_action_get_axis for the rest.
  */
 export declare function wgf_action_is_pressed(action: string | null): boolean;
 
 /**
  * Returns the action as it is now: its axis (-1 to 1), its value (0 to 1), and its state.
  *
- * Returns 0, 0, and UP for an action that doesn't exist.
+ * See wgf_action_get_axis for the rest.
  */
 export declare function wgf_action_is_released(action: string | null): boolean;
 
@@ -3110,27 +2795,21 @@ export declare function wgf_action_get_count(): number;
 /**
  * Lists the actions, in the order they were made, and each one's bindings as text.
  *
- * The text is for a help line or a remap screen, such as "Left / Right", "Space", "Pad south",
- * "Left stick X", "Right trigger", or "Touch". libwgf owns the strings, which are valid until
- * the next call here. Returns "" past the end.
+ * See wgf_action_get_count for the rest.
  */
 export declare function wgf_action_get_name(index: number): string;
 
 /**
  * Lists the actions, in the order they were made, and each one's bindings as text.
  *
- * The text is for a help line or a remap screen, such as "Left / Right", "Space", "Pad south",
- * "Left stick X", "Right trigger", or "Touch". libwgf owns the strings, which are valid until
- * the next call here. Returns "" past the end.
+ * See wgf_action_get_count for the rest.
  */
 export declare function wgf_action_get_binding_count(action: string | null): number;
 
 /**
  * Lists the actions, in the order they were made, and each one's bindings as text.
  *
- * The text is for a help line or a remap screen, such as "Left / Right", "Space", "Pad south",
- * "Left stick X", "Right trigger", or "Touch". libwgf owns the strings, which are valid until
- * the next call here. Returns "" past the end.
+ * See wgf_action_get_count for the rest.
  */
 export declare function wgf_action_get_binding_text(action: string | null, index: number): string;
 
@@ -3200,8 +2879,7 @@ export declare function wgf_mouse_set_locked(locked: boolean): void;
  * Sets or gets whether the pointer is locked to the window and hidden, for mouse look
  * (default: off).
  *
- * While locked, the position stays put and the delta keeps coming. On the web the browser
- * grants the lock only during a click or key press, and the user can end it (Escape).
+ * See wgf_mouse_set_locked for the rest.
  */
 export declare function wgf_mouse_is_locked(): boolean;
 
@@ -3285,10 +2963,7 @@ export declare function wgf_tilt_get_x(): number;
  * Returns how far the device is tilted from level, -1 to 1. A tilt of the range's degrees
  * reads 1 (see wgf_tilt_set_range).
  *
- * - x is across the screen, right positive.
- * - y is up and down the screen, down positive.
- *
- * Returns 0 while calibrating, or while the status isn't ON.
+ * See wgf_tilt_get_x for the rest.
  */
 export declare function wgf_tilt_get_y(): number;
 
@@ -3349,9 +3024,7 @@ export declare function wgf_touch_set_mouse_emulated(emulated: boolean): void;
  * Sets or gets whether the first finger also drives the mouse, so mouse code works by touch
  * (default: on).
  *
- * The finger moves the pointer and holds the left button. A second finger cancels that press:
- * the pointer lets go off the window, at (-1, -1), so nothing under it is clicked. The mouse
- * then stays up until every finger has lifted.
+ * See wgf_touch_set_mouse_emulated for the rest.
  */
 export declare function wgf_touch_is_mouse_emulated(): boolean;
 
@@ -3372,12 +3045,7 @@ export declare function wgf_touch_set_from_mouse(from_mouse: boolean): void;
  * Sets or gets whether the mouse's left button acts as a finger, so touch controls can be tried
  * with a mouse on a desktop (default: off).
  *
- * - While the button is pressed, a finger touches down where the pointer is, follows it, and
- *   lifts with the button.
- * - That finger has its own id, as any finger does.
- * - The two settings don't feed each other: the finger a press makes doesn't drive the mouse
- *   back.
- * - Turned off while the button is pressed, the finger lifts.
+ * See wgf_touch_set_from_mouse for the rest.
  */
 export declare function wgf_touch_is_from_mouse(): boolean;
 
@@ -3428,28 +3096,14 @@ export declare function wgf_touch_is_tapped(): boolean;
 /**
  * Returns one finger's gestures. Each is made by a finger that was alone while it was down.
  *
- * - A tap: lifted within 0.3 seconds, having moved under 12 logical pixels. is_tapped says
- *   whether one happened in this frame (in a tick, in that tick).
- * - A double tap: a second tap within 0.35 seconds of the last, near it. is_double_tapped
- *   says whether one happened.
- * - get_tap_position returns where the tap or double tap was.
- * - A swipe: lifted within 0.5 seconds, having gone 50 logical pixels or more. get_swipe
- *   returns how far it went, or 0, 0 for none.
- * - A hold: down for 0.5 seconds or more, still. is_holding is true while it lasts.
+ * See wgf_touch_is_tapped for the rest.
  */
 export declare function wgf_touch_is_double_tapped(): boolean;
 
 /**
  * Returns one finger's gestures. Each is made by a finger that was alone while it was down.
  *
- * - A tap: lifted within 0.3 seconds, having moved under 12 logical pixels. is_tapped says
- *   whether one happened in this frame (in a tick, in that tick).
- * - A double tap: a second tap within 0.35 seconds of the last, near it. is_double_tapped
- *   says whether one happened.
- * - get_tap_position returns where the tap or double tap was.
- * - A swipe: lifted within 0.5 seconds, having gone 50 logical pixels or more. get_swipe
- *   returns how far it went, or 0, 0 for none.
- * - A hold: down for 0.5 seconds or more, still. is_holding is true while it lasts.
+ * See wgf_touch_is_tapped for the rest.
  */
 export declare function wgf_touch_get_tap_position<T extends number[] | Float32Array | Float64Array>(into: T): T;
 export declare function wgf_touch_get_tap_position(into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -3457,14 +3111,7 @@ export declare function wgf_touch_get_tap_position(into?: wgf_vec2_t | null): wg
 /**
  * Returns one finger's gestures. Each is made by a finger that was alone while it was down.
  *
- * - A tap: lifted within 0.3 seconds, having moved under 12 logical pixels. is_tapped says
- *   whether one happened in this frame (in a tick, in that tick).
- * - A double tap: a second tap within 0.35 seconds of the last, near it. is_double_tapped
- *   says whether one happened.
- * - get_tap_position returns where the tap or double tap was.
- * - A swipe: lifted within 0.5 seconds, having gone 50 logical pixels or more. get_swipe
- *   returns how far it went, or 0, 0 for none.
- * - A hold: down for 0.5 seconds or more, still. is_holding is true while it lasts.
+ * See wgf_touch_is_tapped for the rest.
  */
 export declare function wgf_touch_get_swipe<T extends number[] | Float32Array | Float64Array>(into: T): T;
 export declare function wgf_touch_get_swipe(into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -3472,14 +3119,7 @@ export declare function wgf_touch_get_swipe(into?: wgf_vec2_t | null): wgf_vec2_
 /**
  * Returns one finger's gestures. Each is made by a finger that was alone while it was down.
  *
- * - A tap: lifted within 0.3 seconds, having moved under 12 logical pixels. is_tapped says
- *   whether one happened in this frame (in a tick, in that tick).
- * - A double tap: a second tap within 0.35 seconds of the last, near it. is_double_tapped
- *   says whether one happened.
- * - get_tap_position returns where the tap or double tap was.
- * - A swipe: lifted within 0.5 seconds, having gone 50 logical pixels or more. get_swipe
- *   returns how far it went, or 0, 0 for none.
- * - A hold: down for 0.5 seconds or more, still. is_holding is true while it lasts.
+ * See wgf_touch_is_tapped for the rest.
  */
 export declare function wgf_touch_is_holding(): boolean;
 
@@ -3493,7 +3133,7 @@ export declare function wgf_window_set_title(title: string | null): void;
 /**
  * Sets or gets the window's title (default: "libwgf").
  *
- * Natively it is the window's title bar. On the web it is the page's title. NULL counts as "".
+ * See wgf_window_set_title for the rest.
  */
 export declare function wgf_window_get_title(): string;
 
@@ -3516,32 +3156,14 @@ export declare function wgf_window_set_size(width: number, height: number): bool
 /**
  * Sets or gets the size inside the window's frame, in logical pixels (default: 1024 by 768).
  *
- * Returns false for a width or height under 1.
- *
- * On the web it is the canvas's size on the page, left to the page unless set. Once set, it is
- * the canvas's own style, which wins over the page's. The canvas then stays that size, at the
- * page's top left, whatever the browser window does. So a game meant to fill the page doesn't
- * set it on the web.
- *
- * A game written for one size sets a presentation (wgf_presentation.h) instead. That fits the
- * game to whatever size the window is. Natively, it also opens the window at that size when
- * this size isn't set.
+ * See wgf_window_set_size for the rest.
  */
 export declare function wgf_window_get_width(): number;
 
 /**
  * Sets or gets the size inside the window's frame, in logical pixels (default: 1024 by 768).
  *
- * Returns false for a width or height under 1.
- *
- * On the web it is the canvas's size on the page, left to the page unless set. Once set, it is
- * the canvas's own style, which wins over the page's. The canvas then stays that size, at the
- * page's top left, whatever the browser window does. So a game meant to fill the page doesn't
- * set it on the web.
- *
- * A game written for one size sets a presentation (wgf_presentation.h) instead. That fits the
- * game to whatever size the window is. Natively, it also opens the window at that size when
- * this size isn't set.
+ * See wgf_window_set_size for the rest.
  */
 export declare function wgf_window_get_height(): number;
 
@@ -3570,22 +3192,7 @@ export declare function wgf_window_request_fullscreen(fullscreen: boolean): bool
 /**
  * Asks for the window to fill the screen, or to stop (default: off).
  *
- * The answer is wgf_window_is_fullscreen, not the return value.
- * - Returns false if there is nothing to request (see wgf_window_can_fullscreen).
- * - Returns true if the request was made. That doesn't mean it was granted. Even on the
- *   desktop, the switch has not happened yet when this returns.
- *
- * On the web the browser grants it only inside a tap, a click, or a key press, and a frame
- * comes after those. So a refused request is held, and asked again inside the next one.
- * - Asked as Play is pressed, it is granted by that tap's release or the next.
- * - Asked at start, it is granted by the player's first tap anywhere.
- * - Once granted, it is no longer held. A player who leaves fullscreen stays out until it is
- *   asked again.
- *
- * Asked before the window opens, the window opens filling the screen. On the web the request
- * is held for the first tap.
- *
- * The call is named request_ because the platform may refuse it, as every such call is.
+ * See wgf_window_request_fullscreen for the rest.
  */
 export declare function wgf_window_is_fullscreen(): boolean;
 
@@ -3609,18 +3216,14 @@ export declare function wgf_window_set_position(x: number, y: number): boolean;
 /**
  * Sets or gets where the window is: its top-left in the desktop's coordinates.
  *
- * 0, 0 is the top-left of the main monitor. These work only once the window is open. Setting
- * returns false, and getting returns 0, where programs don't place their windows: the web, and
- * a Wayland desktop, whose compositor places them.
+ * See wgf_window_set_position for the rest.
  */
 export declare function wgf_window_get_x(): number;
 
 /**
  * Sets or gets where the window is: its top-left in the desktop's coordinates.
  *
- * 0, 0 is the top-left of the main monitor. These work only once the window is open. Setting
- * returns false, and getting returns 0, where programs don't place their windows: the web, and
- * a Wayland desktop, whose compositor places them.
+ * See wgf_window_set_position for the rest.
  */
 export declare function wgf_window_get_y(): number;
 
@@ -3640,91 +3243,49 @@ export declare function wgf_window_get_monitor_count(): number;
 /**
  * Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
  *
- * - There is at least one monitor: the screen.
- * - Moving the window to another monitor returns false where programs don't place their
- *   windows.
- * - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
- * - A monitor that isn't there gives 0 and "".
- *
- * These work only once the window is open.
+ * See wgf_window_get_monitor_count for the rest.
  */
 export declare function wgf_window_set_monitor(monitor: number): boolean;
 
 /**
  * Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
  *
- * - There is at least one monitor: the screen.
- * - Moving the window to another monitor returns false where programs don't place their
- *   windows.
- * - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
- * - A monitor that isn't there gives 0 and "".
- *
- * These work only once the window is open.
+ * See wgf_window_get_monitor_count for the rest.
  */
 export declare function wgf_window_get_monitor(): number;
 
 /**
  * Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
  *
- * - There is at least one monitor: the screen.
- * - Moving the window to another monitor returns false where programs don't place their
- *   windows.
- * - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
- * - A monitor that isn't there gives 0 and "".
- *
- * These work only once the window is open.
+ * See wgf_window_get_monitor_count for the rest.
  */
 export declare function wgf_window_get_monitor_width(monitor: number): number;
 
 /**
  * Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
  *
- * - There is at least one monitor: the screen.
- * - Moving the window to another monitor returns false where programs don't place their
- *   windows.
- * - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
- * - A monitor that isn't there gives 0 and "".
- *
- * These work only once the window is open.
+ * See wgf_window_get_monitor_count for the rest.
  */
 export declare function wgf_window_get_monitor_height(monitor: number): number;
 
 /**
  * Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
  *
- * - There is at least one monitor: the screen.
- * - Moving the window to another monitor returns false where programs don't place their
- *   windows.
- * - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
- * - A monitor that isn't there gives 0 and "".
- *
- * These work only once the window is open.
+ * See wgf_window_get_monitor_count for the rest.
  */
 export declare function wgf_window_get_monitor_x(monitor: number): number;
 
 /**
  * Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
  *
- * - There is at least one monitor: the screen.
- * - Moving the window to another monitor returns false where programs don't place their
- *   windows.
- * - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
- * - A monitor that isn't there gives 0 and "".
- *
- * These work only once the window is open.
+ * See wgf_window_get_monitor_count for the rest.
  */
 export declare function wgf_window_get_monitor_y(monitor: number): number;
 
 /**
  * Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
  *
- * - There is at least one monitor: the screen.
- * - Moving the window to another monitor returns false where programs don't place their
- *   windows.
- * - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
- * - A monitor that isn't there gives 0 and "".
- *
- * These work only once the window is open.
+ * See wgf_window_get_monitor_count for the rest.
  */
 export declare function wgf_window_get_monitor_name(monitor: number): string;
 
@@ -3739,8 +3300,7 @@ export declare function wgf_window_set_visible(visible: boolean): void;
 /**
  * Sets or gets whether the window is shown or hidden (default: shown).
  *
- * The program runs either way. Hiding the window at open, then showing it once loaded, avoids
- * showing an empty window.
+ * See wgf_window_set_visible for the rest.
  */
 export declare function wgf_window_is_visible(): boolean;
 
@@ -3756,7 +3316,7 @@ export declare function wgf_window_set_resizable(resizable: boolean): void;
  * Sets or gets whether the user can resize the window (default: true), and whether it has a
  * title bar and border (default: true).
  *
- * These are for the desktop only. The web ignores them.
+ * See wgf_window_set_resizable for the rest.
  */
 export declare function wgf_window_is_resizable(): boolean;
 
@@ -3764,7 +3324,7 @@ export declare function wgf_window_is_resizable(): boolean;
  * Sets or gets whether the user can resize the window (default: true), and whether it has a
  * title bar and border (default: true).
  *
- * These are for the desktop only. The web ignores them.
+ * See wgf_window_set_resizable for the rest.
  */
 export declare function wgf_window_set_decorated(decorated: boolean): void;
 
@@ -3772,7 +3332,7 @@ export declare function wgf_window_set_decorated(decorated: boolean): void;
  * Sets or gets whether the user can resize the window (default: true), and whether it has a
  * title bar and border (default: true).
  *
- * These are for the desktop only. The web ignores them.
+ * See wgf_window_set_resizable for the rest.
  */
 export declare function wgf_window_is_decorated(): boolean;
 
@@ -3819,126 +3379,49 @@ export declare function wgf_window_set_transparent(transparent: boolean): boolea
 /**
  * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
  *
- *   transparent  what is behind the window shows through where gfx clears with
- *                alpha below 1 (default: off). Desktop: where the window system
- *                allows it. Web: the page under the canvas shows
- *   high_dpi     draw at the display's full density (default: on). Off draws one
- *                pixel per logical pixel, scaled up by the display: fewer pixels,
- *                softer edges
- *   vsync        wait for the display between frames (default: on). Off runs as
- *                fast as it can, or at the target fps. The web is always in step
- *                with the display
- *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
- *                is a request, and a platform may give fewer samples. gfx draws
- *                with what the window got
+ * See wgf_window_set_transparent for the rest.
  */
 export declare function wgf_window_is_transparent(): boolean;
 
 /**
  * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
  *
- *   transparent  what is behind the window shows through where gfx clears with
- *                alpha below 1 (default: off). Desktop: where the window system
- *                allows it. Web: the page under the canvas shows
- *   high_dpi     draw at the display's full density (default: on). Off draws one
- *                pixel per logical pixel, scaled up by the display: fewer pixels,
- *                softer edges
- *   vsync        wait for the display between frames (default: on). Off runs as
- *                fast as it can, or at the target fps. The web is always in step
- *                with the display
- *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
- *                is a request, and a platform may give fewer samples. gfx draws
- *                with what the window got
+ * See wgf_window_set_transparent for the rest.
  */
 export declare function wgf_window_set_high_dpi(high_dpi: boolean): boolean;
 
 /**
  * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
  *
- *   transparent  what is behind the window shows through where gfx clears with
- *                alpha below 1 (default: off). Desktop: where the window system
- *                allows it. Web: the page under the canvas shows
- *   high_dpi     draw at the display's full density (default: on). Off draws one
- *                pixel per logical pixel, scaled up by the display: fewer pixels,
- *                softer edges
- *   vsync        wait for the display between frames (default: on). Off runs as
- *                fast as it can, or at the target fps. The web is always in step
- *                with the display
- *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
- *                is a request, and a platform may give fewer samples. gfx draws
- *                with what the window got
+ * See wgf_window_set_transparent for the rest.
  */
 export declare function wgf_window_is_high_dpi(): boolean;
 
 /**
  * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
  *
- *   transparent  what is behind the window shows through where gfx clears with
- *                alpha below 1 (default: off). Desktop: where the window system
- *                allows it. Web: the page under the canvas shows
- *   high_dpi     draw at the display's full density (default: on). Off draws one
- *                pixel per logical pixel, scaled up by the display: fewer pixels,
- *                softer edges
- *   vsync        wait for the display between frames (default: on). Off runs as
- *                fast as it can, or at the target fps. The web is always in step
- *                with the display
- *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
- *                is a request, and a platform may give fewer samples. gfx draws
- *                with what the window got
+ * See wgf_window_set_transparent for the rest.
  */
 export declare function wgf_window_set_vsync(vsync: boolean): boolean;
 
 /**
  * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
  *
- *   transparent  what is behind the window shows through where gfx clears with
- *                alpha below 1 (default: off). Desktop: where the window system
- *                allows it. Web: the page under the canvas shows
- *   high_dpi     draw at the display's full density (default: on). Off draws one
- *                pixel per logical pixel, scaled up by the display: fewer pixels,
- *                softer edges
- *   vsync        wait for the display between frames (default: on). Off runs as
- *                fast as it can, or at the target fps. The web is always in step
- *                with the display
- *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
- *                is a request, and a platform may give fewer samples. gfx draws
- *                with what the window got
+ * See wgf_window_set_transparent for the rest.
  */
 export declare function wgf_window_is_vsync(): boolean;
 
 /**
  * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
  *
- *   transparent  what is behind the window shows through where gfx clears with
- *                alpha below 1 (default: off). Desktop: where the window system
- *                allows it. Web: the page under the canvas shows
- *   high_dpi     draw at the display's full density (default: on). Off draws one
- *                pixel per logical pixel, scaled up by the display: fewer pixels,
- *                softer edges
- *   vsync        wait for the display between frames (default: on). Off runs as
- *                fast as it can, or at the target fps. The web is always in step
- *                with the display
- *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
- *                is a request, and a platform may give fewer samples. gfx draws
- *                with what the window got
+ * See wgf_window_set_transparent for the rest.
  */
 export declare function wgf_window_set_msaa(msaa: boolean): boolean;
 
 /**
  * Sets or gets options fixed when the window opens. A setter returns false once it has opened.
  *
- *   transparent  what is behind the window shows through where gfx clears with
- *                alpha below 1 (default: off). Desktop: where the window system
- *                allows it. Web: the page under the canvas shows
- *   high_dpi     draw at the display's full density (default: on). Off draws one
- *                pixel per logical pixel, scaled up by the display: fewer pixels,
- *                softer edges
- *   vsync        wait for the display between frames (default: on). Off runs as
- *                fast as it can, or at the target fps. The web is always in step
- *                with the display
- *   msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
- *                is a request, and a platform may give fewer samples. gfx draws
- *                with what the window got
+ * See wgf_window_set_transparent for the rest.
  */
 export declare function wgf_window_is_msaa(): boolean;
 
@@ -3970,14 +3453,7 @@ export declare function wgf_window_get_safe_inset_top(): number;
  * Returns the safe area's insets: how far in from each edge of the window the display covers
  * or keeps for itself, in logical pixels.
  *
- * That covered area is a phone's notch, rounded corners, and home indicator, where a HUD and
- * buttons shouldn't go.
- * - On the web, they are the page's CSS safe-area insets (env(safe-area-inset-*)), less what
- *   lies outside the canvas, each at most the window's size. A browser reports them only to a
- *   page whose viewport meta has viewport-fit=cover, as libwgf's pages do.
- * - Natively they are 0, since nothing covers a desktop's window.
- *
- * They are read as they are now, and change as the device turns or the window is resized.
+ * See wgf_window_get_safe_inset_top for the rest.
  */
 export declare function wgf_window_get_safe_inset_right(): number;
 
@@ -3985,14 +3461,7 @@ export declare function wgf_window_get_safe_inset_right(): number;
  * Returns the safe area's insets: how far in from each edge of the window the display covers
  * or keeps for itself, in logical pixels.
  *
- * That covered area is a phone's notch, rounded corners, and home indicator, where a HUD and
- * buttons shouldn't go.
- * - On the web, they are the page's CSS safe-area insets (env(safe-area-inset-*)), less what
- *   lies outside the canvas, each at most the window's size. A browser reports them only to a
- *   page whose viewport meta has viewport-fit=cover, as libwgf's pages do.
- * - Natively they are 0, since nothing covers a desktop's window.
- *
- * They are read as they are now, and change as the device turns or the window is resized.
+ * See wgf_window_get_safe_inset_top for the rest.
  */
 export declare function wgf_window_get_safe_inset_bottom(): number;
 
@@ -4000,14 +3469,7 @@ export declare function wgf_window_get_safe_inset_bottom(): number;
  * Returns the safe area's insets: how far in from each edge of the window the display covers
  * or keeps for itself, in logical pixels.
  *
- * That covered area is a phone's notch, rounded corners, and home indicator, where a HUD and
- * buttons shouldn't go.
- * - On the web, they are the page's CSS safe-area insets (env(safe-area-inset-*)), less what
- *   lies outside the canvas, each at most the window's size. A browser reports them only to a
- *   page whose viewport meta has viewport-fit=cover, as libwgf's pages do.
- * - Natively they are 0, since nothing covers a desktop's window.
- *
- * They are read as they are now, and change as the device turns or the window is resized.
+ * See wgf_window_get_safe_inset_top for the rest.
  */
 export declare function wgf_window_get_safe_inset_left(): number;
 
@@ -4156,9 +3618,7 @@ export declare function wgf_asset_set_fetching(enabled: boolean): boolean;
 /**
  * Sets or gets whether the program does downloads (default: off).
  *
- * Turning it off fails the requests not yet taken, at the next update. Requests already
- * taken are still answered. The setter returns false on the web, where the browser
- * downloads.
+ * See wgf_asset_set_fetching for the rest.
  */
 export declare function wgf_asset_is_fetching(): boolean;
 
@@ -4179,8 +3639,7 @@ export declare function wgf_asset_fetch_get_url(request: wgf_asset_task_t | 0): 
 /**
  * Returns the URL a request downloads, and the destination to write it to.
  *
- * Each string is borrowed, valid until the next call. Returns "" for a handle that isn't a
- * request waiting on its answer, and for a ping's destination.
+ * See wgf_asset_fetch_get_url for the rest.
  */
 export declare function wgf_asset_fetch_get_dest(request: wgf_asset_task_t | 0): string;
 
@@ -4221,13 +3680,7 @@ export declare function wgf_asset_set_fetch_timeout(seconds: number): boolean;
  * Sets or gets the fetch timeout, natively: the seconds a request may go unanswered, once
  * the downloader has taken it, before it fails (default: 0, which waits for ever).
  *
- * Only a downloader can tell a slow download from a stalled one, as curl's low-speed limit
- * does. So the default hides nothing: a downloader that drops requests is a bug that shows
- * as tasks staying PENDING.
- *
- * The setter returns false for a negative or non-finite value. It also returns false on
- * the web, where the browser fetches and the fetch has no timeout of its own, and stores
- * nothing there.
+ * See wgf_asset_set_fetch_timeout for the rest.
  */
 export declare function wgf_asset_get_fetch_timeout(): number;
 
@@ -4438,28 +3891,7 @@ export declare function wgf_asset_add_redirect(prefix: string | null, target: st
  * mods, translations, or a CDN. Files whose path starts with `prefix` are looked for under
  * `target` instead:
  *
- *   wgf_asset_add_redirect("textures/", "mods/hd/textures/");
- *       textures/rock.png loads mods/hd/textures/rock.png if it exists, else its own
- *   wgf_asset_add_redirect("models/", "https://cdn.example.com/game/models/");
- *       a target with "://" is where the file downloads from (by the browser, or
- *       natively by the program's fetcher). It is still cached and loaded as models/...
- *
- * - Path rules stack. Every matching rule is tried, the last added first, then the file's
- *   own path. So later rules sit on top: a mod over a mod, or fr-CA over fr.
- * - A file missing under a path rule isn't an error. The next rule is tried (on the web,
- *   with a request each).
- * - A download rule doesn't stack. The newest matching one is where the file downloads
- *   from.
- * - Prefixes are plain text, matched at the start: "textures/", not "*.png".
- *
- * Redirects apply to every file a create loads, or an ensure makes local unless it gave a
- * fetch_url. They also apply to the files those name, such as a model's buffers and images,
- * beside wherever the model came from. wgf_resource_get_path and wgf_asset_task_get_path
- * say which file was found.
- *
- * There can be up to 32 rules. add_redirect returns false when they are full, for an empty
- * prefix or target, or for a prefix or path target not under the host (as
- * wgf_asset_ensure reads a path). A trailing "/" is kept.
+ * See wgf_asset_add_redirect for the rest.
  */
 export declare function wgf_asset_clear_redirects(): void;
 
@@ -4524,28 +3956,14 @@ export declare function wgf_actor_set_parent(actor: wgf_actor_t | 0, parent: wgf
 /**
  * Sets or gets the actor's parent, and reads its children.
  *
- * set_parent puts `actor` under `parent`, last among its children. The actor keeps its own
- * transform, so it moves to where that transform places it relative to the new parent.
- * A `parent` of 0 detaches it, and a detached actor is not drawn.
- *
- * set_parent returns false if:
- * - `parent` isn't an actor.
- * - `parent` is `actor`, or is under it.
- * - `actor` is a 2D or 3D stage. Stages are always roots.
+ * See wgf_actor_set_parent for the rest.
  */
 export declare function wgf_actor_get_parent(actor: wgf_actor_t | 0): wgf_actor_t;
 
 /**
  * Sets or gets the actor's parent, and reads its children.
  *
- * set_parent puts `actor` under `parent`, last among its children. The actor keeps its own
- * transform, so it moves to where that transform places it relative to the new parent.
- * A `parent` of 0 detaches it, and a detached actor is not drawn.
- *
- * set_parent returns false if:
- * - `parent` isn't an actor.
- * - `parent` is `actor`, or is under it.
- * - `actor` is a 2D or 3D stage. Stages are always roots.
+ * See wgf_actor_set_parent for the rest.
  */
 export declare function wgf_actor_get_child_count(actor: wgf_actor_t | 0): number;
 
@@ -4567,10 +3985,7 @@ export declare function wgf_actor_set_index(actor: wgf_actor_t | 0, index: numbe
 /**
  * Sets or gets where `actor` is among its parent's children.
  *
- * On a 2D stage this is the drawing order: later children draw over earlier ones. An index
- * past either end is clamped to that end, so a large index moves the actor to the front.
- *
- * set_index returns false if the actor has no parent.
+ * See wgf_actor_set_index for the rest.
  */
 export declare function wgf_actor_get_index(actor: wgf_actor_t | 0): number;
 
@@ -4587,10 +4002,7 @@ export declare function wgf_actor_set_position(actor: wgf_actor_t | 0, x: number
 /**
  * Sets or gets the actor's transform, relative to its parent.
  *
- * - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
- *   It is kept as the rotation those angles make. get_rotation returns angles for the same
- *   rotation, which may not be the ones given (past a half turn, for example).
- * - Scale 1 is the actor's own size.
+ * See wgf_actor_set_position for the rest.
  */
 export declare function wgf_actor_get_position<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_actor_get_position(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -4598,20 +4010,14 @@ export declare function wgf_actor_get_position(actor: wgf_actor_t | 0, into?: wg
 /**
  * Sets or gets the actor's transform, relative to its parent.
  *
- * - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
- *   It is kept as the rotation those angles make. get_rotation returns angles for the same
- *   rotation, which may not be the ones given (past a half turn, for example).
- * - Scale 1 is the actor's own size.
+ * See wgf_actor_set_position for the rest.
  */
 export declare function wgf_actor_set_rotation(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * Sets or gets the actor's transform, relative to its parent.
  *
- * - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
- *   It is kept as the rotation those angles make. get_rotation returns angles for the same
- *   rotation, which may not be the ones given (past a half turn, for example).
- * - Scale 1 is the actor's own size.
+ * See wgf_actor_set_position for the rest.
  */
 export declare function wgf_actor_get_rotation<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_actor_get_rotation(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -4619,20 +4025,14 @@ export declare function wgf_actor_get_rotation(actor: wgf_actor_t | 0, into?: wg
 /**
  * Sets or gets the actor's transform, relative to its parent.
  *
- * - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
- *   It is kept as the rotation those angles make. get_rotation returns angles for the same
- *   rotation, which may not be the ones given (past a half turn, for example).
- * - Scale 1 is the actor's own size.
+ * See wgf_actor_set_position for the rest.
  */
 export declare function wgf_actor_set_scale(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * Sets or gets the actor's transform, relative to its parent.
  *
- * - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
- *   It is kept as the rotation those angles make. get_rotation returns angles for the same
- *   rotation, which may not be the ones given (past a half turn, for example).
- * - Scale 1 is the actor's own size.
+ * See wgf_actor_set_position for the rest.
  */
 export declare function wgf_actor_get_scale<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_actor_get_scale(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -4672,13 +4072,7 @@ export declare function wgf_actor_get_positions(actors: readonly wgf_actor_t[] |
 /**
  * Gets or sets the positions of many actors at once.
  *
- * get_positions reads each of `actors` (`count` of them) into `out`, as x, y, z in turn. It
- * reads as many as fit in `out_count` floats, and returns how many floats it filled. A handle
- * that isn't an actor reads as 0, 0, 0.
- *
- * set_positions sets each from `positions`: x, y, z in turn, `positions_count` floats. It
- * skips a handle that isn't an actor. It returns false if there aren't three floats for each
- * actor.
+ * See wgf_actor_get_positions for the rest.
  */
 export declare function wgf_actor_set_positions(actors: readonly wgf_actor_t[] | Uint32Array | null, positions: readonly number[] | Float32Array | Float64Array | null): boolean;
 
@@ -4699,13 +4093,7 @@ export declare function wgf_actor_get_world_position(actor: wgf_actor_t | 0, int
 /**
  * Returns where the actor is in its tree's root's space. On a 2D stage, that is stage units.
  *
- * - The world position is the simulation's, as the transform is (see wgf_actor_snap). It is
- *   the same in a tick and in a frame.
- * - The drawn position is where the actor is drawn this frame. A simulated actor, or one under
- *   a simulated actor, is drawn between its last two ticks. A camera that follows the actor in
- *   the frame reads this, so the camera moves as smoothly as the actor does.
- *
- * The two are the same for an actor with nothing simulated at or above it.
+ * See wgf_actor_get_world_position for the rest.
  */
 export declare function wgf_actor_get_drawn_position<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_actor_get_drawn_position(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -4725,11 +4113,7 @@ export declare function wgf_actor_get_world_direction(actor: wgf_actor_t | 0, x:
 /**
  * Turns a direction in the actor's own space into its tree's root's space, at unit length.
  *
- * For example, (0, 0, -1) gives the actor's heading in the world, with no angles to read back
- * (get_rotation's angles may not be the ones set). The world direction is the simulation's,
- * and the drawn direction is this frame's, as with the positions above.
- *
- * Returns 0, 0, 0 for a direction of (0, 0, 0), or if `actor` isn't an actor.
+ * See wgf_actor_get_world_direction for the rest.
  */
 export declare function wgf_actor_get_drawn_direction<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, x: number, y: number, z: number, into: T): T;
 export declare function wgf_actor_get_drawn_direction(actor: wgf_actor_t | 0, x: number, y: number, z: number, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -4763,13 +4147,7 @@ export declare function wgf_actor_set_name(actor: wgf_actor_t | 0, name: string 
 /**
  * Sets or gets a name to find the actor by.
  *
- * - NULL or "" means no name (default: no name).
- * - get_name returns "" for no name. The string is borrowed, and valid until the name changes
- *   or the actor is gone.
- * - Its stage finds the actor by name (wgf_stage2d_find, wgf_stage3d_find) when it is the only
- *   actor so named there.
- * - A path from any actor finds it (wgf_actor_find) when its name is unique among its
- *   siblings.
+ * See wgf_actor_set_name for the rest.
  */
 export declare function wgf_actor_get_name(actor: wgf_actor_t | 0): string;
 
@@ -4820,256 +4198,56 @@ export declare function wgf_actor_set_enabled(actor: wgf_actor_t | 0, enabled: b
 /**
  * Sets or gets the four flags that say what an actor takes part in.
  *
- * Each flag is the actor's own, and reads back as it was set.
- *
- *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
- *             by every update, as if they weren't in the tree. An emitter under it isn't
- *             moved on. Use it to switch off a part of the game for now. It is the only flag
- *             that reaches the children. Their own flags are kept, so enabling the actor
- *             again brings each back as it was set.
- *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
- *             drawn. The actor is still placed, and its children are as they are. A glTF
- *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
- *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
- *             those nodes are as they are. To hide a whole tree, turn enabled off.
- *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
- *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
- *             lifetimes) and tweens leave them. What moves by itself holds still: an
- *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
- *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen returns true if the actor or
- *             any actor above it is paused.
- *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
- *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
- *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
- *             model, or a 3D shape. For any other kind this flag changes nothing.
- *
- * Defaults: enabled, visible, not paused, pickable.
+ * See wgf_actor_set_enabled for the rest.
  */
 export declare function wgf_actor_is_enabled(actor: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets the four flags that say what an actor takes part in.
  *
- * Each flag is the actor's own, and reads back as it was set.
- *
- *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
- *             by every update, as if they weren't in the tree. An emitter under it isn't
- *             moved on. Use it to switch off a part of the game for now. It is the only flag
- *             that reaches the children. Their own flags are kept, so enabling the actor
- *             again brings each back as it was set.
- *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
- *             drawn. The actor is still placed, and its children are as they are. A glTF
- *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
- *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
- *             those nodes are as they are. To hide a whole tree, turn enabled off.
- *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
- *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
- *             lifetimes) and tweens leave them. What moves by itself holds still: an
- *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
- *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen returns true if the actor or
- *             any actor above it is paused.
- *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
- *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
- *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
- *             model, or a 3D shape. For any other kind this flag changes nothing.
- *
- * Defaults: enabled, visible, not paused, pickable.
+ * See wgf_actor_set_enabled for the rest.
  */
 export declare function wgf_actor_set_paused(actor: wgf_actor_t | 0, paused: boolean): boolean;
 
 /**
  * Sets or gets the four flags that say what an actor takes part in.
  *
- * Each flag is the actor's own, and reads back as it was set.
- *
- *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
- *             by every update, as if they weren't in the tree. An emitter under it isn't
- *             moved on. Use it to switch off a part of the game for now. It is the only flag
- *             that reaches the children. Their own flags are kept, so enabling the actor
- *             again brings each back as it was set.
- *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
- *             drawn. The actor is still placed, and its children are as they are. A glTF
- *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
- *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
- *             those nodes are as they are. To hide a whole tree, turn enabled off.
- *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
- *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
- *             lifetimes) and tweens leave them. What moves by itself holds still: an
- *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
- *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen returns true if the actor or
- *             any actor above it is paused.
- *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
- *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
- *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
- *             model, or a 3D shape. For any other kind this flag changes nothing.
- *
- * Defaults: enabled, visible, not paused, pickable.
+ * See wgf_actor_set_enabled for the rest.
  */
 export declare function wgf_actor_is_paused(actor: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets the four flags that say what an actor takes part in.
  *
- * Each flag is the actor's own, and reads back as it was set.
- *
- *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
- *             by every update, as if they weren't in the tree. An emitter under it isn't
- *             moved on. Use it to switch off a part of the game for now. It is the only flag
- *             that reaches the children. Their own flags are kept, so enabling the actor
- *             again brings each back as it was set.
- *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
- *             drawn. The actor is still placed, and its children are as they are. A glTF
- *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
- *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
- *             those nodes are as they are. To hide a whole tree, turn enabled off.
- *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
- *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
- *             lifetimes) and tweens leave them. What moves by itself holds still: an
- *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
- *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen returns true if the actor or
- *             any actor above it is paused.
- *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
- *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
- *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
- *             model, or a 3D shape. For any other kind this flag changes nothing.
- *
- * Defaults: enabled, visible, not paused, pickable.
+ * See wgf_actor_set_enabled for the rest.
  */
 export declare function wgf_actor_is_frozen(actor: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets the four flags that say what an actor takes part in.
  *
- * Each flag is the actor's own, and reads back as it was set.
- *
- *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
- *             by every update, as if they weren't in the tree. An emitter under it isn't
- *             moved on. Use it to switch off a part of the game for now. It is the only flag
- *             that reaches the children. Their own flags are kept, so enabling the actor
- *             again brings each back as it was set.
- *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
- *             drawn. The actor is still placed, and its children are as they are. A glTF
- *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
- *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
- *             those nodes are as they are. To hide a whole tree, turn enabled off.
- *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
- *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
- *             lifetimes) and tweens leave them. What moves by itself holds still: an
- *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
- *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen returns true if the actor or
- *             any actor above it is paused.
- *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
- *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
- *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
- *             model, or a 3D shape. For any other kind this flag changes nothing.
- *
- * Defaults: enabled, visible, not paused, pickable.
+ * See wgf_actor_set_enabled for the rest.
  */
 export declare function wgf_actor_set_visible(actor: wgf_actor_t | 0, visible: boolean): boolean;
 
 /**
  * Sets or gets the four flags that say what an actor takes part in.
  *
- * Each flag is the actor's own, and reads back as it was set.
- *
- *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
- *             by every update, as if they weren't in the tree. An emitter under it isn't
- *             moved on. Use it to switch off a part of the game for now. It is the only flag
- *             that reaches the children. Their own flags are kept, so enabling the actor
- *             again brings each back as it was set.
- *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
- *             drawn. The actor is still placed, and its children are as they are. A glTF
- *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
- *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
- *             those nodes are as they are. To hide a whole tree, turn enabled off.
- *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
- *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
- *             lifetimes) and tweens leave them. What moves by itself holds still: an
- *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
- *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen returns true if the actor or
- *             any actor above it is paused.
- *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
- *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
- *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
- *             model, or a 3D shape. For any other kind this flag changes nothing.
- *
- * Defaults: enabled, visible, not paused, pickable.
+ * See wgf_actor_set_enabled for the rest.
  */
 export declare function wgf_actor_is_visible(actor: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets the four flags that say what an actor takes part in.
  *
- * Each flag is the actor's own, and reads back as it was set.
- *
- *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
- *             by every update, as if they weren't in the tree. An emitter under it isn't
- *             moved on. Use it to switch off a part of the game for now. It is the only flag
- *             that reaches the children. Their own flags are kept, so enabling the actor
- *             again brings each back as it was set.
- *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
- *             drawn. The actor is still placed, and its children are as they are. A glTF
- *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
- *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
- *             those nodes are as they are. To hide a whole tree, turn enabled off.
- *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
- *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
- *             lifetimes) and tweens leave them. What moves by itself holds still: an
- *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
- *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen returns true if the actor or
- *             any actor above it is paused.
- *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
- *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
- *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
- *             model, or a 3D shape. For any other kind this flag changes nothing.
- *
- * Defaults: enabled, visible, not paused, pickable.
+ * See wgf_actor_set_enabled for the rest.
  */
 export declare function wgf_actor_set_pickable(actor: wgf_actor_t | 0, pickable: boolean): boolean;
 
 /**
  * Sets or gets the four flags that say what an actor takes part in.
  *
- * Each flag is the actor's own, and reads back as it was set.
- *
- *   enabled   off: the actor and every actor under it are skipped altogether, by drawing and
- *             by every update, as if they weren't in the tree. An emitter under it isn't
- *             moved on. Use it to switch off a part of the game for now. It is the only flag
- *             that reaches the children. Their own flags are kept, so enabling the actor
- *             again brings each back as it was set.
- *   visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
- *             drawn. The actor is still placed, and its children are as they are. A glTF
- *             file's root (wgf_model.h) draws nothing itself, and stands for its file:
- *             hidden, its file's nodes aren't drawn or picked either. Actors a game put under
- *             those nodes are as they are. To hide a whole tree, turn enabled off.
- *   paused    on: the actor and every actor under it are frozen, but still drawn. Their
- *             behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
- *             lifetimes) and tweens leave them. What moves by itself holds still: an
- *             emitter's particles, a sprite's clip, a model's animation. Use it to hold a
- *             level under a pause menu (wgf_screen.h pauses the screens under the top one).
- *             Its colliders still meet as triggers. is_frozen returns true if the actor or
- *             any actor above it is paused.
- *   pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
- *             (wgf_pointer.h) pass through the actor to what is under it. Its children can
- *             still be hit, as a panel that isn't clickable can hold buttons that are. Only
- *             actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
- *             model, or a 3D shape. For any other kind this flag changes nothing.
- *
- * Defaults: enabled, visible, not paused, pickable.
+ * See wgf_actor_set_enabled for the rest.
  */
 export declare function wgf_actor_is_pickable(actor: wgf_actor_t | 0): boolean;
 
@@ -5092,7 +4270,7 @@ export declare function wgf_camera2d_set_zoom(camera: wgf_actor_t | 0, zoom: num
  * Sets or gets the camera's zoom: how big actors look. A zoom of 2 draws everything twice as
  * big (default: 1).
  *
- * set_zoom returns false for a zoom of 0 or less.
+ * See wgf_camera2d_set_zoom for the rest.
  */
 export declare function wgf_camera2d_get_zoom(camera: wgf_actor_t | 0): number;
 
@@ -5114,7 +4292,7 @@ export declare function wgf_camera3d_set_fov(camera: wgf_actor_t | 0, radians: n
 /**
  * Sets or gets the vertical field of view, in radians.
  *
- * It is clamped to 0.01 to 3.13 (just short of a half turn).
+ * See wgf_camera3d_set_fov for the rest.
  */
 export declare function wgf_camera3d_get_fov(camera: wgf_actor_t | 0): number;
 
@@ -5128,14 +4306,14 @@ export declare function wgf_camera3d_set_clip(camera: wgf_actor_t | 0, near_z: n
 /**
  * Sets or gets how near and how far in front of the camera it sees, in units.
  *
- * set_clip returns false unless 0 < `near_z` < `far_z`.
+ * See wgf_camera3d_set_clip for the rest.
  */
 export declare function wgf_camera3d_get_near(camera: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how near and how far in front of the camera it sees, in units.
  *
- * set_clip returns false unless 0 < `near_z` < `far_z`.
+ * See wgf_camera3d_set_clip for the rest.
  */
 export declare function wgf_camera3d_get_far(camera: wgf_actor_t | 0): number;
 
@@ -5161,7 +4339,7 @@ export declare function wgf_camera3d_set_ortho_height(camera: wgf_actor_t | 0, h
 /**
  * Sets or gets how tall a view an orthographic camera sees, in units (default: 10).
  *
- * set_ortho_height returns false for a height of 0 or less.
+ * See wgf_camera3d_set_ortho_height for the rest.
  */
 export declare function wgf_camera3d_get_ortho_height(camera: wgf_actor_t | 0): number;
 
@@ -5186,17 +4364,7 @@ export declare function wgf_camera3d_world_to_screen(camera: wgf_actor_t | 0, x:
 /**
  * Converts between the world and the screen's logical pixels, through the camera as it is now.
  *
- * The world is the camera's tree's root's space. The view fills the visible area, as a stage
- * draws it.
- *
- * - world_to_screen returns where a point shows: x and y on the screen, and z its depth. Depth
- *   runs from 0 at the near plane to 1 at the far plane. Below 0 is behind the camera, where a
- *   name tag would be hidden.
- * - screen_to_origin and screen_to_direction return the ray under a place on the screen. Its
- *   origin is on the near plane, and its direction is a unit vector. Use it for picking, or
- *   for a click in the world.
- *
- * Each returns 0, 0, 0 if `camera` isn't a 3D camera.
+ * See wgf_camera3d_world_to_screen for the rest.
  */
 export declare function wgf_camera3d_screen_to_origin<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, x: number, y: number, into: T): T;
 export declare function wgf_camera3d_screen_to_origin(camera: wgf_actor_t | 0, x: number, y: number, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -5204,17 +4372,7 @@ export declare function wgf_camera3d_screen_to_origin(camera: wgf_actor_t | 0, x
 /**
  * Converts between the world and the screen's logical pixels, through the camera as it is now.
  *
- * The world is the camera's tree's root's space. The view fills the visible area, as a stage
- * draws it.
- *
- * - world_to_screen returns where a point shows: x and y on the screen, and z its depth. Depth
- *   runs from 0 at the near plane to 1 at the far plane. Below 0 is behind the camera, where a
- *   name tag would be hidden.
- * - screen_to_origin and screen_to_direction return the ray under a place on the screen. Its
- *   origin is on the near plane, and its direction is a unit vector. Use it for picking, or
- *   for a click in the world.
- *
- * Each returns 0, 0, 0 if `camera` isn't a 3D camera.
+ * See wgf_camera3d_world_to_screen for the rest.
  */
 export declare function wgf_camera3d_screen_to_direction<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, x: number, y: number, into: T): T;
 export declare function wgf_camera3d_screen_to_direction(camera: wgf_actor_t | 0, x: number, y: number, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -5236,9 +4394,7 @@ export declare function wgf_color_make(r: number, g: number, b: number, a: numbe
 /**
  * Makes a color from components, clamped.
  *
- * - make takes components from 0 to 255.
- * - make_float takes components from 0 to 1, and rounds to the nearest 8-bit step.
- * - Out-of-range components saturate. They never spill into the next channel.
+ * See wgf_color_make for the rest.
  */
 export declare function wgf_color_make_float(r: number, g: number, b: number, a: number): wgf_color_t;
 
@@ -5287,33 +4443,21 @@ export declare function wgf_color_make_hsv(hue: number, saturation: number, valu
 /**
  * Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
  *
- * - `hue` is in degrees, wrapped into 0..360.
- * - `saturation` and `value` are 0..1, clamped.
- * - `a`, the alpha, is 0..255.
- *
- * Use it to walk a palette round the color wheel, or for a hit flash.
+ * See wgf_color_make_hsv for the rest.
  */
 export declare function wgf_color_get_hue(color: wgf_color_t): number;
 
 /**
  * Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
  *
- * - `hue` is in degrees, wrapped into 0..360.
- * - `saturation` and `value` are 0..1, clamped.
- * - `a`, the alpha, is 0..255.
- *
- * Use it to walk a palette round the color wheel, or for a hit flash.
+ * See wgf_color_make_hsv for the rest.
  */
 export declare function wgf_color_get_saturation(color: wgf_color_t): number;
 
 /**
  * Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
  *
- * - `hue` is in degrees, wrapped into 0..360.
- * - `saturation` and `value` are 0..1, clamped.
- * - `a`, the alpha, is 0..255.
- *
- * Use it to walk a palette round the color wheel, or for a hit flash.
+ * See wgf_color_make_hsv for the rest.
  */
 export declare function wgf_color_get_value(color: wgf_color_t): number;
 
@@ -5329,9 +4473,7 @@ export declare function wgf_color_brighten(color: wgf_color_t, amount: number): 
 /**
  * Brightens or multiplies a color.
  *
- * - brighten makes `color` lighter toward white by `amount` (0..1), or darker toward black
- *   by a negative `amount`. Its alpha is kept.
- * - multiply multiplies two colors channel by channel, as a tint is applied.
+ * See wgf_color_brighten for the rest.
  */
 export declare function wgf_color_multiply(color: wgf_color_t, by: wgf_color_t): wgf_color_t;
 
@@ -5466,30 +4608,21 @@ export declare function wgf_texture_set_sampling(texture: wgf_texture_t | 0, wra
 /**
  * Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
  *
- * Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
- *
- * The setter returns false for a handle that isn't a texture, or a wrap or filter that
- * isn't one.
+ * See wgf_texture_set_sampling for the rest.
  */
 export declare function wgf_texture_get_wrap_u(texture: wgf_texture_t | 0): wgf_texture_wrap_t;
 
 /**
  * Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
  *
- * Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
- *
- * The setter returns false for a handle that isn't a texture, or a wrap or filter that
- * isn't one.
+ * See wgf_texture_set_sampling for the rest.
  */
 export declare function wgf_texture_get_wrap_v(texture: wgf_texture_t | 0): wgf_texture_wrap_t;
 
 /**
  * Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
  *
- * Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
- *
- * The setter returns false for a handle that isn't a texture, or a wrap or filter that
- * isn't one.
+ * See wgf_texture_set_sampling for the rest.
  */
 export declare function wgf_texture_get_filter(texture: wgf_texture_t | 0): wgf_texture_filter_t;
 
@@ -5534,10 +4667,7 @@ export declare function wgf_texture_read_get_data(read: wgf_texture_read_t | 0):
 /**
  * Returns a DONE read's pixels, and their size in bytes.
  *
- * Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first, as an
- * image file stores them. They are valid until the read is destroyed.
- *
- * Returns NULL and 0 for any read that isn't DONE.
+ * See wgf_texture_read_get_data for the rest.
  */
 export declare function wgf_texture_read_get_size(read: wgf_texture_read_t | 0): number;
 
@@ -5604,11 +4734,7 @@ export declare function wgf_font_enable_bitmaps(): boolean;
  * Enables bitmap fonts (a .fnt, or an image of glyphs: see wgf_font_create), or says whether
  * they are enabled.
  *
- * Bitmap fonts are linked on purpose. This call links the code that reads their files, so a
- * program with TrueType fonts alone carries none of it. A game enables them with
- * "bitmap_fonts" in wgf.json's features.
- *
- * Call it before the first bitmap font is created. Without it, a bitmap font FAILED (logged).
+ * See wgf_font_enable_bitmaps for the rest.
  */
 export declare function wgf_font_is_bitmaps_enabled(): boolean;
 
@@ -5642,13 +4768,7 @@ export declare function wgf_font_set_filter(font: wgf_font_t | 0, filter: wgf_te
  * Sets or gets how a bitmap font's pages are sampled when its text is drawn at a size not
  * its own.
  *
- * - NEAREST (the default, when unset) keeps its texels sharp, for pixel fonts.
- * - LINEAR smooths them.
- *
- * A filter set before the font is READY is kept.
- *
- * The setter returns false for a font that isn't a bitmap font (by its file's extension),
- * font 0, or a filter that isn't one. The getter returns LINEAR for those.
+ * See wgf_font_set_filter for the rest.
  */
 export declare function wgf_font_get_filter(font: wgf_font_t | 0): wgf_texture_filter_t;
 
@@ -5665,10 +4785,7 @@ export declare function wgf_font_set_default(font: wgf_font_t | 0): boolean;
 /**
  * Sets or gets the font that font 0 means.
  *
- * The default holds a reference to `font`. Setting 0 goes back to the built-in font. For
- * text beyond ASCII, set a font that has it.
- *
- * The setter returns false for a handle that isn't a font.
+ * See wgf_font_set_default for the rest.
  */
 export declare function wgf_font_get_default(): wgf_font_t;
 
@@ -5782,45 +4899,35 @@ export declare function wgf_material_set_int(material: wgf_material_t | 0, name:
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_get_int(material: wgf_material_t | 0, name: string | null): number;
 
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_set_float(material: wgf_material_t | 0, name: string | null, value_: number): boolean;
 
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_get_float(material: wgf_material_t | 0, name: string | null): number;
 
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_set_vec2(material: wgf_material_t | 0, name: string | null, x: number, y: number): boolean;
 
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_get_vec2<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
 export declare function wgf_material_get_vec2(material: wgf_material_t | 0, name: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -5828,18 +4935,14 @@ export declare function wgf_material_get_vec2(material: wgf_material_t | 0, name
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_set_vec3(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number): boolean;
 
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_get_vec3<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
 export declare function wgf_material_get_vec3(material: wgf_material_t | 0, name: string | null, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -5847,18 +4950,14 @@ export declare function wgf_material_get_vec3(material: wgf_material_t | 0, name
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_set_vec4(material: wgf_material_t | 0, name: string | null, x: number, y: number, z: number, w: number): boolean;
 
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_get_vec4<T extends number[] | Float32Array | Float64Array>(material: wgf_material_t | 0, name: string | null, into: T): T;
 export declare function wgf_material_get_vec4(material: wgf_material_t | 0, name: string | null, into?: wgf_vec4_t | null): wgf_vec4_t;
@@ -5866,9 +4965,7 @@ export declare function wgf_material_get_vec4(material: wgf_material_t | 0, name
 /**
  * Sets or gets a parameter by name, from the table above.
  *
- * - set_int refuses a texture coordinate set other than 0 or 1.
- * - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
- *   Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+ * See wgf_material_set_int for the rest.
  */
 export declare function wgf_material_set_color(material: wgf_material_t | 0, name: string | null, color: wgf_color_t): boolean;
 
@@ -5904,13 +5001,7 @@ export declare function wgf_material_set_cubemap(material: wgf_material_t | 0, n
  * `name`, sampled as a samplerCube (wgf.glsl). The material holds its own reference to the
  * cubemap, and 0 clears it.
  *
- * Returns false for a material with built-in shading, a handle that isn't a cubemap, or a
- * name that is one of the shader's texture2Ds (set those with wgf_material_set_texture).
- * If the shader is still loading, the cubemap is kept and checked once the shader is
- * READY. A wrong name is then dropped with a warning.
- *
- * set_texture refuses a textureCube's name in the same way, and each getter returns 0 for
- * the other kind.
+ * See wgf_material_set_cubemap for the rest.
  */
 export declare function wgf_material_get_cubemap(material: wgf_material_t | 0, name: string | null): wgf_cubemap_t;
 
@@ -6002,8 +5093,7 @@ export declare function wgf_sheet_get_frame_name(sheet: wgf_sheet_t | 0, index: 
 /**
  * Returns a frame's name, and the index of the frame named `name`.
  *
- * - get_frame_name returns "" for a grid's frame, or an `index` outside the sheet.
- * - find_frame returns -1 if no frame has that name.
+ * See wgf_sheet_get_frame_name for the rest.
  */
 export declare function wgf_sheet_find_frame(sheet: wgf_sheet_t | 0, name: string | null): number;
 
@@ -6030,60 +5120,21 @@ export declare function wgf_sheet_add_clip(sheet: wgf_sheet_t | 0, name: string 
 /**
  * Adds a clip named `name`, replacing any clip of that name.
  *
- * - `frames` lists the sheet's frames by index, `count` of them.
- * - Each frame shows for `seconds`. With 0, each frame shows for its own duration, as an
- *   atlas gives it.
- * - The clip runs in `direction`.
- *
- * A sheet has at most 64 clips. add_clip returns false for:
- * - a `name` that is empty or over 63 bytes;
- * - no frames;
- * - `seconds` below 0, or not finite;
- * - a `direction` that isn't a direction;
- * - a new name when the sheet already has 64 clips.
- *
- * The other calls return how many clips the sheet has, one clip's name ("" for none), and the
- * index of the clip named `name` (-1 for none).
+ * See wgf_sheet_add_clip for the rest.
  */
 export declare function wgf_sheet_get_clip_count(sheet: wgf_sheet_t | 0): number;
 
 /**
  * Adds a clip named `name`, replacing any clip of that name.
  *
- * - `frames` lists the sheet's frames by index, `count` of them.
- * - Each frame shows for `seconds`. With 0, each frame shows for its own duration, as an
- *   atlas gives it.
- * - The clip runs in `direction`.
- *
- * A sheet has at most 64 clips. add_clip returns false for:
- * - a `name` that is empty or over 63 bytes;
- * - no frames;
- * - `seconds` below 0, or not finite;
- * - a `direction` that isn't a direction;
- * - a new name when the sheet already has 64 clips.
- *
- * The other calls return how many clips the sheet has, one clip's name ("" for none), and the
- * index of the clip named `name` (-1 for none).
+ * See wgf_sheet_add_clip for the rest.
  */
 export declare function wgf_sheet_get_clip_name(sheet: wgf_sheet_t | 0, index: number): string;
 
 /**
  * Adds a clip named `name`, replacing any clip of that name.
  *
- * - `frames` lists the sheet's frames by index, `count` of them.
- * - Each frame shows for `seconds`. With 0, each frame shows for its own duration, as an
- *   atlas gives it.
- * - The clip runs in `direction`.
- *
- * A sheet has at most 64 clips. add_clip returns false for:
- * - a `name` that is empty or over 63 bytes;
- * - no frames;
- * - `seconds` below 0, or not finite;
- * - a `direction` that isn't a direction;
- * - a new name when the sheet already has 64 clips.
- *
- * The other calls return how many clips the sheet has, one clip's name ("" for none), and the
- * index of the clip named `name` (-1 for none).
+ * See wgf_sheet_add_clip for the rest.
  */
 export declare function wgf_sheet_find_clip(sheet: wgf_sheet_t | 0, name: string | null): number;
 
@@ -6102,12 +5153,7 @@ export declare function wgf_sheet_set_clip_event(sheet: wgf_sheet_t | 0, clip: s
 /**
  * Sets or gets an event on a clip's frame: a footstep's sound, or an attack's hit frame.
  *
- * `event` (above 0) is raised each time the clip comes to its `place`th frame. Places count
- * from 0, the first frame, by place in the clip as it was added. An `event` of 0 removes the
- * event. The sprite playing the clip reads the events (wgf_sprite_take_clip_events).
- *
- * The setter returns false for a clip the sheet doesn't have, a `place` outside the clip, or
- * an `event` below 0.
+ * See wgf_sheet_set_clip_event for the rest.
  */
 export declare function wgf_sheet_get_clip_event(sheet: wgf_sheet_t | 0, clip: string | null, place: number): number;
 
@@ -6162,12 +5208,7 @@ export declare function wgf_sprite_set_size(sprite: wgf_actor_t | 0, width: numb
 /**
  * Sets or gets the sprite's size, in its own units.
  *
- * A width or height of 0 or less (the default) means no size is set. The sprite then draws
- * at its region's size in pixels on a 2D stage, and at 1 by 1 on a 3D stage.
- *
- * get_size returns the size set, or else the region's size in pixels, on either stage. It
- * returns 0, 0 while the texture isn't READY and no size is set. The setter returns false
- * for a handle that isn't a sprite.
+ * See wgf_sprite_set_size for the rest.
  */
 export declare function wgf_sprite_get_size<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
 export declare function wgf_sprite_get_size(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -6187,10 +5228,7 @@ export declare function wgf_sprite_set_pivot(sprite: wgf_actor_t | 0, x: number,
  * Sets or gets the sprite's pivot: the point placed at its actor's position, which the
  * sprite turns and scales about. It is a fraction of the sprite's size.
  *
- * - 0.5, 0.5 is its center (default).
- * - 0, 0 is its top-left.
- *
- * The setter returns false for a handle that isn't a sprite.
+ * See wgf_sprite_set_pivot for the rest.
  */
 export declare function wgf_sprite_get_pivot<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
 export declare function wgf_sprite_get_pivot(sprite: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -6215,15 +5253,7 @@ export declare function wgf_sprite_set_nine_slice(sprite: wgf_actor_t | 0, left:
  * Sets or gets the sprite's nine-slice borders, in texels in from the region's edges. A
  * nine-slice draws a panel or a health bar's frame at any size from one small image.
  *
- * - The corners, inside `left`, `top`, `right`, and `bottom`, keep their size, one texel a
- *   unit. If the sprite is smaller than its borders, they are scaled down together.
- * - The edges stretch along their length.
- * - The middle stretches both ways.
- *
- * All 0 means no nine-slice (default), and a border below 0 counts as 0. A nine-slice draws
- * only on a 2D stage. On a 3D stage the sprite draws whole. The getter returns left, top,
- * right, and bottom. The setter returns false for a handle that isn't a sprite, or for
- * numbers that aren't finite.
+ * See wgf_sprite_set_nine_slice for the rest.
  */
 export declare function wgf_sprite_get_nine_slice<T extends number[] | Float32Array | Float64Array>(sprite: wgf_actor_t | 0, into: T): T;
 export declare function wgf_sprite_get_nine_slice(sprite: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
@@ -6257,12 +5287,7 @@ export declare function wgf_sprite_set_alpha_mode(sprite: wgf_actor_t | 0, mode:
  * Sets or gets how the sprite uses its texels' alpha, one of wgf_material.h's modes (default:
  * BLEND), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
  *
- * - OPAQUE draws without blending.
- * - ADD adds its color.
- * - MASK draws blended on a 2D stage, since immediate mode cuts nothing out.
- *
- * The setter returns false for a handle that isn't a sprite, or a `mode` that isn't an alpha
- * mode.
+ * See wgf_sprite_set_alpha_mode for the rest.
  */
 export declare function wgf_sprite_get_alpha_mode(sprite: wgf_actor_t | 0): wgf_alpha_mode_t;
 
@@ -6270,12 +5295,7 @@ export declare function wgf_sprite_get_alpha_mode(sprite: wgf_actor_t | 0): wgf_
  * Sets or gets how the sprite uses its texels' alpha, one of wgf_material.h's modes (default:
  * BLEND), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
  *
- * - OPAQUE draws without blending.
- * - ADD adds its color.
- * - MASK draws blended on a 2D stage, since immediate mode cuts nothing out.
- *
- * The setter returns false for a handle that isn't a sprite, or a `mode` that isn't an alpha
- * mode.
+ * See wgf_sprite_set_alpha_mode for the rest.
  */
 export declare function wgf_sprite_get_alpha_cutoff(sprite: wgf_actor_t | 0): number;
 
@@ -6312,28 +5332,7 @@ export declare function wgf_sprite_set_material(sprite: wgf_actor_t | 0, materia
  * Sets or gets the material (wgf_material.h) a sprite is drawn with on a 3D stage, as a
  * model's part is. 0 (the default) goes back to the texture times the tint.
  *
- * - A PBR material is lit by the stage's lights (the up to 8 reaching it most) and its
- *   environment, and shadows fall on it.
- * - An UNLIT material draws its base color.
- * - A custom material (wgf_material_create_custom) draws by its shader, with the same lights.
- *
- * How the sprite and the material combine:
- * - The sprite's texture is the material's base color texture. The material's own base color
- *   texture isn't used, but a custom shader samples the textures its material was given.
- * - The sprite's tint is the placement's tint.
- * - Every map of the material is read over the sprite's region of the texture. So a normal
- *   map laid out like the sprite's sheet lights each frame of it.
- * - The quad is lit from the side it is seen from, so normal maps work on billboards.
- * - The sprite's own alpha mode still says how it draws. ADD draws as BLEND, and MASK uses
- *   the sprite's cutoff.
- * - The sprite's facing, size, pivot, and depth offset still say where it draws.
- *
- * A sprite with a material casts no shadow, and is drawn whole (no nine-slice). Sprites with
- * the same texture, material, and lights go up as one draw. A 2D stage has no lights, so
- * there the material isn't used and the sprite draws as it would without one.
- *
- * The sprite holds a reference to the material. The setter returns false for a handle that
- * isn't a sprite, or a `material` that isn't a material.
+ * See wgf_sprite_set_material for the rest.
  */
 export declare function wgf_sprite_get_material(sprite: wgf_actor_t | 0): wgf_material_t;
 
@@ -6357,13 +5356,7 @@ export declare function wgf_sprite_set_pick_alpha(sprite: wgf_actor_t | 0, thres
  * button or a character is hit only where it shows. This applies to picks on a 2D stage
  * (wgf_stage2d_pick, and the pointer, wgf_pointer.h).
  *
- * `threshold` is 0..1. At 0 (the default), the whole quad is hit.
- *
- * The texture's texels are read from its file on the CPU the first time a pick tests the
- * sprite, and kept while the texture is. The whole quad is hit until they arrive, and always
- * for a texture made in code, a nine-slice, or the placeholder.
- *
- * The setter returns false for a handle that isn't a sprite, or a `threshold` outside 0..1.
+ * See wgf_sprite_set_pick_alpha for the rest.
  */
 export declare function wgf_sprite_get_pick_alpha(sprite: wgf_actor_t | 0): number;
 
@@ -6402,18 +5395,7 @@ export declare function wgf_sprite_set_depth_offset(sprite: wgf_actor_t | 0, off
  * Sets or gets how far the sprite is drawn nearer the camera on a 3D stage, along its line of
  * sight, in stage units (default: 0, where it is).
  *
- * The sprite stays in the same place on the screen, but wins the depth test over whatever
- * shares its place: a bar's fill over its back, or a label over its sprite. A negative
- * `offset` draws it farther away.
- *
- * For example, a health bar over a head, facing the camera, is two tinted sprites of one
- * white texture (wgf_texture_create_from_image of wgf_image_create_color):
- * - its back;
- * - its fill, pivoted at its left edge (wgf_sprite_set_pivot(fill, 0, 0.5)) and placed at the
- *   back's left, its width the share left, with an offset of 0.01.
- *
- * The setter returns false for a handle that isn't a sprite, or an `offset` that isn't
- * finite.
+ * See wgf_sprite_set_depth_offset for the rest.
  */
 export declare function wgf_sprite_get_depth_offset(sprite: wgf_actor_t | 0): number;
 
@@ -6440,120 +5422,42 @@ export declare function wgf_sprite_set_sheet(sprite: wgf_actor_t | 0, sheet: wgf
 /**
  * Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
  *
- * - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
- * - play_clip plays the clip named `name` from its start, looping or once. If that clip is
- *   already playing, it goes on.
- * - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
- *   and 0 holds the clip still.
- *
- * The clip's state is one of these:
- * - PLAYING.
- * - PAUSED.
- * - COMPLETE, once a clip played once ends. It holds its last frame.
- * - STOPPED.
- *
- * The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
- * a clip the sheet doesn't have.
+ * See wgf_sprite_set_sheet for the rest.
  */
 export declare function wgf_sprite_get_sheet(sprite: wgf_actor_t | 0): wgf_sheet_t;
 
 /**
  * Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
  *
- * - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
- * - play_clip plays the clip named `name` from its start, looping or once. If that clip is
- *   already playing, it goes on.
- * - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
- *   and 0 holds the clip still.
- *
- * The clip's state is one of these:
- * - PLAYING.
- * - PAUSED.
- * - COMPLETE, once a clip played once ends. It holds its last frame.
- * - STOPPED.
- *
- * The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
- * a clip the sheet doesn't have.
+ * See wgf_sprite_set_sheet for the rest.
  */
 export declare function wgf_sprite_play_clip(sprite: wgf_actor_t | 0, name: string | null, loop: boolean): boolean;
 
 /**
  * Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
  *
- * - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
- * - play_clip plays the clip named `name` from its start, looping or once. If that clip is
- *   already playing, it goes on.
- * - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
- *   and 0 holds the clip still.
- *
- * The clip's state is one of these:
- * - PLAYING.
- * - PAUSED.
- * - COMPLETE, once a clip played once ends. It holds its last frame.
- * - STOPPED.
- *
- * The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
- * a clip the sheet doesn't have.
+ * See wgf_sprite_set_sheet for the rest.
  */
 export declare function wgf_sprite_pause_clip(sprite: wgf_actor_t | 0): boolean;
 
 /**
  * Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
  *
- * - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
- * - play_clip plays the clip named `name` from its start, looping or once. If that clip is
- *   already playing, it goes on.
- * - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
- *   and 0 holds the clip still.
- *
- * The clip's state is one of these:
- * - PLAYING.
- * - PAUSED.
- * - COMPLETE, once a clip played once ends. It holds its last frame.
- * - STOPPED.
- *
- * The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
- * a clip the sheet doesn't have.
+ * See wgf_sprite_set_sheet for the rest.
  */
 export declare function wgf_sprite_resume_clip(sprite: wgf_actor_t | 0): boolean;
 
 /**
  * Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
  *
- * - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
- * - play_clip plays the clip named `name` from its start, looping or once. If that clip is
- *   already playing, it goes on.
- * - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
- *   and 0 holds the clip still.
- *
- * The clip's state is one of these:
- * - PLAYING.
- * - PAUSED.
- * - COMPLETE, once a clip played once ends. It holds its last frame.
- * - STOPPED.
- *
- * The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
- * a clip the sheet doesn't have.
+ * See wgf_sprite_set_sheet for the rest.
  */
 export declare function wgf_sprite_stop_clip(sprite: wgf_actor_t | 0): boolean;
 
 /**
  * Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
  *
- * - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
- * - play_clip plays the clip named `name` from its start, looping or once. If that clip is
- *   already playing, it goes on.
- * - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
- *   and 0 holds the clip still.
- *
- * The clip's state is one of these:
- * - PLAYING.
- * - PAUSED.
- * - COMPLETE, once a clip played once ends. It holds its last frame.
- * - STOPPED.
- *
- * The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
- * a clip the sheet doesn't have.
+ * See wgf_sprite_set_sheet for the rest.
  */
 export declare function wgf_sprite_get_clip_state(sprite: wgf_actor_t | 0): wgf_play_state_t;
 
@@ -6609,13 +5513,7 @@ export declare function wgf_sprite_set_clip_facing(sprite: wgf_actor_t | 0, faci
  * Sets or gets a facing for the sprite's clips: a direction a character faces, such as "up"
  * or "left".
  *
- * A clip played, or playing, by name plays the sheet's clip named name_facing if it has one,
- * or else the clip named name. For example, "walk" with the facing "left" plays "walk_left".
- * If the facing changes while a clip plays, the clip for the new facing goes on from the same
- * place and time.
- *
- * "" or NULL means no facing. The setter returns false for a sprite with no sheet, or a
- * `facing` over 15 bytes.
+ * See wgf_sprite_set_clip_facing for the rest.
  */
 export declare function wgf_sprite_get_clip_facing(sprite: wgf_actor_t | 0): string;
 
@@ -6649,8 +5547,7 @@ export declare function wgf_text_set_string(text: wgf_actor_t | 0, string: strin
 /**
  * Sets or gets what the text says, in UTF-8. The setter copies the string.
  *
- * The string get_string returns belongs to the actor. It is valid until the next
- * set_string, or until the actor is destroyed.
+ * See wgf_text_set_string for the rest.
  */
 export declare function wgf_text_get_string(text: wgf_actor_t | 0): string;
 
@@ -6669,10 +5566,7 @@ export declare function wgf_text_set_font_size(text: wgf_actor_t | 0, size: numb
  * Sets or gets the text's font size: the height of its lines in stage units, before the
  * actor's scale.
  *
- * It is called a font size so it isn't taken for a sprite's size. A size of 0 or less (the
- * default) is 16 on a 2D stage, and 1 on a 3D one. The getter returns the size it draws at.
- *
- * The setter returns false for a handle that isn't text.
+ * See wgf_text_set_font_size for the rest.
  */
 export declare function wgf_text_get_font_size(text: wgf_actor_t | 0): number;
 
@@ -6703,14 +5597,7 @@ export declare function wgf_text_set_wrap_width(text: wgf_actor_t | 0, width: nu
 /**
  * Sets or gets the width the text's lines wrap to, in stage units (default: 0).
  *
- * - Lines wrap at spaces and tabs to fit `width`.
- * - A word wider than `width` keeps a line to itself.
- * - 0 wraps nothing.
- * - Newlines always break a line.
- * - For its alignment, a wrapped block is `width` wide, or as wide as its widest line where
- *   a word is wider.
- *
- * The setter returns false for a `width` below 0.
+ * See wgf_text_set_wrap_width for the rest.
  */
 export declare function wgf_text_get_wrap_width(text: wgf_actor_t | 0): number;
 
@@ -6725,16 +5612,14 @@ export declare function wgf_text_set_align(text: wgf_actor_t | 0, horizontal: wg
 /**
  * Sets or gets where the block sits relative to the actor's position, on each axis.
  *
- * Lines line up the same way inside the block. The setter returns false for a value that
- * isn't an alignment.
+ * See wgf_text_set_align for the rest.
  */
 export declare function wgf_text_get_halign(text: wgf_actor_t | 0): wgf_text_halign_t;
 
 /**
  * Sets or gets where the block sits relative to the actor's position, on each axis.
  *
- * Lines line up the same way inside the block. The setter returns false for a value that
- * isn't an alignment.
+ * See wgf_text_set_align for the rest.
  */
 export declare function wgf_text_get_valign(text: wgf_actor_t | 0): wgf_text_valign_t;
 
@@ -6751,8 +5636,7 @@ export declare function wgf_text_set_spacing(text: wgf_actor_t | 0, letter: numb
  * Sets or gets the spacing added between the text's letters and between its lines, in
  * logical pixels.
  *
- * Both start at 0. Spacing below 0 tightens the text. The setter returns false for numbers
- * that aren't finite.
+ * See wgf_text_set_spacing for the rest.
  */
 export declare function wgf_text_get_letter_spacing(text: wgf_actor_t | 0): number;
 
@@ -6760,8 +5644,7 @@ export declare function wgf_text_get_letter_spacing(text: wgf_actor_t | 0): numb
  * Sets or gets the spacing added between the text's letters and between its lines, in
  * logical pixels.
  *
- * Both start at 0. Spacing below 0 tightens the text. The setter returns false for numbers
- * that aren't finite.
+ * See wgf_text_set_spacing for the rest.
  */
 export declare function wgf_text_get_line_spacing(text: wgf_actor_t | 0): number;
 
@@ -6784,14 +5667,7 @@ export declare function wgf_text_set_facing(text: wgf_actor_t | 0, facing: wgf_s
  * Sets or gets which way the text's block faces on a 3D stage, as a sprite's does
  * (wgf_sprite.h).
  *
- * It faces one of these:
- * - the camera (the default);
- * - the camera, turning about Y only;
- * - up, lying flat;
- * - the way its actor is turned.
- *
- * Text on a 2D stage is flat on the screen whatever this says. The setter returns false if
- * `facing` isn't a facing.
+ * See wgf_text_set_facing for the rest.
  */
 export declare function wgf_text_get_facing(text: wgf_actor_t | 0): wgf_sprite_facing_t;
 
@@ -6808,10 +5684,7 @@ export declare function wgf_text_set_depth_offset(text: wgf_actor_t | 0, offset:
 /**
  * Sets or gets how far nearer the camera the text is drawn on a 3D stage, in stage units.
  *
- * It works as a sprite's does (wgf_sprite_set_depth_offset). Use it for text over the sprite
- * it labels, to keep the text in front at a distance.
- *
- * The setter returns false for a handle that isn't text, or an `offset` that isn't finite.
+ * See wgf_text_set_depth_offset for the rest.
  */
 export declare function wgf_text_get_depth_offset(text: wgf_actor_t | 0): number;
 
@@ -6831,13 +5704,7 @@ export declare function wgf_draw_rectangle(x: number, y: number, width: number, 
 /**
  * Immediate mode 2D drawing: each call draws once, in the frame it is made in, and keeps nothing.
  *
- * - Calls draw in the order made, along with everything else drawn that frame.
- * - Coordinates are logical pixels from the frame's top-left, with y down (wgf_render.h).
- * - A draw outside a frame draws nothing.
- *
- * Outlines and lines have a thickness in logical pixels, centered on the line. A thickness
- * of 0 or less draws a hairline one logical pixel wide. A polyline's corners are mitred.
- * Where a sharp corner's miter would reach past four thicknesses, the corner is bevelled.
+ * See wgf_draw_rectangle for the rest.
  */
 export declare function wgf_draw_rectangle_lines(x: number, y: number, width: number, height: number, thickness: number, color: wgf_color_t): void;
 
@@ -6855,22 +5722,14 @@ export declare function wgf_draw_rectangle_rounded(x: number, y: number, width: 
 /**
  * Draws a rectangle with rounded corners, filled or outlined, such as a panel or a button.
  *
- * - Each corner is a quarter circle of `radius` logical pixels, clamped to half the
- *   rectangle's shorter side.
- * - A `radius` of 0 or less gives square corners: the plain rectangle.
- * - Each corner is drawn with `segments` straight edges (at most 64).
- * - A `segments` of 0 or less uses enough for the corner's size on screen, as a circle does.
+ * See wgf_draw_rectangle_rounded for the rest.
  */
 export declare function wgf_draw_rectangle_rounded_lines(x: number, y: number, width: number, height: number, radius: number, segments: number, thickness: number, color: wgf_color_t): void;
 
 /**
  * Draws a rectangle with rounded corners, filled or outlined, such as a panel or a button.
  *
- * - Each corner is a quarter circle of `radius` logical pixels, clamped to half the
- *   rectangle's shorter side.
- * - A `radius` of 0 or less gives square corners: the plain rectangle.
- * - Each corner is drawn with `segments` straight edges (at most 64).
- * - A `segments` of 0 or less uses enough for the corner's size on screen, as a circle does.
+ * See wgf_draw_rectangle_rounded for the rest.
  */
 export declare function wgf_draw_line(x0: number, y0: number, x1: number, y1: number, thickness: number, color: wgf_color_t): void;
 
@@ -6941,11 +5800,7 @@ export declare function wgf_draw_set_blend_mode(mode: wgf_alpha_mode_t): boolean
 /**
  * Sets or gets how immediate mode drawing after this call blends with what is under it.
  *
- * The modes are wgf_material.h's alpha modes: BLEND (the default), OPAQUE, ADD, MULTIPLY,
- * and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out. The mode
- * stays as set from frame to frame, until it is set again.
- *
- * The setter returns false for a `mode` that isn't an alpha mode.
+ * See wgf_draw_set_blend_mode for the rest.
  */
 export declare function wgf_draw_get_blend_mode(): wgf_alpha_mode_t;
 
@@ -6962,10 +5817,7 @@ export declare function wgf_draw_set_text_spacing(letter: number, line: number):
 /**
  * Sets or gets the spacing added between letters and between lines, in logical pixels.
  *
- * It applies to text drawn and measured after this call (wgf_draw_text, wgf_font_measure).
- * A text actor has its own spacing.
- *
- * Both start at 0. A number that isn't finite is taken as 0.
+ * See wgf_draw_set_text_spacing for the rest.
  */
 export declare function wgf_draw_get_text_spacing<T extends number[] | Float32Array | Float64Array>(into: T): T;
 export declare function wgf_draw_get_text_spacing(into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -7014,33 +5866,21 @@ export declare function wgf_draw_ring(center_x: number, center_y: number, inner_
 /**
  * Draws rings, sectors, arcs, and ellipses.
  *
- * - wgf_draw_ring draws the band between two radii, from angle `start` to `end`.
- * - Angles are in radians from +x, clockwise on the screen.
- * - A whole turn draws a full ring. An inner radius of 0 draws a sector, such as a pie.
- * - wgf_draw_arc draws a ring `thickness` wide along a circle.
- * - wgf_draw_ellipse and wgf_draw_ellipse_lines draw an ellipse filled and outlined.
+ * See wgf_draw_ring for the rest.
  */
 export declare function wgf_draw_arc(center_x: number, center_y: number, radius: number, start: number, end: number, thickness: number, color: wgf_color_t): void;
 
 /**
  * Draws rings, sectors, arcs, and ellipses.
  *
- * - wgf_draw_ring draws the band between two radii, from angle `start` to `end`.
- * - Angles are in radians from +x, clockwise on the screen.
- * - A whole turn draws a full ring. An inner radius of 0 draws a sector, such as a pie.
- * - wgf_draw_arc draws a ring `thickness` wide along a circle.
- * - wgf_draw_ellipse and wgf_draw_ellipse_lines draw an ellipse filled and outlined.
+ * See wgf_draw_ring for the rest.
  */
 export declare function wgf_draw_ellipse(center_x: number, center_y: number, radius_x: number, radius_y: number, color: wgf_color_t): void;
 
 /**
  * Draws rings, sectors, arcs, and ellipses.
  *
- * - wgf_draw_ring draws the band between two radii, from angle `start` to `end`.
- * - Angles are in radians from +x, clockwise on the screen.
- * - A whole turn draws a full ring. An inner radius of 0 draws a sector, such as a pie.
- * - wgf_draw_arc draws a ring `thickness` wide along a circle.
- * - wgf_draw_ellipse and wgf_draw_ellipse_lines draw an ellipse filled and outlined.
+ * See wgf_draw_ring for the rest.
  */
 export declare function wgf_draw_ellipse_lines(center_x: number, center_y: number, radius_x: number, radius_y: number, thickness: number, color: wgf_color_t): void;
 
@@ -7056,9 +5896,7 @@ export declare function wgf_draw_rectangle_gradient(x: number, y: number, width:
 /**
  * Draws gradients.
  *
- * - A rectangle gives each of its four corners its own color, blended between them. Make
- *   two corners alike for a vertical or a horizontal gradient.
- * - A circle blends from its center's color (`inner`) to its edge's (`outer`).
+ * See wgf_draw_rectangle_gradient for the rest.
  */
 export declare function wgf_draw_circle_gradient(center_x: number, center_y: number, radius: number, inner: wgf_color_t, outer: wgf_color_t): void;
 
@@ -7132,14 +5970,7 @@ export declare function wgf_draw_begin_3d(camera: wgf_actor_t | 0): boolean;
 /**
  * Begins or ends immediate mode 3D drawing, as `camera` sees the world.
  *
- * - Between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D camera,
- *   wgf_camera3d.h) sees it, into the presentation's visible area, under the clip.
- * - They are depth tested against each other, and against the frame's 3D drawn before them.
- * - A 3D call outside begin_3d and end_3d draws nothing.
- * - A frame starts in 2D. A frame left in 3D ends there.
- * - A 2D call between them lands in the world's x-y plane.
- *
- * begin_3d returns false if `camera` isn't a 3D camera, or outside a frame.
+ * See wgf_draw_begin_3d for the rest.
  */
 export declare function wgf_draw_end_3d(): void;
 
@@ -7163,68 +5994,28 @@ export declare function wgf_draw_line_3d(x0: number, y0: number, z0: number, x1:
 /**
  * Draws shapes in the world, unlit, with lines a pixel wide.
  *
- * - wgf_draw_line_3d draws a line.
- * - wgf_draw_cube and wgf_draw_cube_wires draw a cube, filled or its edges, `width` (x) by
- *   `height` (y) by `length` (z), centered on (cx, cy, cz).
- * - wgf_draw_sphere draws a sphere.
- * - wgf_draw_grid draws a grid of `slices` by `slices` squares, `spacing` apart on the x-z
- *   plane, centered on the origin.
- * - wgf_draw_rectangle_3d draws a filled rectangle, and wgf_draw_circle_3d a circle's
- *   outline. Each is centered on (cx, cy, cz), in its x-y plane, turned by (rx, ry, rz)
- *   radians as an actor's rotation turns it.
- *
- * A color with alpha below 255 is blended over what is behind it, in the order drawn.
+ * See wgf_draw_line_3d for the rest.
  */
 export declare function wgf_draw_cube(cx: number, cy: number, cz: number, width: number, height: number, length: number, color: wgf_color_t): void;
 
 /**
  * Draws shapes in the world, unlit, with lines a pixel wide.
  *
- * - wgf_draw_line_3d draws a line.
- * - wgf_draw_cube and wgf_draw_cube_wires draw a cube, filled or its edges, `width` (x) by
- *   `height` (y) by `length` (z), centered on (cx, cy, cz).
- * - wgf_draw_sphere draws a sphere.
- * - wgf_draw_grid draws a grid of `slices` by `slices` squares, `spacing` apart on the x-z
- *   plane, centered on the origin.
- * - wgf_draw_rectangle_3d draws a filled rectangle, and wgf_draw_circle_3d a circle's
- *   outline. Each is centered on (cx, cy, cz), in its x-y plane, turned by (rx, ry, rz)
- *   radians as an actor's rotation turns it.
- *
- * A color with alpha below 255 is blended over what is behind it, in the order drawn.
+ * See wgf_draw_line_3d for the rest.
  */
 export declare function wgf_draw_cube_wires(cx: number, cy: number, cz: number, width: number, height: number, length: number, color: wgf_color_t): void;
 
 /**
  * Draws shapes in the world, unlit, with lines a pixel wide.
  *
- * - wgf_draw_line_3d draws a line.
- * - wgf_draw_cube and wgf_draw_cube_wires draw a cube, filled or its edges, `width` (x) by
- *   `height` (y) by `length` (z), centered on (cx, cy, cz).
- * - wgf_draw_sphere draws a sphere.
- * - wgf_draw_grid draws a grid of `slices` by `slices` squares, `spacing` apart on the x-z
- *   plane, centered on the origin.
- * - wgf_draw_rectangle_3d draws a filled rectangle, and wgf_draw_circle_3d a circle's
- *   outline. Each is centered on (cx, cy, cz), in its x-y plane, turned by (rx, ry, rz)
- *   radians as an actor's rotation turns it.
- *
- * A color with alpha below 255 is blended over what is behind it, in the order drawn.
+ * See wgf_draw_line_3d for the rest.
  */
 export declare function wgf_draw_sphere(cx: number, cy: number, cz: number, radius: number, color: wgf_color_t): void;
 
 /**
  * Draws shapes in the world, unlit, with lines a pixel wide.
  *
- * - wgf_draw_line_3d draws a line.
- * - wgf_draw_cube and wgf_draw_cube_wires draw a cube, filled or its edges, `width` (x) by
- *   `height` (y) by `length` (z), centered on (cx, cy, cz).
- * - wgf_draw_sphere draws a sphere.
- * - wgf_draw_grid draws a grid of `slices` by `slices` squares, `spacing` apart on the x-z
- *   plane, centered on the origin.
- * - wgf_draw_rectangle_3d draws a filled rectangle, and wgf_draw_circle_3d a circle's
- *   outline. Each is centered on (cx, cy, cz), in its x-y plane, turned by (rx, ry, rz)
- *   radians as an actor's rotation turns it.
- *
- * A color with alpha below 255 is blended over what is behind it, in the order drawn.
+ * See wgf_draw_line_3d for the rest.
  */
 export declare function wgf_draw_grid(slices: number, spacing: number, color: wgf_color_t): void;
 
@@ -7242,66 +6033,42 @@ export declare function wgf_draw_triangle_3d(x0: number, y0: number, z0: number,
 /**
  * Draws debug shapes in the world.
  *
- * - wgf_draw_triangle_3d draws a triangle.
- * - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
- *   centered at (cx, cy, cz), filled or as wires.
- * - wgf_draw_sphere_wires draws a sphere as wires.
- * - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+ * See wgf_draw_triangle_3d for the rest.
  */
 export declare function wgf_draw_cylinder(cx: number, cy: number, cz: number, radius: number, height: number, color: wgf_color_t): void;
 
 /**
  * Draws debug shapes in the world.
  *
- * - wgf_draw_triangle_3d draws a triangle.
- * - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
- *   centered at (cx, cy, cz), filled or as wires.
- * - wgf_draw_sphere_wires draws a sphere as wires.
- * - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+ * See wgf_draw_triangle_3d for the rest.
  */
 export declare function wgf_draw_cylinder_wires(cx: number, cy: number, cz: number, radius: number, height: number, color: wgf_color_t): void;
 
 /**
  * Draws debug shapes in the world.
  *
- * - wgf_draw_triangle_3d draws a triangle.
- * - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
- *   centered at (cx, cy, cz), filled or as wires.
- * - wgf_draw_sphere_wires draws a sphere as wires.
- * - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+ * See wgf_draw_triangle_3d for the rest.
  */
 export declare function wgf_draw_sphere_wires(cx: number, cy: number, cz: number, radius: number, color: wgf_color_t): void;
 
 /**
  * Draws debug shapes in the world.
  *
- * - wgf_draw_triangle_3d draws a triangle.
- * - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
- *   centered at (cx, cy, cz), filled or as wires.
- * - wgf_draw_sphere_wires draws a sphere as wires.
- * - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+ * See wgf_draw_triangle_3d for the rest.
  */
 export declare function wgf_draw_capsule_wires(cx: number, cy: number, cz: number, radius: number, height: number, color: wgf_color_t): void;
 
 /**
  * Draws debug shapes in the world.
  *
- * - wgf_draw_triangle_3d draws a triangle.
- * - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
- *   centered at (cx, cy, cz), filled or as wires.
- * - wgf_draw_sphere_wires draws a sphere as wires.
- * - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+ * See wgf_draw_triangle_3d for the rest.
  */
 export declare function wgf_draw_rectangle_3d(cx: number, cy: number, cz: number, width: number, height: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
 
 /**
  * Draws debug shapes in the world.
  *
- * - wgf_draw_triangle_3d draws a triangle.
- * - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
- *   centered at (cx, cy, cz), filled or as wires.
- * - wgf_draw_sphere_wires draws a sphere as wires.
- * - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+ * See wgf_draw_triangle_3d for the rest.
  */
 export declare function wgf_draw_circle_3d(cx: number, cy: number, cz: number, radius: number, rx: number, ry: number, rz: number, color: wgf_color_t): void;
 
@@ -7330,44 +6097,14 @@ export declare function wgf_draw_model_wires(model: wgf_actor_t | 0, color: wgf_
 /**
  * Draws a model as it stands this frame, for debugging: as wires, as points, or as its skeleton.
  *
- * The model's mesh is placed by the model's actor. For a file's root (wgf_mesh_create),
- * each visible node of its tree is placed by its own actor. A skinned part is posed as its
- * animation has it, using the stage's joint matrices applied on the CPU.
- *
- * - Wires draw every triangle's three edges.
- * - Points draw every vertex, a few pixels wide.
- * - Skeleton draws each joint of each skin of a file's root, or of a node's skin when given
- *   a node. Each joint gets a line from the nearest joint above it, and a joint with none
- *   above it gets a small cross.
- *
- * Drawing is unlit, in `color`, with lines a pixel wide. A crowd's costs add up: wires
- * record 6 vertices for each triangle.
- *
- * Returns false, drawing nothing, outside begin_3d and end_3d, for a handle that isn't a
- * model, or for a model whose mesh isn't READY (such as a file's root before its tree is
- * made). A model with no skin has no skeleton, and draws none.
+ * See wgf_draw_model_wires for the rest.
  */
 export declare function wgf_draw_model_points(model: wgf_actor_t | 0, color: wgf_color_t): boolean;
 
 /**
  * Draws a model as it stands this frame, for debugging: as wires, as points, or as its skeleton.
  *
- * The model's mesh is placed by the model's actor. For a file's root (wgf_mesh_create),
- * each visible node of its tree is placed by its own actor. A skinned part is posed as its
- * animation has it, using the stage's joint matrices applied on the CPU.
- *
- * - Wires draw every triangle's three edges.
- * - Points draw every vertex, a few pixels wide.
- * - Skeleton draws each joint of each skin of a file's root, or of a node's skin when given
- *   a node. Each joint gets a line from the nearest joint above it, and a joint with none
- *   above it gets a small cross.
- *
- * Drawing is unlit, in `color`, with lines a pixel wide. A crowd's costs add up: wires
- * record 6 vertices for each triangle.
- *
- * Returns false, drawing nothing, outside begin_3d and end_3d, for a handle that isn't a
- * model, or for a model whose mesh isn't READY (such as a file's root before its tree is
- * made). A model with no skin has no skeleton, and draws none.
+ * See wgf_draw_model_wires for the rest.
  */
 export declare function wgf_draw_model_skeleton(model: wgf_actor_t | 0, color: wgf_color_t): boolean;
 
@@ -7433,13 +6170,7 @@ export declare function wgf_emitter2d_set_frames(emitter: wgf_actor_t | 0, colum
  * Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
  * top to bottom (default: one frame).
  *
- * - The first `count` frames are used. With 0 or less, all of them are.
- * - With `per_second` 0, each particle plays the frames once over its life: puffs.
- * - With `per_second` above 0, each particle loops them at that rate, from a random frame:
- *   flames.
- *
- * Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
- * rate.
+ * See wgf_emitter2d_set_frames for the rest.
  */
 export declare function wgf_emitter2d_get_frame_columns(emitter: wgf_actor_t | 0): number;
 
@@ -7447,13 +6178,7 @@ export declare function wgf_emitter2d_get_frame_columns(emitter: wgf_actor_t | 0
  * Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
  * top to bottom (default: one frame).
  *
- * - The first `count` frames are used. With 0 or less, all of them are.
- * - With `per_second` 0, each particle plays the frames once over its life: puffs.
- * - With `per_second` above 0, each particle loops them at that rate, from a random frame:
- *   flames.
- *
- * Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
- * rate.
+ * See wgf_emitter2d_set_frames for the rest.
  */
 export declare function wgf_emitter2d_get_frame_rows(emitter: wgf_actor_t | 0): number;
 
@@ -7461,13 +6186,7 @@ export declare function wgf_emitter2d_get_frame_rows(emitter: wgf_actor_t | 0): 
  * Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
  * top to bottom (default: one frame).
  *
- * - The first `count` frames are used. With 0 or less, all of them are.
- * - With `per_second` 0, each particle plays the frames once over its life: puffs.
- * - With `per_second` above 0, each particle loops them at that rate, from a random frame:
- *   flames.
- *
- * Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
- * rate.
+ * See wgf_emitter2d_set_frames for the rest.
  */
 export declare function wgf_emitter2d_get_frame_count(emitter: wgf_actor_t | 0): number;
 
@@ -7475,13 +6194,7 @@ export declare function wgf_emitter2d_get_frame_count(emitter: wgf_actor_t | 0):
  * Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
  * top to bottom (default: one frame).
  *
- * - The first `count` frames are used. With 0 or less, all of them are.
- * - With `per_second` 0, each particle plays the frames once over its life: puffs.
- * - With `per_second` above 0, each particle loops them at that rate, from a random frame:
- *   flames.
- *
- * Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
- * rate.
+ * See wgf_emitter2d_set_frames for the rest.
  */
 export declare function wgf_emitter2d_get_frame_rate(emitter: wgf_actor_t | 0): number;
 
@@ -7510,144 +6223,63 @@ export declare function wgf_emitter2d_set_rate(emitter: wgf_actor_t | 0, per_sec
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_get_rate(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_burst(emitter: wgf_actor_t | 0, count: number): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_set_emitting(emitter: wgf_actor_t | 0, emitting: boolean): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_is_emitting(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_set_max(emitter: wgf_actor_t | 0, count: number): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_get_max(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_set_life(emitter: wgf_actor_t | 0, min_seconds: number, max_seconds: number): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_get_life_min(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter2d_set_rate for the rest.
  */
 export declare function wgf_emitter2d_get_life_max(emitter: wgf_actor_t | 0): number;
 
@@ -7680,17 +6312,7 @@ export declare function wgf_emitter2d_set_spawn_box(emitter: wgf_actor_t | 0, ha
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_get_spawn_box<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
 export declare function wgf_emitter2d_get_spawn_box(emitter: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -7698,68 +6320,28 @@ export declare function wgf_emitter2d_get_spawn_box(emitter: wgf_actor_t | 0, in
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_set_spawn_circle(emitter: wgf_actor_t | 0, radius: number): boolean;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_get_spawn_circle(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_set_velocity(emitter: wgf_actor_t | 0, x: number, y: number, spread: number, speed_variance: number): boolean;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_get_velocity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
 export declare function wgf_emitter2d_get_velocity(emitter: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -7767,68 +6349,28 @@ export declare function wgf_emitter2d_get_velocity(emitter: wgf_actor_t | 0, int
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_get_spread(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_get_speed_variance(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_set_gravity(emitter: wgf_actor_t | 0, x: number, y: number): boolean;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_circle: particles are born evenly within a circle. A radius below 0 is refused.
- * - The box and the circle each replace the other.
- * - set_velocity: particles move along (x, y), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does. (0, -1) is up the
- *   screen for an emitter that isn't turned.
- * - Each particle's direction is turned up to `spread` radians either way (TAU: every way). Its
- *   speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter2d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter2d_get_gravity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
 export declare function wgf_emitter2d_get_gravity(emitter: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -7868,70 +6410,35 @@ export declare function wgf_emitter2d_set_drag(emitter: wgf_actor_t | 0, per_sec
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter2d_set_drag for the rest.
  */
 export declare function wgf_emitter2d_get_drag(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter2d_set_drag for the rest.
  */
 export declare function wgf_emitter2d_set_inherit_velocity(emitter: wgf_actor_t | 0, fraction: number): boolean;
 
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter2d_set_drag for the rest.
  */
 export declare function wgf_emitter2d_get_inherit_velocity(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter2d_set_drag for the rest.
  */
 export declare function wgf_emitter2d_set_stretch(emitter: wgf_actor_t | 0, seconds: number): boolean;
 
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter2d_set_drag for the rest.
  */
 export declare function wgf_emitter2d_get_stretch(emitter: wgf_actor_t | 0): number;
 
@@ -7948,8 +6455,7 @@ export declare function wgf_emitter2d_set_aligned_to_motion(emitter: wgf_actor_t
  * Sets or gets whether each particle's top turns along its motion across the screen, like an
  * arrow or a thrown spark (default: off).
  *
- * Its spin, clockwise on screen, is added to that angle rather than to a random one. A particle
- * standing still keeps its top up the screen. A stretched particle is already aligned.
+ * See wgf_emitter2d_set_aligned_to_motion for the rest.
  */
 export declare function wgf_emitter2d_is_aligned_to_motion(emitter: wgf_actor_t | 0): boolean;
 
@@ -7969,11 +6475,7 @@ export declare function wgf_emitter2d_set_wander(emitter: wgf_actor_t | 0, dista
  * Sets or gets wander: each particle strays off its path on a smooth course of its own, like
  * fireflies or dust motes.
  *
- * - `distance` is how far it strays: up to about that many stage units (default: 0, none).
- * - `per_second` is about how many times a second its course turns (default: 1).
- *
- * The course starts on the particle's path. Its motion, for alignment and stretch, includes the
- * stray. Returns false if either is below 0.
+ * See wgf_emitter2d_set_wander for the rest.
  */
 export declare function wgf_emitter2d_get_wander_distance(emitter: wgf_actor_t | 0): number;
 
@@ -7981,11 +6483,7 @@ export declare function wgf_emitter2d_get_wander_distance(emitter: wgf_actor_t |
  * Sets or gets wander: each particle strays off its path on a smooth course of its own, like
  * fireflies or dust motes.
  *
- * - `distance` is how far it strays: up to about that many stage units (default: 0, none).
- * - `per_second` is about how many times a second its course turns (default: 1).
- *
- * The course starts on the particle's path. Its motion, for alignment and stretch, includes the
- * stray. Returns false if either is below 0.
+ * See wgf_emitter2d_set_wander for the rest.
  */
 export declare function wgf_emitter2d_get_wander_rate(emitter: wgf_actor_t | 0): number;
 
@@ -8000,16 +6498,14 @@ export declare function wgf_emitter2d_set_orbit(emitter: wgf_actor_t | 0, min: n
 /**
  * Sets or gets orbit: each particle circles where the emitter was at its birth (default: none).
  *
- * Its speed is picked between `min` and `max`, in radians a second, positive clockwise on screen.
- * Its whole path turns, its own motion included, so a particle thrown outward spirals.
+ * See wgf_emitter2d_set_orbit for the rest.
  */
 export declare function wgf_emitter2d_get_orbit_min(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets orbit: each particle circles where the emitter was at its birth (default: none).
  *
- * Its speed is picked between `min` and `max`, in radians a second, positive clockwise on screen.
- * Its whole path turns, its own motion included, so a particle thrown outward spirals.
+ * See wgf_emitter2d_set_orbit for the rest.
  */
 export declare function wgf_emitter2d_get_orbit_max(emitter: wgf_actor_t | 0): number;
 
@@ -8026,8 +6522,7 @@ export declare function wgf_emitter2d_set_pulse(emitter: wgf_actor_t | 0, per_se
  * Sets or gets pulse: each particle's alpha beats `per_second` times a second, on a phase of its
  * own, for twinkling.
  *
- * At each beat's low, the alpha falls by `depth` of itself (0..1, clamped). Defaults: a rate of 0
- * (none), and a depth of 1 (to clear). Returns false for a rate below 0.
+ * See wgf_emitter2d_set_pulse for the rest.
  */
 export declare function wgf_emitter2d_get_pulse_rate(emitter: wgf_actor_t | 0): number;
 
@@ -8035,8 +6530,7 @@ export declare function wgf_emitter2d_get_pulse_rate(emitter: wgf_actor_t | 0): 
  * Sets or gets pulse: each particle's alpha beats `per_second` times a second, on a phase of its
  * own, for twinkling.
  *
- * At each beat's low, the alpha falls by `depth` of itself (0..1, clamped). Defaults: a rate of 0
- * (none), and a depth of 1 (to clear). Returns false for a rate below 0.
+ * See wgf_emitter2d_set_pulse for the rest.
  */
 export declare function wgf_emitter2d_get_pulse_depth(emitter: wgf_actor_t | 0): number;
 
@@ -8057,12 +6551,7 @@ export declare function wgf_emitter2d_set_local_space(emitter: wgf_actor_t | 0, 
  * Sets or gets whether particles move with the emitter, like an aura around a moving character
  * (default: off).
  *
- * - Each particle is moved as far as its actor has moved since the particle's birth. Only the
- *   actor's place counts, not its turn.
- * - An orbit circles where the emitter is now.
- * - Inherited velocity then does nothing.
- *
- * When off, each particle keeps to its own path as the emitter moves.
+ * See wgf_emitter2d_set_local_space for the rest.
  */
 export declare function wgf_emitter2d_is_local_space(emitter: wgf_actor_t | 0): boolean;
 
@@ -8086,204 +6575,84 @@ export declare function wgf_emitter2d_set_size(emitter: wgf_actor_t | 0, start: 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_get_size_variance(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_add_size_key(emitter: wgf_actor_t | 0, t: number, size: number): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_clear_size_keys(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_get_size_key_count(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_get_size_key_time(emitter: wgf_actor_t | 0, index: number): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_get_size_key_value(emitter: wgf_actor_t | 0, index: number): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_set_color(emitter: wgf_actor_t | 0, start: wgf_color_t, end: wgf_color_t): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_add_color_key(emitter: wgf_actor_t | 0, t: number, color: wgf_color_t): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_clear_color_keys(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_get_color_key_count(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_get_color_key_time(emitter: wgf_actor_t | 0, index: number): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 8 to 8, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter2d_set_size for the rest.
  */
 export declare function wgf_emitter2d_get_color_key_value(emitter: wgf_actor_t | 0, index: number): wgf_color_t;
 
@@ -8298,24 +6667,21 @@ export declare function wgf_emitter2d_add_palette_color(emitter: wgf_actor_t | 0
 /**
  * Sets or gets a palette of up to 8 colors (default: empty, no tint).
  *
- * Each particle picks one color at birth, and it tints the particle's color over its life:
- * confetti from one emitter. add_palette_color returns false for a ninth color.
+ * See wgf_emitter2d_add_palette_color for the rest.
  */
 export declare function wgf_emitter2d_clear_palette(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets a palette of up to 8 colors (default: empty, no tint).
  *
- * Each particle picks one color at birth, and it tints the particle's color over its life:
- * confetti from one emitter. add_palette_color returns false for a ninth color.
+ * See wgf_emitter2d_add_palette_color for the rest.
  */
 export declare function wgf_emitter2d_get_palette_count(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets a palette of up to 8 colors (default: empty, no tint).
  *
- * Each particle picks one color at birth, and it tints the particle's color over its life:
- * confetti from one emitter. add_palette_color returns false for a ninth color.
+ * See wgf_emitter2d_add_palette_color for the rest.
  */
 export declare function wgf_emitter2d_get_palette_color(emitter: wgf_actor_t | 0, index: number): wgf_color_t;
 
@@ -8349,7 +6715,7 @@ export declare function wgf_emitter2d_set_alpha_mode(emitter: wgf_actor_t | 0, m
  * Sets or gets how particles use alpha, one of wgf_material.h's modes (default: ADD, for glows,
  * sparks, and fire), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
  *
- * The setter returns false if `mode` isn't an alpha mode.
+ * See wgf_emitter2d_set_alpha_mode for the rest.
  */
 export declare function wgf_emitter2d_get_alpha_mode(emitter: wgf_actor_t | 0): wgf_alpha_mode_t;
 
@@ -8357,7 +6723,7 @@ export declare function wgf_emitter2d_get_alpha_mode(emitter: wgf_actor_t | 0): 
  * Sets or gets how particles use alpha, one of wgf_material.h's modes (default: ADD, for glows,
  * sparks, and fire), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
  *
- * The setter returns false if `mode` isn't an alpha mode.
+ * See wgf_emitter2d_set_alpha_mode for the rest.
  */
 export declare function wgf_emitter2d_get_alpha_cutoff(emitter: wgf_actor_t | 0): number;
 
@@ -8392,12 +6758,7 @@ export declare function wgf_emitter2d_set_ending(emitter: wgf_actor_t | 0, endin
  * Sets or gets whether the emitter ends itself, as a one-shot effect such as an explosion's burst
  * does (default: off).
  *
- * The emitter's actor is destroyed, with the actors under it, once both are true:
- * - it has nothing left to emit: it isn't emitting, or its rate is 0;
- * - the last particle it made has died.
- *
- * That happens in the update before a frame. An emitter that has made no particle yet waits for
- * its first.
+ * See wgf_emitter2d_set_ending for the rest.
  */
 export declare function wgf_emitter2d_is_ending(emitter: wgf_actor_t | 0): boolean;
 
@@ -8416,10 +6777,7 @@ export declare function wgf_emitter2d_set_lingering(emitter: wgf_actor_t | 0, li
  * Sets or gets whether the emitter's particles outlive it, as a ship's exhaust outlives the ship
  * (default: off).
  *
- * If the emitter is destroyed while it has particles alive on a stage, directly or with an actor
- * above it, they finish their lives where they are. The emitter goes on as an actor of its own at
- * the stage's top, not emitting. It is made in the update before the next frame, and ends (as
- * above) with its last particle.
+ * See wgf_emitter2d_set_lingering for the rest.
  */
 export declare function wgf_emitter2d_is_lingering(emitter: wgf_actor_t | 0): boolean;
 
@@ -8488,13 +6846,7 @@ export declare function wgf_emitter3d_set_frames(emitter: wgf_actor_t | 0, colum
  * Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
  * top to bottom (default: one frame).
  *
- * - The first `count` frames are used. With 0 or less, all of them are.
- * - With `per_second` 0, each particle plays the frames once over its life: puffs.
- * - With `per_second` above 0, each particle loops them at that rate, from a random frame:
- *   flames.
- *
- * Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
- * rate.
+ * See wgf_emitter3d_set_frames for the rest.
  */
 export declare function wgf_emitter3d_get_frame_columns(emitter: wgf_actor_t | 0): number;
 
@@ -8502,13 +6854,7 @@ export declare function wgf_emitter3d_get_frame_columns(emitter: wgf_actor_t | 0
  * Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
  * top to bottom (default: one frame).
  *
- * - The first `count` frames are used. With 0 or less, all of them are.
- * - With `per_second` 0, each particle plays the frames once over its life: puffs.
- * - With `per_second` above 0, each particle loops them at that rate, from a random frame:
- *   flames.
- *
- * Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
- * rate.
+ * See wgf_emitter3d_set_frames for the rest.
  */
 export declare function wgf_emitter3d_get_frame_rows(emitter: wgf_actor_t | 0): number;
 
@@ -8516,13 +6862,7 @@ export declare function wgf_emitter3d_get_frame_rows(emitter: wgf_actor_t | 0): 
  * Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
  * top to bottom (default: one frame).
  *
- * - The first `count` frames are used. With 0 or less, all of them are.
- * - With `per_second` 0, each particle plays the frames once over its life: puffs.
- * - With `per_second` above 0, each particle loops them at that rate, from a random frame:
- *   flames.
- *
- * Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
- * rate.
+ * See wgf_emitter3d_set_frames for the rest.
  */
 export declare function wgf_emitter3d_get_frame_count(emitter: wgf_actor_t | 0): number;
 
@@ -8530,13 +6870,7 @@ export declare function wgf_emitter3d_get_frame_count(emitter: wgf_actor_t | 0):
  * Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
  * top to bottom (default: one frame).
  *
- * - The first `count` frames are used. With 0 or less, all of them are.
- * - With `per_second` 0, each particle plays the frames once over its life: puffs.
- * - With `per_second` above 0, each particle loops them at that rate, from a random frame:
- *   flames.
- *
- * Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
- * rate.
+ * See wgf_emitter3d_set_frames for the rest.
  */
 export declare function wgf_emitter3d_get_frame_rate(emitter: wgf_actor_t | 0): number;
 
@@ -8565,144 +6899,63 @@ export declare function wgf_emitter3d_set_rate(emitter: wgf_actor_t | 0, per_sec
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_get_rate(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_burst(emitter: wgf_actor_t | 0, count: number): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_set_emitting(emitter: wgf_actor_t | 0, emitting: boolean): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_is_emitting(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_set_max(emitter: wgf_actor_t | 0, count: number): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_get_max(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_set_life(emitter: wgf_actor_t | 0, min_seconds: number, max_seconds: number): boolean;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_get_life_min(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
  *
- * - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
- *   false below 0.
- * - burst emits `count` particles at once, where the actor is. It returns false below 0.
- * - set_emitting(false) stops the steady rate. The particles alive finish their lives.
- * - set_max sets how many particles can be alive at once (default: 1024). New particles replace
- *   the oldest. A new max empties the emitter.
- * - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
- *   since fewer particles than asked is a different effect.
- * - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
- *   (default: 1). It returns false for a min of 0 or less, or a max below the min.
+ * See wgf_emitter3d_set_rate for the rest.
  */
 export declare function wgf_emitter3d_get_life_max(emitter: wgf_actor_t | 0): number;
 
@@ -8734,16 +6987,7 @@ export declare function wgf_emitter3d_set_spawn_box(emitter: wgf_actor_t | 0, ha
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_get_spawn_box<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
 export declare function wgf_emitter3d_get_spawn_box(emitter: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -8751,64 +6995,28 @@ export declare function wgf_emitter3d_get_spawn_box(emitter: wgf_actor_t | 0, in
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_set_spawn_sphere(emitter: wgf_actor_t | 0, radius: number): boolean;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_get_spawn_sphere(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_set_velocity(emitter: wgf_actor_t | 0, x: number, y: number, z: number, spread: number, speed_variance: number): boolean;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_get_velocity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
 export declare function wgf_emitter3d_get_velocity(emitter: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -8816,64 +7024,28 @@ export declare function wgf_emitter3d_get_velocity(emitter: wgf_actor_t | 0, int
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_get_spread(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_get_speed_variance(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_set_gravity(emitter: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * Sets or gets where particles are born, and how they move.
  *
- * - set_spawn_box: particles are born anywhere in a box around the position, given by its half
- *   sizes (default: a point).
- * - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
- * - The box and the sphere each replace the other.
- * - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
- *   direction is in the emitter's own frame, so it turns as its actor does.
- * - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
- *   every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
- * - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
- *   (default: none).
+ * See wgf_emitter3d_set_spawn_box for the rest.
  */
 export declare function wgf_emitter3d_get_gravity<T extends number[] | Float32Array | Float64Array>(emitter: wgf_actor_t | 0, into: T): T;
 export declare function wgf_emitter3d_get_gravity(emitter: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -8913,70 +7085,35 @@ export declare function wgf_emitter3d_set_drag(emitter: wgf_actor_t | 0, per_sec
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter3d_set_drag for the rest.
  */
 export declare function wgf_emitter3d_get_drag(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter3d_set_drag for the rest.
  */
 export declare function wgf_emitter3d_set_inherit_velocity(emitter: wgf_actor_t | 0, fraction: number): boolean;
 
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter3d_set_drag for the rest.
  */
 export declare function wgf_emitter3d_get_inherit_velocity(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter3d_set_drag for the rest.
  */
 export declare function wgf_emitter3d_set_stretch(emitter: wgf_actor_t | 0, seconds: number): boolean;
 
 /**
  * Sets or gets how particles move after birth (each defaults to 0).
  *
- * - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
- *   63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
- * - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
- *   birth. At 1, particles are carried along with it.
- * - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
- *   points along its velocity across the screen. It is as long as the distance it moves in
- *   `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
- *   returns false below 0.
+ * See wgf_emitter3d_set_drag for the rest.
  */
 export declare function wgf_emitter3d_get_stretch(emitter: wgf_actor_t | 0): number;
 
@@ -8993,8 +7130,7 @@ export declare function wgf_emitter3d_set_aligned_to_motion(emitter: wgf_actor_t
  * Sets or gets whether each particle's top turns along its motion across the screen, like an
  * arrow or a thrown spark (default: off).
  *
- * Its spin, clockwise as the camera sees it, is added to that angle rather than to a random one.
- * A particle standing still keeps its top up the screen. A stretched particle is already aligned.
+ * See wgf_emitter3d_set_aligned_to_motion for the rest.
  */
 export declare function wgf_emitter3d_is_aligned_to_motion(emitter: wgf_actor_t | 0): boolean;
 
@@ -9014,11 +7150,7 @@ export declare function wgf_emitter3d_set_wander(emitter: wgf_actor_t | 0, dista
  * Sets or gets wander: each particle strays off its path on a smooth course of its own, like
  * fireflies or dust motes.
  *
- * - `distance` is how far it strays: up to about that many stage units (default: 0, none).
- * - `per_second` is about how many times a second its course turns (default: 1).
- *
- * The course starts on the particle's path. Its motion, for alignment and stretch, includes the
- * stray. Returns false if either is below 0.
+ * See wgf_emitter3d_set_wander for the rest.
  */
 export declare function wgf_emitter3d_get_wander_distance(emitter: wgf_actor_t | 0): number;
 
@@ -9026,11 +7158,7 @@ export declare function wgf_emitter3d_get_wander_distance(emitter: wgf_actor_t |
  * Sets or gets wander: each particle strays off its path on a smooth course of its own, like
  * fireflies or dust motes.
  *
- * - `distance` is how far it strays: up to about that many stage units (default: 0, none).
- * - `per_second` is about how many times a second its course turns (default: 1).
- *
- * The course starts on the particle's path. Its motion, for alignment and stretch, includes the
- * stray. Returns false if either is below 0.
+ * See wgf_emitter3d_set_wander for the rest.
  */
 export declare function wgf_emitter3d_get_wander_rate(emitter: wgf_actor_t | 0): number;
 
@@ -9051,12 +7179,7 @@ export declare function wgf_emitter3d_set_orbit(emitter: wgf_actor_t | 0, min: n
  * Sets or gets orbit: each particle circles a line through where the emitter was at its birth
  * (default: none).
  *
- * The line runs along the emitter's velocity (set_velocity's direction) at the particle's
- * birth, or up if it has none, turned as its actor was then.
- *
- * Each particle's speed is picked between `min` and `max`, in radians a second, positive
- * counterclockwise seen from where that line points. Its whole path turns, its own motion
- * included, so a particle thrown outward spirals.
+ * See wgf_emitter3d_set_orbit for the rest.
  */
 export declare function wgf_emitter3d_get_orbit_min(emitter: wgf_actor_t | 0): number;
 
@@ -9064,12 +7187,7 @@ export declare function wgf_emitter3d_get_orbit_min(emitter: wgf_actor_t | 0): n
  * Sets or gets orbit: each particle circles a line through where the emitter was at its birth
  * (default: none).
  *
- * The line runs along the emitter's velocity (set_velocity's direction) at the particle's
- * birth, or up if it has none, turned as its actor was then.
- *
- * Each particle's speed is picked between `min` and `max`, in radians a second, positive
- * counterclockwise seen from where that line points. Its whole path turns, its own motion
- * included, so a particle thrown outward spirals.
+ * See wgf_emitter3d_set_orbit for the rest.
  */
 export declare function wgf_emitter3d_get_orbit_max(emitter: wgf_actor_t | 0): number;
 
@@ -9086,8 +7204,7 @@ export declare function wgf_emitter3d_set_pulse(emitter: wgf_actor_t | 0, per_se
  * Sets or gets pulse: each particle's alpha beats `per_second` times a second, on a phase of its
  * own, for twinkling.
  *
- * At each beat's low, the alpha falls by `depth` of itself (0..1, clamped). Defaults: a rate of 0
- * (none), and a depth of 1 (to clear). Returns false for a rate below 0.
+ * See wgf_emitter3d_set_pulse for the rest.
  */
 export declare function wgf_emitter3d_get_pulse_rate(emitter: wgf_actor_t | 0): number;
 
@@ -9095,8 +7212,7 @@ export declare function wgf_emitter3d_get_pulse_rate(emitter: wgf_actor_t | 0): 
  * Sets or gets pulse: each particle's alpha beats `per_second` times a second, on a phase of its
  * own, for twinkling.
  *
- * At each beat's low, the alpha falls by `depth` of itself (0..1, clamped). Defaults: a rate of 0
- * (none), and a depth of 1 (to clear). Returns false for a rate below 0.
+ * See wgf_emitter3d_set_pulse for the rest.
  */
 export declare function wgf_emitter3d_get_pulse_depth(emitter: wgf_actor_t | 0): number;
 
@@ -9117,12 +7233,7 @@ export declare function wgf_emitter3d_set_local_space(emitter: wgf_actor_t | 0, 
  * Sets or gets whether particles move with the emitter, like an aura around a moving character
  * (default: off).
  *
- * - Each particle is moved as far as its actor has moved since the particle's birth. Only the
- *   actor's place counts, not its turn.
- * - An orbit circles where the emitter is now.
- * - Inherited velocity then does nothing.
- *
- * When off, each particle keeps to its own path as the emitter moves.
+ * See wgf_emitter3d_set_local_space for the rest.
  */
 export declare function wgf_emitter3d_is_local_space(emitter: wgf_actor_t | 0): boolean;
 
@@ -9146,204 +7257,84 @@ export declare function wgf_emitter3d_set_size(emitter: wgf_actor_t | 0, start: 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_get_size_variance(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_add_size_key(emitter: wgf_actor_t | 0, t: number, size: number): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_clear_size_keys(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_get_size_key_count(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_get_size_key_time(emitter: wgf_actor_t | 0, index: number): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_get_size_key_value(emitter: wgf_actor_t | 0, index: number): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_set_color(emitter: wgf_actor_t | 0, start: wgf_color_t, end: wgf_color_t): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_add_color_key(emitter: wgf_actor_t | 0, t: number, color: wgf_color_t): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_clear_color_keys(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_get_color_key_count(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_get_color_key_time(emitter: wgf_actor_t | 0, index: number): number;
 
 /**
  * Sets or gets curves over a particle's life: its size and its color.
  *
- * - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
- * - Color is a tint, alpha included, so a curve can fade particles out.
- * - set_size and set_color make two keys, at 0 (birth) and 1 (death).
- * - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
- *
- * Between two keys, the value moves in a line. Before the first key and after the last, it holds.
- * Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
- * Defaults: size 1 to 1, and white to white.
- *
- * The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
- * read the keys back by index, in time order (0 past the last).
+ * See wgf_emitter3d_set_size for the rest.
  */
 export declare function wgf_emitter3d_get_color_key_value(emitter: wgf_actor_t | 0, index: number): wgf_color_t;
 
@@ -9358,24 +7349,21 @@ export declare function wgf_emitter3d_add_palette_color(emitter: wgf_actor_t | 0
 /**
  * Sets or gets a palette of up to 8 colors (default: empty, no tint).
  *
- * Each particle picks one color at birth, and it tints the particle's color over its life:
- * confetti from one emitter. add_palette_color returns false for a ninth color.
+ * See wgf_emitter3d_add_palette_color for the rest.
  */
 export declare function wgf_emitter3d_clear_palette(emitter: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets a palette of up to 8 colors (default: empty, no tint).
  *
- * Each particle picks one color at birth, and it tints the particle's color over its life:
- * confetti from one emitter. add_palette_color returns false for a ninth color.
+ * See wgf_emitter3d_add_palette_color for the rest.
  */
 export declare function wgf_emitter3d_get_palette_count(emitter: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets a palette of up to 8 colors (default: empty, no tint).
  *
- * Each particle picks one color at birth, and it tints the particle's color over its life:
- * confetti from one emitter. add_palette_color returns false for a ninth color.
+ * See wgf_emitter3d_add_palette_color for the rest.
  */
 export declare function wgf_emitter3d_get_palette_color(emitter: wgf_actor_t | 0, index: number): wgf_color_t;
 
@@ -9409,7 +7397,7 @@ export declare function wgf_emitter3d_set_alpha_mode(emitter: wgf_actor_t | 0, m
  * Sets or gets how particles use alpha, one of wgf_material.h's modes (default: ADD, for glows,
  * sparks, and fire), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
  *
- * The setter returns false if `mode` isn't an alpha mode.
+ * See wgf_emitter3d_set_alpha_mode for the rest.
  */
 export declare function wgf_emitter3d_get_alpha_mode(emitter: wgf_actor_t | 0): wgf_alpha_mode_t;
 
@@ -9417,7 +7405,7 @@ export declare function wgf_emitter3d_get_alpha_mode(emitter: wgf_actor_t | 0): 
  * Sets or gets how particles use alpha, one of wgf_material.h's modes (default: ADD, for glows,
  * sparks, and fire), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
  *
- * The setter returns false if `mode` isn't an alpha mode.
+ * See wgf_emitter3d_set_alpha_mode for the rest.
  */
 export declare function wgf_emitter3d_get_alpha_cutoff(emitter: wgf_actor_t | 0): number;
 
@@ -9452,12 +7440,7 @@ export declare function wgf_emitter3d_set_ending(emitter: wgf_actor_t | 0, endin
  * Sets or gets whether the emitter ends itself, as a one-shot effect such as an explosion's burst
  * does (default: off).
  *
- * The emitter's actor is destroyed, with the actors under it, once both are true:
- * - it has nothing left to emit: it isn't emitting, or its rate is 0;
- * - the last particle it made has died.
- *
- * That happens in the update before a frame. An emitter that has made no particle yet waits for
- * its first.
+ * See wgf_emitter3d_set_ending for the rest.
  */
 export declare function wgf_emitter3d_is_ending(emitter: wgf_actor_t | 0): boolean;
 
@@ -9476,10 +7459,7 @@ export declare function wgf_emitter3d_set_lingering(emitter: wgf_actor_t | 0, li
  * Sets or gets whether the emitter's particles outlive it, as a car's dust outlives the car
  * (default: off).
  *
- * If the emitter is destroyed while it has particles alive on a stage, directly or with an actor
- * above it, they finish their lives where they are. The emitter goes on as an actor of its own at
- * the stage's top, not emitting. It is made in the update before the next frame, and ends (as
- * above) with its last particle.
+ * See wgf_emitter3d_set_lingering for the rest.
  */
 export declare function wgf_emitter3d_is_lingering(emitter: wgf_actor_t | 0): boolean;
 
@@ -9517,11 +7497,7 @@ export declare function wgf_fly_set_mode(camera: wgf_actor_t | 0, mode: wgf_fly_
 /**
  * Sets or gets the mode the camera is flown in (default: NONE).
  *
- * - NONE stops flying it. It stays where it is, and its settings are kept.
- * - When it starts flying, its look is taken from where it faces now.
- *
- * set_mode returns false if `camera` isn't a 3D camera, if `mode` isn't a mode, or if 64
- * cameras already have a mode or a setting.
+ * See wgf_fly_set_mode for the rest.
  */
 export declare function wgf_fly_get_mode(camera: wgf_actor_t | 0): wgf_fly_mode_t;
 
@@ -9538,10 +7514,7 @@ export declare function wgf_fly_set_speed(camera: wgf_actor_t | 0, speed: number
 /**
  * Sets or gets how fast the camera moves, in world units a second (default: 5.4).
  *
- * A stick pushed part way moves it at that part of the speed.
- *
- * set_speed returns false for a negative speed. Like every setter here, it also returns false
- * for a camera set_mode would refuse.
+ * See wgf_fly_set_speed for the rest.
  */
 export declare function wgf_fly_get_speed(camera: wgf_actor_t | 0): number;
 
@@ -9559,9 +7532,7 @@ export declare function wgf_fly_set_sensitivity(camera: wgf_actor_t | 0, radians
  * Sets or gets how far the mouse turns the camera, in radians a logical pixel (default:
  * 0.003).
  *
- * At 0, the mouse doesn't look.
- *
- * set_sensitivity returns false for a negative value.
+ * See wgf_fly_set_sensitivity for the rest.
  */
 export declare function wgf_fly_get_sensitivity(camera: wgf_actor_t | 0): number;
 
@@ -9577,7 +7548,7 @@ export declare function wgf_fly_set_turn_speed(camera: wgf_actor_t | 0, radians:
  * Sets or gets how fast a stick pushed all the way turns the camera, in radians a second
  * (default: 2).
  *
- * set_turn_speed returns false for a negative value.
+ * See wgf_fly_set_turn_speed for the rest.
  */
 export declare function wgf_fly_get_turn_speed(camera: wgf_actor_t | 0): number;
 
@@ -9596,12 +7567,7 @@ export declare function wgf_fly_set_look(camera: wgf_actor_t | 0, yaw: number, p
 /**
  * Sets or gets where the camera looks. Setting it turns the camera at once.
  *
- * - `yaw` is in radians about y. 0 faces -z, and a quarter turn faces -x.
- * - `pitch` is in radians up, clamped to just short of straight up or down.
- *
- * get_look returns where it looks now, as yaw (-pi to pi) and pitch.
- *
- * set_look returns false for a value that isn't finite.
+ * See wgf_fly_set_look for the rest.
  */
 export declare function wgf_fly_get_look<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, into: T): T;
 export declare function wgf_fly_get_look(camera: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -9618,9 +7584,7 @@ export declare function wgf_fly_set_look_held(camera: wgf_actor_t | 0, held: boo
 /**
  * Sets or gets whether the mouse looks only while its right button is held (default: false).
  *
- * - true: the mouse looks only while the right button is held, and the pointer is locked while
- *   it is. Use it for a debug camera beside a game's own clicks.
- * - false: the mouse always looks, and the pointer is locked while the camera flies.
+ * See wgf_fly_set_look_held for the rest.
  */
 export declare function wgf_fly_is_look_held(camera: wgf_actor_t | 0): boolean;
 
@@ -9637,10 +7601,7 @@ export declare function wgf_follow_set_target(camera: wgf_actor_t | 0, target: w
 /**
  * Sets or gets the actor the camera follows.
  *
- * A `target` of 0 stops following. The camera stays where it is.
- *
- * set_target returns false if `camera` isn't a 2D or 3D camera, if `target` isn't an actor,
- * or if 64 cameras already follow.
+ * See wgf_follow_set_target for the rest.
  */
 export declare function wgf_follow_get_target(camera: wgf_actor_t | 0): wgf_actor_t;
 
@@ -9658,9 +7619,7 @@ export declare function wgf_follow_set_smoothing(camera: wgf_actor_t | 0, rate: 
  * Sets or gets how quickly the point catches up, as a rate a second (default: 8, about a
  * fifth of a second).
  *
- * At 0 or less, it catches up at once.
- *
- * This setter, and every setter below, returns false for a camera that follows no actor.
+ * See wgf_follow_set_smoothing for the rest.
  */
 export declare function wgf_follow_get_smoothing(camera: wgf_actor_t | 0): number;
 
@@ -9688,8 +7647,7 @@ export declare function wgf_follow_set_bounds(camera: wgf_actor_t | 0, left: num
 /**
  * 2D: sets or gets the part of the world the view stays inside: left, top, right, bottom.
  *
- * - If the bounds are smaller than the view, the view is centered on them.
- * - A right that isn't above the left lets the view go anywhere (the default).
+ * See wgf_follow_set_bounds for the rest.
  */
 export declare function wgf_follow_get_bounds<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, into: T): T;
 export declare function wgf_follow_get_bounds(camera: wgf_actor_t | 0, into?: wgf_vec4_t | null): wgf_vec4_t;
@@ -9733,11 +7691,7 @@ export declare function wgf_follow_set_orbit(camera: wgf_actor_t | 0, yaw: numbe
 /**
  * 3D, ORBIT: sets or gets where the camera sits round the point.
  *
- * - `yaw` is in radians about y. 0 is on the point's +z side.
- * - `pitch` is in radians up, clamped to just short of straight up or down.
- * - `distance` is how far out. A distance that isn't above 0 is refused.
- *
- * get_orbit returns yaw, pitch, and distance.
+ * See wgf_follow_set_orbit for the rest.
  */
 export declare function wgf_follow_get_orbit<T extends number[] | Float32Array | Float64Array>(camera: wgf_actor_t | 0, into: T): T;
 export declare function wgf_follow_get_orbit(camera: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -9752,7 +7706,7 @@ export declare function wgf_follow_shake(camera: wgf_actor_t | 0, amount: number
 /**
  * Adds trauma to the camera's shake, held to 1. Gets the trauma now.
  *
- * For example, 0.3 for a bump, and 1 for an explosion. Trauma is lost at 1.5 a second.
+ * See wgf_follow_shake for the rest.
  */
 export declare function wgf_follow_get_trauma(camera: wgf_actor_t | 0): number;
 
@@ -9883,10 +7837,7 @@ export declare function wgf_image_get_data(image: wgf_image_t | 0): Uint8Array;
 /**
  * Returns the image's pixels, and their size in bytes.
  *
- * Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first. They are
- * valid until the image is released.
- *
- * Returns NULL and 0 for an image that isn't READY.
+ * See wgf_image_get_data for the rest.
  */
 export declare function wgf_image_get_size(image: wgf_image_t | 0): number;
 
@@ -9932,7 +7883,7 @@ export declare function wgf_light_create(type: wgf_light_type_t): wgf_actor_t;
 /**
  * Creates a white light of intensity 1, with no range limit, and a spot cone of pi/6 to pi/4.
  *
- * Returns 0 if `type` isn't a light type, or if there is no room for another actor.
+ * See wgf_light_create for the rest.
  */
 export declare function wgf_light_get_type(light: wgf_actor_t | 0): wgf_light_type_t;
 
@@ -9956,7 +7907,7 @@ export declare function wgf_light_set_intensity(light: wgf_actor_t | 0, intensit
 /**
  * Sets or gets how strong the light is: its color times this (default: 1).
  *
- * It is clamped to 0 or more.
+ * See wgf_light_set_intensity for the rest.
  */
 export declare function wgf_light_get_intensity(light: wgf_actor_t | 0): number;
 
@@ -9970,7 +7921,7 @@ export declare function wgf_light_set_range(light: wgf_actor_t | 0, range: numbe
 /**
  * Sets or gets how far a point or spot light reaches, in units (default: 0, unlimited).
  *
- * The light fades to nothing at its range. A range below 0 is clamped to 0.
+ * See wgf_light_set_range for the rest.
  */
 export declare function wgf_light_get_range(light: wgf_actor_t | 0): number;
 
@@ -9989,24 +7940,14 @@ export declare function wgf_light_set_spot_cone(light: wgf_actor_t | 0, inner: n
 /**
  * Sets or gets a spot light's cone, in radians from its direction.
  *
- * - Inside `inner`, the light is full.
- * - Past `outer`, there is none.
- * - Between them, it fades smoothly.
- *
- * These are glTF's innerConeAngle and outerConeAngle. `outer` is clamped to 0..pi/2, and
- * `inner` to 0..outer.
+ * See wgf_light_set_spot_cone for the rest.
  */
 export declare function wgf_light_get_spot_inner_angle(light: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets a spot light's cone, in radians from its direction.
  *
- * - Inside `inner`, the light is full.
- * - Past `outer`, there is none.
- * - Between them, it fades smoothly.
- *
- * These are glTF's innerConeAngle and outerConeAngle. `outer` is clamped to 0..pi/2, and
- * `inner` to 0..outer.
+ * See wgf_light_set_spot_cone for the rest.
  */
 export declare function wgf_light_get_spot_outer_angle(light: wgf_actor_t | 0): number;
 
@@ -10032,19 +7973,7 @@ export declare function wgf_light_set_shadow_casting(light: wgf_actor_t | 0, cas
 /**
  * Sets or gets whether the light casts shadows (default: off).
  *
- * A casting light draws what it can see into a depth map once a frame. Surfaces behind another
- * surface are then darkened. Shadows are off by default because a map costs a pass and its
- * memory.
- *
- * - Models cast and receive shadows (wgf_model_set_shadow_casting and
- *   wgf_model_set_shadow_receiving; both on by default). Their see-through parts cast nothing.
- * - Directional and spot lights cast. A point light doesn't: turning it on is refused (returns
- *   false, warned), since it would need six maps, one each way.
- * - Up to 4 lights cast at once: the first ones a stage's draw finds in its tree. Past that, a
- *   light lights the stage without shadowing it.
- * - Shadows fall on the frame's first stage drawn with a casting light. A stage drawn after it
- *   (a HUD's) is lit without shadows.
- * - A model out of the camera's view still casts when its shadow reaches the view.
+ * See wgf_light_set_shadow_casting for the rest.
  */
 export declare function wgf_light_is_shadow_casting(light: wgf_actor_t | 0): boolean;
 
@@ -10063,12 +7992,7 @@ export declare function wgf_light_set_shadow_distance(light: wgf_actor_t | 0, di
 /**
  * Sets or gets how far the light's shadows reach, in units (default: 50).
  *
- * - A directional light covers that much of what the camera sees. It uses one map, fitted
- *   around the view and snapped to its texels (no cascades). So a shorter distance gives a
- *   sharper shadow.
- * - A spot light covers its cone out to this distance or its range, whichever is nearer.
- *
- * set_shadow_distance returns false, and changes nothing, for a distance of 0 or less.
+ * See wgf_light_set_shadow_distance for the rest.
  */
 export declare function wgf_light_get_shadow_distance(light: wgf_actor_t | 0): number;
 
@@ -10086,11 +8010,7 @@ export declare function wgf_light_set_shadow_map_size(light: wgf_actor_t | 0, si
 /**
  * Sets or gets the size of the light's shadow map, in pixels each way (default: 2048).
  *
- * The size is clamped to 256..4096 and rounded down to a power of two. Bigger is sharper and
- * slower. The casting lights share one map, so they all get the largest size any of them asked
- * for. get_shadow_map_size returns the size the GPU gets.
- *
- * set_shadow_map_size returns false for a size below 1.
+ * See wgf_light_set_shadow_map_size for the rest.
  */
 export declare function wgf_light_get_shadow_map_size(light: wgf_actor_t | 0): number;
 
@@ -10104,7 +8024,7 @@ export declare function wgf_light_set_shadow_strength(light: wgf_actor_t | 0, st
 /**
  * Sets or gets how much of the light a shadow blocks, 0..1 (default: 1, all of it).
  *
- * It is clamped to 0..1.
+ * See wgf_light_set_shadow_strength for the rest.
  */
 export declare function wgf_light_get_shadow_strength(light: wgf_actor_t | 0): number;
 
@@ -10118,7 +8038,7 @@ export declare function wgf_light_set_shadow_color(light: wgf_actor_t | 0, color
 /**
  * Sets or gets a color mixed into what a shadow leaves behind (default: black, nothing added).
  *
- * It is scaled by how deep the shadow is. Use it to stylize shadows, as blue or warm ones.
+ * See wgf_light_set_shadow_color for the rest.
  */
 export declare function wgf_light_get_shadow_color(light: wgf_actor_t | 0): wgf_color_t;
 
@@ -10140,13 +8060,7 @@ export declare function wgf_light_set_shadow_bias(light: wgf_actor_t | 0, consta
  * Sets or gets the depth offsets that keep a surface from shadowing itself, in shadow-map
  * texels (default: 1 and 4).
  *
- * - `constant` always applies.
- * - `slope` is scaled by how steeply the surface faces away from the light.
- *
- * Too little bias and lit surfaces stripe ("shadow acne"). Too much, and a shadow creeps away
- * from its caster.
- *
- * set_shadow_bias returns false, and changes nothing, if either is negative.
+ * See wgf_light_set_shadow_bias for the rest.
  */
 export declare function wgf_light_get_shadow_bias_constant(light: wgf_actor_t | 0): number;
 
@@ -10154,13 +8068,7 @@ export declare function wgf_light_get_shadow_bias_constant(light: wgf_actor_t | 
  * Sets or gets the depth offsets that keep a surface from shadowing itself, in shadow-map
  * texels (default: 1 and 4).
  *
- * - `constant` always applies.
- * - `slope` is scaled by how steeply the surface faces away from the light.
- *
- * Too little bias and lit surfaces stripe ("shadow acne"). Too much, and a shadow creeps away
- * from its caster.
- *
- * set_shadow_bias returns false, and changes nothing, if either is negative.
+ * See wgf_light_set_shadow_bias for the rest.
  */
 export declare function wgf_light_get_shadow_bias_slope(light: wgf_actor_t | 0): number;
 
@@ -10259,34 +8167,7 @@ export declare function wgf_mesh_set_positions(mesh: wgf_mesh_t | 0, positions: 
  * Changes a mesh made from numbers in place (wgf_mesh_create_triangles,
  * wgf_mesh_create_heightmap).
  *
- * Each call replaces the corners' positions, normals, texture coordinates, or colors from your
- * array, as many as the mesh has corners. The change goes to the GPU when the mesh is next
- * drawn. Its triangles stay as they are. Use it for a deformed terrain, water, or geometry made
- * each frame.
- *
- * - The first change makes the mesh's vertices a buffer the GPU expects to change. A mesh
- *   never changed keeps a buffer that isn't.
- * - The GPU takes one change a frame. Of several changes in a frame, it draws the last, the
- *   next frame.
- *
- * Each call returns true when it changed the mesh. It returns false, and changes nothing:
- * - For a mesh not made from numbers. A generated shape is shared by its parameters, and a
- *   file's mesh is its file's.
- * - For a count that isn't the mesh's corners times 3 (positions and normals), 2 (texture
- *   coordinates), or 4 (colors). A count of 0 is allowed, and gives the default its create
- *   call gives (except for positions, below).
- *
- *   positions  x, y, z each. The mesh's box (wgf_mesh_get_bounds_min, _max) is made
- *              again. A count of 0 is refused. Its normals stay as they were: set them,
- *              or make them smooth again with a count of 0
- *   normals    x, y, z each, unit length. 0: smooth, made from the triangles as they are
- *   uvs        u, v each (both texture coordinate sets). 0: all 0, 0
- *   colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
- *              are (sRGB, stored linear). The built-in shadings multiply the material's
- *              color by them, and a custom shader reads them as wgf_color. 0: white
- *
- * The tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it was
- * made with: make it again to collide with the new shape.
+ * See wgf_mesh_set_positions for the rest.
  */
 export declare function wgf_mesh_set_normals(mesh: wgf_mesh_t | 0, normals: readonly number[] | Float32Array | Float64Array | null): boolean;
 
@@ -10294,34 +8175,7 @@ export declare function wgf_mesh_set_normals(mesh: wgf_mesh_t | 0, normals: read
  * Changes a mesh made from numbers in place (wgf_mesh_create_triangles,
  * wgf_mesh_create_heightmap).
  *
- * Each call replaces the corners' positions, normals, texture coordinates, or colors from your
- * array, as many as the mesh has corners. The change goes to the GPU when the mesh is next
- * drawn. Its triangles stay as they are. Use it for a deformed terrain, water, or geometry made
- * each frame.
- *
- * - The first change makes the mesh's vertices a buffer the GPU expects to change. A mesh
- *   never changed keeps a buffer that isn't.
- * - The GPU takes one change a frame. Of several changes in a frame, it draws the last, the
- *   next frame.
- *
- * Each call returns true when it changed the mesh. It returns false, and changes nothing:
- * - For a mesh not made from numbers. A generated shape is shared by its parameters, and a
- *   file's mesh is its file's.
- * - For a count that isn't the mesh's corners times 3 (positions and normals), 2 (texture
- *   coordinates), or 4 (colors). A count of 0 is allowed, and gives the default its create
- *   call gives (except for positions, below).
- *
- *   positions  x, y, z each. The mesh's box (wgf_mesh_get_bounds_min, _max) is made
- *              again. A count of 0 is refused. Its normals stay as they were: set them,
- *              or make them smooth again with a count of 0
- *   normals    x, y, z each, unit length. 0: smooth, made from the triangles as they are
- *   uvs        u, v each (both texture coordinate sets). 0: all 0, 0
- *   colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
- *              are (sRGB, stored linear). The built-in shadings multiply the material's
- *              color by them, and a custom shader reads them as wgf_color. 0: white
- *
- * The tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it was
- * made with: make it again to collide with the new shape.
+ * See wgf_mesh_set_positions for the rest.
  */
 export declare function wgf_mesh_set_uvs(mesh: wgf_mesh_t | 0, uvs: readonly number[] | Float32Array | Float64Array | null): boolean;
 
@@ -10329,34 +8183,7 @@ export declare function wgf_mesh_set_uvs(mesh: wgf_mesh_t | 0, uvs: readonly num
  * Changes a mesh made from numbers in place (wgf_mesh_create_triangles,
  * wgf_mesh_create_heightmap).
  *
- * Each call replaces the corners' positions, normals, texture coordinates, or colors from your
- * array, as many as the mesh has corners. The change goes to the GPU when the mesh is next
- * drawn. Its triangles stay as they are. Use it for a deformed terrain, water, or geometry made
- * each frame.
- *
- * - The first change makes the mesh's vertices a buffer the GPU expects to change. A mesh
- *   never changed keeps a buffer that isn't.
- * - The GPU takes one change a frame. Of several changes in a frame, it draws the last, the
- *   next frame.
- *
- * Each call returns true when it changed the mesh. It returns false, and changes nothing:
- * - For a mesh not made from numbers. A generated shape is shared by its parameters, and a
- *   file's mesh is its file's.
- * - For a count that isn't the mesh's corners times 3 (positions and normals), 2 (texture
- *   coordinates), or 4 (colors). A count of 0 is allowed, and gives the default its create
- *   call gives (except for positions, below).
- *
- *   positions  x, y, z each. The mesh's box (wgf_mesh_get_bounds_min, _max) is made
- *              again. A count of 0 is refused. Its normals stay as they were: set them,
- *              or make them smooth again with a count of 0
- *   normals    x, y, z each, unit length. 0: smooth, made from the triangles as they are
- *   uvs        u, v each (both texture coordinate sets). 0: all 0, 0
- *   colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
- *              are (sRGB, stored linear). The built-in shadings multiply the material's
- *              color by them, and a custom shader reads them as wgf_color. 0: white
- *
- * The tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it was
- * made with: make it again to collide with the new shape.
+ * See wgf_mesh_set_positions for the rest.
  */
 export declare function wgf_mesh_set_colors(mesh: wgf_mesh_t | 0, colors: readonly number[] | Float32Array | Float64Array | null): boolean;
 
@@ -10378,60 +8205,28 @@ export declare function wgf_mesh_get_vertex_count(mesh: wgf_mesh_t | 0): number;
 /**
  * Reads the corners of a mesh of one part.
  *
- * This works on any mesh of one part, including a generated shape's and a file's.
- *
- * - get_vertex_count returns how many corners it has. It returns 0 for a handle that isn't a
- *   READY mesh, and for a mesh of several parts or none, as a file's own mesh is.
- * - The others copy the corners' positions, normals, texture coordinates (set 0), or colors
- *   into your array, as many whole corners as fit. Colors are sRGB, as wgf_mesh_set_colors
- *   takes them: a file's COLOR_0, or white where it has none.
- *
- * Each copy returns how many numbers it filled.
+ * See wgf_mesh_get_vertex_count for the rest.
  */
 export declare function wgf_mesh_get_positions(mesh: wgf_mesh_t | 0, positions: number[] | Float32Array | Float64Array | null): number;
 
 /**
  * Reads the corners of a mesh of one part.
  *
- * This works on any mesh of one part, including a generated shape's and a file's.
- *
- * - get_vertex_count returns how many corners it has. It returns 0 for a handle that isn't a
- *   READY mesh, and for a mesh of several parts or none, as a file's own mesh is.
- * - The others copy the corners' positions, normals, texture coordinates (set 0), or colors
- *   into your array, as many whole corners as fit. Colors are sRGB, as wgf_mesh_set_colors
- *   takes them: a file's COLOR_0, or white where it has none.
- *
- * Each copy returns how many numbers it filled.
+ * See wgf_mesh_get_vertex_count for the rest.
  */
 export declare function wgf_mesh_get_normals(mesh: wgf_mesh_t | 0, normals: number[] | Float32Array | Float64Array | null): number;
 
 /**
  * Reads the corners of a mesh of one part.
  *
- * This works on any mesh of one part, including a generated shape's and a file's.
- *
- * - get_vertex_count returns how many corners it has. It returns 0 for a handle that isn't a
- *   READY mesh, and for a mesh of several parts or none, as a file's own mesh is.
- * - The others copy the corners' positions, normals, texture coordinates (set 0), or colors
- *   into your array, as many whole corners as fit. Colors are sRGB, as wgf_mesh_set_colors
- *   takes them: a file's COLOR_0, or white where it has none.
- *
- * Each copy returns how many numbers it filled.
+ * See wgf_mesh_get_vertex_count for the rest.
  */
 export declare function wgf_mesh_get_uvs(mesh: wgf_mesh_t | 0, uvs: number[] | Float32Array | Float64Array | null): number;
 
 /**
  * Reads the corners of a mesh of one part.
  *
- * This works on any mesh of one part, including a generated shape's and a file's.
- *
- * - get_vertex_count returns how many corners it has. It returns 0 for a handle that isn't a
- *   READY mesh, and for a mesh of several parts or none, as a file's own mesh is.
- * - The others copy the corners' positions, normals, texture coordinates (set 0), or colors
- *   into your array, as many whole corners as fit. Colors are sRGB, as wgf_mesh_set_colors
- *   takes them: a file's COLOR_0, or white where it has none.
- *
- * Each copy returns how many numbers it filled.
+ * See wgf_mesh_get_vertex_count for the rest.
  */
 export declare function wgf_mesh_get_colors(mesh: wgf_mesh_t | 0, colors: number[] | Float32Array | Float64Array | null): number;
 
@@ -10526,10 +8321,7 @@ export declare function wgf_mesh_get_material_count(mesh: wgf_mesh_t | 0): numbe
 /**
  * Returns how many materials the mesh has, and the material at a slot (wgf_material.h).
  *
- * The mesh has one material a slot, and a generated mesh has one. The handle is borrowed: it
- * is valid while the mesh is. Changing it changes every model that draws the mesh with it.
- *
- * get_material returns 0 for a slot the mesh hasn't.
+ * See wgf_mesh_get_material_count for the rest.
  */
 export declare function wgf_mesh_get_material(mesh: wgf_mesh_t | 0, slot_: number): wgf_material_t;
 
@@ -10544,7 +8336,7 @@ export declare function wgf_mesh_get_bounds_min(mesh: wgf_mesh_t | 0, into?: wgf
 /**
  * Returns the box around the mesh in its own space: its least and greatest corner.
  *
- * Returns 0, 0, 0 for both while the mesh isn't READY, or if `mesh` isn't a mesh.
+ * See wgf_mesh_get_bounds_min for the rest.
  */
 export declare function wgf_mesh_get_bounds_max<T extends number[] | Float32Array | Float64Array>(mesh: wgf_mesh_t | 0, into: T): T;
 export declare function wgf_mesh_get_bounds_max(mesh: wgf_mesh_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -10582,21 +8374,7 @@ export declare function wgf_model_set_mesh(model: wgf_actor_t | 0, mesh: wgf_mes
 /**
  * Sets or gets the model's mesh. 0 means none, and nothing is drawn.
  *
- * A glTF file's mesh (wgf_mesh_create) makes the model the file's root. Once the mesh is
- * READY, the file's node tree is made the model's children. The mesh is then the model's for
- * good.
- *
- * When the file is loaded again (wgf_asset_reload), the tree is made again in place:
- * - A node's actor is kept, found by its name under its parent's actor, and moved.
- * - Its mesh keeps the same handle, with the new triangles.
- * - A node the file no longer has is gone, with its actor and every actor under it.
- * - A new node is made.
- * - The file's lights are made again.
- *
- * set_mesh returns false if:
- * - `mesh` isn't a mesh.
- * - `mesh` is a file's mesh, and the model has children.
- * - The model is a file's root or one of its nodes, whose meshes are the file's.
+ * See wgf_model_set_mesh for the rest.
  */
 export declare function wgf_model_get_mesh(model: wgf_actor_t | 0): wgf_mesh_t;
 
@@ -10613,10 +8391,7 @@ export declare function wgf_model_set_tint(model: wgf_actor_t | 0, color: wgf_co
 /**
  * Sets or gets a color the model's materials are multiplied by (default: white).
  *
- * Alpha below 255 makes the model see-through, blended back to front.
- *
- * A glTF file's root draws nothing itself, and stands for its file. Its tint multiplies its
- * nodes' own, so one call tints the whole file: an enemy in red, or a hit's flash.
+ * See wgf_model_set_tint for the rest.
  */
 export declare function wgf_model_get_tint(model: wgf_actor_t | 0): wgf_color_t;
 
@@ -10637,14 +8412,7 @@ export declare function wgf_model_set_material(model: wgf_actor_t | 0, slot_: nu
 /**
  * Sets or gets the material a slot is drawn with, in place of the mesh's.
  *
- * - `slot` is 0..31. A `slot` of -1 sets every slot.
- * - A `material` of 0 goes back to the mesh's.
- * - The model holds its own reference. Its materials stay when the mesh changes.
- *
- * set_material returns false for a slot out of range, or a handle that isn't a material.
- *
- * get_material returns the material the slot draws with: the model's own or the mesh's. The
- * handle is borrowed. It returns 0 for neither.
+ * See wgf_model_set_material for the rest.
  */
 export declare function wgf_model_get_material(model: wgf_actor_t | 0, slot_: number): wgf_material_t;
 
@@ -10665,12 +8433,7 @@ export declare function wgf_model_set_shadow_casting(model: wgf_actor_t | 0, cas
  * Sets or gets whether the model casts and receives shadows, when a light on its stage casts
  * them (see wgf_light_set_shadow_casting).
  *
- * - Casting (default: on): the model is drawn into the light's depth map, so it shadows what
- *   is behind it. Turn it off for a glow or a sky.
- * - Receiving (default: on): shadows darken the model.
- *
- * Each setting is the model's own. In a glTF file's tree, each node's model has its own
- * setting. A hidden model casts nothing, and its see-through parts never cast.
+ * See wgf_model_set_shadow_casting for the rest.
  */
 export declare function wgf_model_is_shadow_casting(model: wgf_actor_t | 0): boolean;
 
@@ -10678,12 +8441,7 @@ export declare function wgf_model_is_shadow_casting(model: wgf_actor_t | 0): boo
  * Sets or gets whether the model casts and receives shadows, when a light on its stage casts
  * them (see wgf_light_set_shadow_casting).
  *
- * - Casting (default: on): the model is drawn into the light's depth map, so it shadows what
- *   is behind it. Turn it off for a glow or a sky.
- * - Receiving (default: on): shadows darken the model.
- *
- * Each setting is the model's own. In a glTF file's tree, each node's model has its own
- * setting. A hidden model casts nothing, and its see-through parts never cast.
+ * See wgf_model_set_shadow_casting for the rest.
  */
 export declare function wgf_model_set_shadow_receiving(model: wgf_actor_t | 0, receiving: boolean): boolean;
 
@@ -10691,12 +8449,7 @@ export declare function wgf_model_set_shadow_receiving(model: wgf_actor_t | 0, r
  * Sets or gets whether the model casts and receives shadows, when a light on its stage casts
  * them (see wgf_light_set_shadow_casting).
  *
- * - Casting (default: on): the model is drawn into the light's depth map, so it shadows what
- *   is behind it. Turn it off for a glow or a sky.
- * - Receiving (default: on): shadows darken the model.
- *
- * Each setting is the model's own. In a glTF file's tree, each node's model has its own
- * setting. A hidden model casts nothing, and its see-through parts never cast.
+ * See wgf_model_set_shadow_casting for the rest.
  */
 export declare function wgf_model_is_shadow_receiving(model: wgf_actor_t | 0): boolean;
 
@@ -10763,1260 +8516,147 @@ export declare function wgf_model_get_animation_count(model: wgf_actor_t | 0): n
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_animation_name(model: wgf_actor_t | 0, animation: number): string;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_find_animation(model: wgf_actor_t | 0, name: string | null): number;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_animation_duration(model: wgf_actor_t | 0, animation: number): number;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_play_animation(model: wgf_actor_t | 0, animation: number, fade: number): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_animation(model: wgf_actor_t | 0): number;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_animation_weight(model: wgf_actor_t | 0): number;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_pause_animation(model: wgf_actor_t | 0): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_resume_animation(model: wgf_actor_t | 0): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_stop_animation(model: wgf_actor_t | 0): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_animation_state(model: wgf_actor_t | 0): wgf_play_state_t;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_set_animation_speed(model: wgf_actor_t | 0, speed: number): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_animation_speed(model: wgf_actor_t | 0): number;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_set_animation_loop(model: wgf_actor_t | 0, loop: boolean): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_is_animation_loop(model: wgf_actor_t | 0): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_set_animation_time(model: wgf_actor_t | 0, seconds: number): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_animation_time(model: wgf_actor_t | 0): number;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_play_layer_animation(model: wgf_actor_t | 0, index: number, animation: number, bone: string | null, fade: number, loop: boolean): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_stop_layer_animation(model: wgf_actor_t | 0, index: number, fade: number): boolean;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_layer_animation(model: wgf_actor_t | 0, index: number): number;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_layer_state(model: wgf_actor_t | 0, index: number): wgf_play_state_t;
 
 /**
  * Plays a glTF file's animations on its root: a model of wgf_mesh_create's mesh.
  *
- * An animation moves the actors of the file's tree. Each joint of a skin is one of those
- * actors, and an actor put under a joint moves with it. That poses the skinned parts its skins
- * place, on the GPU, with up to 4 joints a vertex.
- *
- * A clip's translation, rotation, and scale channels play as the file has them: linear (a
- * rotation takes the shorter arc), step, or cubic spline.
- *
- * What plays has one state, a wgf_play_state.h state. Its transitions are those of play,
- * pause, resume, and stop, as a voice's are. libwgf advances it once a frame, by the frame's
- * time, before the frame callback, and poses the model then. So the frame reads this frame's
- * pose.
- *
- *   count, name, find, duration  the file's animations: how many there are (0 until it is
- *                    READY), one's name ("" for none), the first one so named (-1 for
- *                    none), and its length in seconds (its last key's time; 0 for none)
- *   play             plays `animation` from its start (from its end with a negative speed),
- *                    PLAYING, from any state. It is posed at once. A `fade` > 0 crossfades
- *                    into it over that many seconds, from what shows now: the clip that was
- *                    playing, still moving, or the pose held (a crossfade's middle, or a
- *                    clip not moving). Each node's place, turn, and scale are blended. A
- *                    `fade` of 0 or less cuts to it. A node that another animation of the
- *                    file moves, and this one doesn't, is at the file's rest pose. Played
- *                    before the file is READY, it plays once the file is there. If the file
- *                    hasn't that animation, it is dropped then (warned). Returns false for
- *                    a model that isn't a file's root, a negative animation, a fade that
- *                    isn't a number, a file that FAILED, or an animation the READY file
- *                    hasn't
- *   get_animation    the animation played (or stopped at, or paused in); -1 for none
- *   weight           how much of the pose is the played animation's: 0 as its crossfade
- *                    begins, to 1 when it is through. 1 with no crossfade, 0 with no
- *                    animation
- *   pause, resume    pause works only from PLAYING, and resume only from PAUSED. The
- *                    animation is held where it was, its crossfade too
- *   stop             goes to STOPPED from any state, at time 0, showing the clip's first
- *                    pose. Its crossfade is dropped
- *   state            COMPLETE when an animation that isn't looping has run to the end it
- *                    runs toward, and is held there. Also COMPLETE when its file FAILED
- *                    while it played
- *   speed            1 is normal (the default). Negative plays backwards. 0 holds, still
- *                    PLAYING. Returns false for a speed that isn't finite
- *   loop             wraps at the end (the default), or holds the last pose and becomes
- *                    COMPLETE
- *   time             where it is, in seconds from its start. set_time poses it there at
- *                    once, wrapped when looping and clamped to [0, duration] when not. It
- *                    leaves the state as it is. Returns false for a time that isn't finite
- *
- * Each call returns false (or 0, -1, or "") for a model that isn't a file's root.
- *
- * Because the frame moves an animation on, an animation is for what is seen. For what a game
- * decides by (a hit frame, a replay), drive it by hand: set speed 0, and call set_time from
- * the game's fixed tick.
- *
- * A custom material (wgf_material_create_custom) on a skinned part draws it posed too. Its
- * vertex hook runs before the joints pose it.
+ * See wgf_model_get_animation_count for the rest.
  */
 export declare function wgf_model_get_layer_weight(model: wgf_actor_t | 0, index: number): number;
 
@@ -12063,15 +8703,7 @@ export declare function wgf_model_set_animations(model: wgf_actor_t | 0, clips: 
 /**
  * Sets or gets where the model's animations come from: another glTF file, `clips`.
  *
- * `clips` is a file of animations alone, with its skeleton named as this file's is. For
- * example, Wardens' Animations.glb for each of a character's part models. Each clip's
- * channels move this file's nodes of the same names.
- *
- * - A `clips` of 0 goes back to the model's own animations.
- * - What was playing stops.
- * - Each part of a character given the same clips, and played the same way, moves as one.
- *
- * set_animations returns false if `model` isn't a file's root, or if `clips` isn't a mesh.
+ * See wgf_model_set_animations for the rest.
  */
 export declare function wgf_model_get_animations(model: wgf_actor_t | 0): wgf_mesh_t;
 
@@ -12089,10 +8721,7 @@ export declare function wgf_model_get_bounds_min(actor: wgf_actor_t | 0, into?: 
 /**
  * Returns the box around every model at and under `actor`: its least and greatest corner.
  *
- * Each mesh's box is placed as the model is now, in the tree's root's space. Use it to place
- * a glTF file's tree on the ground, or to frame it in a camera.
- *
- * Returns 0, 0, 0 for both if no model there has a READY mesh.
+ * See wgf_model_get_bounds_min for the rest.
  */
 export declare function wgf_model_get_bounds_max<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_model_get_bounds_max(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -12126,9 +8755,7 @@ export declare function wgf_pointer_set_interactive(stage: wgf_actor_t | 0, inte
 /**
  * Sets or gets whether the pointer picks a stage (default: not picked).
  *
- * A stage that is destroyed leaves the list by itself.
- *
- * set_interactive returns false if `stage` isn't a 2D or a 3D stage.
+ * See wgf_pointer_set_interactive for the rest.
  */
 export declare function wgf_pointer_is_interactive(stage: wgf_actor_t | 0): boolean;
 
@@ -12241,8 +8868,7 @@ export declare function wgf_presentation_set_bar_color(color: wgf_color_t): void
 /**
  * Sets or gets the color of the bars (default: black).
  *
- * The bars, under FIT and INTEGER, are the framebuffer outside the visible area. Nothing is
- * drawn in them.
+ * See wgf_presentation_set_bar_color for the rest.
  */
 export declare function wgf_presentation_get_bar_color(): wgf_color_t;
 
@@ -12300,24 +8926,14 @@ export declare function wgf_render_get_width(): number;
 /**
  * Returns the frame's size in pixels, and how many pixels make one logical pixel.
  *
- * - The DPI scale is 2 on most high-density displays.
- * - Drawing is in logical pixels: the frame is get_width() / get_dpi_scale() of them wide.
- * - While there is no surface, these return 0, 0, and 1.
- * - Inside a render target (wgf_render_begin_target), they return the target's size, and 1.
- *   Drawing there is in the target's own pixels, with no presentation (wgf_presentation.h).
- *   A stage's camera sees the target at its aspect ratio.
+ * See wgf_render_get_width for the rest.
  */
 export declare function wgf_render_get_height(): number;
 
 /**
  * Returns the frame's size in pixels, and how many pixels make one logical pixel.
  *
- * - The DPI scale is 2 on most high-density displays.
- * - Drawing is in logical pixels: the frame is get_width() / get_dpi_scale() of them wide.
- * - While there is no surface, these return 0, 0, and 1.
- * - Inside a render target (wgf_render_begin_target), they return the target's size, and 1.
- *   Drawing there is in the target's own pixels, with no presentation (wgf_presentation.h).
- *   A stage's camera sees the target at its aspect ratio.
+ * See wgf_render_get_width for the rest.
  */
 export declare function wgf_render_get_dpi_scale(): number;
 
@@ -12337,26 +8953,14 @@ export declare function wgf_render_get_draw_calls(): number;
 /**
  * Returns frame stats: the last frame's draw calls and triangles, and the bytes the GPU holds.
  *
- * - Draw calls and triangles count every pass: the stages', the shadows', the render
- *   targets', and immediate mode's.
- * - GPU bytes count the buffers and images alive now, at their sizes as made, with each mip
- *   level and slice. A GPU's own padding isn't counted.
- * - The stats are counted as the graphics backend is called, so they cover every draw.
- *
- * Each returns 0 before the first frame.
+ * See wgf_render_get_draw_calls for the rest.
  */
 export declare function wgf_render_get_triangle_count(): number;
 
 /**
  * Returns frame stats: the last frame's draw calls and triangles, and the bytes the GPU holds.
  *
- * - Draw calls and triangles count every pass: the stages', the shadows', the render
- *   targets', and immediate mode's.
- * - GPU bytes count the buffers and images alive now, at their sizes as made, with each mip
- *   level and slice. A GPU's own padding isn't counted.
- * - The stats are counted as the graphics backend is called, so they cover every draw.
- *
- * Each returns 0 before the first frame.
+ * See wgf_render_get_draw_calls for the rest.
  */
 export declare function wgf_render_get_gpu_bytes(): number;
 
@@ -12395,32 +8999,7 @@ export declare function wgf_render_is_context_lost(): boolean;
 /**
  * Returns whether the GPU context is lost, and whether it was restored this frame.
  *
- * On the web, the browser drops WebGL when a phone backgrounds the page or the GPU resets,
- * and gives it back later. Natively the context is never lost, and both calls always return
- * false.
- *
- * While the context is lost (is_context_lost), nothing is drawn and nothing is sent to the
- * GPU. Frames, ticks, input, and sound go on.
- * - A draw, a stage's draw, a document's draw, or a target begun does nothing, silently.
- * - A UI is laid out and its buttons answer, but nothing is drawn.
- * - A texture, mesh, shader, font, or other resource that is loading finishes once the
- *   context is back.
- * - A target or blank texture made meanwhile gets its GPU side then.
- *
- * When the context comes back, everything is made again under the same handles, before the
- * next frame is drawn:
- * - shaders and pipelines;
- * - a texture, cubemap, environment, bitmap font's pages, or glTF file's images, read again
- *   from its file as this run has it, with nothing fetched. Each is blank until it is in,
- *   which takes a few frames;
- * - meshes, from their vertices;
- * - a blank texture, with its last write (wgf_texture.h);
- * - fonts' glyphs;
- * - RmlUi's documents' textures.
- *
- * Render targets come back blank. is_context_restored is true once, in the frame the
- * context is back in. A game that draws a target only when its content changes should draw
- * it again in that frame.
+ * See wgf_render_is_context_lost for the rest.
  */
 export declare function wgf_render_is_context_restored(): boolean;
 
@@ -12447,18 +9026,7 @@ export declare function wgf_render_begin_target(target: wgf_texture_t | 0): bool
  * Begins drawing into a render target (wgf_texture_create_target) instead of the screen,
  * until wgf_render_end_target.
  *
- * - Call it inside a frame. Everything then draws into the target: stages, sprites,
- *   particles, text, the UI, and immediate mode.
- * - Targets are drawn before the screen, in the order begun, so the screen shows what they
- *   drew this frame.
- * - A target begun again in the same frame keeps what it drew before.
- * - Targets don't nest.
- * - A target isn't read while it is drawn into. Used inside its own pass, it draws nothing
- *   there (warned once).
- * - A frame that ends inside a target ends the target (warned).
- *
- * Returns false (logged) outside a frame, inside another target, for a texture that isn't
- * a target, or past 256 target passes in a frame.
+ * See wgf_render_begin_target for the rest.
  */
 export declare function wgf_render_end_target(): void;
 
@@ -12486,8 +9054,7 @@ export declare function wgf_render_set_target_clear_color(target: wgf_texture_t 
 /**
  * Sets or gets the color a pass into `target` starts cleared to (default: transparent black).
  *
- * The color is kept with the target until changed. For a texture that isn't a render
- * target, the setter returns false, and the getter returns transparent black.
+ * See wgf_render_set_target_clear_color for the rest.
  */
 export declare function wgf_render_get_target_clear_color(target: wgf_texture_t | 0): wgf_color_t;
 
@@ -12516,44 +9083,14 @@ export declare function wgf_render_add_effect(material: wgf_material_t | 0): boo
 /**
  * Adds, clears, or counts screen effects: post-processing of the finished frame.
  *
- * The finished frame (stages, sprites, text, and the UI) is redrawn by each effect in the
- * order added. The last effect draws onto the screen.
- *
- * - An effect is a custom material (wgf_material_create_custom) whose shader is a screen
- *   effect (wgf.glsl's wgf_screen, wgf_shader.h).
- * - Its parameters are the material's, and can change any frame.
- * - An effect whose shader is still loading is skipped until it is READY. One whose shader
- *   FAILED is skipped.
- * - The chain is taken as each frame begins. Adding or clearing inside a frame shows from
- *   the next frame.
- * - The effects hold their own references to their materials, and let go of them when
- *   cleared.
- * - There can be up to 8 effects.
- *
- * add returns false (logged) past 8 effects, for anything but a custom material, for a
- * surface shader's material, or before gfx runs (it works from init on).
+ * See wgf_render_add_effect for the rest.
  */
 export declare function wgf_render_clear_effects(): void;
 
 /**
  * Adds, clears, or counts screen effects: post-processing of the finished frame.
  *
- * The finished frame (stages, sprites, text, and the UI) is redrawn by each effect in the
- * order added. The last effect draws onto the screen.
- *
- * - An effect is a custom material (wgf_material_create_custom) whose shader is a screen
- *   effect (wgf.glsl's wgf_screen, wgf_shader.h).
- * - Its parameters are the material's, and can change any frame.
- * - An effect whose shader is still loading is skipped until it is READY. One whose shader
- *   FAILED is skipped.
- * - The chain is taken as each frame begins. Adding or clearing inside a frame shows from
- *   the next frame.
- * - The effects hold their own references to their materials, and let go of them when
- *   cleared.
- * - There can be up to 8 effects.
- *
- * add returns false (logged) past 8 effects, for anything but a custom material, for a
- * surface shader's material, or before gfx runs (it works from init on).
+ * See wgf_render_add_effect for the rest.
  */
 export declare function wgf_render_get_effect_count(): number;
 
@@ -12579,19 +9116,7 @@ export declare function wgf_render_push_clip(x: number, y: number, width: number
 /**
  * Clips drawing to a rectangle until the matching pop.
  *
- * - The rectangle is in logical pixels from the top-left. Inside a render target, it is in
- *   the target's own pixels.
- * - Everything drawn between push and pop is clipped: immediate mode, and the 2D stages
- *   drawn there.
- * - Clips nest. Each push intersects with the clip it's pushed inside, so a scroll area
- *   inside a panel stays inside the panel.
- * - A width or height of 0 clips everything away.
- * - A render target's pass starts unclipped. The screen's clips apply again when it ends.
- * - Clips go up to 32 deep. A push past that clips nothing more (warned once).
- *
- * Pop every push within the frame, and a target's within its pass. Unmatched pushes are
- * dropped at the end, with a warning, as is a pop without a push. Outside a frame, both
- * calls do nothing (warned).
+ * See wgf_render_push_clip for the rest.
  */
 export declare function wgf_render_pop_clip(): void;
 
@@ -12663,24 +9188,14 @@ export declare function wgf_shape2d_get_size(shape: wgf_actor_t | 0, into?: wgf_
 /**
  * Returns what was set.
  *
- * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
- * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
- * - get_point_count returns how many points a polygon has, or 0 for another kind.
- * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
- *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+ * See wgf_shape2d_get_size for the rest.
  */
 export declare function wgf_shape2d_get_radius(shape: wgf_actor_t | 0): number;
 
 /**
  * Returns what was set.
  *
- * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
- * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
- * - get_point_count returns how many points a polygon has, or 0 for another kind.
- * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
- *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+ * See wgf_shape2d_get_size for the rest.
  */
 export declare function wgf_shape2d_get_line_start<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
 export declare function wgf_shape2d_get_line_start(shape: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -12688,12 +9203,7 @@ export declare function wgf_shape2d_get_line_start(shape: wgf_actor_t | 0, into?
 /**
  * Returns what was set.
  *
- * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
- * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
- * - get_point_count returns how many points a polygon has, or 0 for another kind.
- * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
- *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+ * See wgf_shape2d_get_size for the rest.
  */
 export declare function wgf_shape2d_get_line_end<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
 export declare function wgf_shape2d_get_line_end(shape: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -12701,24 +9211,14 @@ export declare function wgf_shape2d_get_line_end(shape: wgf_actor_t | 0, into?: 
 /**
  * Returns what was set.
  *
- * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
- * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
- * - get_point_count returns how many points a polygon has, or 0 for another kind.
- * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
- *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+ * See wgf_shape2d_get_size for the rest.
  */
 export declare function wgf_shape2d_get_point_count(shape: wgf_actor_t | 0): number;
 
 /**
  * Returns what was set.
  *
- * - get_size returns a rectangle's width and height, or 0, 0 for another kind.
- * - get_radius returns a circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
- * - get_point_count returns how many points a polygon has, or 0 for another kind.
- * - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
- *   `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+ * See wgf_shape2d_get_size for the rest.
  */
 export declare function wgf_shape2d_get_points(shape: wgf_actor_t | 0, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -12739,12 +9239,7 @@ export declare function wgf_shape2d_set_pivot(shape: wgf_actor_t | 0, x: number,
  * Sets or gets the pivot: the point of a rectangle or circle at its actor's position, which
  * it turns and scales about.
  *
- * - The pivot is a fraction of the shape: 0, 0 is its top-left, and 1, 1 its bottom-right.
- * - Unset (the default), each shape keeps its own origin: a rectangle's top-left corner, or
- *   a circle's center.
- * - The getter reads an unset pivot back as that fraction: 0, 0 or 0.5, 0.5.
- *
- * The setter returns false for a handle that isn't a 2D shape.
+ * See wgf_shape2d_set_pivot for the rest.
  */
 export declare function wgf_shape2d_get_pivot<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
 export declare function wgf_shape2d_get_pivot(shape: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -12764,10 +9259,7 @@ export declare function wgf_shape2d_set_outline(shape: wgf_actor_t | 0, thicknes
  * Sets or gets the outline: the shape is drawn as an outline `thickness` logical pixels wide,
  * centered on its edge.
  *
- * - A `thickness` of 0 (the default) fills the shape. A line is then a hairline.
- * - The thickness is clamped to 0 or more.
- *
- * The setter returns false for a handle that isn't a 2D shape.
+ * See wgf_shape2d_set_outline for the rest.
  */
 export declare function wgf_shape2d_get_outline(shape: wgf_actor_t | 0): number;
 
@@ -12787,11 +9279,7 @@ export declare function wgf_shape2d_set_corner_radius(shape: wgf_actor_t | 0, ra
  * Sets or gets the radius a rectangle's corners are rounded to, in its own units (default: 0,
  * square).
  *
- * - The corners are rounded as wgf_draw_rectangle_rounded rounds them, filled or outlined.
- * - The radius is clamped to 0 or more, and drawn at no more than half the shorter side.
- * - It is kept for the other kinds, which it doesn't change.
- *
- * The setter returns false for a handle that isn't a 2D shape.
+ * See wgf_shape2d_set_corner_radius for the rest.
  */
 export declare function wgf_shape2d_get_corner_radius(shape: wgf_actor_t | 0): number;
 
@@ -12834,36 +9322,21 @@ export declare function wgf_shape3d_set_cube(shape: wgf_actor_t | 0, width: numb
 /**
  * Makes the shape a cube, a sphere, a rectangle, or a circle, about its actor's origin.
  *
- * - set_cube makes a cube `width` by `height` by `length`.
- * - set_sphere makes a sphere of `radius`.
- * - set_rectangle makes a filled rectangle `width` by `height`, in its local x-y plane.
- * - set_circle makes a circle's outline of `radius`, in its local x-y plane.
- *
- * Returns false for a size below 0.
+ * See wgf_shape3d_set_cube for the rest.
  */
 export declare function wgf_shape3d_set_sphere(shape: wgf_actor_t | 0, radius: number): boolean;
 
 /**
  * Makes the shape a cube, a sphere, a rectangle, or a circle, about its actor's origin.
  *
- * - set_cube makes a cube `width` by `height` by `length`.
- * - set_sphere makes a sphere of `radius`.
- * - set_rectangle makes a filled rectangle `width` by `height`, in its local x-y plane.
- * - set_circle makes a circle's outline of `radius`, in its local x-y plane.
- *
- * Returns false for a size below 0.
+ * See wgf_shape3d_set_cube for the rest.
  */
 export declare function wgf_shape3d_set_rectangle(shape: wgf_actor_t | 0, width: number, height: number): boolean;
 
 /**
  * Makes the shape a cube, a sphere, a rectangle, or a circle, about its actor's origin.
  *
- * - set_cube makes a cube `width` by `height` by `length`.
- * - set_sphere makes a sphere of `radius`.
- * - set_rectangle makes a filled rectangle `width` by `height`, in its local x-y plane.
- * - set_circle makes a circle's outline of `radius`, in its local x-y plane.
- *
- * Returns false for a size below 0.
+ * See wgf_shape3d_set_cube for the rest.
  */
 export declare function wgf_shape3d_set_circle(shape: wgf_actor_t | 0, radius: number): boolean;
 
@@ -12889,28 +9362,14 @@ export declare function wgf_shape3d_set_line_strip(shape: wgf_actor_t | 0, point
 /**
  * Makes the shape a line strip, or gets its points.
  *
- * - `points` is your array, holding x, y, and z in turn: `float_count` floats, three for
- *   each point. It is copied.
- * - The strip is drawn once it has two points.
- * - get_points fills your array with up to `float_count` floats of the points, and returns
- *   how many it filled.
- *
- * set_line_strip returns false for a `float_count` that isn't a multiple of 3, or past 65536
- * points.
+ * See wgf_shape3d_set_line_strip for the rest.
  */
 export declare function wgf_shape3d_get_point_count(shape: wgf_actor_t | 0): number;
 
 /**
  * Makes the shape a line strip, or gets its points.
  *
- * - `points` is your array, holding x, y, and z in turn: `float_count` floats, three for
- *   each point. It is copied.
- * - The strip is drawn once it has two points.
- * - get_points fills your array with up to `float_count` floats of the points, and returns
- *   how many it filled.
- *
- * set_line_strip returns false for a `float_count` that isn't a multiple of 3, or past 65536
- * points.
+ * See wgf_shape3d_set_line_strip for the rest.
  */
 export declare function wgf_shape3d_get_points(shape: wgf_actor_t | 0, points: number[] | Float32Array | Float64Array | null): number;
 
@@ -12928,20 +9387,14 @@ export declare function wgf_shape3d_get_size(shape: wgf_actor_t | 0, into?: wgf_
 /**
  * Returns what was set.
  *
- * - get_size returns a cube's or rectangle's size, with a rectangle's z 0. It returns 0, 0, 0
- *   for another kind.
- * - get_radius returns a sphere's or circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * See wgf_shape3d_get_size for the rest.
  */
 export declare function wgf_shape3d_get_radius(shape: wgf_actor_t | 0): number;
 
 /**
  * Returns what was set.
  *
- * - get_size returns a cube's or rectangle's size, with a rectangle's z 0. It returns 0, 0, 0
- *   for another kind.
- * - get_radius returns a sphere's or circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * See wgf_shape3d_get_size for the rest.
  */
 export declare function wgf_shape3d_get_line_start<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
 export declare function wgf_shape3d_get_line_start(shape: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -12949,10 +9402,7 @@ export declare function wgf_shape3d_get_line_start(shape: wgf_actor_t | 0, into?
 /**
  * Returns what was set.
  *
- * - get_size returns a cube's or rectangle's size, with a rectangle's z 0. It returns 0, 0, 0
- *   for another kind.
- * - get_radius returns a sphere's or circle's radius, or 0 for another kind.
- * - get_line_start and get_line_end return a line's ends.
+ * See wgf_shape3d_get_size for the rest.
  */
 export declare function wgf_shape3d_get_line_end<T extends number[] | Float32Array | Float64Array>(shape: wgf_actor_t | 0, into: T): T;
 export declare function wgf_shape3d_get_line_end(shape: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -12999,8 +9449,7 @@ export declare function wgf_sprite_batch_set_count(batch: wgf_actor_t | 0, count
  * Sets or gets how many quads the batch draws. A larger count makes new quads, set as above.
  * A smaller count drops the quads past it.
  *
- * The setter returns false for a handle that isn't a batch, a `count` below 0 or over
- * 16777216, or no memory for it.
+ * See wgf_sprite_batch_set_count for the rest.
  */
 export declare function wgf_sprite_batch_get_count(batch: wgf_actor_t | 0): number;
 
@@ -13021,12 +9470,7 @@ export declare function wgf_sprite_batch_set_positions(batch: wgf_actor_t | 0, f
  * Sets or gets the quads' positions, from quad `first` on: where each quad's pivot goes, in
  * the batch's units.
  *
- * `positions` holds x and y in turn: `count` floats, for count / 2 quads. Quads past the
- * batch's count are left out. The setter returns how many quads it wrote. It returns 0 for a
- * handle that isn't a batch, a `first` outside the batch, or an odd `count`.
- *
- * The getter reads the positions back into `out`, as many as fit in `count` floats. It
- * returns how many floats it filled.
+ * See wgf_sprite_batch_set_positions for the rest.
  */
 export declare function wgf_sprite_batch_get_positions(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -13042,9 +9486,7 @@ export declare function wgf_sprite_batch_set_sizes(batch: wgf_actor_t | 0, first
 /**
  * Sets or gets the quads' sizes, as width and height in turn, in the same way as positions.
  *
- * - A width or height of 0 uses the region's size in texels.
- * - A negative width or height mirrors the quad across that axis, about its pivot: a tile
- *   flipped.
+ * See wgf_sprite_batch_set_sizes for the rest.
  */
 export declare function wgf_sprite_batch_get_sizes(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -13077,10 +9519,7 @@ export declare function wgf_sprite_batch_set_regions(batch: wgf_actor_t | 0, fir
  * Sets or gets the quads' regions of the texture: x, y, width, and height, in texture pixels
  * from the top-left.
  *
- * - There are four floats a quad, for count / 4 quads. A `count` that isn't a multiple of 4
- *   writes none.
- * - Each value is rounded to a whole pixel and clamped to 0..32767.
- * - A width or height of 0 shows the whole texture.
+ * See wgf_sprite_batch_set_regions for the rest.
  */
 export declare function wgf_sprite_batch_get_regions(batch: wgf_actor_t | 0, first: number, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -13111,10 +9550,7 @@ export declare function wgf_sprite_batch_set_pivot(batch: wgf_actor_t | 0, x: nu
  * Sets or gets the pivot of every quad: the point placed at its position, which it turns
  * about. It is a fraction of the quad's size.
  *
- * - 0.5, 0.5 is its center (default).
- * - 0, 0 is its top-left.
- *
- * The setter returns false for a handle that isn't a batch.
+ * See wgf_sprite_batch_set_pivot for the rest.
  */
 export declare function wgf_sprite_batch_get_pivot<T extends number[] | Float32Array | Float64Array>(batch: wgf_actor_t | 0, into: T): T;
 export declare function wgf_sprite_batch_get_pivot(batch: wgf_actor_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -13136,12 +9572,7 @@ export declare function wgf_sprite_batch_set_alpha_mode(batch: wgf_actor_t | 0, 
  * Sets or gets how the batch's quads use their texels' alpha, one of wgf_material.h's modes
  * (default: BLEND), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
  *
- * - OPAQUE draws without blending.
- * - MASK cuts out below the cutoff and draws the rest opaque.
- * - ADD adds its color.
- *
- * The setter returns false for a handle that isn't a batch, or a `mode` that isn't an alpha
- * mode.
+ * See wgf_sprite_batch_set_alpha_mode for the rest.
  */
 export declare function wgf_sprite_batch_get_alpha_mode(batch: wgf_actor_t | 0): wgf_alpha_mode_t;
 
@@ -13149,12 +9580,7 @@ export declare function wgf_sprite_batch_get_alpha_mode(batch: wgf_actor_t | 0):
  * Sets or gets how the batch's quads use their texels' alpha, one of wgf_material.h's modes
  * (default: BLEND), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
  *
- * - OPAQUE draws without blending.
- * - MASK cuts out below the cutoff and draws the rest opaque.
- * - ADD adds its color.
- *
- * The setter returns false for a handle that isn't a batch, or a `mode` that isn't an alpha
- * mode.
+ * See wgf_sprite_batch_set_alpha_mode for the rest.
  */
 export declare function wgf_sprite_batch_get_alpha_cutoff(batch: wgf_actor_t | 0): number;
 
@@ -13187,14 +9613,7 @@ export declare function wgf_stage2d_set_camera(stage: wgf_actor_t | 0, camera: w
 /**
  * Sets or gets the stage's camera (wgf_camera2d.h).
  *
- * - With a camera, the stage's point at the camera's position is drawn at the frame's center,
- *   turned and zoomed as the camera is. Use it for a 2D world.
- * - Without one (0, the default), stage units are the frame's logical pixels. Use it for a HUD.
- *
- * The camera can be anywhere: on this stage, parented to the player so it follows, or in no
- * tree at all. A camera that is destroyed leaves the stage with none.
- *
- * set_camera returns false if `camera` isn't a 2D camera.
+ * See wgf_stage2d_set_camera for the rest.
  */
 export declare function wgf_stage2d_get_camera(stage: wgf_actor_t | 0): wgf_actor_t;
 
@@ -13217,13 +9636,7 @@ export declare function wgf_stage2d_world_to_screen(stage: wgf_actor_t | 0, x: n
  * Converts between the stage's units and the screen's logical pixels, through its camera as it
  * is now.
  *
- * Logical pixels are what the pointer reads (wgf_mouse.h).
- *
- * - world_to_screen returns where a point of the stage shows on the screen.
- * - screen_to_world returns the stage's point under a place on the screen, as for a click in
- *   the world.
- *
- * Each returns 0, 0 if `stage` isn't a 2D stage.
+ * See wgf_stage2d_world_to_screen for the rest.
  */
 export declare function wgf_stage2d_screen_to_world<T extends number[] | Float32Array | Float64Array>(stage: wgf_actor_t | 0, x: number, y: number, into: T): T;
 export declare function wgf_stage2d_screen_to_world(stage: wgf_actor_t | 0, x: number, y: number, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -13321,10 +9734,7 @@ export declare function wgf_stage3d_set_camera(stage: wgf_actor_t | 0, camera: w
 /**
  * Sets or gets the camera the stage is seen through (default: 0, none, so nothing is drawn).
  *
- * It can be a 3D camera anywhere, on this stage or not. A camera that is destroyed leaves the
- * stage with none.
- *
- * set_camera returns false if `camera` isn't a 3D camera.
+ * See wgf_stage3d_set_camera for the rest.
  */
 export declare function wgf_stage3d_get_camera(stage: wgf_actor_t | 0): wgf_actor_t;
 
@@ -13382,41 +9792,7 @@ export declare function wgf_stage3d_pick(stage: wgf_actor_t | 0, x: number, y: n
 /**
  * Returns the nearest actor on this stage that a ray meets.
  *
- * - pick casts the ray from the screen's point (x, y), in logical pixels (where the pointer
- *   is, wgf_mouse.h), through the stage's camera. It makes the ray as
- *   wgf_camera3d_screen_to_origin and wgf_camera3d_screen_to_direction do.
- * - pick_ray casts any ray, from its origin along its direction. The direction need not be a
- *   unit vector.
- *
- * What can be hit:
- * - A model, by its triangles as it is drawn now. Its box is tested first. A skinned model is
- *   tested in its pose this frame, with no box test first.
- * - A glTF file's node, which is reported as its file's root (the model wgf_model_create
- *   made).
- * - A 3D shape's cube or sphere.
- *
- * An actor that isn't enabled isn't hit, and neither is any actor under it. An actor that
- * isn't visible, or isn't pickable (wgf_actor_set_pickable), lets the ray through. Its
- * children can still be hit. A MASK or BLEND part is hit wherever it is drawn at all,
- * including its see-through texels.
- *
- * The hit goes into `hit`, your array, as many values as fit in `hit_count`. Pass NULL and 0
- * for none. The layout is wgf_collide3d.h's ray hit:
- * - 0, 1, 2: the surface's normal there, a unit vector facing the ray.
- * - 3: zero.
- * - 4, 5, 6: the point, in the stage's space.
- * - 7: how far along the ray, in lengths of its direction. For a point on the screen, it is in
- *   units from the camera's near plane.
- *
- * All values are 0 after a miss.
- *
- * Returns the actor hit. Returns 0 if:
- * - Nothing is hit.
- * - `stage` isn't a 3D stage.
- * - The stage has no camera (pick only).
- * - The direction is 0, or not finite (pick_ray only).
- *
- * It works outside a frame, with the stage as it is placed now.
+ * See wgf_stage3d_pick for the rest.
  */
 export declare function wgf_stage3d_pick_ray(stage: wgf_actor_t | 0, ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, hit: number[] | Float32Array | Float64Array | null): wgf_actor_t;
 
@@ -13432,7 +9808,7 @@ export declare function wgf_stage3d_set_ambient(stage: wgf_actor_t | 0, color: w
  * Sets or gets the ambient light: light that reaches everything evenly, from no direction
  * (default: none, an intensity of 0).
  *
- * It is `color` times `intensity`. The intensity is clamped to 0 or more. Alpha is ignored.
+ * See wgf_stage3d_set_ambient for the rest.
  */
 export declare function wgf_stage3d_get_ambient_color(stage: wgf_actor_t | 0): wgf_color_t;
 
@@ -13440,7 +9816,7 @@ export declare function wgf_stage3d_get_ambient_color(stage: wgf_actor_t | 0): w
  * Sets or gets the ambient light: light that reaches everything evenly, from no direction
  * (default: none, an intensity of 0).
  *
- * It is `color` times `intensity`. The intensity is clamped to 0 or more. Alpha is ignored.
+ * See wgf_stage3d_set_ambient for the rest.
  */
 export declare function wgf_stage3d_get_ambient_intensity(stage: wgf_actor_t | 0): number;
 
@@ -13458,9 +9834,7 @@ export declare function wgf_stage3d_set_tonemap(stage: wgf_actor_t | 0, tonemap:
  * Sets or gets the stage's tone mapping, and its exposure in stops (EV) (default: NEUTRAL,
  * 0).
  *
- * An exposure of +1 doubles the brightness.
- *
- * set_tonemap returns false if `tonemap` isn't a tone mapping.
+ * See wgf_stage3d_set_tonemap for the rest.
  */
 export declare function wgf_stage3d_get_tonemap(stage: wgf_actor_t | 0): wgf_stage3d_tonemap_t;
 
@@ -13468,9 +9842,7 @@ export declare function wgf_stage3d_get_tonemap(stage: wgf_actor_t | 0): wgf_sta
  * Sets or gets the stage's tone mapping, and its exposure in stops (EV) (default: NEUTRAL,
  * 0).
  *
- * An exposure of +1 doubles the brightness.
- *
- * set_tonemap returns false if `tonemap` isn't a tone mapping.
+ * See wgf_stage3d_set_tonemap for the rest.
  */
 export declare function wgf_stage3d_get_exposure(stage: wgf_actor_t | 0): number;
 
@@ -13497,18 +9869,7 @@ export declare function wgf_stage3d_set_environment(stage: wgf_actor_t | 0, envi
  * Sets or gets an environment (wgf_environment.h) that lights the stage's PBR models (default:
  * none).
  *
- * It lights them as well as the stage's lights and ambient light. It gives soft light from all
- * around, and reflections that are sharp or blurred by each surface's roughness, darkened by
- * its occlusion.
- *
- * - `intensity` scales it. 1 is as the image is. It is clamped to 0 or more.
- * - `rotation` turns it about +y, in radians.
- * - An `environment` of 0 removes it.
- *
- * The stage holds a reference of its own. An environment that isn't READY lights nothing
- * until it is.
- *
- * set_environment returns false if `environment` isn't an environment.
+ * See wgf_stage3d_set_environment for the rest.
  */
 export declare function wgf_stage3d_get_environment(stage: wgf_actor_t | 0): wgf_environment_t;
 
@@ -13516,18 +9877,7 @@ export declare function wgf_stage3d_get_environment(stage: wgf_actor_t | 0): wgf
  * Sets or gets an environment (wgf_environment.h) that lights the stage's PBR models (default:
  * none).
  *
- * It lights them as well as the stage's lights and ambient light. It gives soft light from all
- * around, and reflections that are sharp or blurred by each surface's roughness, darkened by
- * its occlusion.
- *
- * - `intensity` scales it. 1 is as the image is. It is clamped to 0 or more.
- * - `rotation` turns it about +y, in radians.
- * - An `environment` of 0 removes it.
- *
- * The stage holds a reference of its own. An environment that isn't READY lights nothing
- * until it is.
- *
- * set_environment returns false if `environment` isn't an environment.
+ * See wgf_stage3d_set_environment for the rest.
  */
 export declare function wgf_stage3d_get_environment_intensity(stage: wgf_actor_t | 0): number;
 
@@ -13535,18 +9885,7 @@ export declare function wgf_stage3d_get_environment_intensity(stage: wgf_actor_t
  * Sets or gets an environment (wgf_environment.h) that lights the stage's PBR models (default:
  * none).
  *
- * It lights them as well as the stage's lights and ambient light. It gives soft light from all
- * around, and reflections that are sharp or blurred by each surface's roughness, darkened by
- * its occlusion.
- *
- * - `intensity` scales it. 1 is as the image is. It is clamped to 0 or more.
- * - `rotation` turns it about +y, in radians.
- * - An `environment` of 0 removes it.
- *
- * The stage holds a reference of its own. An environment that isn't READY lights nothing
- * until it is.
- *
- * set_environment returns false if `environment` isn't an environment.
+ * See wgf_stage3d_set_environment for the rest.
  */
 export declare function wgf_stage3d_get_environment_rotation(stage: wgf_actor_t | 0): number;
 
@@ -13573,18 +9912,7 @@ export declare function wgf_stage3d_set_background(stage: wgf_actor_t | 0, envir
  * Sets or gets an environment drawn behind everything the stage draws, as a sky (default:
  * none).
  *
- * It is drawn before the stage's models, where nothing drawn before it in the frame's 3D is
- * nearer. It is tone mapped as the stage is.
- *
- * - If it is the same environment as the stage's, it uses the stage's environment intensity
- *   and rotation. Otherwise it is drawn at intensity 1, unturned.
- * - `blur` runs from 0, sharp, to 1, fully blurred (clamped).
- * - An `environment` of 0 removes it.
- *
- * The stage holds a reference of its own. An environment that isn't READY draws nothing until
- * it is.
- *
- * set_background returns false if `environment` isn't an environment.
+ * See wgf_stage3d_set_background for the rest.
  */
 export declare function wgf_stage3d_get_background(stage: wgf_actor_t | 0): wgf_environment_t;
 
@@ -13592,18 +9920,7 @@ export declare function wgf_stage3d_get_background(stage: wgf_actor_t | 0): wgf_
  * Sets or gets an environment drawn behind everything the stage draws, as a sky (default:
  * none).
  *
- * It is drawn before the stage's models, where nothing drawn before it in the frame's 3D is
- * nearer. It is tone mapped as the stage is.
- *
- * - If it is the same environment as the stage's, it uses the stage's environment intensity
- *   and rotation. Otherwise it is drawn at intensity 1, unturned.
- * - `blur` runs from 0, sharp, to 1, fully blurred (clamped).
- * - An `environment` of 0 removes it.
- *
- * The stage holds a reference of its own. An environment that isn't READY draws nothing until
- * it is.
- *
- * set_background returns false if `environment` isn't an environment.
+ * See wgf_stage3d_set_background for the rest.
  */
 export declare function wgf_stage3d_get_background_blur(stage: wgf_actor_t | 0): number;
 
@@ -13622,12 +9939,7 @@ export declare function wgf_stage3d_set_culling(stage: wgf_actor_t | 0, culling:
 /**
  * Sets or gets whether the stage skips models the camera can't see (default: on).
  *
- * Before a model is drawn, the box around it, as it is placed now, is tested against the
- * camera's view. The box is grown a little against rounding. The test is far cheaper than
- * drawing the model.
- *
- * Turn it off to draw every model, for example when checking whether a model's bounds are
- * right.
+ * See wgf_stage3d_set_culling for the rest.
  */
 export declare function wgf_stage3d_is_culling(stage: wgf_actor_t | 0): boolean;
 
@@ -13702,8 +10014,7 @@ export declare function wgf_tilemap_get_pixel_width(map: wgf_tilemap_t | 0): num
  * Returns the size of the box the map's cells cover, in the map's pixels, as Tiled gives a
  * map's size.
  *
- * - For an isometric map, it is the box around its diamond.
- * - For a staggered or hexagonal map, it is figured with the tile size made even.
+ * See wgf_tilemap_get_pixel_width for the rest.
  */
 export declare function wgf_tilemap_get_pixel_height(map: wgf_tilemap_t | 0): number;
 
@@ -13726,13 +10037,7 @@ export declare function wgf_tilemap_get_cell_middle(map: wgf_tilemap_t | 0, colu
  * Converts between cells and points, in the map's pixels from its top-left, y down, as Tiled
  * finds them.
  *
- * - get_cell_middle returns the middle of the shape of cell `column`, `row`: a rectangle, a
- *   diamond, or a hexagon. It works outside the map too.
- * - get_column_at and get_row_at return the column and row whose shape holds the point `x`,
- *   `y`. They work outside the map too: below 0, or at its columns or rows and past.
- *
- * A layer's offset isn't added here. wgf_tilemap_layer.h's calls add it. Returns 0 for a map
- * that isn't READY.
+ * See wgf_tilemap_get_cell_middle for the rest.
  */
 export declare function wgf_tilemap_get_column_at(map: wgf_tilemap_t | 0, x: number, y: number): number;
 
@@ -13740,13 +10045,7 @@ export declare function wgf_tilemap_get_column_at(map: wgf_tilemap_t | 0, x: num
  * Converts between cells and points, in the map's pixels from its top-left, y down, as Tiled
  * finds them.
  *
- * - get_cell_middle returns the middle of the shape of cell `column`, `row`: a rectangle, a
- *   diamond, or a hexagon. It works outside the map too.
- * - get_column_at and get_row_at return the column and row whose shape holds the point `x`,
- *   `y`. They work outside the map too: below 0, or at its columns or rows and past.
- *
- * A layer's offset isn't added here. wgf_tilemap_layer.h's calls add it. Returns 0 for a map
- * that isn't READY.
+ * See wgf_tilemap_get_cell_middle for the rest.
  */
 export declare function wgf_tilemap_get_row_at(map: wgf_tilemap_t | 0, x: number, y: number): number;
 
@@ -13763,30 +10062,21 @@ export declare function wgf_tilemap_get_layer_count(map: wgf_tilemap_t | 0): num
 /**
  * Returns the map's layers, with groups flattened, in drawing order.
  *
- * - get_layer_count returns how many layers there are.
- * - get_layer_name and get_layer_kind return one layer's name and kind. The kind is NONE past
- *   the end.
- * - find_layer returns the first layer named `name`, or -1 for none.
+ * See wgf_tilemap_get_layer_count for the rest.
  */
 export declare function wgf_tilemap_get_layer_name(map: wgf_tilemap_t | 0, layer: number): string;
 
 /**
  * Returns the map's layers, with groups flattened, in drawing order.
  *
- * - get_layer_count returns how many layers there are.
- * - get_layer_name and get_layer_kind return one layer's name and kind. The kind is NONE past
- *   the end.
- * - find_layer returns the first layer named `name`, or -1 for none.
+ * See wgf_tilemap_get_layer_count for the rest.
  */
 export declare function wgf_tilemap_get_layer_kind(map: wgf_tilemap_t | 0, layer: number): wgf_tilemap_layer_kind_t;
 
 /**
  * Returns the map's layers, with groups flattened, in drawing order.
  *
- * - get_layer_count returns how many layers there are.
- * - get_layer_name and get_layer_kind return one layer's name and kind. The kind is NONE past
- *   the end.
- * - find_layer returns the first layer named `name`, or -1 for none.
+ * See wgf_tilemap_get_layer_count for the rest.
  */
 export declare function wgf_tilemap_find_layer(map: wgf_tilemap_t | 0, name: string | null): number;
 
@@ -13849,100 +10139,35 @@ export declare function wgf_tilemap_get_object_count(map: wgf_tilemap_t | 0, lay
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_get_object_id(map: wgf_tilemap_t | 0, layer: number, object: number): number;
 
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_get_object_name(map: wgf_tilemap_t | 0, layer: number, object: number): string;
 
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_get_object_class(map: wgf_tilemap_t | 0, layer: number, object: number): string;
 
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_get_object_shape(map: wgf_tilemap_t | 0, layer: number, object: number): wgf_tilemap_shape_t;
 
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_get_object_position<T extends number[] | Float32Array | Float64Array>(map: wgf_tilemap_t | 0, layer: number, object: number, into: T): T;
 export declare function wgf_tilemap_get_object_position(map: wgf_tilemap_t | 0, layer: number, object: number, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -13950,20 +10175,7 @@ export declare function wgf_tilemap_get_object_position(map: wgf_tilemap_t | 0, 
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_get_object_size<T extends number[] | Float32Array | Float64Array>(map: wgf_tilemap_t | 0, layer: number, object: number, into: T): T;
 export declare function wgf_tilemap_get_object_size(map: wgf_tilemap_t | 0, layer: number, object: number, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -13971,60 +10183,21 @@ export declare function wgf_tilemap_get_object_size(map: wgf_tilemap_t | 0, laye
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_get_object_rotation(map: wgf_tilemap_t | 0, layer: number, object: number): number;
 
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_is_object_visible(map: wgf_tilemap_t | 0, layer: number, object: number): boolean;
 
 /**
  * Returns an object layer's objects, in Tiled's order.
  *
- * - get_object_count returns how many there are, or 0 for a layer of another kind.
- * - get_object_id returns the object's id in the map.
- * - get_object_name returns its name.
- * - get_object_class returns its class: Tiled's Class, or Type before 1.9.
- * - get_object_shape returns its shape.
- * - get_object_position returns its place, in the map's pixels from the map's top-left, y
- *   down. That is a tile object's bottom-left corner, a point's point, and any other shape's
- *   top-left. Its layer's offset isn't added.
- * - get_object_size returns its size, or 0 for a point, a polygon, or a polyline.
- * - get_object_rotation returns its turn about its place, in radians, clockwise as Tiled's.
- * - is_object_visible returns whether Tiled shows it.
- * - get_object_tile returns a tile object's gid, or 0 for another shape.
- *
- * Each returns "", 0, or none for an object or layer that isn't one.
+ * See wgf_tilemap_get_object_count for the rest.
  */
 export declare function wgf_tilemap_get_object_tile(map: wgf_tilemap_t | 0, layer: number, object: number): number;
 
@@ -14062,9 +10235,7 @@ export declare function wgf_tilemap_get_object_points(map: wgf_tilemap_t | 0, la
 /**
  * Returns a polygon's or a polyline's points, relative to its place and unturned.
  *
- * get_object_points writes x and y in turn into `out`, as many as fit in `count` floats. It
- * returns how many floats it filled, or 0 for another shape. get_object_point_count returns
- * how many points the object has.
+ * See wgf_tilemap_get_object_points for the rest.
  */
 export declare function wgf_tilemap_get_object_point_count(map: wgf_tilemap_t | 0, layer: number, object: number): number;
 
@@ -14088,15 +10259,7 @@ export declare function wgf_tilemap_get_property_count(map: wgf_tilemap_t | 0, l
  * Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
  * object's in that layer.
  *
- * - get_property_count returns how many there are.
- * - get_property_name returns each one's name, in Tiled's order ("" past the end).
- * - get_property_type returns one's type by name (NONE for a property it doesn't have).
- * - get_property returns its value as text: a number written out, or a bool as "true" or
- *   "false". It returns "" for a property it doesn't have.
- * - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
- *   property it doesn't have, or for text.
- *
- * The text belongs to the map, and is valid while the map is.
+ * See wgf_tilemap_get_property_count for the rest.
  */
 export declare function wgf_tilemap_get_property_name(map: wgf_tilemap_t | 0, layer: number, object: number, index: number): string;
 
@@ -14104,15 +10267,7 @@ export declare function wgf_tilemap_get_property_name(map: wgf_tilemap_t | 0, la
  * Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
  * object's in that layer.
  *
- * - get_property_count returns how many there are.
- * - get_property_name returns each one's name, in Tiled's order ("" past the end).
- * - get_property_type returns one's type by name (NONE for a property it doesn't have).
- * - get_property returns its value as text: a number written out, or a bool as "true" or
- *   "false". It returns "" for a property it doesn't have.
- * - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
- *   property it doesn't have, or for text.
- *
- * The text belongs to the map, and is valid while the map is.
+ * See wgf_tilemap_get_property_count for the rest.
  */
 export declare function wgf_tilemap_get_property_type(map: wgf_tilemap_t | 0, layer: number, object: number, name: string | null): wgf_tilemap_property_type_t;
 
@@ -14120,15 +10275,7 @@ export declare function wgf_tilemap_get_property_type(map: wgf_tilemap_t | 0, la
  * Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
  * object's in that layer.
  *
- * - get_property_count returns how many there are.
- * - get_property_name returns each one's name, in Tiled's order ("" past the end).
- * - get_property_type returns one's type by name (NONE for a property it doesn't have).
- * - get_property returns its value as text: a number written out, or a bool as "true" or
- *   "false". It returns "" for a property it doesn't have.
- * - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
- *   property it doesn't have, or for text.
- *
- * The text belongs to the map, and is valid while the map is.
+ * See wgf_tilemap_get_property_count for the rest.
  */
 export declare function wgf_tilemap_get_property(map: wgf_tilemap_t | 0, layer: number, object: number, name: string | null): string;
 
@@ -14136,15 +10283,7 @@ export declare function wgf_tilemap_get_property(map: wgf_tilemap_t | 0, layer: 
  * Returns custom properties: the map's own (`layer` -1), a layer's (`object` -1), or an
  * object's in that layer.
  *
- * - get_property_count returns how many there are.
- * - get_property_name returns each one's name, in Tiled's order ("" past the end).
- * - get_property_type returns one's type by name (NONE for a property it doesn't have).
- * - get_property returns its value as text: a number written out, or a bool as "true" or
- *   "false". It returns "" for a property it doesn't have.
- * - get_property_number returns its value as a number: a bool as 1 or 0. It returns 0 for a
- *   property it doesn't have, or for text.
- *
- * The text belongs to the map, and is valid while the map is.
+ * See wgf_tilemap_get_property_count for the rest.
  */
 export declare function wgf_tilemap_get_property_number(map: wgf_tilemap_t | 0, layer: number, object: number, name: string | null): number;
 
@@ -14213,24 +10352,7 @@ export declare function wgf_tilemap_get_terrainset_count(map: wgf_tilemap_t | 0)
  * Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
  * them into a layer, see wgf_tilemap_layer_paint_terrain.
  *
- * Sets:
- * - get_terrainset_count returns how many there are.
- * - get_terrainset_name returns one set's name.
- * - get_terrainset_kind returns its kind (NONE past the end).
- * - get_terrainset_tileset returns its tileset's index (-1 past the end).
- * - find_terrainset returns the first set named `name` (-1 for none).
- *
- * A set's terrains are numbered from 1. As in Tiled, 0 is none.
- * - get_terrain_count returns how many a set has.
- * - get_terrain_name returns one terrain's name ("" for 0 or past the end).
- * - find_terrain returns the number of the first terrain named `name` (0 for none).
- *
- * get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
- * from its flips. Places go in Tiled's order, clockwise from the top:
- * - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
- *   top-left corner.
- * - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
- * - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
+ * See wgf_tilemap_get_terrainset_count for the rest.
  */
 export declare function wgf_tilemap_get_terrainset_name(map: wgf_tilemap_t | 0, set: number): string;
 
@@ -14238,24 +10360,7 @@ export declare function wgf_tilemap_get_terrainset_name(map: wgf_tilemap_t | 0, 
  * Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
  * them into a layer, see wgf_tilemap_layer_paint_terrain.
  *
- * Sets:
- * - get_terrainset_count returns how many there are.
- * - get_terrainset_name returns one set's name.
- * - get_terrainset_kind returns its kind (NONE past the end).
- * - get_terrainset_tileset returns its tileset's index (-1 past the end).
- * - find_terrainset returns the first set named `name` (-1 for none).
- *
- * A set's terrains are numbered from 1. As in Tiled, 0 is none.
- * - get_terrain_count returns how many a set has.
- * - get_terrain_name returns one terrain's name ("" for 0 or past the end).
- * - find_terrain returns the number of the first terrain named `name` (0 for none).
- *
- * get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
- * from its flips. Places go in Tiled's order, clockwise from the top:
- * - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
- *   top-left corner.
- * - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
- * - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
+ * See wgf_tilemap_get_terrainset_count for the rest.
  */
 export declare function wgf_tilemap_get_terrainset_kind(map: wgf_tilemap_t | 0, set: number): wgf_tilemap_terrain_kind_t;
 
@@ -14263,24 +10368,7 @@ export declare function wgf_tilemap_get_terrainset_kind(map: wgf_tilemap_t | 0, 
  * Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
  * them into a layer, see wgf_tilemap_layer_paint_terrain.
  *
- * Sets:
- * - get_terrainset_count returns how many there are.
- * - get_terrainset_name returns one set's name.
- * - get_terrainset_kind returns its kind (NONE past the end).
- * - get_terrainset_tileset returns its tileset's index (-1 past the end).
- * - find_terrainset returns the first set named `name` (-1 for none).
- *
- * A set's terrains are numbered from 1. As in Tiled, 0 is none.
- * - get_terrain_count returns how many a set has.
- * - get_terrain_name returns one terrain's name ("" for 0 or past the end).
- * - find_terrain returns the number of the first terrain named `name` (0 for none).
- *
- * get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
- * from its flips. Places go in Tiled's order, clockwise from the top:
- * - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
- *   top-left corner.
- * - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
- * - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
+ * See wgf_tilemap_get_terrainset_count for the rest.
  */
 export declare function wgf_tilemap_get_terrainset_tileset(map: wgf_tilemap_t | 0, set: number): number;
 
@@ -14288,24 +10376,7 @@ export declare function wgf_tilemap_get_terrainset_tileset(map: wgf_tilemap_t | 
  * Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
  * them into a layer, see wgf_tilemap_layer_paint_terrain.
  *
- * Sets:
- * - get_terrainset_count returns how many there are.
- * - get_terrainset_name returns one set's name.
- * - get_terrainset_kind returns its kind (NONE past the end).
- * - get_terrainset_tileset returns its tileset's index (-1 past the end).
- * - find_terrainset returns the first set named `name` (-1 for none).
- *
- * A set's terrains are numbered from 1. As in Tiled, 0 is none.
- * - get_terrain_count returns how many a set has.
- * - get_terrain_name returns one terrain's name ("" for 0 or past the end).
- * - find_terrain returns the number of the first terrain named `name` (0 for none).
- *
- * get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
- * from its flips. Places go in Tiled's order, clockwise from the top:
- * - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
- *   top-left corner.
- * - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
- * - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
+ * See wgf_tilemap_get_terrainset_count for the rest.
  */
 export declare function wgf_tilemap_find_terrainset(map: wgf_tilemap_t | 0, name: string | null): number;
 
@@ -14313,24 +10384,7 @@ export declare function wgf_tilemap_find_terrainset(map: wgf_tilemap_t | 0, name
  * Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
  * them into a layer, see wgf_tilemap_layer_paint_terrain.
  *
- * Sets:
- * - get_terrainset_count returns how many there are.
- * - get_terrainset_name returns one set's name.
- * - get_terrainset_kind returns its kind (NONE past the end).
- * - get_terrainset_tileset returns its tileset's index (-1 past the end).
- * - find_terrainset returns the first set named `name` (-1 for none).
- *
- * A set's terrains are numbered from 1. As in Tiled, 0 is none.
- * - get_terrain_count returns how many a set has.
- * - get_terrain_name returns one terrain's name ("" for 0 or past the end).
- * - find_terrain returns the number of the first terrain named `name` (0 for none).
- *
- * get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
- * from its flips. Places go in Tiled's order, clockwise from the top:
- * - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
- *   top-left corner.
- * - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
- * - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
+ * See wgf_tilemap_get_terrainset_count for the rest.
  */
 export declare function wgf_tilemap_get_terrain_count(map: wgf_tilemap_t | 0, set: number): number;
 
@@ -14338,24 +10392,7 @@ export declare function wgf_tilemap_get_terrain_count(map: wgf_tilemap_t | 0, se
  * Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
  * them into a layer, see wgf_tilemap_layer_paint_terrain.
  *
- * Sets:
- * - get_terrainset_count returns how many there are.
- * - get_terrainset_name returns one set's name.
- * - get_terrainset_kind returns its kind (NONE past the end).
- * - get_terrainset_tileset returns its tileset's index (-1 past the end).
- * - find_terrainset returns the first set named `name` (-1 for none).
- *
- * A set's terrains are numbered from 1. As in Tiled, 0 is none.
- * - get_terrain_count returns how many a set has.
- * - get_terrain_name returns one terrain's name ("" for 0 or past the end).
- * - find_terrain returns the number of the first terrain named `name` (0 for none).
- *
- * get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
- * from its flips. Places go in Tiled's order, clockwise from the top:
- * - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
- *   top-left corner.
- * - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
- * - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
+ * See wgf_tilemap_get_terrainset_count for the rest.
  */
 export declare function wgf_tilemap_get_terrain_name(map: wgf_tilemap_t | 0, set: number, terrain: number): string;
 
@@ -14363,24 +10400,7 @@ export declare function wgf_tilemap_get_terrain_name(map: wgf_tilemap_t | 0, set
  * Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
  * them into a layer, see wgf_tilemap_layer_paint_terrain.
  *
- * Sets:
- * - get_terrainset_count returns how many there are.
- * - get_terrainset_name returns one set's name.
- * - get_terrainset_kind returns its kind (NONE past the end).
- * - get_terrainset_tileset returns its tileset's index (-1 past the end).
- * - find_terrainset returns the first set named `name` (-1 for none).
- *
- * A set's terrains are numbered from 1. As in Tiled, 0 is none.
- * - get_terrain_count returns how many a set has.
- * - get_terrain_name returns one terrain's name ("" for 0 or past the end).
- * - find_terrain returns the number of the first terrain named `name` (0 for none).
- *
- * get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
- * from its flips. Places go in Tiled's order, clockwise from the top:
- * - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
- *   top-left corner.
- * - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
- * - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
+ * See wgf_tilemap_get_terrainset_count for the rest.
  */
 export declare function wgf_tilemap_find_terrain(map: wgf_tilemap_t | 0, set: number, name: string | null): number;
 
@@ -14388,24 +10408,7 @@ export declare function wgf_tilemap_find_terrain(map: wgf_tilemap_t | 0, set: nu
  * Returns the map's terrain (Wang) sets, by tileset and then as Tiled lists them. To paint
  * them into a layer, see wgf_tilemap_layer_paint_terrain.
  *
- * Sets:
- * - get_terrainset_count returns how many there are.
- * - get_terrainset_name returns one set's name.
- * - get_terrainset_kind returns its kind (NONE past the end).
- * - get_terrainset_tileset returns its tileset's index (-1 past the end).
- * - find_terrainset returns the first set named `name` (-1 for none).
- *
- * A set's terrains are numbered from 1. As in Tiled, 0 is none.
- * - get_terrain_count returns how many a set has.
- * - get_terrain_name returns one terrain's name ("" for 0 or past the end).
- * - find_terrain returns the number of the first terrain named `name` (0 for none).
- *
- * get_tile_terrain returns a tile's terrain at `place`. The tile is named by its gid, apart
- * from its flips. Places go in Tiled's order, clockwise from the top:
- * - 0 is its top edge, 1 its top-right corner, 2 its right edge, and so on, to 7, its
- *   top-left corner.
- * - An edge set's tiles have terrains at the even places, and a corner set's at the odd.
- * - It returns 0 for a tile the set doesn't hold, or a `place` past 7.
+ * See wgf_tilemap_get_terrainset_count for the rest.
  */
 export declare function wgf_tilemap_get_tile_terrain(map: wgf_tilemap_t | 0, set: number, gid: number, place: number): number;
 
@@ -14513,10 +10516,7 @@ export declare function wgf_tilemap_layer_get_column_at(layer: wgf_actor_t | 0, 
 /**
  * Returns the column and the row at the point `x`, `y`.
  *
- * The point is in the layer's parent's units: the placed map's, which are the map's pixels
- * from its top-left. It goes through the layer's own place, turn, and scale. It works outside
- * the layer too: below 0, or at its columns or rows and past. Returns 0 for an actor that
- * isn't a placed layer.
+ * See wgf_tilemap_layer_get_column_at for the rest.
  */
 export declare function wgf_tilemap_layer_get_row_at(layer: wgf_actor_t | 0, x: number, y: number): number;
 
@@ -14576,11 +10576,7 @@ export declare function wgf_audio_set_volume(volume: number): boolean;
 /**
  * Sets or gets the volume of every voice, multiplied into each voice's own.
  *
- * - 1 plays the voices as they are.
- * - 0 is silent.
- * - Above 1 is louder, and may clip.
- *
- * Returns false for a negative or non-finite volume.
+ * See wgf_audio_set_volume for the rest.
  */
 export declare function wgf_audio_get_volume(): number;
 
@@ -14595,8 +10591,7 @@ export declare function wgf_audio_set_paused(paused: boolean): void;
 /**
  * Sets or gets whether every voice is held where it is, its state unchanged, until unpaused.
  *
- * Use it for a game's pause screen. Paused or not, voices are told to play, pause, and stop as
- * usual.
+ * See wgf_audio_set_paused for the rest.
  */
 export declare function wgf_audio_is_paused(): boolean;
 
@@ -14619,14 +10614,7 @@ export declare function wgf_audio_set_listener_position(x: number, y: number, z:
  * Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
  * heard from the listener.
  *
- * - The facing has y up, and is normalized when set.
- * - By default the listener is at the origin, facing -z.
- * - A spatial voice is quieter with distance (wgf_voice_set_range), and panned by which side
- *   of the listener it is on.
- * - The ecs sets both from an actor (wgf_world_set_listener).
- *
- * Returns false for a non-finite value, and for a facing of no length or straight up or
- * down.
+ * See wgf_audio_set_listener_position for the rest.
  */
 export declare function wgf_audio_get_listener_position<T extends number[] | Float32Array | Float64Array>(into: T): T;
 export declare function wgf_audio_get_listener_position(into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -14635,14 +10623,7 @@ export declare function wgf_audio_get_listener_position(into?: wgf_vec3_t | null
  * Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
  * heard from the listener.
  *
- * - The facing has y up, and is normalized when set.
- * - By default the listener is at the origin, facing -z.
- * - A spatial voice is quieter with distance (wgf_voice_set_range), and panned by which side
- *   of the listener it is on.
- * - The ecs sets both from an actor (wgf_world_set_listener).
- *
- * Returns false for a non-finite value, and for a facing of no length or straight up or
- * down.
+ * See wgf_audio_set_listener_position for the rest.
  */
 export declare function wgf_audio_set_listener_facing(x: number, y: number, z: number): boolean;
 
@@ -14650,14 +10631,7 @@ export declare function wgf_audio_set_listener_facing(x: number, y: number, z: n
  * Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
  * heard from the listener.
  *
- * - The facing has y up, and is normalized when set.
- * - By default the listener is at the origin, facing -z.
- * - A spatial voice is quieter with distance (wgf_voice_set_range), and panned by which side
- *   of the listener it is on.
- * - The ecs sets both from an actor (wgf_world_set_listener).
- *
- * Returns false for a non-finite value, and for a facing of no length or straight up or
- * down.
+ * See wgf_audio_set_listener_position for the rest.
  */
 export declare function wgf_audio_get_listener_facing<T extends number[] | Float32Array | Float64Array>(into: T): T;
 export declare function wgf_audio_get_listener_facing(into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -14711,12 +10685,7 @@ export declare function wgf_bus_set_volume(bus: wgf_bus_t | 0, volume: number): 
 /**
  * Sets or gets the bus's volume.
  *
- * - 1 plays its voices as they are.
- * - 0 is silent.
- * - Above 1 is louder, and may clip.
- *
- * Setting it ends a fade. Returns false for a negative or non-finite volume, and for a handle
- * that isn't a bus.
+ * See wgf_bus_set_volume for the rest.
  */
 export declare function wgf_bus_get_volume(bus: wgf_bus_t | 0): number;
 
@@ -14731,8 +10700,7 @@ export declare function wgf_bus_set_muted(bus: wgf_bus_t | 0, muted: boolean): b
 /**
  * Sets or gets whether the bus is muted.
  *
- * While muted, its heard volume is 0, and so is everything heard through it or a bus under it.
- * Its volume is kept for unmuting. Returns false only for a handle that isn't a bus.
+ * See wgf_bus_set_muted for the rest.
  */
 export declare function wgf_bus_is_muted(bus: wgf_bus_t | 0): boolean;
 
@@ -14760,13 +10728,7 @@ export declare function wgf_bus_fade(bus: wgf_bus_t | 0, volume: number, seconds
 /**
  * Fades the bus's volume to `volume` over `seconds` of the runtime's frames.
  *
- * - The fade is even in decibels, as an ear hears it. Silence is taken as -60 dB.
- * - 0 seconds or less sets the volume at once.
- * - A new fade, or setting the volume, ends the fade before it.
- * - wgf_bus_is_fading returns whether a fade has not yet ended.
- *
- * Returns false for a negative or non-finite volume, non-finite seconds, or a handle that isn't
- * a bus.
+ * See wgf_bus_fade for the rest.
  */
 export declare function wgf_bus_is_fading(bus: wgf_bus_t | 0): boolean;
 
@@ -14907,8 +10869,7 @@ export declare function wgf_sound_set_bus(sound: wgf_sound_t | 0, bus: wgf_bus_t
 /**
  * Sets or gets the bus the sound's plays (wgf_sound_play) are heard through (wgf_bus.h).
  *
- * It is the effects bus until set, and again once the bus set is destroyed. Returns false for
- * a handle that isn't a decoded sound, or a bus that isn't one.
+ * See wgf_sound_set_bus for the rest.
  */
 export declare function wgf_sound_get_bus(sound: wgf_sound_t | 0): wgf_bus_t;
 
@@ -15010,9 +10971,7 @@ export declare function wgf_voice_set_loop(voice: wgf_voice_t | 0, loop: boolean
 /**
  * Sets or gets whether the voice loops.
  *
- * A looping voice goes on from the start at its end, and is never COMPLETE. With a negative
- * pitch, it goes from the start back to the end. Turning looping on while COMPLETE leaves the
- * voice COMPLETE until the next play. Returns false only for a handle that isn't a voice.
+ * See wgf_voice_set_loop for the rest.
  */
 export declare function wgf_voice_is_loop(voice: wgf_voice_t | 0): boolean;
 
@@ -15030,11 +10989,7 @@ export declare function wgf_voice_set_volume(voice: wgf_voice_t | 0, volume: num
 /**
  * Sets or gets the voice's volume.
  *
- * - 1 plays the sound as the file is.
- * - 0 is silent.
- * - Above 1 is louder, and may clip.
- *
- * Returns false for a negative or non-finite volume.
+ * See wgf_voice_set_volume for the rest.
  */
 export declare function wgf_voice_get_volume(voice: wgf_voice_t | 0): number;
 
@@ -15054,13 +11009,7 @@ export declare function wgf_voice_set_pitch(voice: wgf_voice_t | 0, pitch: numbe
 /**
  * Sets or gets the voice's pitch: its speed and tone together, clamped to [-16, 16].
  *
- * - 1 plays as recorded.
- * - 2 plays an octave up, at twice the speed.
- * - 0 holds it where it is. It is still PLAYING: that is not a pause.
- * - A negative pitch plays backwards.
- *
- * Returns false for a non-finite pitch. Also returns false for a negative pitch on a streamed
- * sound (its decoders run forwards only) or on a pushed voice.
+ * See wgf_voice_set_pitch for the rest.
  */
 export declare function wgf_voice_get_pitch(voice: wgf_voice_t | 0): number;
 
@@ -15079,12 +11028,7 @@ export declare function wgf_voice_set_pan(voice: wgf_voice_t | 0, pan: number): 
 /**
  * Sets or gets the voice's pan, its balance, clamped to [-1, 1] (default: 0).
  *
- * - -1 plays the left only.
- * - 0 plays both.
- * - 1 plays the right only.
- * - Between, the other side fades.
- *
- * Returns false for a non-finite pan.
+ * See wgf_voice_set_pan for the rest.
  */
 export declare function wgf_voice_get_pan(voice: wgf_voice_t | 0): number;
 
@@ -15100,9 +11044,7 @@ export declare function wgf_voice_set_bus(voice: wgf_voice_t | 0, bus: wgf_bus_t
 /**
  * Sets or gets the bus the voice is heard through (wgf_bus.h).
  *
- * It is the effects bus until set. Once the bus set is destroyed, it is that bus's parent. A
- * play (wgf_sound_play) is on its sound's bus instead. Returns false for a handle that isn't a
- * voice, or a bus that isn't one.
+ * See wgf_voice_set_bus for the rest.
  */
 export declare function wgf_voice_get_bus(voice: wgf_voice_t | 0): wgf_bus_t;
 
@@ -15126,51 +11068,21 @@ export declare function wgf_voice_set_spatial(voice: wgf_voice_t | 0, spatial: b
 /**
  * Sets or gets whether the voice is spatial, and its place and range.
  *
- * A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
- * volume and pan.
- * - It is at full volume within its range's near distance (default: 1).
- * - It falls off evenly to silent at its far distance (default: 50).
- * - It is panned by which side of the listener it is on.
- * - An actor's voice component that is spatial is placed at its actor each frame.
- *
- * The place reads back as x, y, z, and the range as near, far.
- *
- * Returns false only for a handle that isn't a voice. Also, set_place returns false for a
- * non-finite place, and set_range for a near below 0 or a far not above the near.
+ * See wgf_voice_set_spatial for the rest.
  */
 export declare function wgf_voice_is_spatial(voice: wgf_voice_t | 0): boolean;
 
 /**
  * Sets or gets whether the voice is spatial, and its place and range.
  *
- * A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
- * volume and pan.
- * - It is at full volume within its range's near distance (default: 1).
- * - It falls off evenly to silent at its far distance (default: 50).
- * - It is panned by which side of the listener it is on.
- * - An actor's voice component that is spatial is placed at its actor each frame.
- *
- * The place reads back as x, y, z, and the range as near, far.
- *
- * Returns false only for a handle that isn't a voice. Also, set_place returns false for a
- * non-finite place, and set_range for a near below 0 or a far not above the near.
+ * See wgf_voice_set_spatial for the rest.
  */
 export declare function wgf_voice_set_place(voice: wgf_voice_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * Sets or gets whether the voice is spatial, and its place and range.
  *
- * A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
- * volume and pan.
- * - It is at full volume within its range's near distance (default: 1).
- * - It falls off evenly to silent at its far distance (default: 50).
- * - It is panned by which side of the listener it is on.
- * - An actor's voice component that is spatial is placed at its actor each frame.
- *
- * The place reads back as x, y, z, and the range as near, far.
- *
- * Returns false only for a handle that isn't a voice. Also, set_place returns false for a
- * non-finite place, and set_range for a near below 0 or a far not above the near.
+ * See wgf_voice_set_spatial for the rest.
  */
 export declare function wgf_voice_get_place<T extends number[] | Float32Array | Float64Array>(voice: wgf_voice_t | 0, into: T): T;
 export declare function wgf_voice_get_place(voice: wgf_voice_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -15178,34 +11090,14 @@ export declare function wgf_voice_get_place(voice: wgf_voice_t | 0, into?: wgf_v
 /**
  * Sets or gets whether the voice is spatial, and its place and range.
  *
- * A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
- * volume and pan.
- * - It is at full volume within its range's near distance (default: 1).
- * - It falls off evenly to silent at its far distance (default: 50).
- * - It is panned by which side of the listener it is on.
- * - An actor's voice component that is spatial is placed at its actor each frame.
- *
- * The place reads back as x, y, z, and the range as near, far.
- *
- * Returns false only for a handle that isn't a voice. Also, set_place returns false for a
- * non-finite place, and set_range for a near below 0 or a far not above the near.
+ * See wgf_voice_set_spatial for the rest.
  */
 export declare function wgf_voice_set_range(voice: wgf_voice_t | 0, near_distance: number, far_distance: number): boolean;
 
 /**
  * Sets or gets whether the voice is spatial, and its place and range.
  *
- * A spatial voice is heard from its place by the listener (wgf_audio.h), on top of its own
- * volume and pan.
- * - It is at full volume within its range's near distance (default: 1).
- * - It falls off evenly to silent at its far distance (default: 50).
- * - It is panned by which side of the listener it is on.
- * - An actor's voice component that is spatial is placed at its actor each frame.
- *
- * The place reads back as x, y, z, and the range as near, far.
- *
- * Returns false only for a handle that isn't a voice. Also, set_place returns false for a
- * non-finite place, and set_range for a near below 0 or a far not above the near.
+ * See wgf_voice_set_spatial for the rest.
  */
 export declare function wgf_voice_get_range<T extends number[] | Float32Array | Float64Array>(voice: wgf_voice_t | 0, into: T): T;
 export declare function wgf_voice_get_range(voice: wgf_voice_t | 0, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -15231,18 +11123,7 @@ export declare function wgf_voice_set_position(voice: wgf_voice_t | 0, seconds: 
 /**
  * Sets or gets where the voice is, in seconds from the sound's start, in any state.
  *
- * When it plays a segment, the position is from the segment's start.
- * - On a looping voice, the position wraps into the sound (or the segment).
- * - On a voice that isn't looping, it is clamped to [0, its length].
- * - Set while PLAYING, the voice plays on from there. A non-looping voice set to its end is
- *   COMPLETE at the next step.
- * - Set while STOPPED, PAUSED, or COMPLETE, it moves and the state stays.
- * - A streamed sound whose file is still arriving, and doesn't state its length
- *   (wgf_sound_get_duration returns 0), bounds the position only below, by 0. Set past what
- *   has arrived, the voice waits there for it.
- *
- * Setting returns false for a non-finite position, for any position while the sound isn't
- * READY, and for any on a pushed voice. Getting returns 0 for a handle that isn't a voice.
+ * See wgf_voice_set_position for the rest.
  */
 export declare function wgf_voice_get_position(voice: wgf_voice_t | 0): number;
 
@@ -15340,30 +11221,14 @@ export declare function wgf_actor_add_component(actor: wgf_actor_t | 0, componen
 /**
  * Adds, removes, or checks for a component on an actor.
  *
- * - add_component adds one with its defaults, which each component's header lists. Adding a
- *   component the actor already has keeps it as it is.
- * - remove_component ends it. A voice is stopped and destroyed.
- *
- * Returns false for a handle that isn't an actor, or a component that isn't one.
- * remove_component also returns false for a component the actor doesn't have.
- *
- * A body or a vehicle belongs to physics (wgf_physics3d.h), an optional part. Adding one
- * before physics has started is refused (logged once).
+ * See wgf_actor_add_component for the rest.
  */
 export declare function wgf_actor_remove_component(actor: wgf_actor_t | 0, component: wgf_component_t): boolean;
 
 /**
  * Adds, removes, or checks for a component on an actor.
  *
- * - add_component adds one with its defaults, which each component's header lists. Adding a
- *   component the actor already has keeps it as it is.
- * - remove_component ends it. A voice is stopped and destroyed.
- *
- * Returns false for a handle that isn't an actor, or a component that isn't one.
- * remove_component also returns false for a component the actor doesn't have.
- *
- * A body or a vehicle belongs to physics (wgf_physics3d.h), an optional part. Adding one
- * before physics has started is refused (logged once).
+ * See wgf_actor_add_component for the rest.
  */
 export declare function wgf_actor_has_component(actor: wgf_actor_t | 0, component: wgf_component_t): boolean;
 
@@ -15390,10 +11255,7 @@ export declare function wgf_actor_find_with_component(component: wgf_component_t
 /**
  * Finds the actors with a component, oldest first.
  *
- * An actor's age is when its first component or behavior was added. find_with_component fills
- * `out` with as many as fit in `count`, and returns how many it filled. count_with_component
- * returns how many there are, to size `out`. Each component is indexed, so neither call looks
- * at every actor. NONE, or a value that isn't a component, finds none.
+ * See wgf_actor_find_with_component for the rest.
  */
 export declare function wgf_actor_count_with_component(component: wgf_component_t): number;
 
@@ -15481,68 +11343,28 @@ export declare function wgf_arcade2d_is_grounded(actor: wgf_actor_t | 0): boolea
 /**
  * Returns what the arcade body touched at its last tick, moving into it.
  *
- * - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
- *   tick, so it reads grounded while it stands.
- * - is_blocked_left, is_blocked_right: it was stopped on that side.
- * - is_blocked_above: it was stopped on its top (it hit its head).
- * - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
- *
- * A side reads blocked only while the arcade body moves that way. A body walking into a wall
- * each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
- *
- * To allow a jump a moment after walking off a ledge (coyote time), check that the air time
- * is short.
+ * See wgf_arcade2d_is_grounded for the rest.
  */
 export declare function wgf_arcade2d_is_blocked_left(actor: wgf_actor_t | 0): boolean;
 
 /**
  * Returns what the arcade body touched at its last tick, moving into it.
  *
- * - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
- *   tick, so it reads grounded while it stands.
- * - is_blocked_left, is_blocked_right: it was stopped on that side.
- * - is_blocked_above: it was stopped on its top (it hit its head).
- * - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
- *
- * A side reads blocked only while the arcade body moves that way. A body walking into a wall
- * each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
- *
- * To allow a jump a moment after walking off a ledge (coyote time), check that the air time
- * is short.
+ * See wgf_arcade2d_is_grounded for the rest.
  */
 export declare function wgf_arcade2d_is_blocked_right(actor: wgf_actor_t | 0): boolean;
 
 /**
  * Returns what the arcade body touched at its last tick, moving into it.
  *
- * - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
- *   tick, so it reads grounded while it stands.
- * - is_blocked_left, is_blocked_right: it was stopped on that side.
- * - is_blocked_above: it was stopped on its top (it hit its head).
- * - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
- *
- * A side reads blocked only while the arcade body moves that way. A body walking into a wall
- * each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
- *
- * To allow a jump a moment after walking off a ledge (coyote time), check that the air time
- * is short.
+ * See wgf_arcade2d_is_grounded for the rest.
  */
 export declare function wgf_arcade2d_is_blocked_above(actor: wgf_actor_t | 0): boolean;
 
 /**
  * Returns what the arcade body touched at its last tick, moving into it.
  *
- * - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
- *   tick, so it reads grounded while it stands.
- * - is_blocked_left, is_blocked_right: it was stopped on that side.
- * - is_blocked_above: it was stopped on its top (it hit its head).
- * - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
- *
- * A side reads blocked only while the arcade body moves that way. A body walking into a wall
- * each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
- *
- * To allow a jump a moment after walking off a ledge (coyote time), check that the air time
- * is short.
+ * See wgf_arcade2d_is_grounded for the rest.
  */
 export declare function wgf_arcade2d_get_air_time(actor: wgf_actor_t | 0): number;
 
@@ -15584,48 +11406,21 @@ export declare function wgf_arcade2d_set_grid_from_layer(parent: wgf_actor_t | 0
 /**
  * Sets the grid from a placed Tiled map's tile layer (wgf_tilemap_layer.h).
  *
- * - A cell with a tile is solid, and an empty cell is open.
- * - Each cell is the map's tile size.
- * - Cell 0 is where the layer's top-left cell is in the parent's space. That includes the
- *   layer's offset, the placement of the map's root, and an infinite map's origin.
- * - A layer scaled or turned under the parent is placed, but the grid isn't scaled or turned.
- * - The grid copies the layer's cells as they are now. A cell set on the layer later must also
- *   be set here, with set_grid_cell.
- *
- * Also returns false for a layer that isn't a placed tile layer, a map that isn't orthogonal,
- * or a map whose tiles aren't square.
+ * See wgf_arcade2d_set_grid_from_layer for the rest.
  */
 export declare function wgf_arcade2d_clear_grid(parent: wgf_actor_t | 0): boolean;
 
 /**
  * Sets the grid from a placed Tiled map's tile layer (wgf_tilemap_layer.h).
  *
- * - A cell with a tile is solid, and an empty cell is open.
- * - Each cell is the map's tile size.
- * - Cell 0 is where the layer's top-left cell is in the parent's space. That includes the
- *   layer's offset, the placement of the map's root, and an infinite map's origin.
- * - A layer scaled or turned under the parent is placed, but the grid isn't scaled or turned.
- * - The grid copies the layer's cells as they are now. A cell set on the layer later must also
- *   be set here, with set_grid_cell.
- *
- * Also returns false for a layer that isn't a placed tile layer, a map that isn't orthogonal,
- * or a map whose tiles aren't square.
+ * See wgf_arcade2d_set_grid_from_layer for the rest.
  */
 export declare function wgf_arcade2d_get_grid_cell(parent: wgf_actor_t | 0, column: number, row: number): number;
 
 /**
  * Sets the grid from a placed Tiled map's tile layer (wgf_tilemap_layer.h).
  *
- * - A cell with a tile is solid, and an empty cell is open.
- * - Each cell is the map's tile size.
- * - Cell 0 is where the layer's top-left cell is in the parent's space. That includes the
- *   layer's offset, the placement of the map's root, and an infinite map's origin.
- * - A layer scaled or turned under the parent is placed, but the grid isn't scaled or turned.
- * - The grid copies the layer's cells as they are now. A cell set on the layer later must also
- *   be set here, with set_grid_cell.
- *
- * Also returns false for a layer that isn't a placed tile layer, a map that isn't orthogonal,
- * or a map whose tiles aren't square.
+ * See wgf_arcade2d_set_grid_from_layer for the rest.
  */
 export declare function wgf_arcade2d_set_grid_cell(parent: wgf_actor_t | 0, column: number, row: number, value_: number): boolean;
 
@@ -15653,18 +11448,14 @@ export declare function wgf_actor_get_behavior_count(actor: wgf_actor_t | 0): nu
 /**
  * Lists the actor's behaviors, in the order they were added.
  *
- * - get_behavior_count returns how many there are.
- * - get_behavior returns the id of the one at `index`, or 0 past the end.
- * - find_behavior returns the id of the first one named `name`, or 0 for none.
+ * See wgf_actor_get_behavior_count for the rest.
  */
 export declare function wgf_actor_get_behavior(actor: wgf_actor_t | 0, index: number): number;
 
 /**
  * Lists the actor's behaviors, in the order they were added.
  *
- * - get_behavior_count returns how many there are.
- * - get_behavior returns the id of the one at `index`, or 0 past the end.
- * - find_behavior returns the id of the first one named `name`, or 0 for none.
+ * See wgf_actor_get_behavior_count for the rest.
  */
 export declare function wgf_actor_find_behavior(actor: wgf_actor_t | 0, name: string | null): number;
 
@@ -15699,92 +11490,28 @@ export declare function wgf_behavior_set_param(actor: wgf_actor_t | 0, behavior:
 /**
  * Sets or gets a parameter, as text.
  *
- * - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
- *   removes it. It also returns false for a key or value that breaks the limits, or a 33rd
- *   parameter.
- * - get_param returns the value. The actor owns the string, valid until it changes. It
- *   returns "" for a parameter the behavior doesn't have.
- * - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
- *   doesn't have, or one that isn't a number.
- *
- * A value starting with '@' refers to another actor. The actor is found once, when the value
- * is set, and again when all of a scene's actors are made. It is then kept, so
- * get_param_actor returns it without a search.
- * - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
- * - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
- * - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
- *
- * get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
- * actor, or an actor since destroyed.
+ * See wgf_behavior_set_param for the rest.
  */
 export declare function wgf_behavior_get_param(actor: wgf_actor_t | 0, behavior: number, key: string | null): string;
 
 /**
  * Sets or gets a parameter, as text.
  *
- * - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
- *   removes it. It also returns false for a key or value that breaks the limits, or a 33rd
- *   parameter.
- * - get_param returns the value. The actor owns the string, valid until it changes. It
- *   returns "" for a parameter the behavior doesn't have.
- * - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
- *   doesn't have, or one that isn't a number.
- *
- * A value starting with '@' refers to another actor. The actor is found once, when the value
- * is set, and again when all of a scene's actors are made. It is then kept, so
- * get_param_actor returns it without a search.
- * - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
- * - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
- * - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
- *
- * get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
- * actor, or an actor since destroyed.
+ * See wgf_behavior_set_param for the rest.
  */
 export declare function wgf_behavior_get_param_number(actor: wgf_actor_t | 0, behavior: number, key: string | null): number;
 
 /**
  * Sets or gets a parameter, as text.
  *
- * - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
- *   removes it. It also returns false for a key or value that breaks the limits, or a 33rd
- *   parameter.
- * - get_param returns the value. The actor owns the string, valid until it changes. It
- *   returns "" for a parameter the behavior doesn't have.
- * - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
- *   doesn't have, or one that isn't a number.
- *
- * A value starting with '@' refers to another actor. The actor is found once, when the value
- * is set, and again when all of a scene's actors are made. It is then kept, so
- * get_param_actor returns it without a search.
- * - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
- * - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
- * - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
- *
- * get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
- * actor, or an actor since destroyed.
+ * See wgf_behavior_set_param for the rest.
  */
 export declare function wgf_behavior_get_param_actor(actor: wgf_actor_t | 0, behavior: number, key: string | null): wgf_actor_t;
 
 /**
  * Sets or gets a parameter, as text.
  *
- * - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
- *   removes it. It also returns false for a key or value that breaks the limits, or a 33rd
- *   parameter.
- * - get_param returns the value. The actor owns the string, valid until it changes. It
- *   returns "" for a parameter the behavior doesn't have.
- * - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
- *   doesn't have, or one that isn't a number.
- *
- * A value starting with '@' refers to another actor. The actor is found once, when the value
- * is set, and again when all of a scene's actors are made. It is then kept, so
- * get_param_actor returns it without a search.
- * - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
- * - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
- * - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
- *
- * get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
- * actor, or an actor since destroyed.
+ * See wgf_behavior_set_param for the rest.
  */
 export declare function wgf_behavior_has_param(actor: wgf_actor_t | 0, behavior: number, key: string | null): boolean;
 
@@ -15813,10 +11540,7 @@ export declare function wgf_actor_find_with_behavior(name: string | null, out: w
 /**
  * Finds the actors with a behavior named `name`, oldest first.
  *
- * An actor's age is when its first component or behavior was added. find_with_behavior fills
- * `out` with as many as fit in `count`, and returns how many it filled. count_with_behavior
- * returns how many there are, to size `out`. An actor with two behaviors of that name counts
- * once. Each name is indexed, so neither call looks at every actor.
+ * See wgf_actor_find_with_behavior for the rest.
  */
 export declare function wgf_actor_count_with_behavior(name: string | null): number;
 
@@ -15858,10 +11582,7 @@ export declare function wgf_bounds_set_visible(actor: wgf_actor_t | 0, visible: 
 /**
  * Sets or gets whether the rectangle is the presentation's visible area (default: off).
  *
- * The visible area (wgf_presentation.h) is read each tick. An actor that wraps at the screen's
- * edge then wraps at the window's edge, whatever its size. A scene file sets this with
- * `bounds visible=true`. get_rect returns the rectangle as it is now. Setting a rectangle
- * turns this off.
+ * See wgf_bounds_set_visible for the rest.
  */
 export declare function wgf_bounds_is_visible(actor: wgf_actor_t | 0): boolean;
 
@@ -15933,8 +11654,7 @@ export declare function wgf_collider_get_shape(actor: wgf_actor_t | 0): wgf_coll
 /**
  * Returns the collider's shape, and a polygon's or a segment's points.
  *
- * get_points fills `out` with x and y in turn, as many as fit in `count` floats. It returns
- * how many floats it filled, or 0 for a circle or a rectangle.
+ * See wgf_collider_get_shape for the rest.
  */
 export declare function wgf_collider_get_points(actor: wgf_actor_t | 0, out: number[] | Float32Array | Float64Array | null): number;
 
@@ -15965,9 +11685,7 @@ export declare function wgf_collider_set_layer(actor: wgf_actor_t | 0, layer: nu
  * Sets or gets the layer and mask, as bits. The layer is what the collider is, and the mask is
  * what it meets (defaults: layer 1, mask -1).
  *
- * A pair meets when either side's mask has the other's layer. Clearing one collider's mask
- * doesn't stop another collider, whose mask has its layer, from meeting it. To make a collider
- * meet nothing, switch it off (see wgf_collider_set_enabled).
+ * See wgf_collider_set_layer for the rest.
  */
 export declare function wgf_collider_get_layer(actor: wgf_actor_t | 0): number;
 
@@ -15975,9 +11693,7 @@ export declare function wgf_collider_get_layer(actor: wgf_actor_t | 0): number;
  * Sets or gets the layer and mask, as bits. The layer is what the collider is, and the mask is
  * what it meets (defaults: layer 1, mask -1).
  *
- * A pair meets when either side's mask has the other's layer. Clearing one collider's mask
- * doesn't stop another collider, whose mask has its layer, from meeting it. To make a collider
- * meet nothing, switch it off (see wgf_collider_set_enabled).
+ * See wgf_collider_set_layer for the rest.
  */
 export declare function wgf_collider_set_mask(actor: wgf_actor_t | 0, mask: number): boolean;
 
@@ -15985,9 +11701,7 @@ export declare function wgf_collider_set_mask(actor: wgf_actor_t | 0, mask: numb
  * Sets or gets the layer and mask, as bits. The layer is what the collider is, and the mask is
  * what it meets (defaults: layer 1, mask -1).
  *
- * A pair meets when either side's mask has the other's layer. Clearing one collider's mask
- * doesn't stop another collider, whose mask has its layer, from meeting it. To make a collider
- * meet nothing, switch it off (see wgf_collider_set_enabled).
+ * See wgf_collider_set_layer for the rest.
  */
 export declare function wgf_collider_get_mask(actor: wgf_actor_t | 0): number;
 
@@ -16003,9 +11717,7 @@ export declare function wgf_collider_set_enabled(actor: wgf_actor_t | 0, enabled
 /**
  * Switches the collider on or off, or gets whether it is on (default: on).
  *
- * A collider switched off meets nothing, from either side. A pair it was in ends, raising
- * TRIGGER_EXIT at the next tick. Its radius, layer, and mask are kept, so when it is switched
- * on again it meets as they say. Use it for a ship that can't be hit while it blinks.
+ * See wgf_collider_set_enabled for the rest.
  */
 export declare function wgf_collider_is_enabled(actor: wgf_actor_t | 0): boolean;
 
@@ -16058,8 +11770,7 @@ export declare function wgf_motion_set_spin(actor: wgf_actor_t | 0, x: number, y
 /**
  * Sets or gets the spin, in radians a second about each axis (in 2D, about z alone).
  *
- * Each tick the actor turns by the tick's share, about its parent's axes. A spin about one
- * axis turns it steadily, past any half turn.
+ * See wgf_motion_set_spin for the rest.
  */
 export declare function wgf_motion_get_spin<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_motion_get_spin(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -16126,33 +11837,21 @@ export declare function wgf_scene_get_actor_count(scene: wgf_scene_t | 0): numbe
 /**
  * Returns what the file holds, once the scene is READY.
  *
- * - get_actor_count returns the number of top actors.
- * - get_prefab_count returns the number of prefabs.
- * - get_prefab_name returns each prefab's name in file order, or "" past the end.
- *
- * They return 0 and "" until the scene is READY.
+ * See wgf_scene_get_actor_count for the rest.
  */
 export declare function wgf_scene_get_prefab_count(scene: wgf_scene_t | 0): number;
 
 /**
  * Returns what the file holds, once the scene is READY.
  *
- * - get_actor_count returns the number of top actors.
- * - get_prefab_count returns the number of prefabs.
- * - get_prefab_name returns each prefab's name in file order, or "" past the end.
- *
- * They return 0 and "" until the scene is READY.
+ * See wgf_scene_get_actor_count for the rest.
  */
 export declare function wgf_scene_get_prefab_name(scene: wgf_scene_t | 0, index: number): string;
 
 /**
  * Returns what the file holds, once the scene is READY.
  *
- * - get_actor_count returns the number of top actors.
- * - get_prefab_count returns the number of prefabs.
- * - get_prefab_name returns each prefab's name in file order, or "" past the end.
- *
- * They return 0 and "" until the scene is READY.
+ * See wgf_scene_get_actor_count for the rest.
  */
 export declare function wgf_scene_has_prefab(scene: wgf_scene_t | 0, name: string | null): boolean;
 
@@ -16220,33 +11919,21 @@ export declare function wgf_screen_add_stage(screen: wgf_actor_t | 0, stage: wgf
 /**
  * Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
  *
- * - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
- *   stage the screen already has.
- * - remove_stage returns false for a stage the screen doesn't have.
- *
- * A stage that is destroyed leaves its screen.
+ * See wgf_screen_add_stage for the rest.
  */
 export declare function wgf_screen_remove_stage(screen: wgf_actor_t | 0, stage: wgf_actor_t | 0): boolean;
 
 /**
  * Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
  *
- * - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
- *   stage the screen already has.
- * - remove_stage returns false for a stage the screen doesn't have.
- *
- * A stage that is destroyed leaves its screen.
+ * See wgf_screen_add_stage for the rest.
  */
 export declare function wgf_screen_get_stage_count(screen: wgf_actor_t | 0): number;
 
 /**
  * Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
  *
- * - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
- *   stage the screen already has.
- * - remove_stage returns false for a stage the screen doesn't have.
- *
- * A stage that is destroyed leaves its screen.
+ * See wgf_screen_add_stage for the rest.
  */
 export declare function wgf_screen_get_stage(screen: wgf_actor_t | 0, index: number): wgf_actor_t;
 
@@ -16264,22 +11951,14 @@ export declare function wgf_screen_push(screen: wgf_actor_t | 0): boolean;
 /**
  * Changes the stack, through the transition.
  *
- * - push returns false for an actor that isn't a screen, or one already on the stack.
- * - pop returns false with no screen, or with the bottom screen alone.
- * - replace returns false as push does, or with no screen to replace.
- *
- * All of them return false while a change runs.
+ * See wgf_screen_push for the rest.
  */
 export declare function wgf_screen_pop(): boolean;
 
 /**
  * Changes the stack, through the transition.
  *
- * - push returns false for an actor that isn't a screen, or one already on the stack.
- * - pop returns false with no screen, or with the bottom screen alone.
- * - replace returns false as push does, or with no screen to replace.
- *
- * All of them return false while a change runs.
+ * See wgf_screen_push for the rest.
  */
 export declare function wgf_screen_replace(screen: wgf_actor_t | 0): boolean;
 
@@ -16297,22 +11976,14 @@ export declare function wgf_screen_get_top(): wgf_actor_t;
 /**
  * Returns the stack's screens.
  *
- * - get_top returns the top screen, or 0 with none.
- * - get_count returns how many are on the stack.
- * - get returns the one `index` up from the bottom, or 0 for an index off the stack.
- *
- * Each is as of the last change made. A change still running isn't counted yet.
+ * See wgf_screen_get_top for the rest.
  */
 export declare function wgf_screen_get_count(): number;
 
 /**
  * Returns the stack's screens.
  *
- * - get_top returns the top screen, or 0 with none.
- * - get_count returns how many are on the stack.
- * - get returns the one `index` up from the bottom, or 0 for an index off the stack.
- *
- * Each is as of the last change made. A change still running isn't counted yet.
+ * See wgf_screen_get_top for the rest.
  */
 export declare function wgf_screen_get(index: number): wgf_actor_t;
 
@@ -16330,33 +12001,21 @@ export declare function wgf_screen_set_opaque(screen: wgf_actor_t | 0, opaque: b
 /**
  * Sets or gets whether a screen is opaque, and whether it is pausing.
  *
- * - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
- *   game.
- * - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
- *
- * Returns false for an actor that isn't a screen.
+ * See wgf_screen_set_opaque for the rest.
  */
 export declare function wgf_screen_is_opaque(screen: wgf_actor_t | 0): boolean;
 
 /**
  * Sets or gets whether a screen is opaque, and whether it is pausing.
  *
- * - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
- *   game.
- * - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
- *
- * Returns false for an actor that isn't a screen.
+ * See wgf_screen_set_opaque for the rest.
  */
 export declare function wgf_screen_set_pausing(screen: wgf_actor_t | 0, pausing: boolean): boolean;
 
 /**
  * Sets or gets whether a screen is opaque, and whether it is pausing.
  *
- * - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
- *   game.
- * - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
- *
- * Returns false for an actor that isn't a screen.
+ * See wgf_screen_set_opaque for the rest.
  */
 export declare function wgf_screen_is_pausing(screen: wgf_actor_t | 0): boolean;
 
@@ -16379,66 +12038,42 @@ export declare function wgf_screen_set_transition(kind: wgf_transition_t, second
 /**
  * Sets or gets the transition the changes run through.
  *
- * - Its kind, and its length in seconds. 0 or less means at once.
- * - Its color (default: black).
- * - Each half's ease (default: linear).
- *
- * Returns false for a kind that isn't one, or seconds that aren't finite.
+ * See wgf_screen_set_transition for the rest.
  */
 export declare function wgf_screen_get_transition(): wgf_transition_t;
 
 /**
  * Sets or gets the transition the changes run through.
  *
- * - Its kind, and its length in seconds. 0 or less means at once.
- * - Its color (default: black).
- * - Each half's ease (default: linear).
- *
- * Returns false for a kind that isn't one, or seconds that aren't finite.
+ * See wgf_screen_set_transition for the rest.
  */
 export declare function wgf_screen_get_transition_seconds(): number;
 
 /**
  * Sets or gets the transition the changes run through.
  *
- * - Its kind, and its length in seconds. 0 or less means at once.
- * - Its color (default: black).
- * - Each half's ease (default: linear).
- *
- * Returns false for a kind that isn't one, or seconds that aren't finite.
+ * See wgf_screen_set_transition for the rest.
  */
 export declare function wgf_screen_set_transition_color(color: wgf_color_t): void;
 
 /**
  * Sets or gets the transition the changes run through.
  *
- * - Its kind, and its length in seconds. 0 or less means at once.
- * - Its color (default: black).
- * - Each half's ease (default: linear).
- *
- * Returns false for a kind that isn't one, or seconds that aren't finite.
+ * See wgf_screen_set_transition for the rest.
  */
 export declare function wgf_screen_get_transition_color(): wgf_color_t;
 
 /**
  * Sets or gets the transition the changes run through.
  *
- * - Its kind, and its length in seconds. 0 or less means at once.
- * - Its color (default: black).
- * - Each half's ease (default: linear).
- *
- * Returns false for a kind that isn't one, or seconds that aren't finite.
+ * See wgf_screen_set_transition for the rest.
  */
 export declare function wgf_screen_set_transition_ease(ease: wgf_easing_t): boolean;
 
 /**
  * Sets or gets the transition the changes run through.
  *
- * - Its kind, and its length in seconds. 0 or less means at once.
- * - Its color (default: black).
- * - Each half's ease (default: linear).
- *
- * Returns false for a kind that isn't one, or seconds that aren't finite.
+ * See wgf_screen_set_transition for the rest.
  */
 export declare function wgf_screen_get_transition_ease(): wgf_easing_t;
 
@@ -16456,11 +12091,7 @@ export declare function wgf_screen_is_changing(): boolean;
 /**
  * Returns whether a change is running, and how far it has come.
  *
- * - 0 to 0.5: covering.
- * - 0.5: covered. The change is made there, or it is waiting on a load.
- * - 0.5 to 1: uncovering.
- *
- * The progress is 0 with no change running.
+ * See wgf_screen_is_changing for the rest.
  */
 export declare function wgf_screen_get_change_progress(): number;
 
@@ -16504,9 +12135,7 @@ export declare function wgf_screen_set_loading_screen(screen: wgf_actor_t | 0): 
  * Sets or gets the loading screen, drawn over the cover while a change waits on loads (0 for
  * none). get_load_progress returns how far the loads have come, 0 to 1.
  *
- * - With assets to wait for, it is their progress.
- * - Otherwise it is the share of the loads pending when the wait began that have settled.
- * - It is 1 with nothing waiting.
+ * See wgf_screen_set_loading_screen for the rest.
  */
 export declare function wgf_screen_get_loading_screen(): wgf_actor_t;
 
@@ -16514,9 +12143,7 @@ export declare function wgf_screen_get_loading_screen(): wgf_actor_t;
  * Sets or gets the loading screen, drawn over the cover while a change waits on loads (0 for
  * none). get_load_progress returns how far the loads have come, 0 to 1.
  *
- * - With assets to wait for, it is their progress.
- * - Otherwise it is the share of the loads pending when the wait began that have settled.
- * - It is 1 with nothing waiting.
+ * See wgf_screen_set_loading_screen for the rest.
  */
 export declare function wgf_screen_get_load_progress(): number;
 
@@ -16541,16 +12168,7 @@ export declare function wgf_tween_create(from: number, to: number, seconds: numb
  * Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
  * ease (wgf_ease.h).
  *
- * Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
- *
- * - An actor's tween starts from where the actor is when the tween begins, after its delay.
- * - It ends with the actor: a tween of a destroyed actor is let go of.
- * - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
- *   wgf_handle_is_alive), which is how your game knows it ended.
- * - There can be at most 4096 tweens.
- *
- * Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
- * finite, an actor that isn't one, or no room for another tween.
+ * See wgf_tween_create for the rest.
  */
 export declare function wgf_tween_move(actor: wgf_actor_t | 0, x: number, y: number, z: number, seconds: number, easing: wgf_easing_t): wgf_tween_t;
 
@@ -16558,16 +12176,7 @@ export declare function wgf_tween_move(actor: wgf_actor_t | 0, x: number, y: num
  * Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
  * ease (wgf_ease.h).
  *
- * Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
- *
- * - An actor's tween starts from where the actor is when the tween begins, after its delay.
- * - It ends with the actor: a tween of a destroyed actor is let go of.
- * - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
- *   wgf_handle_is_alive), which is how your game knows it ended.
- * - There can be at most 4096 tweens.
- *
- * Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
- * finite, an actor that isn't one, or no room for another tween.
+ * See wgf_tween_create for the rest.
  */
 export declare function wgf_tween_turn(actor: wgf_actor_t | 0, x: number, y: number, z: number, seconds: number, easing: wgf_easing_t): wgf_tween_t;
 
@@ -16575,16 +12184,7 @@ export declare function wgf_tween_turn(actor: wgf_actor_t | 0, x: number, y: num
  * Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
  * ease (wgf_ease.h).
  *
- * Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
- *
- * - An actor's tween starts from where the actor is when the tween begins, after its delay.
- * - It ends with the actor: a tween of a destroyed actor is let go of.
- * - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
- *   wgf_handle_is_alive), which is how your game knows it ended.
- * - There can be at most 4096 tweens.
- *
- * Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
- * finite, an actor that isn't one, or no room for another tween.
+ * See wgf_tween_create for the rest.
  */
 export declare function wgf_tween_scale(actor: wgf_actor_t | 0, x: number, y: number, z: number, seconds: number, easing: wgf_easing_t): wgf_tween_t;
 
@@ -16630,7 +12230,7 @@ export declare function wgf_tween_set_repeat(tween: wgf_tween_t | 0, count: numb
  * Sets or gets how many more times a tween runs after the first (default: 0), and whether each
  * run after the first goes back the way it came (yoyo).
  *
- * A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
+ * See wgf_tween_set_repeat for the rest.
  */
 export declare function wgf_tween_get_repeat(tween: wgf_tween_t | 0): number;
 
@@ -16638,7 +12238,7 @@ export declare function wgf_tween_get_repeat(tween: wgf_tween_t | 0): number;
  * Sets or gets how many more times a tween runs after the first (default: 0), and whether each
  * run after the first goes back the way it came (yoyo).
  *
- * A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
+ * See wgf_tween_set_repeat for the rest.
  */
 export declare function wgf_tween_set_yoyo(tween: wgf_tween_t | 0, yoyo: boolean): boolean;
 
@@ -16646,7 +12246,7 @@ export declare function wgf_tween_set_yoyo(tween: wgf_tween_t | 0, yoyo: boolean
  * Sets or gets how many more times a tween runs after the first (default: 0), and whether each
  * run after the first goes back the way it came (yoyo).
  *
- * A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
+ * See wgf_tween_set_repeat for the rest.
  */
 export declare function wgf_tween_is_yoyo(tween: wgf_tween_t | 0): boolean;
 
@@ -16673,8 +12273,7 @@ export declare function wgf_world_get_event_count(): number;
 /**
  * Returns how many events wait, or takes the oldest off the queue.
  *
- * take_events fills `out` with four ints an event (the event, then the three above). It takes
- * as many whole events as fit in `count` ints, and returns how many ints it filled.
+ * See wgf_world_get_event_count for the rest.
  */
 export declare function wgf_world_take_events(out: number[] | Int32Array | null): number;
 
@@ -16701,9 +12300,7 @@ export declare function wgf_world_set_listener(actor: wgf_actor_t | 0): boolean;
 /**
  * Sets or gets the actor that spatial audio is heard from (wgf_audio.h's listener).
  *
- * Each frame the listener is put where the actor is drawn, facing its -z, as a camera views.
- * 0 sets none, and the listener stays as last set. Returns false for a handle that isn't an
- * actor.
+ * See wgf_world_set_listener for the rest.
  */
 export declare function wgf_world_get_listener(): wgf_actor_t;
 
@@ -16804,24 +12401,14 @@ export declare function wgf_body3d_set_shape(actor: wgf_actor_t | 0, shape: wgf_
 /**
  * Sets or gets the body's shape, centered on the actor (default: a box of 1 by 1 by 1).
  *
- * - `x`, `y`, `z` mean what the shape says (see wgf_body3d_shape_t). Each is at least 0.01.
- * - CONVEX and MESH take no size. Their models' meshes are read when the body is made, and
- *   a model not yet loaded is left out.
- * - A mesh can only be static. On another type it is its convex hull.
- *
- * get_size returns `x`, `y`, `z` as set.
+ * See wgf_body3d_set_shape for the rest.
  */
 export declare function wgf_body3d_get_shape(actor: wgf_actor_t | 0): wgf_body3d_shape_t;
 
 /**
  * Sets or gets the body's shape, centered on the actor (default: a box of 1 by 1 by 1).
  *
- * - `x`, `y`, `z` mean what the shape says (see wgf_body3d_shape_t). Each is at least 0.01.
- * - CONVEX and MESH take no size. Their models' meshes are read when the body is made, and
- *   a model not yet loaded is left out.
- * - A mesh can only be static. On another type it is its convex hull.
- *
- * get_size returns `x`, `y`, `z` as set.
+ * See wgf_body3d_set_shape for the rest.
  */
 export declare function wgf_body3d_get_size<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_body3d_get_size(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -16841,10 +12428,7 @@ export declare function wgf_body3d_set_offset(actor: wgf_actor_t | 0, x: number,
  * Sets or gets the shape's offset and the center of mass's offset, in the actor's space
  * (default: 0, 0, 0 for each).
  *
- * - The offset is where the shape is centered from its actor. Use it for a gate's sensor on
- *   the road, with its actor at the gate's foot.
- * - The mass offset is how far the center of mass is from the shape's own. Set it low on a
- *   car, so it doesn't roll.
+ * See wgf_body3d_set_offset for the rest.
  */
 export declare function wgf_body3d_get_offset<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_body3d_get_offset(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -16853,10 +12437,7 @@ export declare function wgf_body3d_get_offset(actor: wgf_actor_t | 0, into?: wgf
  * Sets or gets the shape's offset and the center of mass's offset, in the actor's space
  * (default: 0, 0, 0 for each).
  *
- * - The offset is where the shape is centered from its actor. Use it for a gate's sensor on
- *   the road, with its actor at the gate's foot.
- * - The mass offset is how far the center of mass is from the shape's own. Set it low on a
- *   car, so it doesn't roll.
+ * See wgf_body3d_set_offset for the rest.
  */
 export declare function wgf_body3d_set_mass_offset(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
@@ -16864,10 +12445,7 @@ export declare function wgf_body3d_set_mass_offset(actor: wgf_actor_t | 0, x: nu
  * Sets or gets the shape's offset and the center of mass's offset, in the actor's space
  * (default: 0, 0, 0 for each).
  *
- * - The offset is where the shape is centered from its actor. Use it for a gate's sensor on
- *   the road, with its actor at the gate's foot.
- * - The mass offset is how far the center of mass is from the shape's own. Set it low on a
- *   car, so it doesn't roll.
+ * See wgf_body3d_set_offset for the rest.
  */
 export declare function wgf_body3d_get_mass_offset<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_body3d_get_mass_offset(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -16895,24 +12473,21 @@ export declare function wgf_body3d_set_friction(actor: wgf_actor_t | 0, friction
 /**
  * Sets or gets friction and bounce. Each is taken for a pair of bodies together.
  *
- * - friction: 0 is ice and 1 is rubber (default: 0.5). It is clamped to 0 or more.
- * - bounce: 0 is none and 1 is all of it (default: 0). It is clamped to 0 to 1.
+ * See wgf_body3d_set_friction for the rest.
  */
 export declare function wgf_body3d_get_friction(actor: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets friction and bounce. Each is taken for a pair of bodies together.
  *
- * - friction: 0 is ice and 1 is rubber (default: 0.5). It is clamped to 0 or more.
- * - bounce: 0 is none and 1 is all of it (default: 0). It is clamped to 0 to 1.
+ * See wgf_body3d_set_friction for the rest.
  */
 export declare function wgf_body3d_set_bounce(actor: wgf_actor_t | 0, bounce: number): boolean;
 
 /**
  * Sets or gets friction and bounce. Each is taken for a pair of bodies together.
  *
- * - friction: 0 is ice and 1 is rubber (default: 0.5). It is clamped to 0 or more.
- * - bounce: 0 is none and 1 is all of it (default: 0). It is clamped to 0 to 1.
+ * See wgf_body3d_set_friction for the rest.
  */
 export declare function wgf_body3d_get_bounce(actor: wgf_actor_t | 0): number;
 
@@ -16947,45 +12522,21 @@ export declare function wgf_body3d_set_layer(actor: wgf_actor_t | 0, layer: numb
 /**
  * Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
  *
- * Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
- * (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
- *
- * - Each is 15 bits (1 to 0x7FFF).
- * - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
- *   them, whatever their masks are.
- * - To make two bodies pass through each other, leave each one's layer out of the other's
- *   mask. That goes for a moving body and a static one too.
- * - Two static bodies never meet.
+ * See wgf_body3d_set_layer for the rest.
  */
 export declare function wgf_body3d_get_layer(actor: wgf_actor_t | 0): number;
 
 /**
  * Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
  *
- * Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
- * (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
- *
- * - Each is 15 bits (1 to 0x7FFF).
- * - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
- *   them, whatever their masks are.
- * - To make two bodies pass through each other, leave each one's layer out of the other's
- *   mask. That goes for a moving body and a static one too.
- * - Two static bodies never meet.
+ * See wgf_body3d_set_layer for the rest.
  */
 export declare function wgf_body3d_set_mask(actor: wgf_actor_t | 0, mask: number): boolean;
 
 /**
  * Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
  *
- * Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
- * (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
- *
- * - Each is 15 bits (1 to 0x7FFF).
- * - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
- *   them, whatever their masks are.
- * - To make two bodies pass through each other, leave each one's layer out of the other's
- *   mask. That goes for a moving body and a static one too.
- * - Two static bodies never meet.
+ * See wgf_body3d_set_layer for the rest.
  */
 export declare function wgf_body3d_get_mask(actor: wgf_actor_t | 0): number;
 
@@ -17004,12 +12555,7 @@ export declare function wgf_body3d_set_velocity(actor: wgf_actor_t | 0, x: numbe
 /**
  * Sets or gets the body's velocity and spin, in its stage's space, or gives it a push.
  *
- * - The velocity is in units a second.
- * - The spin is in radians a second about each axis.
- * - add_impulse pushes it through its center, in kilogram units a second.
- *
- * A body not yet made in the world (before its first tick) reads 0, and takes them when it
- * is made.
+ * See wgf_body3d_set_velocity for the rest.
  */
 export declare function wgf_body3d_get_velocity<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_body3d_get_velocity(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -17017,24 +12563,14 @@ export declare function wgf_body3d_get_velocity(actor: wgf_actor_t | 0, into?: w
 /**
  * Sets or gets the body's velocity and spin, in its stage's space, or gives it a push.
  *
- * - The velocity is in units a second.
- * - The spin is in radians a second about each axis.
- * - add_impulse pushes it through its center, in kilogram units a second.
- *
- * A body not yet made in the world (before its first tick) reads 0, and takes them when it
- * is made.
+ * See wgf_body3d_set_velocity for the rest.
  */
 export declare function wgf_body3d_set_spin(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
 /**
  * Sets or gets the body's velocity and spin, in its stage's space, or gives it a push.
  *
- * - The velocity is in units a second.
- * - The spin is in radians a second about each axis.
- * - add_impulse pushes it through its center, in kilogram units a second.
- *
- * A body not yet made in the world (before its first tick) reads 0, and takes them when it
- * is made.
+ * See wgf_body3d_set_velocity for the rest.
  */
 export declare function wgf_body3d_get_spin<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_body3d_get_spin(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -17042,12 +12578,7 @@ export declare function wgf_body3d_get_spin(actor: wgf_actor_t | 0, into?: wgf_v
 /**
  * Sets or gets the body's velocity and spin, in its stage's space, or gives it a push.
  *
- * - The velocity is in units a second.
- * - The spin is in radians a second about each axis.
- * - add_impulse pushes it through its center, in kilogram units a second.
- *
- * A body not yet made in the world (before its first tick) reads 0, and takes them when it
- * is made.
+ * See wgf_body3d_set_velocity for the rest.
  */
 export declare function wgf_body3d_add_impulse(actor: wgf_actor_t | 0, x: number, y: number, z: number): boolean;
 
@@ -17119,10 +12650,7 @@ export declare function wgf_physics3d_enable_characters(): boolean;
  * Enables characters (WGF_BODY3D_TYPE_CHARACTER in wgf_body3d.h, Jolt's CharacterVirtual), or
  * gets whether they are enabled.
  *
- * Characters are linked on purpose. This call links them, so a game with no characters carries
- * none of their code (about 42 KB). A game enables them with "characters" in wgf.json's
- * features. Without it, a character type is refused (logged), in a scene too. Call it any time
- * before the first character.
+ * See wgf_physics3d_enable_characters for the rest.
  */
 export declare function wgf_physics3d_is_characters_enabled(): boolean;
 
@@ -17141,10 +12669,7 @@ export declare function wgf_physics3d_enable_vehicles(): boolean;
  * Enables vehicles (wgf_vehicle.h, Jolt's VehicleConstraint), or gets whether they are
  * enabled.
  *
- * Vehicles are linked on purpose. This call links them, so a game with physics and no car
- * carries none of their code (about 46 KB). A game enables them with "vehicles" in wgf.json's
- * features. Without it, a vehicle component is refused (logged), in a scene too. Call it any
- * time before the first vehicle.
+ * See wgf_physics3d_enable_vehicles for the rest.
  */
 export declare function wgf_physics3d_is_vehicles_enabled(): boolean;
 
@@ -17196,20 +12721,7 @@ export declare function wgf_physics3d_cast_ray(x: number, y: number, z: number, 
 /**
  * Casts a ray or a sphere through the world, and returns what it hits.
  *
- * The queries in this header see the bodies as they are now (as of their last tick), in their
- * 3D stage's space. Each meets the bodies whose layer is in `mask` (wgf_body3d_set_layer), and
- * never a sensor. Each starts physics.
- *
- * - The ray starts at `x`, `y`, `z` and goes along `dx`, `dy`, `dz` for `distance`. The
- *   direction may be any length: it is normalized.
- * - cast_sphere sweeps a sphere of `radius` the same way.
- * - Hits come nearest first, each body once (its nearest hit), as many as fit in `count`.
- * - Each hit's actor goes into `actors`.
- * - If `hits` is given, each hit also fills 7 floats of it, as many as fit in `hits_count`:
- *   the point, the surface's normal there, and the distance along the ray.
- *
- * Returns how many hits. Returns 0 for nothing hit, a direction of no length, a distance or
- * radius not above 0, or no array.
+ * See wgf_physics3d_cast_ray for the rest.
  */
 export declare function wgf_physics3d_cast_sphere(x: number, y: number, z: number, radius: number, dx: number, dy: number, dz: number, distance: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null, hits: number[] | Float32Array | Float64Array | null): number;
 
@@ -17228,12 +12740,7 @@ export declare function wgf_physics3d_overlap_sphere(x: number, y: number, z: nu
 /**
  * Finds the bodies overlapping a sphere or a box, and returns how many.
  *
- * - overlap_sphere: a sphere of `radius` at `x`, `y`, `z`.
- * - overlap_box: a box `width`, `height`, and `depth`, centered there, with the world's axes.
- *
- * The bodies go into `actors` in no order, as many as fit in `count`. Like the casts, these
- * see the bodies as of their last tick, meet only those whose layer is in `mask` and never a
- * sensor, and start physics. Returns 0 for none, a size not above 0, or no array.
+ * See wgf_physics3d_overlap_sphere for the rest.
  */
 export declare function wgf_physics3d_overlap_box(x: number, y: number, z: number, width: number, height: number, depth: number, mask: number, actors: wgf_actor_t[] | Uint32Array | null): number;
 
@@ -17272,33 +12779,21 @@ export declare function wgf_vehicle_set_wheel_size(actor: wgf_actor_t | 0, radiu
 /**
  * Sets the wheels, springs, steering, and grip.
  *
- * - set_wheel_size: each wheel's radius and width, in meters.
- * - set_suspension: each spring's travel (meters), stiffness (Hz), and damping (0 is none, and
- *   1 is just enough).
- * - set_steering: how far the front pair steers, in radians.
- * - set_grip: the tires' grip. 1 is a road tire's, and more grips harder.
+ * See wgf_vehicle_set_wheel_size for the rest.
  */
 export declare function wgf_vehicle_set_suspension(actor: wgf_actor_t | 0, travel: number, stiffness: number, damping: number): boolean;
 
 /**
  * Sets the wheels, springs, steering, and grip.
  *
- * - set_wheel_size: each wheel's radius and width, in meters.
- * - set_suspension: each spring's travel (meters), stiffness (Hz), and damping (0 is none, and
- *   1 is just enough).
- * - set_steering: how far the front pair steers, in radians.
- * - set_grip: the tires' grip. 1 is a road tire's, and more grips harder.
+ * See wgf_vehicle_set_wheel_size for the rest.
  */
 export declare function wgf_vehicle_set_steering(actor: wgf_actor_t | 0, radians: number): boolean;
 
 /**
  * Sets the wheels, springs, steering, and grip.
  *
- * - set_wheel_size: each wheel's radius and width, in meters.
- * - set_suspension: each spring's travel (meters), stiffness (Hz), and damping (0 is none, and
- *   1 is just enough).
- * - set_steering: how far the front pair steers, in radians.
- * - set_grip: the tires' grip. 1 is a road tire's, and more grips harder.
+ * See wgf_vehicle_set_wheel_size for the rest.
  */
 export declare function wgf_vehicle_set_grip(actor: wgf_actor_t | 0, grip: number): boolean;
 
@@ -17328,10 +12823,7 @@ export declare function wgf_vehicle_get_wheel_size(actor: wgf_actor_t | 0, into?
 /**
  * Returns the settings as set.
  *
- * - get_wheel_size: (radius, width).
- * - get_suspension: (travel, stiffness, damping).
- * - get_steering: radians.
- * - get_grip: the grip.
+ * See wgf_vehicle_get_wheel_size for the rest.
  */
 export declare function wgf_vehicle_get_suspension<T extends number[] | Float32Array | Float64Array>(actor: wgf_actor_t | 0, into: T): T;
 export declare function wgf_vehicle_get_suspension(actor: wgf_actor_t | 0, into?: wgf_vec3_t | null): wgf_vec3_t;
@@ -17339,20 +12831,14 @@ export declare function wgf_vehicle_get_suspension(actor: wgf_actor_t | 0, into?
 /**
  * Returns the settings as set.
  *
- * - get_wheel_size: (radius, width).
- * - get_suspension: (travel, stiffness, damping).
- * - get_steering: radians.
- * - get_grip: the grip.
+ * See wgf_vehicle_get_wheel_size for the rest.
  */
 export declare function wgf_vehicle_get_steering(actor: wgf_actor_t | 0): number;
 
 /**
  * Returns the settings as set.
  *
- * - get_wheel_size: (radius, width).
- * - get_suspension: (travel, stiffness, damping).
- * - get_steering: radians.
- * - get_grip: the grip.
+ * See wgf_vehicle_get_wheel_size for the rest.
  */
 export declare function wgf_vehicle_get_grip(actor: wgf_actor_t | 0): number;
 
@@ -17369,20 +12855,14 @@ export declare function wgf_vehicle_set_engine(actor: wgf_actor_t | 0, torque: n
 /**
  * Sets the engine, the gearbox, and the drive.
  *
- * - set_engine: the engine's torque (Nm) and top speed (rpm).
- * - set_gears: the gearbox's forward ratios, 1 to 8 of them, the first the lowest. For
- *   example, 3.2 down to 0.9.
- * - set_drive: which axles the engine drives.
+ * See wgf_vehicle_set_engine for the rest.
  */
 export declare function wgf_vehicle_set_gears(actor: wgf_actor_t | 0, ratios: readonly number[] | Float32Array | Float64Array | null): boolean;
 
 /**
  * Sets the engine, the gearbox, and the drive.
  *
- * - set_engine: the engine's torque (Nm) and top speed (rpm).
- * - set_gears: the gearbox's forward ratios, 1 to 8 of them, the first the lowest. For
- *   example, 3.2 down to 0.9.
- * - set_drive: which axles the engine drives.
+ * See wgf_vehicle_set_engine for the rest.
  */
 export declare function wgf_vehicle_set_drive(actor: wgf_actor_t | 0, drive: wgf_vehicle_drive_t): boolean;
 
@@ -17400,30 +12880,21 @@ export declare function wgf_vehicle_get_engine(actor: wgf_actor_t | 0, into?: wg
 /**
  * Returns the engine, gearbox, and drive as set.
  *
- * - get_engine: (torque, max_rpm).
- * - get_gear_count: how many forward ratios.
- * - get_gear_ratio: ratio `index`, or 0 for one the gearbox doesn't have.
- * - get_drive: the drive.
+ * See wgf_vehicle_get_engine for the rest.
  */
 export declare function wgf_vehicle_get_gear_count(actor: wgf_actor_t | 0): number;
 
 /**
  * Returns the engine, gearbox, and drive as set.
  *
- * - get_engine: (torque, max_rpm).
- * - get_gear_count: how many forward ratios.
- * - get_gear_ratio: ratio `index`, or 0 for one the gearbox doesn't have.
- * - get_drive: the drive.
+ * See wgf_vehicle_get_engine for the rest.
  */
 export declare function wgf_vehicle_get_gear_ratio(actor: wgf_actor_t | 0, index: number): number;
 
 /**
  * Returns the engine, gearbox, and drive as set.
  *
- * - get_engine: (torque, max_rpm).
- * - get_gear_count: how many forward ratios.
- * - get_gear_ratio: ratio `index`, or 0 for one the gearbox doesn't have.
- * - get_drive: the drive.
+ * See wgf_vehicle_get_engine for the rest.
  */
 export declare function wgf_vehicle_get_drive(actor: wgf_actor_t | 0): wgf_vehicle_drive_t;
 
@@ -17460,57 +12931,21 @@ export declare function wgf_vehicle_get_speed(actor: wgf_actor_t | 0): number;
 /**
  * Returns how the vehicle is going.
  *
- * - get_speed: its speed along its +z, in meters a second. Below 0 is backing up.
- * - get_rpm: the engine's rpm.
- * - get_gear: the gear it is in. 1 is the lowest, -1 is reverse, and 0 is neutral.
- * - get_wheel_slip: how hard wheel `index`'s tire works, as a share of its grip's peak. It is
- *   the larger of the slip along the tire and across it.
- *
- * Wheel slip:
- * - Below 1, the tire grips. A free-rolling wheel reads a little above 0, from its small slip
- *   angle.
- * - 1 is at the limit.
- * - Above 1 it is sliding or spinning, up to 10. Traction control keeps it near 1, and tire
- *   smoke shows above about 1.5.
- * - It is 0 for a wheel the vehicle doesn't have, or a wheel in the air.
+ * See wgf_vehicle_get_speed for the rest.
  */
 export declare function wgf_vehicle_get_rpm(actor: wgf_actor_t | 0): number;
 
 /**
  * Returns how the vehicle is going.
  *
- * - get_speed: its speed along its +z, in meters a second. Below 0 is backing up.
- * - get_rpm: the engine's rpm.
- * - get_gear: the gear it is in. 1 is the lowest, -1 is reverse, and 0 is neutral.
- * - get_wheel_slip: how hard wheel `index`'s tire works, as a share of its grip's peak. It is
- *   the larger of the slip along the tire and across it.
- *
- * Wheel slip:
- * - Below 1, the tire grips. A free-rolling wheel reads a little above 0, from its small slip
- *   angle.
- * - 1 is at the limit.
- * - Above 1 it is sliding or spinning, up to 10. Traction control keeps it near 1, and tire
- *   smoke shows above about 1.5.
- * - It is 0 for a wheel the vehicle doesn't have, or a wheel in the air.
+ * See wgf_vehicle_get_speed for the rest.
  */
 export declare function wgf_vehicle_get_gear(actor: wgf_actor_t | 0): number;
 
 /**
  * Returns how the vehicle is going.
  *
- * - get_speed: its speed along its +z, in meters a second. Below 0 is backing up.
- * - get_rpm: the engine's rpm.
- * - get_gear: the gear it is in. 1 is the lowest, -1 is reverse, and 0 is neutral.
- * - get_wheel_slip: how hard wheel `index`'s tire works, as a share of its grip's peak. It is
- *   the larger of the slip along the tire and across it.
- *
- * Wheel slip:
- * - Below 1, the tire grips. A free-rolling wheel reads a little above 0, from its small slip
- *   angle.
- * - 1 is at the limit.
- * - Above 1 it is sliding or spinning, up to 10. Traction control keeps it near 1, and tire
- *   smoke shows above about 1.5.
- * - It is 0 for a wheel the vehicle doesn't have, or a wheel in the air.
+ * See wgf_vehicle_get_speed for the rest.
  */
 export declare function wgf_vehicle_get_wheel_slip(actor: wgf_actor_t | 0, index: number): number;
 
@@ -17545,9 +12980,7 @@ export declare function wgf_ui_begin_grid(id: string | null, columns: number): b
 /**
  * Begins a grid, closed by wgf_ui_end_grid.
  *
- * Its children are laid out in rows of `columns`, left to right, then top to bottom. They are
- * gapped by the style's gap both ways. Nothing else wraps a row: the grid makes them. Also
- * returns false for fewer than 1 column.
+ * See wgf_ui_begin_grid for the rest.
  */
 export declare function wgf_ui_end_grid(): boolean;
 
@@ -17568,70 +13001,35 @@ export declare function wgf_ui_begin_box(id: string | null, direction: wgf_ui_di
 /**
  * Begins a box, a panel, or a group, each closed by its own end call.
  *
- * - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
- * - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
- *   by the style's gap. Close it with wgf_ui_end_panel.
- * - A group is a column drawn as an outline, in the style's separator color and line width.
- *   Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
- *   Close it with wgf_ui_end_group.
- *
- * An end call returns false with nothing of its kind open.
+ * See wgf_ui_begin_box for the rest.
  */
 export declare function wgf_ui_end_box(): boolean;
 
 /**
  * Begins a box, a panel, or a group, each closed by its own end call.
  *
- * - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
- * - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
- *   by the style's gap. Close it with wgf_ui_end_panel.
- * - A group is a column drawn as an outline, in the style's separator color and line width.
- *   Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
- *   Close it with wgf_ui_end_group.
- *
- * An end call returns false with nothing of its kind open.
+ * See wgf_ui_begin_box for the rest.
  */
 export declare function wgf_ui_begin_panel(id: string | null): boolean;
 
 /**
  * Begins a box, a panel, or a group, each closed by its own end call.
  *
- * - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
- * - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
- *   by the style's gap. Close it with wgf_ui_end_panel.
- * - A group is a column drawn as an outline, in the style's separator color and line width.
- *   Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
- *   Close it with wgf_ui_end_group.
- *
- * An end call returns false with nothing of its kind open.
+ * See wgf_ui_begin_box for the rest.
  */
 export declare function wgf_ui_end_panel(): boolean;
 
 /**
  * Begins a box, a panel, or a group, each closed by its own end call.
  *
- * - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
- * - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
- *   by the style's gap. Close it with wgf_ui_end_panel.
- * - A group is a column drawn as an outline, in the style's separator color and line width.
- *   Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
- *   Close it with wgf_ui_end_group.
- *
- * An end call returns false with nothing of its kind open.
+ * See wgf_ui_begin_box for the rest.
  */
 export declare function wgf_ui_begin_group(id: string | null, title: string | null): boolean;
 
 /**
  * Begins a box, a panel, or a group, each closed by its own end call.
  *
- * - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
- * - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
- *   by the style's gap. Close it with wgf_ui_end_panel.
- * - A group is a column drawn as an outline, in the style's separator color and line width.
- *   Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
- *   Close it with wgf_ui_end_group.
- *
- * An end call returns false with nothing of its kind open.
+ * See wgf_ui_begin_box for the rest.
  */
 export declare function wgf_ui_end_group(): boolean;
 
@@ -17670,32 +13068,7 @@ export declare function wgf_ui_begin_scroll(id: string | null, width: number, he
 /**
  * Begins a scroll area, closed by wgf_ui_end_scroll.
  *
- * A scroll area is a window onto its children, `width` by `height` logical pixels. 0 takes the
- * room its parent has left that way. Its children are a column, clipped to the window, and
- * scrolled when they are longer or wider than it.
- *
- * It scrolls by:
- * - The wheel over it. The innermost area under the pointer scrolls. A wheel across, or the
- *   wheel with Shift, scrolls sideways.
- * - A drag. A press that moves a few pixels belongs to the area, and the widget it began on
- *   isn't pressed, unless that widget is a slider. Let go while moving, it flings.
- * - Its scroll bars. Drag the thumb, or press the track for a page. Each bar is shown while
- *   there is more to scroll to that way. With the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS it
- *   is always shown, and with no more to scroll it is disabled, its thumb the whole track.
- *
- * Focus:
- * - Focus moved to a widget in it, by keys, a pad, or wgf_ui_set_focus, scrolls the widget
- *   into view.
- * - Page Up and Page Down page while the focus is in it.
- * - An area with no widget in it to focus (a page of text), and more than it shows, is focused
- *   itself, by its id. That starts from the frame after it was first laid out so. Focused, its
- *   arrows scroll it a row at a time, and the page keys a page.
- *
- * The layout calls (padding, gap, alignment, color) apply to its content. Its size is the
- * call's, so wgf_ui_set_width and wgf_ui_set_height refuse it. Its scroll is kept while it is
- * given each frame. What it scrolls to shows from the next frame.
- *
- * Also returns false for no id, or a size below 0.
+ * See wgf_ui_begin_scroll for the rest.
  */
 export declare function wgf_ui_end_scroll(): boolean;
 
@@ -17714,12 +13087,7 @@ export declare function wgf_ui_set_scroll(id: string | null, x: number, y: numbe
 /**
  * Sets or gets how far the scroll area or list `id` is scrolled, in logical pixels.
  *
- * x is across and y is down, from its content's top left. get_scroll returns 0, 0 for one not
- * laid out. set_scroll scrolls it there, shown from its next layout, and held to its content
- * as last laid out. Use it to keep a chat log at its end.
- *
- * The setter returns false for an id that isn't a scroll area or list laid out in the frame
- * before, or a value that isn't finite. These two work outside a begun UI too.
+ * See wgf_ui_set_scroll for the rest.
  */
 export declare function wgf_ui_get_scroll<T extends number[] | Float32Array | Float64Array>(id: string | null, into: T): T;
 export declare function wgf_ui_get_scroll(id: string | null, into?: wgf_vec2_t | null): wgf_vec2_t;
@@ -17738,55 +13106,35 @@ export declare function wgf_ui_set_width(sizing: wgf_ui_sizing_t, value_: number
 /**
  * Sets the open box's or panel's layout, before its first child.
  *
- * Your game describes the open box each frame, so nothing keeps it to read back. A color draws
- * its background, and 0 (the default) draws none.
- *
- * Returns false after its first child, with none open, for a sizing or alignment that isn't
- * one, or a value below 0 (or above 1 for a percent).
+ * See wgf_ui_set_width for the rest.
  */
 export declare function wgf_ui_set_height(sizing: wgf_ui_sizing_t, value_: number): boolean;
 
 /**
  * Sets the open box's or panel's layout, before its first child.
  *
- * Your game describes the open box each frame, so nothing keeps it to read back. A color draws
- * its background, and 0 (the default) draws none.
- *
- * Returns false after its first child, with none open, for a sizing or alignment that isn't
- * one, or a value below 0 (or above 1 for a percent).
+ * See wgf_ui_set_width for the rest.
  */
 export declare function wgf_ui_set_padding(x: number, y: number): boolean;
 
 /**
  * Sets the open box's or panel's layout, before its first child.
  *
- * Your game describes the open box each frame, so nothing keeps it to read back. A color draws
- * its background, and 0 (the default) draws none.
- *
- * Returns false after its first child, with none open, for a sizing or alignment that isn't
- * one, or a value below 0 (or above 1 for a percent).
+ * See wgf_ui_set_width for the rest.
  */
 export declare function wgf_ui_set_gap(gap: number): boolean;
 
 /**
  * Sets the open box's or panel's layout, before its first child.
  *
- * Your game describes the open box each frame, so nothing keeps it to read back. A color draws
- * its background, and 0 (the default) draws none.
- *
- * Returns false after its first child, with none open, for a sizing or alignment that isn't
- * one, or a value below 0 (or above 1 for a percent).
+ * See wgf_ui_set_width for the rest.
  */
 export declare function wgf_ui_set_align(x: wgf_ui_align_t, y: wgf_ui_align_t): boolean;
 
 /**
  * Sets the open box's or panel's layout, before its first child.
  *
- * Your game describes the open box each frame, so nothing keeps it to read back. A color draws
- * its background, and 0 (the default) draws none.
- *
- * Returns false after its first child, with none open, for a sizing or alignment that isn't
- * one, or a value below 0 (or above 1 for a percent).
+ * See wgf_ui_set_width for the rest.
  */
 export declare function wgf_ui_set_color(color: wgf_color_t): boolean;
 
@@ -17847,9 +13195,7 @@ export declare function wgf_ui_button(id: string | null, text: string | null): b
  * Shows a button with `text`, and returns true in the frame it is activated. Also returns
  * false for no id.
  *
- * An icon button shows `icon` (a texture, or 0 for none) before its text. The icon is as tall
- * as the text, and as wide as its shape keeps. With `text` NULL or "", it shows the icon
- * alone.
+ * See wgf_ui_button for the rest.
  */
 export declare function wgf_ui_icon_button(id: string | null, icon: wgf_texture_t | 0, text: string | null): boolean;
 
@@ -17880,11 +13226,7 @@ export declare function wgf_ui_toggle(id: string | null, text: string | null, on
 /**
  * Shows a toggle or a checkbox, and returns whether it is on.
  *
- * - A toggle is a button that stays down while on.
- * - A checkbox is a box, checked while on, with `text` beside it (NULL or "" for none).
- *
- * Each is turned by an activation. It returns `on` as given, or flipped in the frame it is
- * activated. It returns `on` as given when refused (no id).
+ * See wgf_ui_toggle for the rest.
  */
 export declare function wgf_ui_checkbox(id: string | null, text: string | null, on: boolean): boolean;
 
@@ -17936,34 +13278,14 @@ export declare function wgf_ui_tabs(id: string | null, labels: string | null, se
 /**
  * Shows tabs, a choice, or a combo among `labels`, and returns the one chosen.
  *
- * `labels` holds one label a line, up to 32 ("Easy\nNormal\nHard").
- * - Tabs are a row of the labels, with the chosen one pressed. Your game draws its panel
- *   below.
- * - A choice is the same, drawn as toggles.
- * - A combo shows the chosen label alone, and steps to the next when activated. Its arrows
- *   step either way, wrapping.
- *
- * A press chooses the tab or toggle it is on. When focused, the arrows step.
- *
- * Returns `selected` as given (clamped to the labels), or as the user chose this frame. Returns
- * `selected` as given when refused: no id, or no labels.
+ * See wgf_ui_tabs for the rest.
  */
 export declare function wgf_ui_choice(id: string | null, labels: string | null, selected: number): number;
 
 /**
  * Shows tabs, a choice, or a combo among `labels`, and returns the one chosen.
  *
- * `labels` holds one label a line, up to 32 ("Easy\nNormal\nHard").
- * - Tabs are a row of the labels, with the chosen one pressed. Your game draws its panel
- *   below.
- * - A choice is the same, drawn as toggles.
- * - A combo shows the chosen label alone, and steps to the next when activated. Its arrows
- *   step either way, wrapping.
- *
- * A press chooses the tab or toggle it is on. When focused, the arrows step.
- *
- * Returns `selected` as given (clamped to the labels), or as the user chose this frame. Returns
- * `selected` as given when refused: no id, or no labels.
+ * See wgf_ui_tabs for the rest.
  */
 export declare function wgf_ui_combo(id: string | null, labels: string | null, selected: number): number;
 
@@ -17989,8 +13311,7 @@ export declare function wgf_ui_set_disabled(disabled: boolean): boolean;
 /**
  * Sets or gets whether the widgets given after it, until it is changed, are disabled.
  *
- * A disabled widget is drawn in its disabled state, answers nothing, and is never focused.
- * Each UI begins with no widget disabled. Returns false with no UI begun.
+ * See wgf_ui_set_disabled for the rest.
  */
 export declare function wgf_ui_is_disabled(): boolean;
 
@@ -18079,42 +13400,7 @@ export declare function wgf_ui_text_field(id: string | null, placeholder: string
  * Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
  * it.
  *
- * It is as wide as its parent's room, at least the style's button width. The UI keeps its
- * text by its id (see wgf_ui_get_text), from the first call or wgf_ui_set_text on, until the
- * UI stops.
- *
- * Focused, it takes what is typed (wgf_input_get_chars) in place of the selection, and the
- * keys:
- *
- *   Left, Right         move the caret a character; with Ctrl (Alt on macOS) a word
- *   Home, End           go to the start, the end (Cmd+Left and +Right on macOS too)
- *   Shift with a move   extends the selection
- *   Backspace, Delete   delete the selection, else the character before or after (a word with
- *                       Ctrl or Alt), held ones repeating
- *   Ctrl+A (Cmd on macOS)        selects all
- *   Ctrl+C, +X, +V               copy, cut, and paste, through the system's clipboard
- *                                (wgf_input_set_clipboard); newlines pasted are stripped
- *   Ctrl+Z; Ctrl+Y, Ctrl+Shift+Z undo and redo, a run of typing or of deleting one step
- *
- * The pointer and touch:
- * - A press places the caret. With Shift, it extends the selection to it.
- * - A drag selects.
- * - A double press selects the word under it, and a triple press the whole text.
- * - By touch, the same taps work.
- *
- * Its caret blinks, and the text scrolls to keep it in view. Focus moved to it by keys or a
- * pad selects the whole text. A press off it lets the focus go.
- *
- * While it is focused, the platform's on-screen keyboard is shown. That is a phone's, and on
- * the web, the page's hidden input that a phone's keyboard types into.
- *
- * - `placeholder` (NULL or "" for none) is shown, dimmed, while the field is empty.
- * - It holds at most `max_length` characters (0 or less: 4095 bytes' worth). A longer text is
- *   cut to it.
- * - A password field is the same, drawn as dots. Its words are the whole of it, and it is
- *   never copied or cut.
- *
- * Also returns false when refused (no id).
+ * See wgf_ui_text_field for the rest.
  */
 export declare function wgf_ui_password_field(id: string | null, placeholder: string | null, max_length: number): boolean;
 
@@ -18134,13 +13420,7 @@ export declare function wgf_ui_set_text(id: string | null, text: string | null):
 /**
  * Sets or gets the text field `id`'s text.
  *
- * - set_text puts its caret at the end and forgets its undo. The text is cut to 4095 bytes.
- *   A field not given yet keeps the text for its first call.
- * - get_text returns "" for a field never given or set. The string is valid until the field
- *   changes.
- *
- * The setter returns false for no id, an id of 64 bytes or more, or no text. These two work
- * outside a begun UI too.
+ * See wgf_ui_set_text for the rest.
  */
 export declare function wgf_ui_get_text(id: string | null): string;
 
@@ -18158,9 +13438,7 @@ export declare function wgf_ui_set_invalid(invalid: boolean): boolean;
  * Sets or gets whether the text fields given after it, until it is changed, show their text
  * as refused.
  *
- * Whatever reads the text decides, as for a name already taken. An invalid field's text is
- * drawn in the style's invalid color, and outlined in it. Each UI begins with no field invalid.
- * Returns false with no UI begun.
+ * See wgf_ui_set_invalid for the rest.
  */
 export declare function wgf_ui_is_invalid(): boolean;
 
@@ -18208,16 +13486,7 @@ export declare function wgf_ui_begin_modal(id: string | null): boolean;
  * Begins a modal, closed by wgf_ui_end_modal: a panel at the screen's center, such as
  * "Quit? Yes / No".
  *
- * - Its layout, its skin, and its children are a panel's.
- * - It is drawn over the screen, dimmed in the style's dim color. Nothing under it answers the
- *   pointer.
- * - While it is given, the focus moves among its own widgets alone. The focus is put on its
- *   first widget when it opens.
- * - When it closes (is no longer given), the focus goes back to the widget that had it.
- * - A dropdown in it opens over it.
- * - There is one modal a frame.
- *
- * Also returns false for no id, or a modal already open.
+ * See wgf_ui_begin_modal for the rest.
  */
 export declare function wgf_ui_end_modal(): boolean;
 
@@ -18248,11 +13517,7 @@ export declare function wgf_ui_set_alpha(alpha: number): boolean;
 /**
  * Sets or gets the whole UI's alpha (default: 1), kept until it is changed.
  *
- * 0 is unseen, and 1 is as drawn. Use it to fade a menu in or out. The UI answers as ever: a
- * UI faded to nothing is still there until it isn't given.
- *
- * The setter returns false for a value outside 0 to 1, or not finite. These two work outside a
- * begun UI too.
+ * See wgf_ui_set_alpha for the rest.
  */
 export declare function wgf_ui_get_alpha(): number;
 
@@ -18284,13 +13549,7 @@ export declare function wgf_ui_set_focus(id: string | null): boolean;
 /**
  * Sets or gets the focused widget.
  *
- * - set_focus gives the focus to the widget `id` (NULL or "" for none). It is drawn as a key
- *   or pad would draw it. It returns false for an id of 64 bytes or more.
- * - get_focus returns the focused widget's id, or "" for none. The string is valid until the
- *   focus changes.
- *
- * These two work outside a begun UI too. Each frame a UI ends, the focus is published as the
- * text probe "ui.focus" (wgf_probe.h), so an autopilot can expect which widget has it.
+ * See wgf_ui_set_focus for the rest.
  */
 export declare function wgf_ui_get_focus(): string;
 
@@ -18347,22 +13606,14 @@ export declare function wgf_ui_set_skin(widget: wgf_ui_widget_t, part: wgf_ui_pa
 /**
  * Sets or gets a skin: its texture, region, borders, and tint.
  *
- * - set_skin with texture 0 draws the part in its colors again.
- * - get_skin returns its texture, or 0 for none.
- * - get_skin_source returns its region: x, y, z the width, and w the height.
- * - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
- * - get_skin_tint returns its tint, or white for none.
+ * See wgf_ui_set_skin for the rest.
  */
 export declare function wgf_ui_get_skin(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t): wgf_texture_t;
 
 /**
  * Sets or gets a skin: its texture, region, borders, and tint.
  *
- * - set_skin with texture 0 draws the part in its colors again.
- * - get_skin returns its texture, or 0 for none.
- * - get_skin_source returns its region: x, y, z the width, and w the height.
- * - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
- * - get_skin_tint returns its tint, or white for none.
+ * See wgf_ui_set_skin for the rest.
  */
 export declare function wgf_ui_get_skin_source<T extends number[] | Float32Array | Float64Array>(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, into: T): T;
 export declare function wgf_ui_get_skin_source(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, into?: wgf_vec4_t | null): wgf_vec4_t;
@@ -18370,22 +13621,14 @@ export declare function wgf_ui_get_skin_source(widget: wgf_ui_widget_t, part: wg
 /**
  * Sets or gets a skin: its texture, region, borders, and tint.
  *
- * - set_skin with texture 0 draws the part in its colors again.
- * - get_skin returns its texture, or 0 for none.
- * - get_skin_source returns its region: x, y, z the width, and w the height.
- * - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
- * - get_skin_tint returns its tint, or white for none.
+ * See wgf_ui_set_skin for the rest.
  */
 export declare function wgf_ui_set_skin_borders(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, left: number, top: number, right: number, bottom: number): boolean;
 
 /**
  * Sets or gets a skin: its texture, region, borders, and tint.
  *
- * - set_skin with texture 0 draws the part in its colors again.
- * - get_skin returns its texture, or 0 for none.
- * - get_skin_source returns its region: x, y, z the width, and w the height.
- * - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
- * - get_skin_tint returns its tint, or white for none.
+ * See wgf_ui_set_skin for the rest.
  */
 export declare function wgf_ui_get_skin_borders<T extends number[] | Float32Array | Float64Array>(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, into: T): T;
 export declare function wgf_ui_get_skin_borders(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, into?: wgf_vec4_t | null): wgf_vec4_t;
@@ -18393,22 +13636,14 @@ export declare function wgf_ui_get_skin_borders(widget: wgf_ui_widget_t, part: w
 /**
  * Sets or gets a skin: its texture, region, borders, and tint.
  *
- * - set_skin with texture 0 draws the part in its colors again.
- * - get_skin returns its texture, or 0 for none.
- * - get_skin_source returns its region: x, y, z the width, and w the height.
- * - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
- * - get_skin_tint returns its tint, or white for none.
+ * See wgf_ui_set_skin for the rest.
  */
 export declare function wgf_ui_set_skin_tint(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t, tint: wgf_color_t): boolean;
 
 /**
  * Sets or gets a skin: its texture, region, borders, and tint.
  *
- * - set_skin with texture 0 draws the part in its colors again.
- * - get_skin returns its texture, or 0 for none.
- * - get_skin_source returns its region: x, y, z the width, and w the height.
- * - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
- * - get_skin_tint returns its tint, or white for none.
+ * See wgf_ui_set_skin for the rest.
  */
 export declare function wgf_ui_get_skin_tint(widget: wgf_ui_widget_t, part: wgf_ui_part_t, state: wgf_ui_state_t): wgf_color_t;
 
@@ -18473,15 +13708,7 @@ export declare function wgf_ui_set_style_texture(which: wgf_ui_color_t, texture:
  * Sets or gets a part drawn from your game's art, by its color. It is a short form of
  * wgf_ui_set_skin for a part's base.
  *
- * The part draws `texture` whole, nine-sliced by its borders, and untinted. 0 draws the color
- * again. The parts are:
- * - WGF_UI_COLOR_PANEL: the panel's base.
- * - WGF_UI_COLOR_BUTTON, _BUTTON_HOVERED, and _BUTTON_PRESSED: the button's base in those
- *   states.
- * - WGF_UI_COLOR_BAR and _BAR_FILL: the progress bar's base and fill.
- *
- * Returns false for a part that isn't one of these, a handle that isn't a texture, or a border
- * below 0 or not finite.
+ * See wgf_ui_set_style_texture for the rest.
  */
 export declare function wgf_ui_get_style_texture(which: wgf_ui_color_t): wgf_texture_t;
 
@@ -18497,9 +13724,7 @@ export declare function wgf_ui_set_document_font(family: string | null, font: wg
 /**
  * Sets or gets the font that RCSS's `font-family: <family>` means in every document.
  *
- * The family's name is matched without case. 0 unsets it, so the family draws in the default
- * font. The UI holds a reference to `font`. Returns false for no family, or a handle that
- * isn't a font.
+ * See wgf_ui_set_document_font for the rest.
  */
 export declare function wgf_ui_get_document_font(family: string | null): wgf_font_t;
 
@@ -18525,19 +13750,7 @@ export declare function wgf_ui_set_document_font_face(family: string | null, wei
 /**
  * Sets or gets one of a family's own faces.
  *
- * A face is the font that `font-family: <family>` draws in at `font-weight: <weight>`, and, if
- * `italic`, at `font-style: italic`. `weight` is 1 to 1000: 400 is normal, and 700 bold.
- *
- * Text draws in the family's face nearest the one it asks for:
- * - A face of its style, when the family has one of that style. Otherwise, one of the other
- *   style.
- * - The nearest weight. A tie goes to the heavier above 400, and to the lighter at or below.
- * - The family's font (wgf_ui_set_document_font) is its face at 400, upright.
- *
- * A face no font is set for is never made up: no bold is drawn from a regular. 0 unsets a
- * face. The UI holds a reference to `font`.
- *
- * Returns false for no family, a weight outside 1 to 1000, or a handle that isn't a font.
+ * See wgf_ui_set_document_font_face for the rest.
  */
 export declare function wgf_ui_get_document_font_face(family: string | null, weight: number, italic: boolean): wgf_font_t;
 
@@ -18575,11 +13788,7 @@ export declare function wgf_document_set_visible(document: wgf_document_t | 0, v
 /**
  * Shows or hides a document, or gets whether it is shown.
  *
- * A shown document is drawn by wgf_ui_draw_documents, and worked by the input. A document
- * asked to show while it loads is shown once it is READY. Shown documents are drawn in the
- * order they were last shown, the last on top.
- *
- * Returns false for a handle that isn't a document, or one that FAILED.
+ * See wgf_document_set_visible for the rest.
  */
 export declare function wgf_document_is_visible(document: wgf_document_t | 0): boolean;
 
@@ -18604,12 +13813,7 @@ export declare function wgf_document_set_focus(document: wgf_document_t | 0, ele
 /**
  * Sets or gets the element of `document` that has the focus (0 for none).
  *
- * Setting it moves the focus there, shown as keys move it (`:focus-visible`). 0 takes the
- * focus from the document.
- *
- * The setter returns false for a handle that isn't a document, an element of another
- * document, or an element that can't take the focus. An element can't take it if it is
- * hidden, disabled, or neither a form control nor `tab-index: auto`.
+ * See wgf_document_set_focus for the rest.
  */
 export declare function wgf_document_get_focus(document: wgf_document_t | 0): wgf_element_t;
 
@@ -18633,15 +13837,7 @@ export declare function wgf_document_get_event_count(document: wgf_document_t | 
  * Returns how many events of `document` wait, or takes the oldest, since they were last
  * taken.
  *
- * take_events fills `out` with two ints an event: the event (a wgf_document_event_t) and its
- * element (a wgf_element_t). It takes as many whole events as fit in `count` ints, oldest
- * first, and returns how many ints it filled.
- *
- * An event's element is the one it happened to. If that element has no id, it is the nearest
- * element around it that has one: a click on a button's label is the button's.
- *
- * Events wait while nobody takes them. Past 1024, the oldest are dropped. Returns 0 for a
- * handle that isn't a document, or no array.
+ * See wgf_document_get_event_count for the rest.
  */
 export declare function wgf_document_take_events(document: wgf_document_t | 0, out: number[] | Int32Array | null): number;
 
@@ -18673,39 +13869,21 @@ export declare function wgf_element_set_text(element: wgf_element_t | 0, text: s
 /**
  * Sets or gets an element's content, as plain text or as RML.
  *
- * - set_text shows `text` as it is, with no markup.
- * - set_rml parses `rml` and makes its elements.
- * - get_text returns the text of every element inside it, in order.
- * - get_rml returns its content as RML.
- *
- * Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
- * until the next call in this header that returns text.
+ * See wgf_element_set_text for the rest.
  */
 export declare function wgf_element_get_text(element: wgf_element_t | 0): string;
 
 /**
  * Sets or gets an element's content, as plain text or as RML.
  *
- * - set_text shows `text` as it is, with no markup.
- * - set_rml parses `rml` and makes its elements.
- * - get_text returns the text of every element inside it, in order.
- * - get_rml returns its content as RML.
- *
- * Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
- * until the next call in this header that returns text.
+ * See wgf_element_set_text for the rest.
  */
 export declare function wgf_element_set_rml(element: wgf_element_t | 0, rml: string | null): boolean;
 
 /**
  * Sets or gets an element's content, as plain text or as RML.
  *
- * - set_text shows `text` as it is, with no markup.
- * - set_rml parses `rml` and makes its elements.
- * - get_text returns the text of every element inside it, in order.
- * - get_rml returns its content as RML.
- *
- * Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
- * until the next call in this header that returns text.
+ * See wgf_element_set_text for the rest.
  */
 export declare function wgf_element_get_rml(element: wgf_element_t | 0): string;
 
@@ -18725,11 +13903,7 @@ export declare function wgf_element_set_attribute(element: wgf_element_t | 0, na
  * Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
  * `value`.
  *
- * - get_attribute returns "" for an attribute that isn't set.
- * - has_attribute returns whether it is set.
- * - remove_attribute unsets it, and returns false if it wasn't set.
- *
- * Returns false for a handle that isn't an element, or no name.
+ * See wgf_element_set_attribute for the rest.
  */
 export declare function wgf_element_get_attribute(element: wgf_element_t | 0, name: string | null): string;
 
@@ -18737,11 +13911,7 @@ export declare function wgf_element_get_attribute(element: wgf_element_t | 0, na
  * Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
  * `value`.
  *
- * - get_attribute returns "" for an attribute that isn't set.
- * - has_attribute returns whether it is set.
- * - remove_attribute unsets it, and returns false if it wasn't set.
- *
- * Returns false for a handle that isn't an element, or no name.
+ * See wgf_element_set_attribute for the rest.
  */
 export declare function wgf_element_has_attribute(element: wgf_element_t | 0, name: string | null): boolean;
 
@@ -18749,11 +13919,7 @@ export declare function wgf_element_has_attribute(element: wgf_element_t | 0, na
  * Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
  * `value`.
  *
- * - get_attribute returns "" for an attribute that isn't set.
- * - has_attribute returns whether it is set.
- * - remove_attribute unsets it, and returns false if it wasn't set.
- *
- * Returns false for a handle that isn't an element, or no name.
+ * See wgf_element_set_attribute for the rest.
  */
 export declare function wgf_element_remove_attribute(element: wgf_element_t | 0, name: string | null): boolean;
 
@@ -18786,12 +13952,7 @@ export declare function wgf_element_set_property(element: wgf_element_t | 0, nam
  * Sets or gets an RCSS property on the element itself, over its style sheets' value
  * (`"color"`, `"#ffcc00"`).
  *
- * - A `value` of "" or NULL takes the element's own value off.
- * - get_property returns the property's value as the element has it now, from wherever it
- *   comes, as RCSS text. It returns "" for a name that isn't a property.
- *
- * The setter returns false for a handle that isn't an element, a name that isn't a property, or
- * a value that isn't one of its values (logged).
+ * See wgf_element_set_property for the rest.
  */
 export declare function wgf_element_get_property(element: wgf_element_t | 0, name: string | null): string;
 
@@ -18813,45 +13974,21 @@ export declare function wgf_element_set_value(element: wgf_element_t | 0, value_
 /**
  * Sets or gets a form control's value, as text or as a number.
  *
- * - The value is a text field's text, a slider's number, a choice's chosen value, or a
- *   checkbox's own value.
- * - As a number: a slider's value is clamped to its range. Text is read as a number, and text
- *   that isn't one reads 0.
- * - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
- *   number among them. A tab chosen by the player raises the tabset's CHANGE.
- *
- * Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
- * control or a tabset. set_value takes a form control only.
+ * See wgf_element_set_value for the rest.
  */
 export declare function wgf_element_get_value(element: wgf_element_t | 0): string;
 
 /**
  * Sets or gets a form control's value, as text or as a number.
  *
- * - The value is a text field's text, a slider's number, a choice's chosen value, or a
- *   checkbox's own value.
- * - As a number: a slider's value is clamped to its range. Text is read as a number, and text
- *   that isn't one reads 0.
- * - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
- *   number among them. A tab chosen by the player raises the tabset's CHANGE.
- *
- * Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
- * control or a tabset. set_value takes a form control only.
+ * See wgf_element_set_value for the rest.
  */
 export declare function wgf_element_set_number(element: wgf_element_t | 0, value_: number): boolean;
 
 /**
  * Sets or gets a form control's value, as text or as a number.
  *
- * - The value is a text field's text, a slider's number, a choice's chosen value, or a
- *   checkbox's own value.
- * - As a number: a slider's value is clamped to its range. Text is read as a number, and text
- *   that isn't one reads 0.
- * - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
- *   number among them. A tab chosen by the player raises the tabset's CHANGE.
- *
- * Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
- * control or a tabset. set_value takes a form control only.
+ * See wgf_element_set_value for the rest.
  */
 export declare function wgf_element_get_number(element: wgf_element_t | 0): number;
 
@@ -18901,15 +14038,7 @@ export declare function wgf_app_enable_autopilot(): boolean;
  * Lets an autopilot fly this run, or returns whether that is enabled. Call it before
  * wgf_app_run, as a build that is tested or checked does.
  *
- * - Natively the autopilot is the file LIBWGF_AUTOPILOT names.
- * - On the web it is the one the page gives the module.
- * - See BUILDING.md, "Autopilot files".
- *
- * This call is what links the autopilot's runner. A program that never calls it, such as
- * a game's web export by default, carries none of it. Given an autopilot all the same, such
- * a program logs that it has no runner and quits.
- *
- * Returns false once the program is running.
+ * See wgf_app_enable_autopilot for the rest.
  */
 export declare function wgf_app_is_autopilot_enabled(): boolean;
 
@@ -18954,57 +14083,21 @@ export declare function wgf_app_has_option(name: string | null): boolean;
 /**
  * Reads the program's options by name, the same way on both platforms.
  *
- * - Natively an option is `--name=value`, or `--name`, among the program's arguments.
- * - On the web it is `name=value`, or `name`, in the page's address after the `?`. For
- *   example, Wardens' `enemies=200`, or a benchmark's `count=10000`.
- * - If a name is given more than once, the last one wins.
- *
- * The calls:
- * - has_option returns whether the option was given.
- * - get_option returns its value, valid for the program's life. It returns "" for an
- *   option given without a value, or not given.
- * - get_option_int and get_option_float return the value as a number. They return
- *   `otherwise` if the option wasn't given or isn't a number.
- *
- * For a NULL `name` they return false, "", or `otherwise`.
+ * See wgf_app_has_option for the rest.
  */
 export declare function wgf_app_get_option(name: string | null): string;
 
 /**
  * Reads the program's options by name, the same way on both platforms.
  *
- * - Natively an option is `--name=value`, or `--name`, among the program's arguments.
- * - On the web it is `name=value`, or `name`, in the page's address after the `?`. For
- *   example, Wardens' `enemies=200`, or a benchmark's `count=10000`.
- * - If a name is given more than once, the last one wins.
- *
- * The calls:
- * - has_option returns whether the option was given.
- * - get_option returns its value, valid for the program's life. It returns "" for an
- *   option given without a value, or not given.
- * - get_option_int and get_option_float return the value as a number. They return
- *   `otherwise` if the option wasn't given or isn't a number.
- *
- * For a NULL `name` they return false, "", or `otherwise`.
+ * See wgf_app_has_option for the rest.
  */
 export declare function wgf_app_get_option_int(name: string | null, otherwise: number): number;
 
 /**
  * Reads the program's options by name, the same way on both platforms.
  *
- * - Natively an option is `--name=value`, or `--name`, among the program's arguments.
- * - On the web it is `name=value`, or `name`, in the page's address after the `?`. For
- *   example, Wardens' `enemies=200`, or a benchmark's `count=10000`.
- * - If a name is given more than once, the last one wins.
- *
- * The calls:
- * - has_option returns whether the option was given.
- * - get_option returns its value, valid for the program's life. It returns "" for an
- *   option given without a value, or not given.
- * - get_option_int and get_option_float return the value as a number. They return
- *   `otherwise` if the option wasn't given or isn't a number.
- *
- * For a NULL `name` they return false, "", or `otherwise`.
+ * See wgf_app_has_option for the rest.
  */
 export declare function wgf_app_get_option_float(name: string | null, otherwise: number): number;
 
@@ -19027,32 +14120,14 @@ export declare function wgf_debug_show_fps(font: wgf_font_t | 0, x: number, y: n
 /**
  * Shows, hides, or reports the frame-rate overlay, for a program under development.
  *
- * The overlay reads "<fps> FPS <cost> ms": the frames a second, and a frame's own cost
- * (see wgf_loop.h). The runtime draws it every frame, over everything the program drew.
- *
- * - (x, y) is its position, in logical pixels.
- * - `font` is the font to draw it in. 0 is the built-in font.
- * - `size` is its size. A size of 0 or less draws nothing, so it isn't shown.
- * - `color` is its color.
- *
- * It is off by default. Showing it again moves or restyles it. A program that never shows
- * it links none of it.
+ * See wgf_debug_show_fps for the rest.
  */
 export declare function wgf_debug_hide_fps(): void;
 
 /**
  * Shows, hides, or reports the frame-rate overlay, for a program under development.
  *
- * The overlay reads "<fps> FPS <cost> ms": the frames a second, and a frame's own cost
- * (see wgf_loop.h). The runtime draws it every frame, over everything the program drew.
- *
- * - (x, y) is its position, in logical pixels.
- * - `font` is the font to draw it in. 0 is the built-in font.
- * - `size` is its size. A size of 0 or less draws nothing, so it isn't shown.
- * - `color` is its color.
- *
- * It is off by default. Showing it again moves or restyles it. A program that never shows
- * it links none of it.
+ * See wgf_debug_show_fps for the rest.
  */
 export declare function wgf_debug_is_fps_shown(): boolean;
 
@@ -19083,26 +14158,14 @@ export declare function wgf_debug_start_frame_recording(): void;
 /**
  * Starts, stops, or reports a recording of frame stats.
  *
- * - A recording runs from the next frame's end until it is stopped. It keeps its latest
- *   65,536 frames.
- * - Starting again drops what the recording held.
- * - Once stopped, its stats are kept for reading (wgf_debug_get_recorded_frame_stat) until
- *   the next start.
- * - Stop returns false, and keeps nothing, if no recording was started.
- * - Recording doesn't change the stats of the last half second.
+ * See wgf_debug_start_frame_recording for the rest.
  */
 export declare function wgf_debug_stop_frame_recording(): boolean;
 
 /**
  * Starts, stops, or reports a recording of frame stats.
  *
- * - A recording runs from the next frame's end until it is stopped. It keeps its latest
- *   65,536 frames.
- * - Starting again drops what the recording held.
- * - Once stopped, its stats are kept for reading (wgf_debug_get_recorded_frame_stat) until
- *   the next start.
- * - Stop returns false, and keeps nothing, if no recording was started.
- * - Recording doesn't change the stats of the last half second.
+ * See wgf_debug_start_frame_recording for the rest.
  */
 export declare function wgf_debug_is_frame_recording(): boolean;
 
@@ -19167,9 +14230,7 @@ export declare function wgf_loop_set_time_scale(scale: number): void;
  * Sets or gets how fast ticks run against real time (default: 1). A scale below 0 is
  * clamped to 0.
  *
- * - 1 is normal speed.
- * - 0.5 is slow motion.
- * - 0 is paused: no ticks run, while frames still draw and read input.
+ * See wgf_loop_set_time_scale for the rest.
  */
 export declare function wgf_loop_get_time_scale(): number;
 
@@ -19200,8 +14261,7 @@ export declare function wgf_loop_set_target_fps(fps: number): void;
  * Sets or gets the most frames a second, to save power or heat. 0 or less is the
  * display's rate (default: 0).
  *
- * With vsync on, a cap can only lower the rate. On the web, a frame the browser offers too
- * early is skipped.
+ * See wgf_loop_set_target_fps for the rest.
  */
 export declare function wgf_loop_get_target_fps(): number;
 

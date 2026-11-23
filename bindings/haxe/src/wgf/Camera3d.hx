@@ -39,7 +39,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the vertical field of view, in radians.
 
-	    It is clamped to 0.01 to 3.13 (just short of a half turn).
+	    See Camera3d.setFov for the rest.
 	**/
 	public inline function getFov():Float
 		return Raw.wgf_camera3d_get_fov(this);
@@ -55,7 +55,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how near and how far in front of the camera it sees, in units.
 
-	    set_clip returns false unless 0 < `near_z` < `far_z`.
+	    See Camera3d.setClip for the rest.
 	**/
 	public inline function getNear():Float
 		return Raw.wgf_camera3d_get_near(this);
@@ -63,7 +63,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how near and how far in front of the camera it sees, in units.
 
-	    set_clip returns false unless 0 < `near_z` < `far_z`.
+	    See Camera3d.setClip for the rest.
 	**/
 	public inline function getFar():Float
 		return Raw.wgf_camera3d_get_far(this);
@@ -93,7 +93,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how tall a view an orthographic camera sees, in units (default: 10).
 
-	    set_ortho_height returns false for a height of 0 or less.
+	    See Camera3d.setOrthoHeight for the rest.
 	**/
 	public inline function getOrthoHeight():Float
 		return Raw.wgf_camera3d_get_ortho_height(this);
@@ -119,17 +119,7 @@ import wgf.impl.Raw;
 	/**
 	    Converts between the world and the screen's logical pixels, through the camera as it is now.
 
-	    The world is the camera's tree's root's space. The view fills the visible area, as a stage
-	    draws it.
-
-	    - world_to_screen returns where a point shows: x and y on the screen, and z its depth. Depth
-	      runs from 0 at the near plane to 1 at the far plane. Below 0 is behind the camera, where a
-	      name tag would be hidden.
-	    - screen_to_origin and screen_to_direction return the ray under a place on the screen. Its
-	      origin is on the near plane, and its direction is a unit vector. Use it for picking, or
-	      for a click in the world.
-
-	    Each returns 0, 0, 0 if `camera` isn't a 3D camera.
+	    See Camera3d.worldToScreen for the rest.
 	**/
 	public inline function screenToOrigin(x:Float, y:Float, ?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_camera3d_screen_to_origin(this, x, y, into);
@@ -137,17 +127,7 @@ import wgf.impl.Raw;
 	/**
 	    Converts between the world and the screen's logical pixels, through the camera as it is now.
 
-	    The world is the camera's tree's root's space. The view fills the visible area, as a stage
-	    draws it.
-
-	    - world_to_screen returns where a point shows: x and y on the screen, and z its depth. Depth
-	      runs from 0 at the near plane to 1 at the far plane. Below 0 is behind the camera, where a
-	      name tag would be hidden.
-	    - screen_to_origin and screen_to_direction return the ray under a place on the screen. Its
-	      origin is on the near plane, and its direction is a unit vector. Use it for picking, or
-	      for a click in the world.
-
-	    Each returns 0, 0, 0 if `camera` isn't a 3D camera.
+	    See Camera3d.worldToScreen for the rest.
 	**/
 	public inline function screenToDirection(x:Float, y:Float, ?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_camera3d_screen_to_direction(this, x, y, into);

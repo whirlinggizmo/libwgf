@@ -74,9 +74,7 @@ class Touch {
 	    Sets or gets whether the first finger also drives the mouse, so mouse code works by touch
 	    (default: on).
 
-	    The finger moves the pointer and holds the left button. A second finger cancels that press:
-	    the pointer lets go off the window, at (-1, -1), so nothing under it is clicked. The mouse
-	    then stays up until every finger has lifted.
+	    See Touch.setMouseEmulated for the rest.
 	**/
 	public static inline function isMouseEmulated():Bool
 		return Raw.wgf_touch_is_mouse_emulated();
@@ -99,12 +97,7 @@ class Touch {
 	    Sets or gets whether the mouse's left button acts as a finger, so touch controls can be tried
 	    with a mouse on a desktop (default: off).
 
-	    - While the button is pressed, a finger touches down where the pointer is, follows it, and
-	      lifts with the button.
-	    - That finger has its own id, as any finger does.
-	    - The two settings don't feed each other: the finger a press makes doesn't drive the mouse
-	      back.
-	    - Turned off while the button is pressed, the finger lifts.
+	    See Touch.setFromMouse for the rest.
 	**/
 	public static inline function isFromMouse():Bool
 		return Raw.wgf_touch_is_from_mouse();
@@ -160,14 +153,7 @@ class Touch {
 	/**
 	    Returns one finger's gestures. Each is made by a finger that was alone while it was down.
 
-	    - A tap: lifted within 0.3 seconds, having moved under 12 logical pixels. is_tapped says
-	      whether one happened in this frame (in a tick, in that tick).
-	    - A double tap: a second tap within 0.35 seconds of the last, near it. is_double_tapped
-	      says whether one happened.
-	    - get_tap_position returns where the tap or double tap was.
-	    - A swipe: lifted within 0.5 seconds, having gone 50 logical pixels or more. get_swipe
-	      returns how far it went, or 0, 0 for none.
-	    - A hold: down for 0.5 seconds or more, still. is_holding is true while it lasts.
+	    See Touch.isTapped for the rest.
 	**/
 	public static inline function isDoubleTapped():Bool
 		return Raw.wgf_touch_is_double_tapped();
@@ -175,14 +161,7 @@ class Touch {
 	/**
 	    Returns one finger's gestures. Each is made by a finger that was alone while it was down.
 
-	    - A tap: lifted within 0.3 seconds, having moved under 12 logical pixels. is_tapped says
-	      whether one happened in this frame (in a tick, in that tick).
-	    - A double tap: a second tap within 0.35 seconds of the last, near it. is_double_tapped
-	      says whether one happened.
-	    - get_tap_position returns where the tap or double tap was.
-	    - A swipe: lifted within 0.5 seconds, having gone 50 logical pixels or more. get_swipe
-	      returns how far it went, or 0, 0 for none.
-	    - A hold: down for 0.5 seconds or more, still. is_holding is true while it lasts.
+	    See Touch.isTapped for the rest.
 	**/
 	public static inline function getTapPosition(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_touch_get_tap_position(into);
@@ -190,14 +169,7 @@ class Touch {
 	/**
 	    Returns one finger's gestures. Each is made by a finger that was alone while it was down.
 
-	    - A tap: lifted within 0.3 seconds, having moved under 12 logical pixels. is_tapped says
-	      whether one happened in this frame (in a tick, in that tick).
-	    - A double tap: a second tap within 0.35 seconds of the last, near it. is_double_tapped
-	      says whether one happened.
-	    - get_tap_position returns where the tap or double tap was.
-	    - A swipe: lifted within 0.5 seconds, having gone 50 logical pixels or more. get_swipe
-	      returns how far it went, or 0, 0 for none.
-	    - A hold: down for 0.5 seconds or more, still. is_holding is true while it lasts.
+	    See Touch.isTapped for the rest.
 	**/
 	public static inline function getSwipe(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_touch_get_swipe(into);
@@ -205,14 +177,7 @@ class Touch {
 	/**
 	    Returns one finger's gestures. Each is made by a finger that was alone while it was down.
 
-	    - A tap: lifted within 0.3 seconds, having moved under 12 logical pixels. is_tapped says
-	      whether one happened in this frame (in a tick, in that tick).
-	    - A double tap: a second tap within 0.35 seconds of the last, near it. is_double_tapped
-	      says whether one happened.
-	    - get_tap_position returns where the tap or double tap was.
-	    - A swipe: lifted within 0.5 seconds, having gone 50 logical pixels or more. get_swipe
-	      returns how far it went, or 0, 0 for none.
-	    - A hold: down for 0.5 seconds or more, still. is_holding is true while it lasts.
+	    See Touch.isTapped for the rest.
 	**/
 	public static inline function isHolding():Bool
 		return Raw.wgf_touch_is_holding();

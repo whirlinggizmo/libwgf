@@ -103,13 +103,7 @@ import wgf.impl.Raw;
 	    Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
 	    top to bottom (default: one frame).
 
-	    - The first `count` frames are used. With 0 or less, all of them are.
-	    - With `per_second` 0, each particle plays the frames once over its life: puffs.
-	    - With `per_second` above 0, each particle loops them at that rate, from a random frame:
-	      flames.
-
-	    Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
-	    rate.
+	    See Emitter3d.setFrames for the rest.
 	**/
 	public inline function getFrameColumns():Int
 		return Raw.wgf_emitter3d_get_frame_columns(this);
@@ -118,13 +112,7 @@ import wgf.impl.Raw;
 	    Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
 	    top to bottom (default: one frame).
 
-	    - The first `count` frames are used. With 0 or less, all of them are.
-	    - With `per_second` 0, each particle plays the frames once over its life: puffs.
-	    - With `per_second` above 0, each particle loops them at that rate, from a random frame:
-	      flames.
-
-	    Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
-	    rate.
+	    See Emitter3d.setFrames for the rest.
 	**/
 	public inline function getFrameRows():Int
 		return Raw.wgf_emitter3d_get_frame_rows(this);
@@ -133,13 +121,7 @@ import wgf.impl.Raw;
 	    Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
 	    top to bottom (default: one frame).
 
-	    - The first `count` frames are used. With 0 or less, all of them are.
-	    - With `per_second` 0, each particle plays the frames once over its life: puffs.
-	    - With `per_second` above 0, each particle loops them at that rate, from a random frame:
-	      flames.
-
-	    Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
-	    rate.
+	    See Emitter3d.setFrames for the rest.
 	**/
 	public inline function getFrameCount():Int
 		return Raw.wgf_emitter3d_get_frame_count(this);
@@ -148,13 +130,7 @@ import wgf.impl.Raw;
 	    Sets or gets a flipbook: the source split into `columns` by `rows` frames, left to right, then
 	    top to bottom (default: one frame).
 
-	    - The first `count` frames are used. With 0 or less, all of them are.
-	    - With `per_second` 0, each particle plays the frames once over its life: puffs.
-	    - With `per_second` above 0, each particle loops them at that rate, from a random frame:
-	      flames.
-
-	    Returns false for less than 1 by 1, more than 4096 frames, a `count` past them, or a negative
-	    rate.
+	    See Emitter3d.setFrames for the rest.
 	**/
 	public inline function getFrameRate():Float
 		return Raw.wgf_emitter3d_get_frame_rate(this);
@@ -186,16 +162,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function getRate():Float
 		return Raw.wgf_emitter3d_get_rate(this);
@@ -203,16 +170,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function burst(count:Int):Bool
 		return Raw.wgf_emitter3d_burst(this, count);
@@ -220,16 +178,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function setEmitting(emitting:Bool):Bool
 		return Raw.wgf_emitter3d_set_emitting(this, emitting);
@@ -237,16 +186,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function isEmitting():Bool
 		return Raw.wgf_emitter3d_is_emitting(this);
@@ -254,16 +194,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function setMax(count:Int):Bool
 		return Raw.wgf_emitter3d_set_max(this, count);
@@ -271,16 +202,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function getMax():Int
 		return Raw.wgf_emitter3d_get_max(this);
@@ -288,16 +210,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function setLife(min_seconds:Float, max_seconds:Float):Bool
 		return Raw.wgf_emitter3d_set_life(this, min_seconds, max_seconds);
@@ -305,16 +218,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function getLifeMin():Float
 		return Raw.wgf_emitter3d_get_life_min(this);
@@ -322,16 +226,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how the emitter emits particles, how many can be alive, and how long they live.
 
-	    - set_rate sets a steady rate, in particles a second (default: 0, for bursts only). It returns
-	      false below 0.
-	    - burst emits `count` particles at once, where the actor is. It returns false below 0.
-	    - set_emitting(false) stops the steady rate. The particles alive finish their lives.
-	    - set_max sets how many particles can be alive at once (default: 1024). New particles replace
-	      the oldest. A new max empties the emitter.
-	    - set_max returns false for a `count` below 1 or above 65536. It refuses rather than clamps,
-	      since fewer particles than asked is a different effect.
-	    - set_life sets each particle's life, in seconds, between `min_seconds` and `max_seconds`
-	      (default: 1). It returns false for a min of 0 or less, or a max below the min.
+	    See Emitter3d.setRate for the rest.
 	**/
 	public inline function getLifeMax():Float
 		return Raw.wgf_emitter3d_get_life_max(this);
@@ -366,16 +261,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function getSpawnBox(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_emitter3d_get_spawn_box(this, into);
@@ -383,16 +269,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function setSpawnSphere(radius:Float):Bool
 		return Raw.wgf_emitter3d_set_spawn_sphere(this, radius);
@@ -400,16 +277,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function getSpawnSphere():Float
 		return Raw.wgf_emitter3d_get_spawn_sphere(this);
@@ -417,16 +285,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function setVelocity(x:Float, y:Float, z:Float, spread:Float, speed_variance:Float):Bool
 		return Raw.wgf_emitter3d_set_velocity(this, x, y, z, spread, speed_variance);
@@ -434,16 +293,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function getVelocity(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_emitter3d_get_velocity(this, into);
@@ -451,16 +301,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function getSpread():Float
 		return Raw.wgf_emitter3d_get_spread(this);
@@ -468,16 +309,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function getSpeedVariance():Float
 		return Raw.wgf_emitter3d_get_speed_variance(this);
@@ -485,16 +317,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function setGravity(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_emitter3d_set_gravity(this, x, y, z);
@@ -502,16 +325,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where particles are born, and how they move.
 
-	    - set_spawn_box: particles are born anywhere in a box around the position, given by its half
-	      sizes (default: a point).
-	    - set_spawn_sphere: particles are born evenly within a sphere. A radius below 0 is refused.
-	    - The box and the sphere each replace the other.
-	    - set_velocity: particles move along (x, y, z), at its length's speed (default: still). The
-	      direction is in the emitter's own frame, so it turns as its actor does.
-	    - Each particle's direction is spread evenly within a cone of `spread` radians about it (PI:
-	      every way). Its speed is faster or slower by up to `speed_variance` (0..1) of it.
-	    - set_gravity: an acceleration, in stage units a second squared, along the stage's axes
-	      (default: none).
+	    See Emitter3d.setSpawnBox for the rest.
 	**/
 	public inline function getGravity(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_emitter3d_get_gravity(this, into);
@@ -554,14 +368,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how particles move after birth (each defaults to 0).
 
-	    - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
-	      63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
-	    - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
-	      birth. At 1, particles are carried along with it.
-	    - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
-	      points along its velocity across the screen. It is as long as the distance it moves in
-	      `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
-	      returns false below 0.
+	    See Emitter3d.setDrag for the rest.
 	**/
 	public inline function getDrag():Float
 		return Raw.wgf_emitter3d_get_drag(this);
@@ -569,14 +376,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how particles move after birth (each defaults to 0).
 
-	    - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
-	      63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
-	    - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
-	      birth. At 1, particles are carried along with it.
-	    - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
-	      points along its velocity across the screen. It is as long as the distance it moves in
-	      `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
-	      returns false below 0.
+	    See Emitter3d.setDrag for the rest.
 	**/
 	public inline function setInheritVelocity(fraction:Float):Bool
 		return Raw.wgf_emitter3d_set_inherit_velocity(this, fraction);
@@ -584,14 +384,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how particles move after birth (each defaults to 0).
 
-	    - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
-	      63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
-	    - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
-	      birth. At 1, particles are carried along with it.
-	    - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
-	      points along its velocity across the screen. It is as long as the distance it moves in
-	      `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
-	      returns false below 0.
+	    See Emitter3d.setDrag for the rest.
 	**/
 	public inline function getInheritVelocity():Float
 		return Raw.wgf_emitter3d_get_inherit_velocity(this);
@@ -599,14 +392,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how particles move after birth (each defaults to 0).
 
-	    - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
-	      63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
-	    - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
-	      birth. At 1, particles are carried along with it.
-	    - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
-	      points along its velocity across the screen. It is as long as the distance it moves in
-	      `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
-	      returns false below 0.
+	    See Emitter3d.setDrag for the rest.
 	**/
 	public inline function setStretch(seconds:Float):Bool
 		return Raw.wgf_emitter3d_set_stretch(this, seconds);
@@ -614,14 +400,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how particles move after birth (each defaults to 0).
 
-	    - Drag slows particles in proportion to their speed, per second. At 1, a particle loses about
-	      63% of its speed in a second, less gravity's pull. set_drag returns false below 0.
-	    - Inherit velocity adds that fraction of the emitter's own velocity, its actor's movement, at
-	      birth. At 1, particles are carried along with it.
-	    - Stretch draws each particle along its motion, for sparks and streaks. Its texture's top
-	      points along its velocity across the screen. It is as long as the distance it moves in
-	      `seconds`, plus its size, trailing behind. Stretched particles don't spin. set_stretch
-	      returns false below 0.
+	    See Emitter3d.setDrag for the rest.
 	**/
 	public inline function getStretch():Float
 		return Raw.wgf_emitter3d_get_stretch(this);
@@ -640,8 +419,7 @@ import wgf.impl.Raw;
 	    Sets or gets whether each particle's top turns along its motion across the screen, like an
 	    arrow or a thrown spark (default: off).
 
-	    Its spin, clockwise as the camera sees it, is added to that angle rather than to a random one.
-	    A particle standing still keeps its top up the screen. A stretched particle is already aligned.
+	    See Emitter3d.setAlignedToMotion for the rest.
 	**/
 	public inline function isAlignedToMotion():Bool
 		return Raw.wgf_emitter3d_is_aligned_to_motion(this);
@@ -663,11 +441,7 @@ import wgf.impl.Raw;
 	    Sets or gets wander: each particle strays off its path on a smooth course of its own, like
 	    fireflies or dust motes.
 
-	    - `distance` is how far it strays: up to about that many stage units (default: 0, none).
-	    - `per_second` is about how many times a second its course turns (default: 1).
-
-	    The course starts on the particle's path. Its motion, for alignment and stretch, includes the
-	    stray. Returns false if either is below 0.
+	    See Emitter3d.setWander for the rest.
 	**/
 	public inline function getWanderDistance():Float
 		return Raw.wgf_emitter3d_get_wander_distance(this);
@@ -676,11 +450,7 @@ import wgf.impl.Raw;
 	    Sets or gets wander: each particle strays off its path on a smooth course of its own, like
 	    fireflies or dust motes.
 
-	    - `distance` is how far it strays: up to about that many stage units (default: 0, none).
-	    - `per_second` is about how many times a second its course turns (default: 1).
-
-	    The course starts on the particle's path. Its motion, for alignment and stretch, includes the
-	    stray. Returns false if either is below 0.
+	    See Emitter3d.setWander for the rest.
 	**/
 	public inline function getWanderRate():Float
 		return Raw.wgf_emitter3d_get_wander_rate(this);
@@ -703,12 +473,7 @@ import wgf.impl.Raw;
 	    Sets or gets orbit: each particle circles a line through where the emitter was at its birth
 	    (default: none).
 
-	    The line runs along the emitter's velocity (set_velocity's direction) at the particle's
-	    birth, or up if it has none, turned as its actor was then.
-
-	    Each particle's speed is picked between `min` and `max`, in radians a second, positive
-	    counterclockwise seen from where that line points. Its whole path turns, its own motion
-	    included, so a particle thrown outward spirals.
+	    See Emitter3d.setOrbit for the rest.
 	**/
 	public inline function getOrbitMin():Float
 		return Raw.wgf_emitter3d_get_orbit_min(this);
@@ -717,12 +482,7 @@ import wgf.impl.Raw;
 	    Sets or gets orbit: each particle circles a line through where the emitter was at its birth
 	    (default: none).
 
-	    The line runs along the emitter's velocity (set_velocity's direction) at the particle's
-	    birth, or up if it has none, turned as its actor was then.
-
-	    Each particle's speed is picked between `min` and `max`, in radians a second, positive
-	    counterclockwise seen from where that line points. Its whole path turns, its own motion
-	    included, so a particle thrown outward spirals.
+	    See Emitter3d.setOrbit for the rest.
 	**/
 	public inline function getOrbitMax():Float
 		return Raw.wgf_emitter3d_get_orbit_max(this);
@@ -741,8 +501,7 @@ import wgf.impl.Raw;
 	    Sets or gets pulse: each particle's alpha beats `per_second` times a second, on a phase of its
 	    own, for twinkling.
 
-	    At each beat's low, the alpha falls by `depth` of itself (0..1, clamped). Defaults: a rate of 0
-	    (none), and a depth of 1 (to clear). Returns false for a rate below 0.
+	    See Emitter3d.setPulse for the rest.
 	**/
 	public inline function getPulseRate():Float
 		return Raw.wgf_emitter3d_get_pulse_rate(this);
@@ -751,8 +510,7 @@ import wgf.impl.Raw;
 	    Sets or gets pulse: each particle's alpha beats `per_second` times a second, on a phase of its
 	    own, for twinkling.
 
-	    At each beat's low, the alpha falls by `depth` of itself (0..1, clamped). Defaults: a rate of 0
-	    (none), and a depth of 1 (to clear). Returns false for a rate below 0.
+	    See Emitter3d.setPulse for the rest.
 	**/
 	public inline function getPulseDepth():Float
 		return Raw.wgf_emitter3d_get_pulse_depth(this);
@@ -775,12 +533,7 @@ import wgf.impl.Raw;
 	    Sets or gets whether particles move with the emitter, like an aura around a moving character
 	    (default: off).
 
-	    - Each particle is moved as far as its actor has moved since the particle's birth. Only the
-	      actor's place counts, not its turn.
-	    - An orbit circles where the emitter is now.
-	    - Inherited velocity then does nothing.
-
-	    When off, each particle keeps to its own path as the emitter moves.
+	    See Emitter3d.setLocalSpace for the rest.
 	**/
 	public inline function isLocalSpace():Bool
 		return Raw.wgf_emitter3d_is_local_space(this);
@@ -806,17 +559,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function getSizeVariance():Float
 		return Raw.wgf_emitter3d_get_size_variance(this);
@@ -824,17 +567,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function addSizeKey(t:Float, size:Float):Bool
 		return Raw.wgf_emitter3d_add_size_key(this, t, size);
@@ -842,17 +575,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function clearSizeKeys():Bool
 		return Raw.wgf_emitter3d_clear_size_keys(this);
@@ -860,17 +583,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function getSizeKeyCount():Int
 		return Raw.wgf_emitter3d_get_size_key_count(this);
@@ -878,17 +591,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function getSizeKeyTime(index:Int):Float
 		return Raw.wgf_emitter3d_get_size_key_time(this, index);
@@ -896,17 +599,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function getSizeKeyValue(index:Int):Float
 		return Raw.wgf_emitter3d_get_size_key_value(this, index);
@@ -914,17 +607,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function setColor(start:Int, end:Int):Bool
 		return Raw.wgf_emitter3d_set_color(this, start, end);
@@ -932,17 +615,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function addColorKey(t:Float, color:Int):Bool
 		return Raw.wgf_emitter3d_add_color_key(this, t, color);
@@ -950,17 +623,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function clearColorKeys():Bool
 		return Raw.wgf_emitter3d_clear_color_keys(this);
@@ -968,17 +631,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function getColorKeyCount():Int
 		return Raw.wgf_emitter3d_get_color_key_count(this);
@@ -986,17 +639,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function getColorKeyTime(index:Int):Float
 		return Raw.wgf_emitter3d_get_color_key_time(this, index);
@@ -1004,17 +647,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets curves over a particle's life: its size and its color.
 
-	    - Size is in stage units. Each particle's size is scaled by up to `variance` (0..1).
-	    - Color is a tint, alpha included, so a curve can fade particles out.
-	    - set_size and set_color make two keys, at 0 (birth) and 1 (death).
-	    - For more keys, clear the keys and add up to 8, each at `t` (0..1 of a life).
-
-	    Between two keys, the value moves in a line. Before the first key and after the last, it holds.
-	    Keys at the same time make a step. An emitter with no size keys, or with no color keys, draws nothing.
-	    Defaults: size 1 to 1, and white to white.
-
-	    The calls return false for a negative size, a `t` outside 0..1, or a ninth key. The getters
-	    read the keys back by index, in time order (0 past the last).
+	    See Emitter3d.setSize for the rest.
 	**/
 	public inline function getColorKeyValue(index:Int):Int
 		return Raw.wgf_emitter3d_get_color_key_value(this, index);
@@ -1031,8 +664,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a palette of up to 8 colors (default: empty, no tint).
 
-	    Each particle picks one color at birth, and it tints the particle's color over its life:
-	    confetti from one emitter. add_palette_color returns false for a ninth color.
+	    See Emitter3d.addPaletteColor for the rest.
 	**/
 	public inline function clearPalette():Bool
 		return Raw.wgf_emitter3d_clear_palette(this);
@@ -1040,8 +672,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a palette of up to 8 colors (default: empty, no tint).
 
-	    Each particle picks one color at birth, and it tints the particle's color over its life:
-	    confetti from one emitter. add_palette_color returns false for a ninth color.
+	    See Emitter3d.addPaletteColor for the rest.
 	**/
 	public inline function getPaletteCount():Int
 		return Raw.wgf_emitter3d_get_palette_count(this);
@@ -1049,8 +680,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a palette of up to 8 colors (default: empty, no tint).
 
-	    Each particle picks one color at birth, and it tints the particle's color over its life:
-	    confetti from one emitter. add_palette_color returns false for a ninth color.
+	    See Emitter3d.addPaletteColor for the rest.
 	**/
 	public inline function getPaletteColor(index:Int):Int
 		return Raw.wgf_emitter3d_get_palette_color(this, index);
@@ -1089,7 +719,7 @@ import wgf.impl.Raw;
 	    Sets or gets how particles use alpha, one of wgf_material.h's modes (default: ADD, for glows,
 	    sparks, and fire), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
 
-	    The setter returns false if `mode` isn't an alpha mode.
+	    See Emitter3d.setAlphaMode for the rest.
 	**/
 	public inline function getAlphaMode():AlphaMode
 		return Raw.wgf_emitter3d_get_alpha_mode(this);
@@ -1098,7 +728,7 @@ import wgf.impl.Raw;
 	    Sets or gets how particles use alpha, one of wgf_material.h's modes (default: ADD, for glows,
 	    sparks, and fire), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
 
-	    The setter returns false if `mode` isn't an alpha mode.
+	    See Emitter3d.setAlphaMode for the rest.
 	**/
 	public inline function getAlphaCutoff():Float
 		return Raw.wgf_emitter3d_get_alpha_cutoff(this);
@@ -1137,12 +767,7 @@ import wgf.impl.Raw;
 	    Sets or gets whether the emitter ends itself, as a one-shot effect such as an explosion's burst
 	    does (default: off).
 
-	    The emitter's actor is destroyed, with the actors under it, once both are true:
-	    - it has nothing left to emit: it isn't emitting, or its rate is 0;
-	    - the last particle it made has died.
-
-	    That happens in the update before a frame. An emitter that has made no particle yet waits for
-	    its first.
+	    See Emitter3d.setEnding for the rest.
 	**/
 	public inline function isEnding():Bool
 		return Raw.wgf_emitter3d_is_ending(this);
@@ -1163,10 +788,7 @@ import wgf.impl.Raw;
 	    Sets or gets whether the emitter's particles outlive it, as a car's dust outlives the car
 	    (default: off).
 
-	    If the emitter is destroyed while it has particles alive on a stage, directly or with an actor
-	    above it, they finish their lives where they are. The emitter goes on as an actor of its own at
-	    the stage's top, not emitting. It is made in the update before the next frame, and ends (as
-	    above) with its last particle.
+	    See Emitter3d.setLingering for the rest.
 	**/
 	public inline function isLingering():Bool
 		return Raw.wgf_emitter3d_is_lingering(this);

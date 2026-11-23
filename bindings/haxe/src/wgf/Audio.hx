@@ -24,11 +24,7 @@ class Audio {
 	/**
 	    Sets or gets the volume of every voice, multiplied into each voice's own.
 
-	    - 1 plays the voices as they are.
-	    - 0 is silent.
-	    - Above 1 is louder, and may clip.
-
-	    Returns false for a negative or non-finite volume.
+	    See Audio.setVolume for the rest.
 	**/
 	public static inline function getVolume():Float
 		return Raw.wgf_audio_get_volume();
@@ -45,8 +41,7 @@ class Audio {
 	/**
 	    Sets or gets whether every voice is held where it is, its state unchanged, until unpaused.
 
-	    Use it for a game's pause screen. Paused or not, voices are told to play, pause, and stop as
-	    usual.
+	    See Audio.setPaused for the rest.
 	**/
 	public static inline function isPaused():Bool
 		return Raw.wgf_audio_is_paused();
@@ -71,14 +66,7 @@ class Audio {
 	    Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
 	    heard from the listener.
 
-	    - The facing has y up, and is normalized when set.
-	    - By default the listener is at the origin, facing -z.
-	    - A spatial voice is quieter with distance (wgf_voice_set_range), and panned by which side
-	      of the listener it is on.
-	    - The ecs sets both from an actor (wgf_world_set_listener).
-
-	    Returns false for a non-finite value, and for a facing of no length or straight up or
-	    down.
+	    See Audio.setListenerPosition for the rest.
 	**/
 	public static inline function getListenerPosition(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_audio_get_listener_position(into);
@@ -87,14 +75,7 @@ class Audio {
 	    Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
 	    heard from the listener.
 
-	    - The facing has y up, and is normalized when set.
-	    - By default the listener is at the origin, facing -z.
-	    - A spatial voice is quieter with distance (wgf_voice_set_range), and panned by which side
-	      of the listener it is on.
-	    - The ecs sets both from an actor (wgf_world_set_listener).
-
-	    Returns false for a non-finite value, and for a facing of no length or straight up or
-	    down.
+	    See Audio.setListenerPosition for the rest.
 	**/
 	public static inline function setListenerFacing(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_audio_set_listener_facing(x, y, z);
@@ -103,14 +84,7 @@ class Audio {
 	    Sets or gets the listener's position and facing. A spatial voice (wgf_voice_set_spatial) is
 	    heard from the listener.
 
-	    - The facing has y up, and is normalized when set.
-	    - By default the listener is at the origin, facing -z.
-	    - A spatial voice is quieter with distance (wgf_voice_set_range), and panned by which side
-	      of the listener it is on.
-	    - The ecs sets both from an actor (wgf_world_set_listener).
-
-	    Returns false for a non-finite value, and for a facing of no length or straight up or
-	    down.
+	    See Audio.setListenerPosition for the rest.
 	**/
 	public static inline function getListenerFacing(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_audio_get_listener_facing(into);

@@ -69,11 +69,7 @@ abstract Font(Int) from Int to Int to wgf.Handle {
 	    Enables bitmap fonts (a .fnt, or an image of glyphs: see wgf_font_create), or says whether
 	    they are enabled.
 
-	    Bitmap fonts are linked on purpose. This call links the code that reads their files, so a
-	    program with TrueType fonts alone carries none of it. A game enables them with
-	    "bitmap_fonts" in wgf.json's features.
-
-	    Call it before the first bitmap font is created. Without it, a bitmap font FAILED (logged).
+	    See Font.enableBitmaps for the rest.
 	**/
 	public static inline function isBitmapsEnabled():Bool
 		return Raw.wgf_font_is_bitmaps_enabled();
@@ -110,13 +106,7 @@ abstract Font(Int) from Int to Int to wgf.Handle {
 	    Sets or gets how a bitmap font's pages are sampled when its text is drawn at a size not
 	    its own.
 
-	    - NEAREST (the default, when unset) keeps its texels sharp, for pixel fonts.
-	    - LINEAR smooths them.
-
-	    A filter set before the font is READY is kept.
-
-	    The setter returns false for a font that isn't a bitmap font (by its file's extension),
-	    font 0, or a filter that isn't one. The getter returns LINEAR for those.
+	    See Font.setFilter for the rest.
 	**/
 	public inline function getFilter():TextureFilter
 		return Raw.wgf_font_get_filter(this);
@@ -135,10 +125,7 @@ abstract Font(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the font that font 0 means.
 
-	    The default holds a reference to `font`. Setting 0 goes back to the built-in font. For
-	    text beyond ASCII, set a font that has it.
-
-	    The setter returns false for a handle that isn't a font.
+	    See Font.setDefault for the rest.
 	**/
 	public static inline function getDefault():Font
 		return Raw.wgf_font_get_default();

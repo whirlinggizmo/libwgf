@@ -68,11 +68,7 @@ class Screen {
 	/**
 	    Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
 
-	    - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
-	      stage the screen already has.
-	    - remove_stage returns false for a stage the screen doesn't have.
-
-	    A stage that is destroyed leaves its screen.
+	    See Screen.addStage for the rest.
 	**/
 	public static inline function removeStage(screen:Actor, stage:Actor):Bool
 		return Raw.wgf_screen_remove_stage(screen, stage);
@@ -80,11 +76,7 @@ class Screen {
 	/**
 	    Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
 
-	    - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
-	      stage the screen already has.
-	    - remove_stage returns false for a stage the screen doesn't have.
-
-	    A stage that is destroyed leaves its screen.
+	    See Screen.addStage for the rest.
 	**/
 	public static inline function getStageCount(screen:Actor):Int
 		return Raw.wgf_screen_get_stage_count(screen);
@@ -92,11 +84,7 @@ class Screen {
 	/**
 	    Adds, removes, or lists a screen's stages, drawn in the order added (at most 8).
 
-	    - add_stage returns false for an actor that isn't a screen, one that isn't a stage, or a
-	      stage the screen already has.
-	    - remove_stage returns false for a stage the screen doesn't have.
-
-	    A stage that is destroyed leaves its screen.
+	    See Screen.addStage for the rest.
 	**/
 	public static inline function getStage(screen:Actor, index:Int):Actor
 		return Raw.wgf_screen_get_stage(screen, index);
@@ -116,11 +104,7 @@ class Screen {
 	/**
 	    Changes the stack, through the transition.
 
-	    - push returns false for an actor that isn't a screen, or one already on the stack.
-	    - pop returns false with no screen, or with the bottom screen alone.
-	    - replace returns false as push does, or with no screen to replace.
-
-	    All of them return false while a change runs.
+	    See Screen.push for the rest.
 	**/
 	public static inline function pop():Bool
 		return Raw.wgf_screen_pop();
@@ -128,11 +112,7 @@ class Screen {
 	/**
 	    Changes the stack, through the transition.
 
-	    - push returns false for an actor that isn't a screen, or one already on the stack.
-	    - pop returns false with no screen, or with the bottom screen alone.
-	    - replace returns false as push does, or with no screen to replace.
-
-	    All of them return false while a change runs.
+	    See Screen.push for the rest.
 	**/
 	public static inline function replace(screen:Actor):Bool
 		return Raw.wgf_screen_replace(screen);
@@ -152,11 +132,7 @@ class Screen {
 	/**
 	    Returns the stack's screens.
 
-	    - get_top returns the top screen, or 0 with none.
-	    - get_count returns how many are on the stack.
-	    - get returns the one `index` up from the bottom, or 0 for an index off the stack.
-
-	    Each is as of the last change made. A change still running isn't counted yet.
+	    See Screen.getTop for the rest.
 	**/
 	public static inline function getCount():Int
 		return Raw.wgf_screen_get_count();
@@ -164,11 +140,7 @@ class Screen {
 	/**
 	    Returns the stack's screens.
 
-	    - get_top returns the top screen, or 0 with none.
-	    - get_count returns how many are on the stack.
-	    - get returns the one `index` up from the bottom, or 0 for an index off the stack.
-
-	    Each is as of the last change made. A change still running isn't counted yet.
+	    See Screen.getTop for the rest.
 	**/
 	public static inline function get(index:Int):Actor
 		return Raw.wgf_screen_get(index);
@@ -188,11 +160,7 @@ class Screen {
 	/**
 	    Sets or gets whether a screen is opaque, and whether it is pausing.
 
-	    - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
-	      game.
-	    - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
-
-	    Returns false for an actor that isn't a screen.
+	    See Screen.setOpaque for the rest.
 	**/
 	public static inline function isOpaque(screen:Actor):Bool
 		return Raw.wgf_screen_is_opaque(screen);
@@ -200,11 +168,7 @@ class Screen {
 	/**
 	    Sets or gets whether a screen is opaque, and whether it is pausing.
 
-	    - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
-	      game.
-	    - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
-
-	    Returns false for an actor that isn't a screen.
+	    See Screen.setOpaque for the rest.
 	**/
 	public static inline function setPausing(screen:Actor, pausing:Bool):Bool
 		return Raw.wgf_screen_set_pausing(screen, pausing);
@@ -212,11 +176,7 @@ class Screen {
 	/**
 	    Sets or gets whether a screen is opaque, and whether it is pausing.
 
-	    - opaque: no screen under it is drawn (default: on). Turn it off for a pause menu over the
-	      game.
-	    - pausing: the screens under it are paused (default: on). Turn it off for a HUD over play.
-
-	    Returns false for an actor that isn't a screen.
+	    See Screen.setOpaque for the rest.
 	**/
 	public static inline function isPausing(screen:Actor):Bool
 		return Raw.wgf_screen_is_pausing(screen);
@@ -242,11 +202,7 @@ class Screen {
 	/**
 	    Sets or gets the transition the changes run through.
 
-	    - Its kind, and its length in seconds. 0 or less means at once.
-	    - Its color (default: black).
-	    - Each half's ease (default: linear).
-
-	    Returns false for a kind that isn't one, or seconds that aren't finite.
+	    See Screen.setTransition for the rest.
 	**/
 	public static inline function getTransition():Transition
 		return Raw.wgf_screen_get_transition();
@@ -254,11 +210,7 @@ class Screen {
 	/**
 	    Sets or gets the transition the changes run through.
 
-	    - Its kind, and its length in seconds. 0 or less means at once.
-	    - Its color (default: black).
-	    - Each half's ease (default: linear).
-
-	    Returns false for a kind that isn't one, or seconds that aren't finite.
+	    See Screen.setTransition for the rest.
 	**/
 	public static inline function getTransitionSeconds():Float
 		return Raw.wgf_screen_get_transition_seconds();
@@ -266,11 +218,7 @@ class Screen {
 	/**
 	    Sets or gets the transition the changes run through.
 
-	    - Its kind, and its length in seconds. 0 or less means at once.
-	    - Its color (default: black).
-	    - Each half's ease (default: linear).
-
-	    Returns false for a kind that isn't one, or seconds that aren't finite.
+	    See Screen.setTransition for the rest.
 	**/
 	public static inline function setTransitionColor(color:Int):Void
 		Raw.wgf_screen_set_transition_color(color);
@@ -278,11 +226,7 @@ class Screen {
 	/**
 	    Sets or gets the transition the changes run through.
 
-	    - Its kind, and its length in seconds. 0 or less means at once.
-	    - Its color (default: black).
-	    - Each half's ease (default: linear).
-
-	    Returns false for a kind that isn't one, or seconds that aren't finite.
+	    See Screen.setTransition for the rest.
 	**/
 	public static inline function getTransitionColor():Int
 		return Raw.wgf_screen_get_transition_color();
@@ -290,11 +234,7 @@ class Screen {
 	/**
 	    Sets or gets the transition the changes run through.
 
-	    - Its kind, and its length in seconds. 0 or less means at once.
-	    - Its color (default: black).
-	    - Each half's ease (default: linear).
-
-	    Returns false for a kind that isn't one, or seconds that aren't finite.
+	    See Screen.setTransition for the rest.
 	**/
 	public static inline function setTransitionEase(ease:Easing):Bool
 		return Raw.wgf_screen_set_transition_ease(ease);
@@ -302,11 +242,7 @@ class Screen {
 	/**
 	    Sets or gets the transition the changes run through.
 
-	    - Its kind, and its length in seconds. 0 or less means at once.
-	    - Its color (default: black).
-	    - Each half's ease (default: linear).
-
-	    Returns false for a kind that isn't one, or seconds that aren't finite.
+	    See Screen.setTransition for the rest.
 	**/
 	public static inline function getTransitionEase():Easing
 		return Raw.wgf_screen_get_transition_ease();
@@ -326,11 +262,7 @@ class Screen {
 	/**
 	    Returns whether a change is running, and how far it has come.
 
-	    - 0 to 0.5: covering.
-	    - 0.5: covered. The change is made there, or it is waiting on a load.
-	    - 0.5 to 1: uncovering.
-
-	    The progress is 0 with no change running.
+	    See Screen.isChanging for the rest.
 	**/
 	public static inline function getChangeProgress():Float
 		return Raw.wgf_screen_get_change_progress();
@@ -380,9 +312,7 @@ class Screen {
 	    Sets or gets the loading screen, drawn over the cover while a change waits on loads (0 for
 	    none). get_load_progress returns how far the loads have come, 0 to 1.
 
-	    - With assets to wait for, it is their progress.
-	    - Otherwise it is the share of the loads pending when the wait began that have settled.
-	    - It is 1 with nothing waiting.
+	    See Screen.setLoadingScreen for the rest.
 	**/
 	public static inline function getLoadingScreen():Actor
 		return Raw.wgf_screen_get_loading_screen();
@@ -391,9 +321,7 @@ class Screen {
 	    Sets or gets the loading screen, drawn over the cover while a change waits on loads (0 for
 	    none). get_load_progress returns how far the loads have come, 0 to 1.
 
-	    - With assets to wait for, it is their progress.
-	    - Otherwise it is the share of the loads pending when the wait began that have settled.
-	    - It is 1 with nothing waiting.
+	    See Screen.setLoadingScreen for the rest.
 	**/
 	public static inline function getLoadProgress():Float
 		return Raw.wgf_screen_get_load_progress();

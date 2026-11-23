@@ -48,14 +48,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the stage's camera (wgf_camera2d.h).
 
-	    - With a camera, the stage's point at the camera's position is drawn at the frame's center,
-	      turned and zoomed as the camera is. Use it for a 2D world.
-	    - Without one (0, the default), stage units are the frame's logical pixels. Use it for a HUD.
-
-	    The camera can be anywhere: on this stage, parented to the player so it follows, or in no
-	    tree at all. A camera that is destroyed leaves the stage with none.
-
-	    set_camera returns false if `camera` isn't a 2D camera.
+	    See Stage2d.setCamera for the rest.
 	**/
 	public inline function getCamera():Actor
 		return Raw.wgf_stage2d_get_camera(this);
@@ -79,13 +72,7 @@ import wgf.impl.Raw;
 	    Converts between the stage's units and the screen's logical pixels, through its camera as it
 	    is now.
 
-	    Logical pixels are what the pointer reads (wgf_mouse.h).
-
-	    - world_to_screen returns where a point of the stage shows on the screen.
-	    - screen_to_world returns the stage's point under a place on the screen, as for a click in
-	      the world.
-
-	    Each returns 0, 0 if `stage` isn't a 2D stage.
+	    See Stage2d.worldToScreen for the rest.
 	**/
 	public inline function screenToWorld(x:Float, y:Float, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_stage2d_screen_to_world(this, x, y, into);

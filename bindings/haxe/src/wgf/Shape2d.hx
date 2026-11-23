@@ -87,12 +87,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what was set.
 
-	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
-	    - get_radius returns a circle's radius, or 0 for another kind.
-	    - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
-	    - get_point_count returns how many points a polygon has, or 0 for another kind.
-	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
-	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+	    See Shape2d.getSize for the rest.
 	**/
 	public inline function getRadius():Float
 		return Raw.wgf_shape2d_get_radius(this);
@@ -100,12 +95,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what was set.
 
-	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
-	    - get_radius returns a circle's radius, or 0 for another kind.
-	    - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
-	    - get_point_count returns how many points a polygon has, or 0 for another kind.
-	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
-	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+	    See Shape2d.getSize for the rest.
 	**/
 	public inline function getLineStart(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_shape2d_get_line_start(this, into);
@@ -113,12 +103,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what was set.
 
-	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
-	    - get_radius returns a circle's radius, or 0 for another kind.
-	    - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
-	    - get_point_count returns how many points a polygon has, or 0 for another kind.
-	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
-	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+	    See Shape2d.getSize for the rest.
 	**/
 	public inline function getLineEnd(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_shape2d_get_line_end(this, into);
@@ -126,12 +111,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what was set.
 
-	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
-	    - get_radius returns a circle's radius, or 0 for another kind.
-	    - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
-	    - get_point_count returns how many points a polygon has, or 0 for another kind.
-	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
-	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+	    See Shape2d.getSize for the rest.
 	**/
 	public inline function getPointCount():Int
 		return Raw.wgf_shape2d_get_point_count(this);
@@ -139,12 +119,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what was set.
 
-	    - get_size returns a rectangle's width and height, or 0, 0 for another kind.
-	    - get_radius returns a circle's radius, or 0 for another kind.
-	    - get_line_start and get_line_end return a line's ends, or 0, 0 for another kind.
-	    - get_point_count returns how many points a polygon has, or 0 for another kind.
-	    - get_points copies a polygon's points into `out`, x and y in turn, as many as fit in
-	      `count` floats. It returns how many floats it filled, or 0 for anything but a polygon.
+	    See Shape2d.getSize for the rest.
 	**/
 	public inline function getPoints(out:Array<Float>):Int
 		return Raw.wgf_shape2d_get_points(this, out);
@@ -167,12 +142,7 @@ import wgf.impl.Raw;
 	    Sets or gets the pivot: the point of a rectangle or circle at its actor's position, which
 	    it turns and scales about.
 
-	    - The pivot is a fraction of the shape: 0, 0 is its top-left, and 1, 1 its bottom-right.
-	    - Unset (the default), each shape keeps its own origin: a rectangle's top-left corner, or
-	      a circle's center.
-	    - The getter reads an unset pivot back as that fraction: 0, 0 or 0.5, 0.5.
-
-	    The setter returns false for a handle that isn't a 2D shape.
+	    See Shape2d.setPivot for the rest.
 	**/
 	public inline function getPivot(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_shape2d_get_pivot(this, into);
@@ -193,10 +163,7 @@ import wgf.impl.Raw;
 	    Sets or gets the outline: the shape is drawn as an outline `thickness` logical pixels wide,
 	    centered on its edge.
 
-	    - A `thickness` of 0 (the default) fills the shape. A line is then a hairline.
-	    - The thickness is clamped to 0 or more.
-
-	    The setter returns false for a handle that isn't a 2D shape.
+	    See Shape2d.setOutline for the rest.
 	**/
 	public inline function getOutline():Float
 		return Raw.wgf_shape2d_get_outline(this);
@@ -218,11 +185,7 @@ import wgf.impl.Raw;
 	    Sets or gets the radius a rectangle's corners are rounded to, in its own units (default: 0,
 	    square).
 
-	    - The corners are rounded as wgf_draw_rectangle_rounded rounds them, filled or outlined.
-	    - The radius is clamped to 0 or more, and drawn at no more than half the shorter side.
-	    - It is kept for the other kinds, which it doesn't change.
-
-	    The setter returns false for a handle that isn't a 2D shape.
+	    See Shape2d.setCornerRadius for the rest.
 	**/
 	public inline function getCornerRadius():Float
 		return Raw.wgf_shape2d_get_corner_radius(this);

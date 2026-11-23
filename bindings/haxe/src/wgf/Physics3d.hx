@@ -35,10 +35,7 @@ class Physics3d {
 	    Enables characters (WGF_BODY3D_TYPE_CHARACTER in wgf_body3d.h, Jolt's CharacterVirtual), or
 	    gets whether they are enabled.
 
-	    Characters are linked on purpose. This call links them, so a game with no characters carries
-	    none of their code (about 42 KB). A game enables them with "characters" in wgf.json's
-	    features. Without it, a character type is refused (logged), in a scene too. Call it any time
-	    before the first character.
+	    See Physics3d.enableCharacters for the rest.
 	**/
 	public static inline function isCharactersEnabled():Bool
 		return Raw.wgf_physics3d_is_characters_enabled();
@@ -59,10 +56,7 @@ class Physics3d {
 	    Enables vehicles (wgf_vehicle.h, Jolt's VehicleConstraint), or gets whether they are
 	    enabled.
 
-	    Vehicles are linked on purpose. This call links them, so a game with physics and no car
-	    carries none of their code (about 46 KB). A game enables them with "vehicles" in wgf.json's
-	    features. Without it, a vehicle component is refused (logged), in a scene too. Call it any
-	    time before the first vehicle.
+	    See Physics3d.enableVehicles for the rest.
 	**/
 	public static inline function isVehiclesEnabled():Bool
 		return Raw.wgf_physics3d_is_vehicles_enabled();
@@ -118,20 +112,7 @@ class Physics3d {
 	/**
 	    Casts a ray or a sphere through the world, and returns what it hits.
 
-	    The queries in this header see the bodies as they are now (as of their last tick), in their
-	    3D stage's space. Each meets the bodies whose layer is in `mask` (wgf_body3d_set_layer), and
-	    never a sensor. Each starts physics.
-
-	    - The ray starts at `x`, `y`, `z` and goes along `dx`, `dy`, `dz` for `distance`. The
-	      direction may be any length: it is normalized.
-	    - cast_sphere sweeps a sphere of `radius` the same way.
-	    - Hits come nearest first, each body once (its nearest hit), as many as fit in `count`.
-	    - Each hit's actor goes into `actors`.
-	    - If `hits` is given, each hit also fills 7 floats of it, as many as fit in `hits_count`:
-	      the point, the surface's normal there, and the distance along the ray.
-
-	    Returns how many hits. Returns 0 for nothing hit, a direction of no length, a distance or
-	    radius not above 0, or no array.
+	    See Physics3d.castRay for the rest.
 	**/
 	public static inline function castSphere(x:Float, y:Float, z:Float, radius:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Actor>, hits:Array<Float>):Int
 		return Raw.wgf_physics3d_cast_sphere(x, y, z, radius, dx, dy, dz, distance, mask, cast actors, hits);
@@ -152,12 +133,7 @@ class Physics3d {
 	/**
 	    Finds the bodies overlapping a sphere or a box, and returns how many.
 
-	    - overlap_sphere: a sphere of `radius` at `x`, `y`, `z`.
-	    - overlap_box: a box `width`, `height`, and `depth`, centered there, with the world's axes.
-
-	    The bodies go into `actors` in no order, as many as fit in `count`. Like the casts, these
-	    see the bodies as of their last tick, meet only those whose layer is in `mask` and never a
-	    sensor, and start physics. Returns 0 for none, a size not above 0, or no array.
+	    See Physics3d.overlapSphere for the rest.
 	**/
 	public static inline function overlapBox(x:Float, y:Float, z:Float, width:Float, height:Float, depth:Float, mask:Int, actors:Array<Actor>):Int
 		return Raw.wgf_physics3d_overlap_box(x, y, z, width, height, depth, mask, cast actors);

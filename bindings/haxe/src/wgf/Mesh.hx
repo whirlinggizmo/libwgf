@@ -159,34 +159,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	    Changes a mesh made from numbers in place (wgf_mesh_create_triangles,
 	    wgf_mesh_create_heightmap).
 
-	    Each call replaces the corners' positions, normals, texture coordinates, or colors from your
-	    array, as many as the mesh has corners. The change goes to the GPU when the mesh is next
-	    drawn. Its triangles stay as they are. Use it for a deformed terrain, water, or geometry made
-	    each frame.
-
-	    - The first change makes the mesh's vertices a buffer the GPU expects to change. A mesh
-	      never changed keeps a buffer that isn't.
-	    - The GPU takes one change a frame. Of several changes in a frame, it draws the last, the
-	      next frame.
-
-	    Each call returns true when it changed the mesh. It returns false, and changes nothing:
-	    - For a mesh not made from numbers. A generated shape is shared by its parameters, and a
-	      file's mesh is its file's.
-	    - For a count that isn't the mesh's corners times 3 (positions and normals), 2 (texture
-	      coordinates), or 4 (colors). A count of 0 is allowed, and gives the default its create
-	      call gives (except for positions, below).
-
-	      positions  x, y, z each. The mesh's box (wgf_mesh_get_bounds_min, _max) is made
-	                 again. A count of 0 is refused. Its normals stay as they were: set them,
-	                 or make them smooth again with a count of 0
-	      normals    x, y, z each, unit length. 0: smooth, made from the triangles as they are
-	      uvs        u, v each (both texture coordinate sets). 0: all 0, 0
-	      colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
-	                 are (sRGB, stored linear). The built-in shadings multiply the material's
-	                 color by them, and a custom shader reads them as wgf_color. 0: white
-
-	    The tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it was
-	    made with: make it again to collide with the new shape.
+	    See Mesh.setPositions for the rest.
 	**/
 	public inline function setNormals(normals:Array<Float>):Bool
 		return Raw.wgf_mesh_set_normals(this, normals);
@@ -195,34 +168,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	    Changes a mesh made from numbers in place (wgf_mesh_create_triangles,
 	    wgf_mesh_create_heightmap).
 
-	    Each call replaces the corners' positions, normals, texture coordinates, or colors from your
-	    array, as many as the mesh has corners. The change goes to the GPU when the mesh is next
-	    drawn. Its triangles stay as they are. Use it for a deformed terrain, water, or geometry made
-	    each frame.
-
-	    - The first change makes the mesh's vertices a buffer the GPU expects to change. A mesh
-	      never changed keeps a buffer that isn't.
-	    - The GPU takes one change a frame. Of several changes in a frame, it draws the last, the
-	      next frame.
-
-	    Each call returns true when it changed the mesh. It returns false, and changes nothing:
-	    - For a mesh not made from numbers. A generated shape is shared by its parameters, and a
-	      file's mesh is its file's.
-	    - For a count that isn't the mesh's corners times 3 (positions and normals), 2 (texture
-	      coordinates), or 4 (colors). A count of 0 is allowed, and gives the default its create
-	      call gives (except for positions, below).
-
-	      positions  x, y, z each. The mesh's box (wgf_mesh_get_bounds_min, _max) is made
-	                 again. A count of 0 is refused. Its normals stay as they were: set them,
-	                 or make them smooth again with a count of 0
-	      normals    x, y, z each, unit length. 0: smooth, made from the triangles as they are
-	      uvs        u, v each (both texture coordinate sets). 0: all 0, 0
-	      colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
-	                 are (sRGB, stored linear). The built-in shadings multiply the material's
-	                 color by them, and a custom shader reads them as wgf_color. 0: white
-
-	    The tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it was
-	    made with: make it again to collide with the new shape.
+	    See Mesh.setPositions for the rest.
 	**/
 	public inline function setUvs(uvs:Array<Float>):Bool
 		return Raw.wgf_mesh_set_uvs(this, uvs);
@@ -231,34 +177,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	    Changes a mesh made from numbers in place (wgf_mesh_create_triangles,
 	    wgf_mesh_create_heightmap).
 
-	    Each call replaces the corners' positions, normals, texture coordinates, or colors from your
-	    array, as many as the mesh has corners. The change goes to the GPU when the mesh is next
-	    drawn. Its triangles stay as they are. Use it for a deformed terrain, water, or geometry made
-	    each frame.
-
-	    - The first change makes the mesh's vertices a buffer the GPU expects to change. A mesh
-	      never changed keeps a buffer that isn't.
-	    - The GPU takes one change a frame. Of several changes in a frame, it draws the last, the
-	      next frame.
-
-	    Each call returns true when it changed the mesh. It returns false, and changes nothing:
-	    - For a mesh not made from numbers. A generated shape is shared by its parameters, and a
-	      file's mesh is its file's.
-	    - For a count that isn't the mesh's corners times 3 (positions and normals), 2 (texture
-	      coordinates), or 4 (colors). A count of 0 is allowed, and gives the default its create
-	      call gives (except for positions, below).
-
-	      positions  x, y, z each. The mesh's box (wgf_mesh_get_bounds_min, _max) is made
-	                 again. A count of 0 is refused. Its normals stay as they were: set them,
-	                 or make them smooth again with a count of 0
-	      normals    x, y, z each, unit length. 0: smooth, made from the triangles as they are
-	      uvs        u, v each (both texture coordinate sets). 0: all 0, 0
-	      colors     red, green, blue, alpha each, 0..1 (clamped), as a wgf_color_t's channels
-	                 are (sRGB, stored linear). The built-in shadings multiply the material's
-	                 color by them, and a custom shader reads them as wgf_color. 0: white
-
-	    The tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it was
-	    made with: make it again to collide with the new shape.
+	    See Mesh.setPositions for the rest.
 	**/
 	public inline function setColors(colors:Array<Float>):Bool
 		return Raw.wgf_mesh_set_colors(this, colors);
@@ -282,15 +201,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	/**
 	    Reads the corners of a mesh of one part.
 
-	    This works on any mesh of one part, including a generated shape's and a file's.
-
-	    - get_vertex_count returns how many corners it has. It returns 0 for a handle that isn't a
-	      READY mesh, and for a mesh of several parts or none, as a file's own mesh is.
-	    - The others copy the corners' positions, normals, texture coordinates (set 0), or colors
-	      into your array, as many whole corners as fit. Colors are sRGB, as wgf_mesh_set_colors
-	      takes them: a file's COLOR_0, or white where it has none.
-
-	    Each copy returns how many numbers it filled.
+	    See Mesh.getVertexCount for the rest.
 	**/
 	public inline function getPositions(positions:Array<Float>):Int
 		return Raw.wgf_mesh_get_positions(this, positions);
@@ -298,15 +209,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	/**
 	    Reads the corners of a mesh of one part.
 
-	    This works on any mesh of one part, including a generated shape's and a file's.
-
-	    - get_vertex_count returns how many corners it has. It returns 0 for a handle that isn't a
-	      READY mesh, and for a mesh of several parts or none, as a file's own mesh is.
-	    - The others copy the corners' positions, normals, texture coordinates (set 0), or colors
-	      into your array, as many whole corners as fit. Colors are sRGB, as wgf_mesh_set_colors
-	      takes them: a file's COLOR_0, or white where it has none.
-
-	    Each copy returns how many numbers it filled.
+	    See Mesh.getVertexCount for the rest.
 	**/
 	public inline function getNormals(normals:Array<Float>):Int
 		return Raw.wgf_mesh_get_normals(this, normals);
@@ -314,15 +217,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	/**
 	    Reads the corners of a mesh of one part.
 
-	    This works on any mesh of one part, including a generated shape's and a file's.
-
-	    - get_vertex_count returns how many corners it has. It returns 0 for a handle that isn't a
-	      READY mesh, and for a mesh of several parts or none, as a file's own mesh is.
-	    - The others copy the corners' positions, normals, texture coordinates (set 0), or colors
-	      into your array, as many whole corners as fit. Colors are sRGB, as wgf_mesh_set_colors
-	      takes them: a file's COLOR_0, or white where it has none.
-
-	    Each copy returns how many numbers it filled.
+	    See Mesh.getVertexCount for the rest.
 	**/
 	public inline function getUvs(uvs:Array<Float>):Int
 		return Raw.wgf_mesh_get_uvs(this, uvs);
@@ -330,15 +225,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	/**
 	    Reads the corners of a mesh of one part.
 
-	    This works on any mesh of one part, including a generated shape's and a file's.
-
-	    - get_vertex_count returns how many corners it has. It returns 0 for a handle that isn't a
-	      READY mesh, and for a mesh of several parts or none, as a file's own mesh is.
-	    - The others copy the corners' positions, normals, texture coordinates (set 0), or colors
-	      into your array, as many whole corners as fit. Colors are sRGB, as wgf_mesh_set_colors
-	      takes them: a file's COLOR_0, or white where it has none.
-
-	    Each copy returns how many numbers it filled.
+	    See Mesh.getVertexCount for the rest.
 	**/
 	public inline function getColors(colors:Array<Float>):Int
 		return Raw.wgf_mesh_get_colors(this, colors);
@@ -437,10 +324,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns how many materials the mesh has, and the material at a slot (wgf_material.h).
 
-	    The mesh has one material a slot, and a generated mesh has one. The handle is borrowed: it
-	    is valid while the mesh is. Changing it changes every model that draws the mesh with it.
-
-	    get_material returns 0 for a slot the mesh hasn't.
+	    See Mesh.getMaterialCount for the rest.
 	**/
 	public inline function getMaterial(slot:Int):Material
 		return Raw.wgf_mesh_get_material(this, slot);
@@ -456,7 +340,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns the box around the mesh in its own space: its least and greatest corner.
 
-	    Returns 0, 0, 0 for both while the mesh isn't READY, or if `mesh` isn't a mesh.
+	    See Mesh.getBoundsMin for the rest.
 	**/
 	public inline function getBoundsMax(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_mesh_get_bounds_max(this, into);

@@ -59,15 +59,7 @@ class Probe {
 	/**
 	    Sets or gets probe `name` as text (UTF-8, at most 255 bytes).
 
-	    set_text adds the probe the first time. From then on the probe is text, and its number
-	    is 0, until a number is set again. It returns false, and sets nothing, if:
-	    - `name` breaks the rules above.
-	    - `text` is NULL or longer than 255 bytes.
-	    - It would be a 257th probe.
-	    - Core isn't running, or memory runs out.
-
-	    get_text returns the probe's text, borrowed until the probe next changes. It returns ""
-	    for a probe that is a number or was never set.
+	    See Probe.setText for the rest.
 	**/
 	public static inline function getText(name:String):String
 		return Raw.wgf_probe_get_text(name);
@@ -84,8 +76,7 @@ class Probe {
 	/**
 	    Returns how many probes there are, and each one's name, in the order they were first set.
 
-	    A name is borrowed, valid until core stops. get_name returns "" for an index out of
-	    range.
+	    See Probe.getCount for the rest.
 	**/
 	public static inline function getName(index:Int):String
 		return Raw.wgf_probe_get_name(index);

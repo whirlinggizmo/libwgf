@@ -16,8 +16,7 @@ class World {
 	/**
 	    Returns how many events wait, or takes the oldest off the queue.
 
-	    take_events fills `out` with four ints an event (the event, then the three above). It takes
-	    as many whole events as fit in `count` ints, and returns how many ints it filled.
+	    See World.getEventCount for the rest.
 	**/
 	public static inline function takeEvents(out:Array<Int>):Int
 		return Raw.wgf_world_take_events(out);
@@ -42,9 +41,7 @@ class World {
 	/**
 	    Sets or gets the actor that spatial audio is heard from (wgf_audio.h's listener).
 
-	    Each frame the listener is put where the actor is drawn, facing its -z, as a camera views.
-	    0 sets none, and the listener stays as last set. Returns false for a handle that isn't an
-	    actor.
+	    See World.setListener for the rest.
 	**/
 	public static inline function getListener():Actor
 		return Raw.wgf_world_get_listener();

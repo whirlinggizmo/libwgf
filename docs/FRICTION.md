@@ -893,7 +893,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** none: the reader scrolls
 - **Cost:** Hard to look up one call in the Haxe or `.d.ts` file. The API site already shows "see <first call>, above" in these cases.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "A group's doc is written once in the bindings".
 
 ### examples: Haxe views don't convert to each other
 

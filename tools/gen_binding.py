@@ -238,7 +238,7 @@ def typed_layout(binding, with_skipped=False):
 
 def typed_modules(binding):
     """Haxe module name -> its text."""
-    docs = binding.docs()
+    docs = binding.member_docs(binding.haxe_name)
     over = binding.over()
     members = {}
     seen = {}
@@ -344,7 +344,8 @@ def outputs(api):
     for name, text in typed_modules(binding).items():
         files[OUT / f'{name}.hx'] = text
     files.update(jsbinding.outputs(binding, version, stamp, SKIPPED))
-    files.update(jsbinding.typed_outputs(*typed_layout(binding, with_skipped=True), JS_EXTRAS, binding.docs(), binding.class_docs()))
+    files.update(jsbinding.typed_outputs(*typed_layout(binding, with_skipped=True), JS_EXTRAS,
+                                         binding.member_docs(binding.haxe_name), binding.class_docs()))
     exports = sorted('_' + f.name for f in binding.functions) + HOST_EXTRA
     files[EXPORTS] = json.dumps({'generated': MARK, 'version': version, 'headers': stamp, 'exports': exports},
                                 indent=1) + '\n'

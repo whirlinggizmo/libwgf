@@ -31,23 +31,7 @@ class Trig {
 	/**
 	    Returns the sine, cosine, or tangent of an angle in radians, with the same bits on every target.
 
-	    The results match natively, under Windows, and in a browser. So a simulation started from
-	    the same numbers runs the same everywhere. The rotations (wgf_quat.h) and the generated
-	    meshes are made with these calls.
-
-	    The C library's sinf and cosf don't match. glibc's and Emscripten's (musl's) differ in the
-	    last bit for some angles. That is enough for a pile of a thousand physics boxes, each turned
-	    as it is made, to come apart within seconds. A binding's own functions (Haxe's Math on hxcpp
-	    and on JS) differ in the same way.
-
-	    Each result is within an ulp of the C library's, and usually equal to it.
-
-	    The results are exact in this way for angles up to about 1.6 million radians. A larger angle
-	    is first brought within one turn. Its result is always within -1..1, but it loses accuracy
-	    as the angle grows.
-
-	    Returns NaN for an infinite or NaN angle, as the C library does. asin and acos also return
-	    NaN past -1..1.
+	    See Trig.sin for the rest.
 	**/
 	public static inline function cos(radians:Float):Float
 		return Raw.wgf_trig_cos(radians);
@@ -55,23 +39,7 @@ class Trig {
 	/**
 	    Returns the sine, cosine, or tangent of an angle in radians, with the same bits on every target.
 
-	    The results match natively, under Windows, and in a browser. So a simulation started from
-	    the same numbers runs the same everywhere. The rotations (wgf_quat.h) and the generated
-	    meshes are made with these calls.
-
-	    The C library's sinf and cosf don't match. glibc's and Emscripten's (musl's) differ in the
-	    last bit for some angles. That is enough for a pile of a thousand physics boxes, each turned
-	    as it is made, to come apart within seconds. A binding's own functions (Haxe's Math on hxcpp
-	    and on JS) differ in the same way.
-
-	    Each result is within an ulp of the C library's, and usually equal to it.
-
-	    The results are exact in this way for angles up to about 1.6 million radians. A larger angle
-	    is first brought within one turn. Its result is always within -1..1, but it loses accuracy
-	    as the angle grows.
-
-	    Returns NaN for an infinite or NaN angle, as the C library does. asin and acos also return
-	    NaN past -1..1.
+	    See Trig.sin for the rest.
 	**/
 	public static inline function tan(radians:Float):Float
 		return Raw.wgf_trig_tan(radians);

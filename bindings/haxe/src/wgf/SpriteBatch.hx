@@ -62,8 +62,7 @@ import wgf.impl.Raw;
 	    Sets or gets how many quads the batch draws. A larger count makes new quads, set as above.
 	    A smaller count drops the quads past it.
 
-	    The setter returns false for a handle that isn't a batch, a `count` below 0 or over
-	    16777216, or no memory for it.
+	    See SpriteBatch.setCount for the rest.
 	**/
 	public inline function getCount():Int
 		return Raw.wgf_sprite_batch_get_count(this);
@@ -86,12 +85,7 @@ import wgf.impl.Raw;
 	    Sets or gets the quads' positions, from quad `first` on: where each quad's pivot goes, in
 	    the batch's units.
 
-	    `positions` holds x and y in turn: `count` floats, for count / 2 quads. Quads past the
-	    batch's count are left out. The setter returns how many quads it wrote. It returns 0 for a
-	    handle that isn't a batch, a `first` outside the batch, or an odd `count`.
-
-	    The getter reads the positions back into `out`, as many as fit in `count` floats. It
-	    returns how many floats it filled.
+	    See SpriteBatch.setPositions for the rest.
 	**/
 	public inline function getPositions(first:Int, out:Array<Float>):Int
 		return Raw.wgf_sprite_batch_get_positions(this, first, out);
@@ -109,9 +103,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the quads' sizes, as width and height in turn, in the same way as positions.
 
-	    - A width or height of 0 uses the region's size in texels.
-	    - A negative width or height mirrors the quad across that axis, about its pivot: a tile
-	      flipped.
+	    See SpriteBatch.setSizes for the rest.
 	**/
 	public inline function getSizes(first:Int, out:Array<Float>):Int
 		return Raw.wgf_sprite_batch_get_sizes(this, first, out);
@@ -148,10 +140,7 @@ import wgf.impl.Raw;
 	    Sets or gets the quads' regions of the texture: x, y, width, and height, in texture pixels
 	    from the top-left.
 
-	    - There are four floats a quad, for count / 4 quads. A `count` that isn't a multiple of 4
-	      writes none.
-	    - Each value is rounded to a whole pixel and clamped to 0..32767.
-	    - A width or height of 0 shows the whole texture.
+	    See SpriteBatch.setRegions for the rest.
 	**/
 	public inline function getRegions(first:Int, out:Array<Float>):Int
 		return Raw.wgf_sprite_batch_get_regions(this, first, out);
@@ -186,10 +175,7 @@ import wgf.impl.Raw;
 	    Sets or gets the pivot of every quad: the point placed at its position, which it turns
 	    about. It is a fraction of the quad's size.
 
-	    - 0.5, 0.5 is its center (default).
-	    - 0, 0 is its top-left.
-
-	    The setter returns false for a handle that isn't a batch.
+	    See SpriteBatch.setPivot for the rest.
 	**/
 	public inline function getPivot(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_sprite_batch_get_pivot(this, into);
@@ -212,12 +198,7 @@ import wgf.impl.Raw;
 	    Sets or gets how the batch's quads use their texels' alpha, one of wgf_material.h's modes
 	    (default: BLEND), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
 
-	    - OPAQUE draws without blending.
-	    - MASK cuts out below the cutoff and draws the rest opaque.
-	    - ADD adds its color.
-
-	    The setter returns false for a handle that isn't a batch, or a `mode` that isn't an alpha
-	    mode.
+	    See SpriteBatch.setAlphaMode for the rest.
 	**/
 	public inline function getAlphaMode():AlphaMode
 		return Raw.wgf_sprite_batch_get_alpha_mode(this);
@@ -226,12 +207,7 @@ import wgf.impl.Raw;
 	    Sets or gets how the batch's quads use their texels' alpha, one of wgf_material.h's modes
 	    (default: BLEND), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
 
-	    - OPAQUE draws without blending.
-	    - MASK cuts out below the cutoff and draws the rest opaque.
-	    - ADD adds its color.
-
-	    The setter returns false for a handle that isn't a batch, or a `mode` that isn't an alpha
-	    mode.
+	    See SpriteBatch.setAlphaMode for the rest.
 	**/
 	public inline function getAlphaCutoff():Float
 		return Raw.wgf_sprite_batch_get_alpha_cutoff(this);

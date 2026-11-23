@@ -178,8 +178,7 @@ abstract Sound(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the bus the sound's plays (wgf_sound_play) are heard through (wgf_bus.h).
 
-	    It is the effects bus until set, and again once the bus set is destroyed. Returns false for
-	    a handle that isn't a decoded sound, or a bus that isn't one.
+	    See Sound.setBus for the rest.
 	**/
 	public inline function getBus():Bus
 		return Raw.wgf_sound_get_bus(this);

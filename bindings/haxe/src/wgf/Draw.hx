@@ -32,13 +32,7 @@ class Draw {
 	/**
 	    Immediate mode 2D drawing: each call draws once, in the frame it is made in, and keeps nothing.
 
-	    - Calls draw in the order made, along with everything else drawn that frame.
-	    - Coordinates are logical pixels from the frame's top-left, with y down (wgf_render.h).
-	    - A draw outside a frame draws nothing.
-
-	    Outlines and lines have a thickness in logical pixels, centered on the line. A thickness
-	    of 0 or less draws a hairline one logical pixel wide. A polyline's corners are mitred.
-	    Where a sharp corner's miter would reach past four thicknesses, the corner is bevelled.
+	    See Draw.rectangle for the rest.
 	**/
 	public static inline function rectangleLines(x:Float, y:Float, width:Float, height:Float, thickness:Float, color:Int):Void
 		Raw.wgf_draw_rectangle_lines(x, y, width, height, thickness, color);
@@ -58,11 +52,7 @@ class Draw {
 	/**
 	    Draws a rectangle with rounded corners, filled or outlined, such as a panel or a button.
 
-	    - Each corner is a quarter circle of `radius` logical pixels, clamped to half the
-	      rectangle's shorter side.
-	    - A `radius` of 0 or less gives square corners: the plain rectangle.
-	    - Each corner is drawn with `segments` straight edges (at most 64).
-	    - A `segments` of 0 or less uses enough for the corner's size on screen, as a circle does.
+	    See Draw.rectangleRounded for the rest.
 	**/
 	public static inline function rectangleRoundedLines(x:Float, y:Float, width:Float, height:Float, radius:Float, segments:Int, thickness:Float, color:Int):Void
 		Raw.wgf_draw_rectangle_rounded_lines(x, y, width, height, radius, segments, thickness, color);
@@ -70,11 +60,7 @@ class Draw {
 	/**
 	    Draws a rectangle with rounded corners, filled or outlined, such as a panel or a button.
 
-	    - Each corner is a quarter circle of `radius` logical pixels, clamped to half the
-	      rectangle's shorter side.
-	    - A `radius` of 0 or less gives square corners: the plain rectangle.
-	    - Each corner is drawn with `segments` straight edges (at most 64).
-	    - A `segments` of 0 or less uses enough for the corner's size on screen, as a circle does.
+	    See Draw.rectangleRounded for the rest.
 	**/
 	public static inline function line(x0:Float, y0:Float, x1:Float, y1:Float, thickness:Float, color:Int):Void
 		Raw.wgf_draw_line(x0, y0, x1, y1, thickness, color);
@@ -154,11 +140,7 @@ class Draw {
 	/**
 	    Sets or gets how immediate mode drawing after this call blends with what is under it.
 
-	    The modes are wgf_material.h's alpha modes: BLEND (the default), OPAQUE, ADD, MULTIPLY,
-	    and PREMULTIPLIED. MASK draws as BLEND, because immediate mode cuts nothing out. The mode
-	    stays as set from frame to frame, until it is set again.
-
-	    The setter returns false for a `mode` that isn't an alpha mode.
+	    See Draw.setBlendMode for the rest.
 	**/
 	public static inline function getBlendMode():AlphaMode
 		return Raw.wgf_draw_get_blend_mode();
@@ -177,10 +159,7 @@ class Draw {
 	/**
 	    Sets or gets the spacing added between letters and between lines, in logical pixels.
 
-	    It applies to text drawn and measured after this call (wgf_draw_text, wgf_font_measure).
-	    A text actor has its own spacing.
-
-	    Both start at 0. A number that isn't finite is taken as 0.
+	    See Draw.setTextSpacing for the rest.
 	**/
 	public static inline function getTextSpacing(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_draw_get_text_spacing(into);
@@ -233,11 +212,7 @@ class Draw {
 	/**
 	    Draws rings, sectors, arcs, and ellipses.
 
-	    - wgf_draw_ring draws the band between two radii, from angle `start` to `end`.
-	    - Angles are in radians from +x, clockwise on the screen.
-	    - A whole turn draws a full ring. An inner radius of 0 draws a sector, such as a pie.
-	    - wgf_draw_arc draws a ring `thickness` wide along a circle.
-	    - wgf_draw_ellipse and wgf_draw_ellipse_lines draw an ellipse filled and outlined.
+	    See Draw.ring for the rest.
 	**/
 	public static inline function arc(center_x:Float, center_y:Float, radius:Float, start:Float, end:Float, thickness:Float, color:Int):Void
 		Raw.wgf_draw_arc(center_x, center_y, radius, start, end, thickness, color);
@@ -245,11 +220,7 @@ class Draw {
 	/**
 	    Draws rings, sectors, arcs, and ellipses.
 
-	    - wgf_draw_ring draws the band between two radii, from angle `start` to `end`.
-	    - Angles are in radians from +x, clockwise on the screen.
-	    - A whole turn draws a full ring. An inner radius of 0 draws a sector, such as a pie.
-	    - wgf_draw_arc draws a ring `thickness` wide along a circle.
-	    - wgf_draw_ellipse and wgf_draw_ellipse_lines draw an ellipse filled and outlined.
+	    See Draw.ring for the rest.
 	**/
 	public static inline function ellipse(center_x:Float, center_y:Float, radius_x:Float, radius_y:Float, color:Int):Void
 		Raw.wgf_draw_ellipse(center_x, center_y, radius_x, radius_y, color);
@@ -257,11 +228,7 @@ class Draw {
 	/**
 	    Draws rings, sectors, arcs, and ellipses.
 
-	    - wgf_draw_ring draws the band between two radii, from angle `start` to `end`.
-	    - Angles are in radians from +x, clockwise on the screen.
-	    - A whole turn draws a full ring. An inner radius of 0 draws a sector, such as a pie.
-	    - wgf_draw_arc draws a ring `thickness` wide along a circle.
-	    - wgf_draw_ellipse and wgf_draw_ellipse_lines draw an ellipse filled and outlined.
+	    See Draw.ring for the rest.
 	**/
 	public static inline function ellipseLines(center_x:Float, center_y:Float, radius_x:Float, radius_y:Float, thickness:Float, color:Int):Void
 		Raw.wgf_draw_ellipse_lines(center_x, center_y, radius_x, radius_y, thickness, color);
@@ -279,9 +246,7 @@ class Draw {
 	/**
 	    Draws gradients.
 
-	    - A rectangle gives each of its four corners its own color, blended between them. Make
-	      two corners alike for a vertical or a horizontal gradient.
-	    - A circle blends from its center's color (`inner`) to its edge's (`outer`).
+	    See Draw.rectangleGradient for the rest.
 	**/
 	public static inline function circleGradient(center_x:Float, center_y:Float, radius:Float, inner:Int, outer:Int):Void
 		Raw.wgf_draw_circle_gradient(center_x, center_y, radius, inner, outer);
@@ -362,14 +327,7 @@ class Draw {
 	/**
 	    Begins or ends immediate mode 3D drawing, as `camera` sees the world.
 
-	    - Between begin_3d and end_3d, the 3D calls draw in the world as `camera` (a 3D camera,
-	      wgf_camera3d.h) sees it, into the presentation's visible area, under the clip.
-	    - They are depth tested against each other, and against the frame's 3D drawn before them.
-	    - A 3D call outside begin_3d and end_3d draws nothing.
-	    - A frame starts in 2D. A frame left in 3D ends there.
-	    - A 2D call between them lands in the world's x-y plane.
-
-	    begin_3d returns false if `camera` isn't a 3D camera, or outside a frame.
+	    See Draw.begin3d for the rest.
 	**/
 	public static inline function end3d():Void
 		Raw.wgf_draw_end_3d();
@@ -395,17 +353,7 @@ class Draw {
 	/**
 	    Draws shapes in the world, unlit, with lines a pixel wide.
 
-	    - wgf_draw_line_3d draws a line.
-	    - wgf_draw_cube and wgf_draw_cube_wires draw a cube, filled or its edges, `width` (x) by
-	      `height` (y) by `length` (z), centered on (cx, cy, cz).
-	    - wgf_draw_sphere draws a sphere.
-	    - wgf_draw_grid draws a grid of `slices` by `slices` squares, `spacing` apart on the x-z
-	      plane, centered on the origin.
-	    - wgf_draw_rectangle_3d draws a filled rectangle, and wgf_draw_circle_3d a circle's
-	      outline. Each is centered on (cx, cy, cz), in its x-y plane, turned by (rx, ry, rz)
-	      radians as an actor's rotation turns it.
-
-	    A color with alpha below 255 is blended over what is behind it, in the order drawn.
+	    See Draw.line3d for the rest.
 	**/
 	public static inline function cube(cx:Float, cy:Float, cz:Float, width:Float, height:Float, length:Float, color:Int):Void
 		Raw.wgf_draw_cube(cx, cy, cz, width, height, length, color);
@@ -413,17 +361,7 @@ class Draw {
 	/**
 	    Draws shapes in the world, unlit, with lines a pixel wide.
 
-	    - wgf_draw_line_3d draws a line.
-	    - wgf_draw_cube and wgf_draw_cube_wires draw a cube, filled or its edges, `width` (x) by
-	      `height` (y) by `length` (z), centered on (cx, cy, cz).
-	    - wgf_draw_sphere draws a sphere.
-	    - wgf_draw_grid draws a grid of `slices` by `slices` squares, `spacing` apart on the x-z
-	      plane, centered on the origin.
-	    - wgf_draw_rectangle_3d draws a filled rectangle, and wgf_draw_circle_3d a circle's
-	      outline. Each is centered on (cx, cy, cz), in its x-y plane, turned by (rx, ry, rz)
-	      radians as an actor's rotation turns it.
-
-	    A color with alpha below 255 is blended over what is behind it, in the order drawn.
+	    See Draw.line3d for the rest.
 	**/
 	public static inline function cubeWires(cx:Float, cy:Float, cz:Float, width:Float, height:Float, length:Float, color:Int):Void
 		Raw.wgf_draw_cube_wires(cx, cy, cz, width, height, length, color);
@@ -431,17 +369,7 @@ class Draw {
 	/**
 	    Draws shapes in the world, unlit, with lines a pixel wide.
 
-	    - wgf_draw_line_3d draws a line.
-	    - wgf_draw_cube and wgf_draw_cube_wires draw a cube, filled or its edges, `width` (x) by
-	      `height` (y) by `length` (z), centered on (cx, cy, cz).
-	    - wgf_draw_sphere draws a sphere.
-	    - wgf_draw_grid draws a grid of `slices` by `slices` squares, `spacing` apart on the x-z
-	      plane, centered on the origin.
-	    - wgf_draw_rectangle_3d draws a filled rectangle, and wgf_draw_circle_3d a circle's
-	      outline. Each is centered on (cx, cy, cz), in its x-y plane, turned by (rx, ry, rz)
-	      radians as an actor's rotation turns it.
-
-	    A color with alpha below 255 is blended over what is behind it, in the order drawn.
+	    See Draw.line3d for the rest.
 	**/
 	public static inline function sphere(cx:Float, cy:Float, cz:Float, radius:Float, color:Int):Void
 		Raw.wgf_draw_sphere(cx, cy, cz, radius, color);
@@ -449,17 +377,7 @@ class Draw {
 	/**
 	    Draws shapes in the world, unlit, with lines a pixel wide.
 
-	    - wgf_draw_line_3d draws a line.
-	    - wgf_draw_cube and wgf_draw_cube_wires draw a cube, filled or its edges, `width` (x) by
-	      `height` (y) by `length` (z), centered on (cx, cy, cz).
-	    - wgf_draw_sphere draws a sphere.
-	    - wgf_draw_grid draws a grid of `slices` by `slices` squares, `spacing` apart on the x-z
-	      plane, centered on the origin.
-	    - wgf_draw_rectangle_3d draws a filled rectangle, and wgf_draw_circle_3d a circle's
-	      outline. Each is centered on (cx, cy, cz), in its x-y plane, turned by (rx, ry, rz)
-	      radians as an actor's rotation turns it.
-
-	    A color with alpha below 255 is blended over what is behind it, in the order drawn.
+	    See Draw.line3d for the rest.
 	**/
 	public static inline function grid(slices:Int, spacing:Float, color:Int):Void
 		Raw.wgf_draw_grid(slices, spacing, color);
@@ -479,11 +397,7 @@ class Draw {
 	/**
 	    Draws debug shapes in the world.
 
-	    - wgf_draw_triangle_3d draws a triangle.
-	    - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
-	      centered at (cx, cy, cz), filled or as wires.
-	    - wgf_draw_sphere_wires draws a sphere as wires.
-	    - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+	    See Draw.triangle3d for the rest.
 	**/
 	public static inline function cylinder(cx:Float, cy:Float, cz:Float, radius:Float, height:Float, color:Int):Void
 		Raw.wgf_draw_cylinder(cx, cy, cz, radius, height, color);
@@ -491,11 +405,7 @@ class Draw {
 	/**
 	    Draws debug shapes in the world.
 
-	    - wgf_draw_triangle_3d draws a triangle.
-	    - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
-	      centered at (cx, cy, cz), filled or as wires.
-	    - wgf_draw_sphere_wires draws a sphere as wires.
-	    - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+	    See Draw.triangle3d for the rest.
 	**/
 	public static inline function cylinderWires(cx:Float, cy:Float, cz:Float, radius:Float, height:Float, color:Int):Void
 		Raw.wgf_draw_cylinder_wires(cx, cy, cz, radius, height, color);
@@ -503,11 +413,7 @@ class Draw {
 	/**
 	    Draws debug shapes in the world.
 
-	    - wgf_draw_triangle_3d draws a triangle.
-	    - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
-	      centered at (cx, cy, cz), filled or as wires.
-	    - wgf_draw_sphere_wires draws a sphere as wires.
-	    - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+	    See Draw.triangle3d for the rest.
 	**/
 	public static inline function sphereWires(cx:Float, cy:Float, cz:Float, radius:Float, color:Int):Void
 		Raw.wgf_draw_sphere_wires(cx, cy, cz, radius, color);
@@ -515,11 +421,7 @@ class Draw {
 	/**
 	    Draws debug shapes in the world.
 
-	    - wgf_draw_triangle_3d draws a triangle.
-	    - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
-	      centered at (cx, cy, cz), filled or as wires.
-	    - wgf_draw_sphere_wires draws a sphere as wires.
-	    - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+	    See Draw.triangle3d for the rest.
 	**/
 	public static inline function capsuleWires(cx:Float, cy:Float, cz:Float, radius:Float, height:Float, color:Int):Void
 		Raw.wgf_draw_capsule_wires(cx, cy, cz, radius, height, color);
@@ -527,11 +429,7 @@ class Draw {
 	/**
 	    Draws debug shapes in the world.
 
-	    - wgf_draw_triangle_3d draws a triangle.
-	    - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
-	      centered at (cx, cy, cz), filled or as wires.
-	    - wgf_draw_sphere_wires draws a sphere as wires.
-	    - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+	    See Draw.triangle3d for the rest.
 	**/
 	public static inline function rectangle3d(cx:Float, cy:Float, cz:Float, width:Float, height:Float, rx:Float, ry:Float, rz:Float, color:Int):Void
 		Raw.wgf_draw_rectangle_3d(cx, cy, cz, width, height, rx, ry, rz, color);
@@ -539,11 +437,7 @@ class Draw {
 	/**
 	    Draws debug shapes in the world.
 
-	    - wgf_draw_triangle_3d draws a triangle.
-	    - wgf_draw_cylinder and wgf_draw_cylinder_wires draw a cylinder upright (along y),
-	      centered at (cx, cy, cz), filled or as wires.
-	    - wgf_draw_sphere_wires draws a sphere as wires.
-	    - wgf_draw_capsule_wires draws an upright capsule as wires, `height` from end to end.
+	    See Draw.triangle3d for the rest.
 	**/
 	public static inline function circle3d(cx:Float, cy:Float, cz:Float, radius:Float, rx:Float, ry:Float, rz:Float, color:Int):Void
 		Raw.wgf_draw_circle_3d(cx, cy, cz, radius, rx, ry, rz, color);
@@ -574,22 +468,7 @@ class Draw {
 	/**
 	    Draws a model as it stands this frame, for debugging: as wires, as points, or as its skeleton.
 
-	    The model's mesh is placed by the model's actor. For a file's root (wgf_mesh_create),
-	    each visible node of its tree is placed by its own actor. A skinned part is posed as its
-	    animation has it, using the stage's joint matrices applied on the CPU.
-
-	    - Wires draw every triangle's three edges.
-	    - Points draw every vertex, a few pixels wide.
-	    - Skeleton draws each joint of each skin of a file's root, or of a node's skin when given
-	      a node. Each joint gets a line from the nearest joint above it, and a joint with none
-	      above it gets a small cross.
-
-	    Drawing is unlit, in `color`, with lines a pixel wide. A crowd's costs add up: wires
-	    record 6 vertices for each triangle.
-
-	    Returns false, drawing nothing, outside begin_3d and end_3d, for a handle that isn't a
-	    model, or for a model whose mesh isn't READY (such as a file's root before its tree is
-	    made). A model with no skin has no skeleton, and draws none.
+	    See Draw.modelWires for the rest.
 	**/
 	public static inline function modelPoints(model:Actor, color:Int):Bool
 		return Raw.wgf_draw_model_points(model, color);
@@ -597,22 +476,7 @@ class Draw {
 	/**
 	    Draws a model as it stands this frame, for debugging: as wires, as points, or as its skeleton.
 
-	    The model's mesh is placed by the model's actor. For a file's root (wgf_mesh_create),
-	    each visible node of its tree is placed by its own actor. A skinned part is posed as its
-	    animation has it, using the stage's joint matrices applied on the CPU.
-
-	    - Wires draw every triangle's three edges.
-	    - Points draw every vertex, a few pixels wide.
-	    - Skeleton draws each joint of each skin of a file's root, or of a node's skin when given
-	      a node. Each joint gets a line from the nearest joint above it, and a joint with none
-	      above it gets a small cross.
-
-	    Drawing is unlit, in `color`, with lines a pixel wide. A crowd's costs add up: wires
-	    record 6 vertices for each triangle.
-
-	    Returns false, drawing nothing, outside begin_3d and end_3d, for a handle that isn't a
-	    model, or for a model whose mesh isn't READY (such as a file's root before its tree is
-	    made). A model with no skin has no skeleton, and draws none.
+	    See Draw.modelWires for the rest.
 	**/
 	public static inline function modelSkeleton(model:Actor, color:Int):Bool
 		return Raw.wgf_draw_model_skeleton(model, color);

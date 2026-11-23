@@ -77,10 +77,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the camera the stage is seen through (default: 0, none, so nothing is drawn).
 
-	    It can be a 3D camera anywhere, on this stage or not. A camera that is destroyed leaves the
-	    stage with none.
-
-	    set_camera returns false if `camera` isn't a 3D camera.
+	    See Stage3d.setCamera for the rest.
 	**/
 	public inline function getCamera():Actor
 		return Raw.wgf_stage3d_get_camera(this);
@@ -141,41 +138,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns the nearest actor on this stage that a ray meets.
 
-	    - pick casts the ray from the screen's point (x, y), in logical pixels (where the pointer
-	      is, wgf_mouse.h), through the stage's camera. It makes the ray as
-	      wgf_camera3d_screen_to_origin and wgf_camera3d_screen_to_direction do.
-	    - pick_ray casts any ray, from its origin along its direction. The direction need not be a
-	      unit vector.
-
-	    What can be hit:
-	    - A model, by its triangles as it is drawn now. Its box is tested first. A skinned model is
-	      tested in its pose this frame, with no box test first.
-	    - A glTF file's node, which is reported as its file's root (the model wgf_model_create
-	      made).
-	    - A 3D shape's cube or sphere.
-
-	    An actor that isn't enabled isn't hit, and neither is any actor under it. An actor that
-	    isn't visible, or isn't pickable (wgf_actor_set_pickable), lets the ray through. Its
-	    children can still be hit. A MASK or BLEND part is hit wherever it is drawn at all,
-	    including its see-through texels.
-
-	    The hit goes into `hit`, your array, as many values as fit in `hit_count`. Pass NULL and 0
-	    for none. The layout is wgf_collide3d.h's ray hit:
-	    - 0, 1, 2: the surface's normal there, a unit vector facing the ray.
-	    - 3: zero.
-	    - 4, 5, 6: the point, in the stage's space.
-	    - 7: how far along the ray, in lengths of its direction. For a point on the screen, it is in
-	      units from the camera's near plane.
-
-	    All values are 0 after a miss.
-
-	    Returns the actor hit. Returns 0 if:
-	    - Nothing is hit.
-	    - `stage` isn't a 3D stage.
-	    - The stage has no camera (pick only).
-	    - The direction is 0, or not finite (pick_ray only).
-
-	    It works outside a frame, with the stage as it is placed now.
+	    See Stage3d.pick for the rest.
 	**/
 	public inline function pickRay(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, hit:Array<Float>):Actor
 		return Raw.wgf_stage3d_pick_ray(this, ox, oy, oz, dx, dy, dz, hit);
@@ -193,7 +156,7 @@ import wgf.impl.Raw;
 	    Sets or gets the ambient light: light that reaches everything evenly, from no direction
 	    (default: none, an intensity of 0).
 
-	    It is `color` times `intensity`. The intensity is clamped to 0 or more. Alpha is ignored.
+	    See Stage3d.setAmbient for the rest.
 	**/
 	public inline function getAmbientColor():Int
 		return Raw.wgf_stage3d_get_ambient_color(this);
@@ -202,7 +165,7 @@ import wgf.impl.Raw;
 	    Sets or gets the ambient light: light that reaches everything evenly, from no direction
 	    (default: none, an intensity of 0).
 
-	    It is `color` times `intensity`. The intensity is clamped to 0 or more. Alpha is ignored.
+	    See Stage3d.setAmbient for the rest.
 	**/
 	public inline function getAmbientIntensity():Float
 		return Raw.wgf_stage3d_get_ambient_intensity(this);
@@ -222,9 +185,7 @@ import wgf.impl.Raw;
 	    Sets or gets the stage's tone mapping, and its exposure in stops (EV) (default: NEUTRAL,
 	    0).
 
-	    An exposure of +1 doubles the brightness.
-
-	    set_tonemap returns false if `tonemap` isn't a tone mapping.
+	    See Stage3d.setTonemap for the rest.
 	**/
 	public inline function getTonemap():Stage3dTonemap
 		return Raw.wgf_stage3d_get_tonemap(this);
@@ -233,9 +194,7 @@ import wgf.impl.Raw;
 	    Sets or gets the stage's tone mapping, and its exposure in stops (EV) (default: NEUTRAL,
 	    0).
 
-	    An exposure of +1 doubles the brightness.
-
-	    set_tonemap returns false if `tonemap` isn't a tone mapping.
+	    See Stage3d.setTonemap for the rest.
 	**/
 	public inline function getExposure():Float
 		return Raw.wgf_stage3d_get_exposure(this);
@@ -264,18 +223,7 @@ import wgf.impl.Raw;
 	    Sets or gets an environment (wgf_environment.h) that lights the stage's PBR models (default:
 	    none).
 
-	    It lights them as well as the stage's lights and ambient light. It gives soft light from all
-	    around, and reflections that are sharp or blurred by each surface's roughness, darkened by
-	    its occlusion.
-
-	    - `intensity` scales it. 1 is as the image is. It is clamped to 0 or more.
-	    - `rotation` turns it about +y, in radians.
-	    - An `environment` of 0 removes it.
-
-	    The stage holds a reference of its own. An environment that isn't READY lights nothing
-	    until it is.
-
-	    set_environment returns false if `environment` isn't an environment.
+	    See Stage3d.setEnvironment for the rest.
 	**/
 	public inline function getEnvironment():Environment
 		return Raw.wgf_stage3d_get_environment(this);
@@ -284,18 +232,7 @@ import wgf.impl.Raw;
 	    Sets or gets an environment (wgf_environment.h) that lights the stage's PBR models (default:
 	    none).
 
-	    It lights them as well as the stage's lights and ambient light. It gives soft light from all
-	    around, and reflections that are sharp or blurred by each surface's roughness, darkened by
-	    its occlusion.
-
-	    - `intensity` scales it. 1 is as the image is. It is clamped to 0 or more.
-	    - `rotation` turns it about +y, in radians.
-	    - An `environment` of 0 removes it.
-
-	    The stage holds a reference of its own. An environment that isn't READY lights nothing
-	    until it is.
-
-	    set_environment returns false if `environment` isn't an environment.
+	    See Stage3d.setEnvironment for the rest.
 	**/
 	public inline function getEnvironmentIntensity():Float
 		return Raw.wgf_stage3d_get_environment_intensity(this);
@@ -304,18 +241,7 @@ import wgf.impl.Raw;
 	    Sets or gets an environment (wgf_environment.h) that lights the stage's PBR models (default:
 	    none).
 
-	    It lights them as well as the stage's lights and ambient light. It gives soft light from all
-	    around, and reflections that are sharp or blurred by each surface's roughness, darkened by
-	    its occlusion.
-
-	    - `intensity` scales it. 1 is as the image is. It is clamped to 0 or more.
-	    - `rotation` turns it about +y, in radians.
-	    - An `environment` of 0 removes it.
-
-	    The stage holds a reference of its own. An environment that isn't READY lights nothing
-	    until it is.
-
-	    set_environment returns false if `environment` isn't an environment.
+	    See Stage3d.setEnvironment for the rest.
 	**/
 	public inline function getEnvironmentRotation():Float
 		return Raw.wgf_stage3d_get_environment_rotation(this);
@@ -344,18 +270,7 @@ import wgf.impl.Raw;
 	    Sets or gets an environment drawn behind everything the stage draws, as a sky (default:
 	    none).
 
-	    It is drawn before the stage's models, where nothing drawn before it in the frame's 3D is
-	    nearer. It is tone mapped as the stage is.
-
-	    - If it is the same environment as the stage's, it uses the stage's environment intensity
-	      and rotation. Otherwise it is drawn at intensity 1, unturned.
-	    - `blur` runs from 0, sharp, to 1, fully blurred (clamped).
-	    - An `environment` of 0 removes it.
-
-	    The stage holds a reference of its own. An environment that isn't READY draws nothing until
-	    it is.
-
-	    set_background returns false if `environment` isn't an environment.
+	    See Stage3d.setBackground for the rest.
 	**/
 	public inline function getBackground():Environment
 		return Raw.wgf_stage3d_get_background(this);
@@ -364,18 +279,7 @@ import wgf.impl.Raw;
 	    Sets or gets an environment drawn behind everything the stage draws, as a sky (default:
 	    none).
 
-	    It is drawn before the stage's models, where nothing drawn before it in the frame's 3D is
-	    nearer. It is tone mapped as the stage is.
-
-	    - If it is the same environment as the stage's, it uses the stage's environment intensity
-	      and rotation. Otherwise it is drawn at intensity 1, unturned.
-	    - `blur` runs from 0, sharp, to 1, fully blurred (clamped).
-	    - An `environment` of 0 removes it.
-
-	    The stage holds a reference of its own. An environment that isn't READY draws nothing until
-	    it is.
-
-	    set_background returns false if `environment` isn't an environment.
+	    See Stage3d.setBackground for the rest.
 	**/
 	public inline function getBackgroundBlur():Float
 		return Raw.wgf_stage3d_get_background_blur(this);
@@ -396,12 +300,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets whether the stage skips models the camera can't see (default: on).
 
-	    Before a model is drawn, the box around it, as it is placed now, is tested against the
-	    camera's view. The box is grown a little against rounding. The test is far cheaper than
-	    drawing the model.
-
-	    Turn it off to draw every model, for example when checking whether a model's bounds are
-	    right.
+	    See Stage3d.setCulling for the rest.
 	**/
 	public inline function isCulling():Bool
 		return Raw.wgf_stage3d_is_culling(this);

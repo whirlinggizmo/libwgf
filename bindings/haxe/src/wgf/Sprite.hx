@@ -84,12 +84,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the sprite's size, in its own units.
 
-	    A width or height of 0 or less (the default) means no size is set. The sprite then draws
-	    at its region's size in pixels on a 2D stage, and at 1 by 1 on a 3D stage.
-
-	    get_size returns the size set, or else the region's size in pixels, on either stage. It
-	    returns 0, 0 while the texture isn't READY and no size is set. The setter returns false
-	    for a handle that isn't a sprite.
+	    See Sprite.setSize for the rest.
 	**/
 	public inline function getSize(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_sprite_get_size(this, into);
@@ -110,10 +105,7 @@ import wgf.impl.Raw;
 	    Sets or gets the sprite's pivot: the point placed at its actor's position, which the
 	    sprite turns and scales about. It is a fraction of the sprite's size.
 
-	    - 0.5, 0.5 is its center (default).
-	    - 0, 0 is its top-left.
-
-	    The setter returns false for a handle that isn't a sprite.
+	    See Sprite.setPivot for the rest.
 	**/
 	public inline function getPivot(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_sprite_get_pivot(this, into);
@@ -139,15 +131,7 @@ import wgf.impl.Raw;
 	    Sets or gets the sprite's nine-slice borders, in texels in from the region's edges. A
 	    nine-slice draws a panel or a health bar's frame at any size from one small image.
 
-	    - The corners, inside `left`, `top`, `right`, and `bottom`, keep their size, one texel a
-	      unit. If the sprite is smaller than its borders, they are scaled down together.
-	    - The edges stretch along their length.
-	    - The middle stretches both ways.
-
-	    All 0 means no nine-slice (default), and a border below 0 counts as 0. A nine-slice draws
-	    only on a 2D stage. On a 3D stage the sprite draws whole. The getter returns left, top,
-	    right, and bottom. The setter returns false for a handle that isn't a sprite, or for
-	    numbers that aren't finite.
+	    See Sprite.setNineSlice for the rest.
 	**/
 	public inline function getNineSlice(?into:wgf.Vec4):wgf.Vec4
 		return Raw.wgf_sprite_get_nine_slice(this, into);
@@ -184,12 +168,7 @@ import wgf.impl.Raw;
 	    Sets or gets how the sprite uses its texels' alpha, one of wgf_material.h's modes (default:
 	    BLEND), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
 
-	    - OPAQUE draws without blending.
-	    - ADD adds its color.
-	    - MASK draws blended on a 2D stage, since immediate mode cuts nothing out.
-
-	    The setter returns false for a handle that isn't a sprite, or a `mode` that isn't an alpha
-	    mode.
+	    See Sprite.setAlphaMode for the rest.
 	**/
 	public inline function getAlphaMode():AlphaMode
 		return Raw.wgf_sprite_get_alpha_mode(this);
@@ -198,12 +177,7 @@ import wgf.impl.Raw;
 	    Sets or gets how the sprite uses its texels' alpha, one of wgf_material.h's modes (default:
 	    BLEND), and the cutoff MASK cuts out below (default: 0.5, clamped to 0..1).
 
-	    - OPAQUE draws without blending.
-	    - ADD adds its color.
-	    - MASK draws blended on a 2D stage, since immediate mode cuts nothing out.
-
-	    The setter returns false for a handle that isn't a sprite, or a `mode` that isn't an alpha
-	    mode.
+	    See Sprite.setAlphaMode for the rest.
 	**/
 	public inline function getAlphaCutoff():Float
 		return Raw.wgf_sprite_get_alpha_cutoff(this);
@@ -242,28 +216,7 @@ import wgf.impl.Raw;
 	    Sets or gets the material (wgf_material.h) a sprite is drawn with on a 3D stage, as a
 	    model's part is. 0 (the default) goes back to the texture times the tint.
 
-	    - A PBR material is lit by the stage's lights (the up to 8 reaching it most) and its
-	      environment, and shadows fall on it.
-	    - An UNLIT material draws its base color.
-	    - A custom material (wgf_material_create_custom) draws by its shader, with the same lights.
-
-	    How the sprite and the material combine:
-	    - The sprite's texture is the material's base color texture. The material's own base color
-	      texture isn't used, but a custom shader samples the textures its material was given.
-	    - The sprite's tint is the placement's tint.
-	    - Every map of the material is read over the sprite's region of the texture. So a normal
-	      map laid out like the sprite's sheet lights each frame of it.
-	    - The quad is lit from the side it is seen from, so normal maps work on billboards.
-	    - The sprite's own alpha mode still says how it draws. ADD draws as BLEND, and MASK uses
-	      the sprite's cutoff.
-	    - The sprite's facing, size, pivot, and depth offset still say where it draws.
-
-	    A sprite with a material casts no shadow, and is drawn whole (no nine-slice). Sprites with
-	    the same texture, material, and lights go up as one draw. A 2D stage has no lights, so
-	    there the material isn't used and the sprite draws as it would without one.
-
-	    The sprite holds a reference to the material. The setter returns false for a handle that
-	    isn't a sprite, or a `material` that isn't a material.
+	    See Sprite.setMaterial for the rest.
 	**/
 	public inline function getMaterial():Material
 		return Raw.wgf_sprite_get_material(this);
@@ -289,13 +242,7 @@ import wgf.impl.Raw;
 	    button or a character is hit only where it shows. This applies to picks on a 2D stage
 	    (wgf_stage2d_pick, and the pointer, wgf_pointer.h).
 
-	    `threshold` is 0..1. At 0 (the default), the whole quad is hit.
-
-	    The texture's texels are read from its file on the CPU the first time a pick tests the
-	    sprite, and kept while the texture is. The whole quad is hit until they arrive, and always
-	    for a texture made in code, a nine-slice, or the placeholder.
-
-	    The setter returns false for a handle that isn't a sprite, or a `threshold` outside 0..1.
+	    See Sprite.setPickAlpha for the rest.
 	**/
 	public inline function getPickAlpha():Float
 		return Raw.wgf_sprite_get_pick_alpha(this);
@@ -338,18 +285,7 @@ import wgf.impl.Raw;
 	    Sets or gets how far the sprite is drawn nearer the camera on a 3D stage, along its line of
 	    sight, in stage units (default: 0, where it is).
 
-	    The sprite stays in the same place on the screen, but wins the depth test over whatever
-	    shares its place: a bar's fill over its back, or a label over its sprite. A negative
-	    `offset` draws it farther away.
-
-	    For example, a health bar over a head, facing the camera, is two tinted sprites of one
-	    white texture (wgf_texture_create_from_image of wgf_image_create_color):
-	    - its back;
-	    - its fill, pivoted at its left edge (wgf_sprite_set_pivot(fill, 0, 0.5)) and placed at the
-	      back's left, its width the share left, with an offset of 0.01.
-
-	    The setter returns false for a handle that isn't a sprite, or an `offset` that isn't
-	    finite.
+	    See Sprite.setDepthOffset for the rest.
 	**/
 	public inline function getDepthOffset():Float
 		return Raw.wgf_sprite_get_depth_offset(this);
@@ -378,20 +314,7 @@ import wgf.impl.Raw;
 	/**
 	    Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
 
-	    - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
-	    - play_clip plays the clip named `name` from its start, looping or once. If that clip is
-	      already playing, it goes on.
-	    - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
-	      and 0 holds the clip still.
-
-	    The clip's state is one of these:
-	    - PLAYING.
-	    - PAUSED.
-	    - COMPLETE, once a clip played once ends. It holds its last frame.
-	    - STOPPED.
-
-	    The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
-	    a clip the sheet doesn't have.
+	    See Sprite.setSheet for the rest.
 	**/
 	public inline function getSheet():Sheet
 		return Raw.wgf_sprite_get_sheet(this);
@@ -399,20 +322,7 @@ import wgf.impl.Raw;
 	/**
 	    Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
 
-	    - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
-	    - play_clip plays the clip named `name` from its start, looping or once. If that clip is
-	      already playing, it goes on.
-	    - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
-	      and 0 holds the clip still.
-
-	    The clip's state is one of these:
-	    - PLAYING.
-	    - PAUSED.
-	    - COMPLETE, once a clip played once ends. It holds its last frame.
-	    - STOPPED.
-
-	    The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
-	    a clip the sheet doesn't have.
+	    See Sprite.setSheet for the rest.
 	**/
 	public inline function playClip(name:String, loop:Bool):Bool
 		return Raw.wgf_sprite_play_clip(this, name, loop);
@@ -420,20 +330,7 @@ import wgf.impl.Raw;
 	/**
 	    Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
 
-	    - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
-	    - play_clip plays the clip named `name` from its start, looping or once. If that clip is
-	      already playing, it goes on.
-	    - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
-	      and 0 holds the clip still.
-
-	    The clip's state is one of these:
-	    - PLAYING.
-	    - PAUSED.
-	    - COMPLETE, once a clip played once ends. It holds its last frame.
-	    - STOPPED.
-
-	    The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
-	    a clip the sheet doesn't have.
+	    See Sprite.setSheet for the rest.
 	**/
 	public inline function pauseClip():Bool
 		return Raw.wgf_sprite_pause_clip(this);
@@ -441,20 +338,7 @@ import wgf.impl.Raw;
 	/**
 	    Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
 
-	    - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
-	    - play_clip plays the clip named `name` from its start, looping or once. If that clip is
-	      already playing, it goes on.
-	    - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
-	      and 0 holds the clip still.
-
-	    The clip's state is one of these:
-	    - PLAYING.
-	    - PAUSED.
-	    - COMPLETE, once a clip played once ends. It holds its last frame.
-	    - STOPPED.
-
-	    The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
-	    a clip the sheet doesn't have.
+	    See Sprite.setSheet for the rest.
 	**/
 	public inline function resumeClip():Bool
 		return Raw.wgf_sprite_resume_clip(this);
@@ -462,20 +346,7 @@ import wgf.impl.Raw;
 	/**
 	    Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
 
-	    - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
-	    - play_clip plays the clip named `name` from its start, looping or once. If that clip is
-	      already playing, it goes on.
-	    - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
-	      and 0 holds the clip still.
-
-	    The clip's state is one of these:
-	    - PLAYING.
-	    - PAUSED.
-	    - COMPLETE, once a clip played once ends. It holds its last frame.
-	    - STOPPED.
-
-	    The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
-	    a clip the sheet doesn't have.
+	    See Sprite.setSheet for the rest.
 	**/
 	public inline function stopClip():Bool
 		return Raw.wgf_sprite_stop_clip(this);
@@ -483,20 +354,7 @@ import wgf.impl.Raw;
 	/**
 	    Plays a sprite sheet's clips (wgf_sheet.h) on a sprite.
 
-	    - set_sheet sets the sheet, and makes the sheet's texture the sprite's.
-	    - play_clip plays the clip named `name` from its start, looping or once. If that clip is
-	      already playing, it goes on.
-	    - The clip steps each frame by the frame's time times its speed. The speed defaults to 1,
-	      and 0 holds the clip still.
-
-	    The clip's state is one of these:
-	    - PLAYING.
-	    - PAUSED.
-	    - COMPLETE, once a clip played once ends. It holds its last frame.
-	    - STOPPED.
-
-	    The calls return false for a handle that isn't a sprite, a `sheet` that isn't a sheet, or
-	    a clip the sheet doesn't have.
+	    See Sprite.setSheet for the rest.
 	**/
 	public inline function getClipState():PlayState
 		return Raw.wgf_sprite_get_clip_state(this);
@@ -559,13 +417,7 @@ import wgf.impl.Raw;
 	    Sets or gets a facing for the sprite's clips: a direction a character faces, such as "up"
 	    or "left".
 
-	    A clip played, or playing, by name plays the sheet's clip named name_facing if it has one,
-	    or else the clip named name. For example, "walk" with the facing "left" plays "walk_left".
-	    If the facing changes while a clip plays, the clip for the new facing goes on from the same
-	    place and time.
-
-	    "" or NULL means no facing. The setter returns false for a sprite with no sheet, or a
-	    `facing` over 15 bytes.
+	    See Sprite.setClipFacing for the rest.
 	**/
 	public inline function getClipFacing():String
 		return Raw.wgf_sprite_get_clip_facing(this);

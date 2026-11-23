@@ -124,10 +124,7 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
 
-	    Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
-
-	    The setter returns false for a handle that isn't a texture, or a wrap or filter that
-	    isn't one.
+	    See Texture.setSampling for the rest.
 	**/
 	public inline function getWrapU():TextureWrap
 		return Raw.wgf_texture_get_wrap_u(this);
@@ -135,10 +132,7 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
 
-	    Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
-
-	    The setter returns false for a handle that isn't a texture, or a wrap or filter that
-	    isn't one.
+	    See Texture.setSampling for the rest.
 	**/
 	public inline function getWrapV():TextureWrap
 		return Raw.wgf_texture_get_wrap_v(this);
@@ -146,10 +140,7 @@ abstract Texture(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets how the texture is sampled where it is drawn (default: clamp, linear).
 
-	    Where it is drawn smaller than it is, it samples from its mipmaps, built when it loads.
-
-	    The setter returns false for a handle that isn't a texture, or a wrap or filter that
-	    isn't one.
+	    See Texture.setSampling for the rest.
 	**/
 	public inline function getFilter():TextureFilter
 		return Raw.wgf_texture_get_filter(this);

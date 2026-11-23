@@ -43,10 +43,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the actor the camera follows.
 
-	    A `target` of 0 stops following. The camera stays where it is.
-
-	    set_target returns false if `camera` isn't a 2D or 3D camera, if `target` isn't an actor,
-	    or if 64 cameras already follow.
+	    See Follow.setTarget for the rest.
 	**/
 	public inline function getTarget():Actor
 		return Raw.wgf_follow_get_target(this);
@@ -66,9 +63,7 @@ import wgf.impl.Raw;
 	    Sets or gets how quickly the point catches up, as a rate a second (default: 8, about a
 	    fifth of a second).
 
-	    At 0 or less, it catches up at once.
-
-	    This setter, and every setter below, returns false for a camera that follows no actor.
+	    See Follow.setSmoothing for the rest.
 	**/
 	public inline function getSmoothing():Float
 		return Raw.wgf_follow_get_smoothing(this);
@@ -99,8 +94,7 @@ import wgf.impl.Raw;
 	/**
 	    2D: sets or gets the part of the world the view stays inside: left, top, right, bottom.
 
-	    - If the bounds are smaller than the view, the view is centered on them.
-	    - A right that isn't above the left lets the view go anywhere (the default).
+	    See Follow.setBounds for the rest.
 	**/
 	public inline function getBounds(?into:wgf.Vec4):wgf.Vec4
 		return Raw.wgf_follow_get_bounds(this, into);
@@ -148,11 +142,7 @@ import wgf.impl.Raw;
 	/**
 	    3D, ORBIT: sets or gets where the camera sits round the point.
 
-	    - `yaw` is in radians about y. 0 is on the point's +z side.
-	    - `pitch` is in radians up, clamped to just short of straight up or down.
-	    - `distance` is how far out. A distance that isn't above 0 is refused.
-
-	    get_orbit returns yaw, pitch, and distance.
+	    See Follow.setOrbit for the rest.
 	**/
 	public inline function getOrbit(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_follow_get_orbit(this, into);
@@ -168,7 +158,7 @@ import wgf.impl.Raw;
 	/**
 	    Adds trauma to the camera's shake, held to 1. Gets the trauma now.
 
-	    For example, 0.3 for a bump, and 1 for an explosion. Trauma is lost at 1.5 a second.
+	    See Follow.shake for the rest.
 	**/
 	public inline function getTrauma():Float
 		return Raw.wgf_follow_get_trauma(this);

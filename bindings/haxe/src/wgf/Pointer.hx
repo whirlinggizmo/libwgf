@@ -46,9 +46,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets whether the pointer picks a stage (default: not picked).
 
-	    A stage that is destroyed leaves the list by itself.
-
-	    set_interactive returns false if `stage` isn't a 2D or a 3D stage.
+	    See Pointer.setInteractive for the rest.
 	**/
 	public inline function isInteractive():Bool
 		return Raw.wgf_pointer_is_interactive(this);

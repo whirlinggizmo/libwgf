@@ -183,10 +183,7 @@ abstract Image(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns the image's pixels, and their size in bytes.
 
-	    Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first. They are
-	    valid until the image is released.
-
-	    Returns NULL and 0 for an image that isn't READY.
+	    See Image.getData for the rest.
 	**/
 	public inline function getSize():Int
 		return Raw.wgf_image_get_size(this);

@@ -88,11 +88,7 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns what the file holds, once the scene is READY.
 
-	    - get_actor_count returns the number of top actors.
-	    - get_prefab_count returns the number of prefabs.
-	    - get_prefab_name returns each prefab's name in file order, or "" past the end.
-
-	    They return 0 and "" until the scene is READY.
+	    See Scene.getActorCount for the rest.
 	**/
 	public inline function getPrefabCount():Int
 		return Raw.wgf_scene_get_prefab_count(this);
@@ -100,11 +96,7 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns what the file holds, once the scene is READY.
 
-	    - get_actor_count returns the number of top actors.
-	    - get_prefab_count returns the number of prefabs.
-	    - get_prefab_name returns each prefab's name in file order, or "" past the end.
-
-	    They return 0 and "" until the scene is READY.
+	    See Scene.getActorCount for the rest.
 	**/
 	public inline function getPrefabName(index:Int):String
 		return Raw.wgf_scene_get_prefab_name(this, index);
@@ -112,11 +104,7 @@ abstract Scene(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns what the file holds, once the scene is READY.
 
-	    - get_actor_count returns the number of top actors.
-	    - get_prefab_count returns the number of prefabs.
-	    - get_prefab_name returns each prefab's name in file order, or "" past the end.
-
-	    They return 0 and "" until the scene is READY.
+	    See Scene.getActorCount for the rest.
 	**/
 	public inline function hasPrefab(name:String):Bool
 		return Raw.wgf_scene_has_prefab(this, name);

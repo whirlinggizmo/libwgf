@@ -65,10 +65,7 @@ abstract TextureRead(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns a DONE read's pixels, and their size in bytes.
 
-	    Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first, as an
-	    image file stores them. They are valid until the read is destroyed.
-
-	    Returns NULL and 0 for any read that isn't DONE.
+	    See TextureRead.getData for the rest.
 	**/
 	public inline function getSize():Int
 		return Raw.wgf_texture_read_get_size(this);

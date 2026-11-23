@@ -82,9 +82,7 @@ class Ui {
 	/**
 	    Begins a grid, closed by wgf_ui_end_grid.
 
-	    Its children are laid out in rows of `columns`, left to right, then top to bottom. They are
-	    gapped by the style's gap both ways. Nothing else wraps a row: the grid makes them. Also
-	    returns false for fewer than 1 column.
+	    See Ui.beginGrid for the rest.
 	**/
 	public static inline function endGrid():Bool
 		return Raw.wgf_ui_end_grid();
@@ -107,14 +105,7 @@ class Ui {
 	/**
 	    Begins a box, a panel, or a group, each closed by its own end call.
 
-	    - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
-	    - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
-	      by the style's gap. Close it with wgf_ui_end_panel.
-	    - A group is a column drawn as an outline, in the style's separator color and line width.
-	      Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
-	      Close it with wgf_ui_end_group.
-
-	    An end call returns false with nothing of its kind open.
+	    See Ui.beginBox for the rest.
 	**/
 	public static inline function endBox():Bool
 		return Raw.wgf_ui_end_box();
@@ -122,14 +113,7 @@ class Ui {
 	/**
 	    Begins a box, a panel, or a group, each closed by its own end call.
 
-	    - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
-	    - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
-	      by the style's gap. Close it with wgf_ui_end_panel.
-	    - A group is a column drawn as an outline, in the style's separator color and line width.
-	      Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
-	      Close it with wgf_ui_end_group.
-
-	    An end call returns false with nothing of its kind open.
+	    See Ui.beginBox for the rest.
 	**/
 	public static inline function beginPanel(id:String):Bool
 		return Raw.wgf_ui_begin_panel(id);
@@ -137,14 +121,7 @@ class Ui {
 	/**
 	    Begins a box, a panel, or a group, each closed by its own end call.
 
-	    - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
-	    - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
-	      by the style's gap. Close it with wgf_ui_end_panel.
-	    - A group is a column drawn as an outline, in the style's separator color and line width.
-	      Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
-	      Close it with wgf_ui_end_group.
-
-	    An end call returns false with nothing of its kind open.
+	    See Ui.beginBox for the rest.
 	**/
 	public static inline function endPanel():Bool
 		return Raw.wgf_ui_end_panel();
@@ -152,14 +129,7 @@ class Ui {
 	/**
 	    Begins a box, a panel, or a group, each closed by its own end call.
 
-	    - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
-	    - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
-	      by the style's gap. Close it with wgf_ui_end_panel.
-	    - A group is a column drawn as an outline, in the style's separator color and line width.
-	      Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
-	      Close it with wgf_ui_end_group.
-
-	    An end call returns false with nothing of its kind open.
+	    See Ui.beginBox for the rest.
 	**/
 	public static inline function beginGroup(id:String, title:String):Bool
 		return Raw.wgf_ui_begin_group(id, title);
@@ -167,14 +137,7 @@ class Ui {
 	/**
 	    Begins a box, a panel, or a group, each closed by its own end call.
 
-	    - A box lays its children out in `direction`. Close it with wgf_ui_end_box.
-	    - A panel is a column drawn with the style's panel color, corners, and padding, and gapped
-	      by the style's gap. Close it with wgf_ui_end_panel.
-	    - A group is a column drawn as an outline, in the style's separator color and line width.
-	      Its `title` (NULL or "" for none) is its first line. It is padded and gapped as a panel.
-	      Close it with wgf_ui_end_group.
-
-	    An end call returns false with nothing of its kind open.
+	    See Ui.beginBox for the rest.
 	**/
 	public static inline function endGroup():Bool
 		return Raw.wgf_ui_end_group();
@@ -215,32 +178,7 @@ class Ui {
 	/**
 	    Begins a scroll area, closed by wgf_ui_end_scroll.
 
-	    A scroll area is a window onto its children, `width` by `height` logical pixels. 0 takes the
-	    room its parent has left that way. Its children are a column, clipped to the window, and
-	    scrolled when they are longer or wider than it.
-
-	    It scrolls by:
-	    - The wheel over it. The innermost area under the pointer scrolls. A wheel across, or the
-	      wheel with Shift, scrolls sideways.
-	    - A drag. A press that moves a few pixels belongs to the area, and the widget it began on
-	      isn't pressed, unless that widget is a slider. Let go while moving, it flings.
-	    - Its scroll bars. Drag the thumb, or press the track for a page. Each bar is shown while
-	      there is more to scroll to that way. With the style's WGF_UI_VALUE_SCROLL_BAR_ALWAYS it
-	      is always shown, and with no more to scroll it is disabled, its thumb the whole track.
-
-	    Focus:
-	    - Focus moved to a widget in it, by keys, a pad, or wgf_ui_set_focus, scrolls the widget
-	      into view.
-	    - Page Up and Page Down page while the focus is in it.
-	    - An area with no widget in it to focus (a page of text), and more than it shows, is focused
-	      itself, by its id. That starts from the frame after it was first laid out so. Focused, its
-	      arrows scroll it a row at a time, and the page keys a page.
-
-	    The layout calls (padding, gap, alignment, color) apply to its content. Its size is the
-	    call's, so wgf_ui_set_width and wgf_ui_set_height refuse it. Its scroll is kept while it is
-	    given each frame. What it scrolls to shows from the next frame.
-
-	    Also returns false for no id, or a size below 0.
+	    See Ui.beginScroll for the rest.
 	**/
 	public static inline function endScroll():Bool
 		return Raw.wgf_ui_end_scroll();
@@ -261,12 +199,7 @@ class Ui {
 	/**
 	    Sets or gets how far the scroll area or list `id` is scrolled, in logical pixels.
 
-	    x is across and y is down, from its content's top left. get_scroll returns 0, 0 for one not
-	    laid out. set_scroll scrolls it there, shown from its next layout, and held to its content
-	    as last laid out. Use it to keep a chat log at its end.
-
-	    The setter returns false for an id that isn't a scroll area or list laid out in the frame
-	    before, or a value that isn't finite. These two work outside a begun UI too.
+	    See Ui.setScroll for the rest.
 	**/
 	public static inline function getScroll(id:String, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_ui_get_scroll(id, into);
@@ -286,11 +219,7 @@ class Ui {
 	/**
 	    Sets the open box's or panel's layout, before its first child.
 
-	    Your game describes the open box each frame, so nothing keeps it to read back. A color draws
-	    its background, and 0 (the default) draws none.
-
-	    Returns false after its first child, with none open, for a sizing or alignment that isn't
-	    one, or a value below 0 (or above 1 for a percent).
+	    See Ui.setWidth for the rest.
 	**/
 	public static inline function setHeight(sizing:UiSizing, value:Float):Bool
 		return Raw.wgf_ui_set_height(sizing, value);
@@ -298,11 +227,7 @@ class Ui {
 	/**
 	    Sets the open box's or panel's layout, before its first child.
 
-	    Your game describes the open box each frame, so nothing keeps it to read back. A color draws
-	    its background, and 0 (the default) draws none.
-
-	    Returns false after its first child, with none open, for a sizing or alignment that isn't
-	    one, or a value below 0 (or above 1 for a percent).
+	    See Ui.setWidth for the rest.
 	**/
 	public static inline function setPadding(x:Float, y:Float):Bool
 		return Raw.wgf_ui_set_padding(x, y);
@@ -310,11 +235,7 @@ class Ui {
 	/**
 	    Sets the open box's or panel's layout, before its first child.
 
-	    Your game describes the open box each frame, so nothing keeps it to read back. A color draws
-	    its background, and 0 (the default) draws none.
-
-	    Returns false after its first child, with none open, for a sizing or alignment that isn't
-	    one, or a value below 0 (or above 1 for a percent).
+	    See Ui.setWidth for the rest.
 	**/
 	public static inline function setGap(gap:Float):Bool
 		return Raw.wgf_ui_set_gap(gap);
@@ -322,11 +243,7 @@ class Ui {
 	/**
 	    Sets the open box's or panel's layout, before its first child.
 
-	    Your game describes the open box each frame, so nothing keeps it to read back. A color draws
-	    its background, and 0 (the default) draws none.
-
-	    Returns false after its first child, with none open, for a sizing or alignment that isn't
-	    one, or a value below 0 (or above 1 for a percent).
+	    See Ui.setWidth for the rest.
 	**/
 	public static inline function setAlign(x:UiAlign, y:UiAlign):Bool
 		return Raw.wgf_ui_set_align(x, y);
@@ -334,11 +251,7 @@ class Ui {
 	/**
 	    Sets the open box's or panel's layout, before its first child.
 
-	    Your game describes the open box each frame, so nothing keeps it to read back. A color draws
-	    its background, and 0 (the default) draws none.
-
-	    Returns false after its first child, with none open, for a sizing or alignment that isn't
-	    one, or a value below 0 (or above 1 for a percent).
+	    See Ui.setWidth for the rest.
 	**/
 	public static inline function setColor(color:Int):Bool
 		return Raw.wgf_ui_set_color(color);
@@ -406,9 +319,7 @@ class Ui {
 	    Shows a button with `text`, and returns true in the frame it is activated. Also returns
 	    false for no id.
 
-	    An icon button shows `icon` (a texture, or 0 for none) before its text. The icon is as tall
-	    as the text, and as wide as its shape keeps. With `text` NULL or "", it shows the icon
-	    alone.
+	    See Ui.button for the rest.
 	**/
 	public static inline function iconButton(id:String, icon:Texture, text:String):Bool
 		return Raw.wgf_ui_icon_button(id, icon, text);
@@ -442,11 +353,7 @@ class Ui {
 	/**
 	    Shows a toggle or a checkbox, and returns whether it is on.
 
-	    - A toggle is a button that stays down while on.
-	    - A checkbox is a box, checked while on, with `text` beside it (NULL or "" for none).
-
-	    Each is turned by an activation. It returns `on` as given, or flipped in the frame it is
-	    activated. It returns `on` as given when refused (no id).
+	    See Ui.toggle for the rest.
 	**/
 	public static inline function checkbox(id:String, text:String, on:Bool):Bool
 		return Raw.wgf_ui_checkbox(id, text, on);
@@ -502,17 +409,7 @@ class Ui {
 	/**
 	    Shows tabs, a choice, or a combo among `labels`, and returns the one chosen.
 
-	    `labels` holds one label a line, up to 32 ("Easy\nNormal\nHard").
-	    - Tabs are a row of the labels, with the chosen one pressed. Your game draws its panel
-	      below.
-	    - A choice is the same, drawn as toggles.
-	    - A combo shows the chosen label alone, and steps to the next when activated. Its arrows
-	      step either way, wrapping.
-
-	    A press chooses the tab or toggle it is on. When focused, the arrows step.
-
-	    Returns `selected` as given (clamped to the labels), or as the user chose this frame. Returns
-	    `selected` as given when refused: no id, or no labels.
+	    See Ui.tabs for the rest.
 	**/
 	public static inline function choice(id:String, labels:String, selected:Int):Int
 		return Raw.wgf_ui_choice(id, labels, selected);
@@ -520,17 +417,7 @@ class Ui {
 	/**
 	    Shows tabs, a choice, or a combo among `labels`, and returns the one chosen.
 
-	    `labels` holds one label a line, up to 32 ("Easy\nNormal\nHard").
-	    - Tabs are a row of the labels, with the chosen one pressed. Your game draws its panel
-	      below.
-	    - A choice is the same, drawn as toggles.
-	    - A combo shows the chosen label alone, and steps to the next when activated. Its arrows
-	      step either way, wrapping.
-
-	    A press chooses the tab or toggle it is on. When focused, the arrows step.
-
-	    Returns `selected` as given (clamped to the labels), or as the user chose this frame. Returns
-	    `selected` as given when refused: no id, or no labels.
+	    See Ui.tabs for the rest.
 	**/
 	public static inline function combo(id:String, labels:String, selected:Int):Int
 		return Raw.wgf_ui_combo(id, labels, selected);
@@ -559,8 +446,7 @@ class Ui {
 	/**
 	    Sets or gets whether the widgets given after it, until it is changed, are disabled.
 
-	    A disabled widget is drawn in its disabled state, answers nothing, and is never focused.
-	    Each UI begins with no widget disabled. Returns false with no UI begun.
+	    See Ui.setDisabled for the rest.
 	**/
 	public static inline function isDisabled():Bool
 		return Raw.wgf_ui_is_disabled();
@@ -653,42 +539,7 @@ class Ui {
 	    Shows a text field: a line of text typed in. Returns true in the frame Enter is pressed in
 	    it.
 
-	    It is as wide as its parent's room, at least the style's button width. The UI keeps its
-	    text by its id (see wgf_ui_get_text), from the first call or wgf_ui_set_text on, until the
-	    UI stops.
-
-	    Focused, it takes what is typed (wgf_input_get_chars) in place of the selection, and the
-	    keys:
-
-	      Left, Right         move the caret a character; with Ctrl (Alt on macOS) a word
-	      Home, End           go to the start, the end (Cmd+Left and +Right on macOS too)
-	      Shift with a move   extends the selection
-	      Backspace, Delete   delete the selection, else the character before or after (a word with
-	                          Ctrl or Alt), held ones repeating
-	      Ctrl+A (Cmd on macOS)        selects all
-	      Ctrl+C, +X, +V               copy, cut, and paste, through the system's clipboard
-	                                   (wgf_input_set_clipboard); newlines pasted are stripped
-	      Ctrl+Z; Ctrl+Y, Ctrl+Shift+Z undo and redo, a run of typing or of deleting one step
-
-	    The pointer and touch:
-	    - A press places the caret. With Shift, it extends the selection to it.
-	    - A drag selects.
-	    - A double press selects the word under it, and a triple press the whole text.
-	    - By touch, the same taps work.
-
-	    Its caret blinks, and the text scrolls to keep it in view. Focus moved to it by keys or a
-	    pad selects the whole text. A press off it lets the focus go.
-
-	    While it is focused, the platform's on-screen keyboard is shown. That is a phone's, and on
-	    the web, the page's hidden input that a phone's keyboard types into.
-
-	    - `placeholder` (NULL or "" for none) is shown, dimmed, while the field is empty.
-	    - It holds at most `max_length` characters (0 or less: 4095 bytes' worth). A longer text is
-	      cut to it.
-	    - A password field is the same, drawn as dots. Its words are the whole of it, and it is
-	      never copied or cut.
-
-	    Also returns false when refused (no id).
+	    See Ui.textField for the rest.
 	**/
 	public static inline function passwordField(id:String, placeholder:String, max_length:Int):Bool
 		return Raw.wgf_ui_password_field(id, placeholder, max_length);
@@ -710,13 +561,7 @@ class Ui {
 	/**
 	    Sets or gets the text field `id`'s text.
 
-	    - set_text puts its caret at the end and forgets its undo. The text is cut to 4095 bytes.
-	      A field not given yet keeps the text for its first call.
-	    - get_text returns "" for a field never given or set. The string is valid until the field
-	      changes.
-
-	    The setter returns false for no id, an id of 64 bytes or more, or no text. These two work
-	    outside a begun UI too.
+	    See Ui.setText for the rest.
 	**/
 	public static inline function getText(id:String):String
 		return Raw.wgf_ui_get_text(id);
@@ -736,9 +581,7 @@ class Ui {
 	    Sets or gets whether the text fields given after it, until it is changed, show their text
 	    as refused.
 
-	    Whatever reads the text decides, as for a name already taken. An invalid field's text is
-	    drawn in the style's invalid color, and outlined in it. Each UI begins with no field invalid.
-	    Returns false with no UI begun.
+	    See Ui.setInvalid for the rest.
 	**/
 	public static inline function isInvalid():Bool
 		return Raw.wgf_ui_is_invalid();
@@ -789,16 +632,7 @@ class Ui {
 	    Begins a modal, closed by wgf_ui_end_modal: a panel at the screen's center, such as
 	    "Quit? Yes / No".
 
-	    - Its layout, its skin, and its children are a panel's.
-	    - It is drawn over the screen, dimmed in the style's dim color. Nothing under it answers the
-	      pointer.
-	    - While it is given, the focus moves among its own widgets alone. The focus is put on its
-	      first widget when it opens.
-	    - When it closes (is no longer given), the focus goes back to the widget that had it.
-	    - A dropdown in it opens over it.
-	    - There is one modal a frame.
-
-	    Also returns false for no id, or a modal already open.
+	    See Ui.beginModal for the rest.
 	**/
 	public static inline function endModal():Bool
 		return Raw.wgf_ui_end_modal();
@@ -832,11 +666,7 @@ class Ui {
 	/**
 	    Sets or gets the whole UI's alpha (default: 1), kept until it is changed.
 
-	    0 is unseen, and 1 is as drawn. Use it to fade a menu in or out. The UI answers as ever: a
-	    UI faded to nothing is still there until it isn't given.
-
-	    The setter returns false for a value outside 0 to 1, or not finite. These two work outside a
-	    begun UI too.
+	    See Ui.setAlpha for the rest.
 	**/
 	public static inline function getAlpha():Float
 		return Raw.wgf_ui_get_alpha();
@@ -871,13 +701,7 @@ class Ui {
 	/**
 	    Sets or gets the focused widget.
 
-	    - set_focus gives the focus to the widget `id` (NULL or "" for none). It is drawn as a key
-	      or pad would draw it. It returns false for an id of 64 bytes or more.
-	    - get_focus returns the focused widget's id, or "" for none. The string is valid until the
-	      focus changes.
-
-	    These two work outside a begun UI too. Each frame a UI ends, the focus is published as the
-	    text probe "ui.focus" (wgf_probe.h), so an autopilot can expect which widget has it.
+	    See Ui.setFocus for the rest.
 	**/
 	public static inline function getFocus():String
 		return Raw.wgf_ui_get_focus();
@@ -943,11 +767,7 @@ class Ui {
 	/**
 	    Sets or gets a skin: its texture, region, borders, and tint.
 
-	    - set_skin with texture 0 draws the part in its colors again.
-	    - get_skin returns its texture, or 0 for none.
-	    - get_skin_source returns its region: x, y, z the width, and w the height.
-	    - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
-	    - get_skin_tint returns its tint, or white for none.
+	    See Ui.setSkin for the rest.
 	**/
 	public static inline function getSkin(widget:UiWidget, part:UiPart, state:UiState):Texture
 		return Raw.wgf_ui_get_skin(widget, part, state);
@@ -955,11 +775,7 @@ class Ui {
 	/**
 	    Sets or gets a skin: its texture, region, borders, and tint.
 
-	    - set_skin with texture 0 draws the part in its colors again.
-	    - get_skin returns its texture, or 0 for none.
-	    - get_skin_source returns its region: x, y, z the width, and w the height.
-	    - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
-	    - get_skin_tint returns its tint, or white for none.
+	    See Ui.setSkin for the rest.
 	**/
 	public static inline function getSkinSource(widget:UiWidget, part:UiPart, state:UiState, ?into:wgf.Vec4):wgf.Vec4
 		return Raw.wgf_ui_get_skin_source(widget, part, state, into);
@@ -967,11 +783,7 @@ class Ui {
 	/**
 	    Sets or gets a skin: its texture, region, borders, and tint.
 
-	    - set_skin with texture 0 draws the part in its colors again.
-	    - get_skin returns its texture, or 0 for none.
-	    - get_skin_source returns its region: x, y, z the width, and w the height.
-	    - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
-	    - get_skin_tint returns its tint, or white for none.
+	    See Ui.setSkin for the rest.
 	**/
 	public static inline function setSkinBorders(widget:UiWidget, part:UiPart, state:UiState, left:Float, top:Float, right:Float, bottom:Float):Bool
 		return Raw.wgf_ui_set_skin_borders(widget, part, state, left, top, right, bottom);
@@ -979,11 +791,7 @@ class Ui {
 	/**
 	    Sets or gets a skin: its texture, region, borders, and tint.
 
-	    - set_skin with texture 0 draws the part in its colors again.
-	    - get_skin returns its texture, or 0 for none.
-	    - get_skin_source returns its region: x, y, z the width, and w the height.
-	    - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
-	    - get_skin_tint returns its tint, or white for none.
+	    See Ui.setSkin for the rest.
 	**/
 	public static inline function getSkinBorders(widget:UiWidget, part:UiPart, state:UiState, ?into:wgf.Vec4):wgf.Vec4
 		return Raw.wgf_ui_get_skin_borders(widget, part, state, into);
@@ -991,11 +799,7 @@ class Ui {
 	/**
 	    Sets or gets a skin: its texture, region, borders, and tint.
 
-	    - set_skin with texture 0 draws the part in its colors again.
-	    - get_skin returns its texture, or 0 for none.
-	    - get_skin_source returns its region: x, y, z the width, and w the height.
-	    - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
-	    - get_skin_tint returns its tint, or white for none.
+	    See Ui.setSkin for the rest.
 	**/
 	public static inline function setSkinTint(widget:UiWidget, part:UiPart, state:UiState, tint:Int):Bool
 		return Raw.wgf_ui_set_skin_tint(widget, part, state, tint);
@@ -1003,11 +807,7 @@ class Ui {
 	/**
 	    Sets or gets a skin: its texture, region, borders, and tint.
 
-	    - set_skin with texture 0 draws the part in its colors again.
-	    - get_skin returns its texture, or 0 for none.
-	    - get_skin_source returns its region: x, y, z the width, and w the height.
-	    - get_skin_borders returns its borders: x left, y top, z right, and w bottom.
-	    - get_skin_tint returns its tint, or white for none.
+	    See Ui.setSkin for the rest.
 	**/
 	public static inline function getSkinTint(widget:UiWidget, part:UiPart, state:UiState):Int
 		return Raw.wgf_ui_get_skin_tint(widget, part, state);
@@ -1080,15 +880,7 @@ class Ui {
 	    Sets or gets a part drawn from your game's art, by its color. It is a short form of
 	    wgf_ui_set_skin for a part's base.
 
-	    The part draws `texture` whole, nine-sliced by its borders, and untinted. 0 draws the color
-	    again. The parts are:
-	    - WGF_UI_COLOR_PANEL: the panel's base.
-	    - WGF_UI_COLOR_BUTTON, _BUTTON_HOVERED, and _BUTTON_PRESSED: the button's base in those
-	      states.
-	    - WGF_UI_COLOR_BAR and _BAR_FILL: the progress bar's base and fill.
-
-	    Returns false for a part that isn't one of these, a handle that isn't a texture, or a border
-	    below 0 or not finite.
+	    See Ui.setStyleTexture for the rest.
 	**/
 	public static inline function getStyleTexture(which:UiColor):Texture
 		return Raw.wgf_ui_get_style_texture(which);
@@ -1106,9 +898,7 @@ class Ui {
 	/**
 	    Sets or gets the font that RCSS's `font-family: <family>` means in every document.
 
-	    The family's name is matched without case. 0 unsets it, so the family draws in the default
-	    font. The UI holds a reference to `font`. Returns false for no family, or a handle that
-	    isn't a font.
+	    See Ui.setDocumentFont for the rest.
 	**/
 	public static inline function getDocumentFont(family:String):Font
 		return Raw.wgf_ui_get_document_font(family);
@@ -1136,19 +926,7 @@ class Ui {
 	/**
 	    Sets or gets one of a family's own faces.
 
-	    A face is the font that `font-family: <family>` draws in at `font-weight: <weight>`, and, if
-	    `italic`, at `font-style: italic`. `weight` is 1 to 1000: 400 is normal, and 700 bold.
-
-	    Text draws in the family's face nearest the one it asks for:
-	    - A face of its style, when the family has one of that style. Otherwise, one of the other
-	      style.
-	    - The nearest weight. A tie goes to the heavier above 400, and to the lighter at or below.
-	    - The family's font (wgf_ui_set_document_font) is its face at 400, upright.
-
-	    A face no font is set for is never made up: no bold is drawn from a regular. 0 unsets a
-	    face. The UI holds a reference to `font`.
-
-	    Returns false for no family, a weight outside 1 to 1000, or a handle that isn't a font.
+	    See Ui.setDocumentFontFace for the rest.
 	**/
 	public static inline function getDocumentFontFace(family:String, weight:Int, italic:Bool):Font
 		return Raw.wgf_ui_get_document_font_face(family, weight, italic);

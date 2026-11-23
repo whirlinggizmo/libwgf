@@ -40,8 +40,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the spin, in radians a second about each axis (in 2D, about z alone).
 
-	    Each tick the actor turns by the tick's share, about its parent's axes. A spin about one
-	    axis turns it steadily, past any half turn.
+	    See Motion.setSpin for the rest.
 	**/
 	public inline function getSpin(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_motion_get_spin(this, into);

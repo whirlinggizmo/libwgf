@@ -37,12 +37,7 @@ import wgf.impl.Raw;
 	/**
 	    Makes the shape a cube, a sphere, a rectangle, or a circle, about its actor's origin.
 
-	    - set_cube makes a cube `width` by `height` by `length`.
-	    - set_sphere makes a sphere of `radius`.
-	    - set_rectangle makes a filled rectangle `width` by `height`, in its local x-y plane.
-	    - set_circle makes a circle's outline of `radius`, in its local x-y plane.
-
-	    Returns false for a size below 0.
+	    See Shape3d.setCube for the rest.
 	**/
 	public inline function setSphere(radius:Float):Bool
 		return Raw.wgf_shape3d_set_sphere(this, radius);
@@ -50,12 +45,7 @@ import wgf.impl.Raw;
 	/**
 	    Makes the shape a cube, a sphere, a rectangle, or a circle, about its actor's origin.
 
-	    - set_cube makes a cube `width` by `height` by `length`.
-	    - set_sphere makes a sphere of `radius`.
-	    - set_rectangle makes a filled rectangle `width` by `height`, in its local x-y plane.
-	    - set_circle makes a circle's outline of `radius`, in its local x-y plane.
-
-	    Returns false for a size below 0.
+	    See Shape3d.setCube for the rest.
 	**/
 	public inline function setRectangle(width:Float, height:Float):Bool
 		return Raw.wgf_shape3d_set_rectangle(this, width, height);
@@ -63,12 +53,7 @@ import wgf.impl.Raw;
 	/**
 	    Makes the shape a cube, a sphere, a rectangle, or a circle, about its actor's origin.
 
-	    - set_cube makes a cube `width` by `height` by `length`.
-	    - set_sphere makes a sphere of `radius`.
-	    - set_rectangle makes a filled rectangle `width` by `height`, in its local x-y plane.
-	    - set_circle makes a circle's outline of `radius`, in its local x-y plane.
-
-	    Returns false for a size below 0.
+	    See Shape3d.setCube for the rest.
 	**/
 	public inline function setCircle(radius:Float):Bool
 		return Raw.wgf_shape3d_set_circle(this, radius);
@@ -97,14 +82,7 @@ import wgf.impl.Raw;
 	/**
 	    Makes the shape a line strip, or gets its points.
 
-	    - `points` is your array, holding x, y, and z in turn: `float_count` floats, three for
-	      each point. It is copied.
-	    - The strip is drawn once it has two points.
-	    - get_points fills your array with up to `float_count` floats of the points, and returns
-	      how many it filled.
-
-	    set_line_strip returns false for a `float_count` that isn't a multiple of 3, or past 65536
-	    points.
+	    See Shape3d.setLineStrip for the rest.
 	**/
 	public inline function getPointCount():Int
 		return Raw.wgf_shape3d_get_point_count(this);
@@ -112,14 +90,7 @@ import wgf.impl.Raw;
 	/**
 	    Makes the shape a line strip, or gets its points.
 
-	    - `points` is your array, holding x, y, and z in turn: `float_count` floats, three for
-	      each point. It is copied.
-	    - The strip is drawn once it has two points.
-	    - get_points fills your array with up to `float_count` floats of the points, and returns
-	      how many it filled.
-
-	    set_line_strip returns false for a `float_count` that isn't a multiple of 3, or past 65536
-	    points.
+	    See Shape3d.setLineStrip for the rest.
 	**/
 	public inline function getPoints(points:Array<Float>):Int
 		return Raw.wgf_shape3d_get_points(this, points);
@@ -138,10 +109,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what was set.
 
-	    - get_size returns a cube's or rectangle's size, with a rectangle's z 0. It returns 0, 0, 0
-	      for another kind.
-	    - get_radius returns a sphere's or circle's radius, or 0 for another kind.
-	    - get_line_start and get_line_end return a line's ends.
+	    See Shape3d.getSize for the rest.
 	**/
 	public inline function getRadius():Float
 		return Raw.wgf_shape3d_get_radius(this);
@@ -149,10 +117,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what was set.
 
-	    - get_size returns a cube's or rectangle's size, with a rectangle's z 0. It returns 0, 0, 0
-	      for another kind.
-	    - get_radius returns a sphere's or circle's radius, or 0 for another kind.
-	    - get_line_start and get_line_end return a line's ends.
+	    See Shape3d.getSize for the rest.
 	**/
 	public inline function getLineStart(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_shape3d_get_line_start(this, into);
@@ -160,10 +125,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what was set.
 
-	    - get_size returns a cube's or rectangle's size, with a rectangle's z 0. It returns 0, 0, 0
-	      for another kind.
-	    - get_radius returns a sphere's or circle's radius, or 0 for another kind.
-	    - get_line_start and get_line_end return a line's ends.
+	    See Shape3d.getSize for the rest.
 	**/
 	public inline function getLineEnd(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_shape3d_get_line_end(this, into);

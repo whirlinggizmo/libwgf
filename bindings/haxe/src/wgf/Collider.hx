@@ -101,8 +101,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns the collider's shape, and a polygon's or a segment's points.
 
-	    get_points fills `out` with x and y in turn, as many as fit in `count` floats. It returns
-	    how many floats it filled, or 0 for a circle or a rectangle.
+	    See Collider.getShape for the rest.
 	**/
 	public inline function getPoints(out:Array<Float>):Int
 		return Raw.wgf_collider_get_points(this, out);
@@ -136,9 +135,7 @@ import wgf.impl.Raw;
 	    Sets or gets the layer and mask, as bits. The layer is what the collider is, and the mask is
 	    what it meets (defaults: layer 1, mask -1).
 
-	    A pair meets when either side's mask has the other's layer. Clearing one collider's mask
-	    doesn't stop another collider, whose mask has its layer, from meeting it. To make a collider
-	    meet nothing, switch it off (see wgf_collider_set_enabled).
+	    See Collider.setLayer for the rest.
 	**/
 	public inline function getLayer():Int
 		return Raw.wgf_collider_get_layer(this);
@@ -147,9 +144,7 @@ import wgf.impl.Raw;
 	    Sets or gets the layer and mask, as bits. The layer is what the collider is, and the mask is
 	    what it meets (defaults: layer 1, mask -1).
 
-	    A pair meets when either side's mask has the other's layer. Clearing one collider's mask
-	    doesn't stop another collider, whose mask has its layer, from meeting it. To make a collider
-	    meet nothing, switch it off (see wgf_collider_set_enabled).
+	    See Collider.setLayer for the rest.
 	**/
 	public inline function setMask(mask:Int):Bool
 		return Raw.wgf_collider_set_mask(this, mask);
@@ -158,9 +153,7 @@ import wgf.impl.Raw;
 	    Sets or gets the layer and mask, as bits. The layer is what the collider is, and the mask is
 	    what it meets (defaults: layer 1, mask -1).
 
-	    A pair meets when either side's mask has the other's layer. Clearing one collider's mask
-	    doesn't stop another collider, whose mask has its layer, from meeting it. To make a collider
-	    meet nothing, switch it off (see wgf_collider_set_enabled).
+	    See Collider.setLayer for the rest.
 	**/
 	public inline function getMask():Int
 		return Raw.wgf_collider_get_mask(this);
@@ -178,9 +171,7 @@ import wgf.impl.Raw;
 	/**
 	    Switches the collider on or off, or gets whether it is on (default: on).
 
-	    A collider switched off meets nothing, from either side. A pair it was in ends, raising
-	    TRIGGER_EXIT at the next tick. Its radius, layer, and mask are kept, so when it is switched
-	    on again it meets as they say. Use it for a ship that can't be hit while it blinks.
+	    See Collider.setEnabled for the rest.
 	**/
 	public inline function isEnabled():Bool
 		return Raw.wgf_collider_is_enabled(this);

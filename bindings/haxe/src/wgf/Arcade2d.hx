@@ -132,17 +132,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what the arcade body touched at its last tick, moving into it.
 
-	    - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
-	      tick, so it reads grounded while it stands.
-	    - is_blocked_left, is_blocked_right: it was stopped on that side.
-	    - is_blocked_above: it was stopped on its top (it hit its head).
-	    - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
-
-	    A side reads blocked only while the arcade body moves that way. A body walking into a wall
-	    each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
-
-	    To allow a jump a moment after walking off a ledge (coyote time), check that the air time
-	    is short.
+	    See Arcade2d.isGrounded for the rest.
 	**/
 	public inline function isBlockedLeft():Bool
 		return Raw.wgf_arcade2d_is_blocked_left(this);
@@ -150,17 +140,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what the arcade body touched at its last tick, moving into it.
 
-	    - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
-	      tick, so it reads grounded while it stands.
-	    - is_blocked_left, is_blocked_right: it was stopped on that side.
-	    - is_blocked_above: it was stopped on its top (it hit its head).
-	    - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
-
-	    A side reads blocked only while the arcade body moves that way. A body walking into a wall
-	    each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
-
-	    To allow a jump a moment after walking off a ledge (coyote time), check that the air time
-	    is short.
+	    See Arcade2d.isGrounded for the rest.
 	**/
 	public inline function isBlockedRight():Bool
 		return Raw.wgf_arcade2d_is_blocked_right(this);
@@ -168,17 +148,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what the arcade body touched at its last tick, moving into it.
 
-	    - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
-	      tick, so it reads grounded while it stands.
-	    - is_blocked_left, is_blocked_right: it was stopped on that side.
-	    - is_blocked_above: it was stopped on its top (it hit its head).
-	    - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
-
-	    A side reads blocked only while the arcade body moves that way. A body walking into a wall
-	    each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
-
-	    To allow a jump a moment after walking off a ledge (coyote time), check that the air time
-	    is short.
+	    See Arcade2d.isGrounded for the rest.
 	**/
 	public inline function isBlockedAbove():Bool
 		return Raw.wgf_arcade2d_is_blocked_above(this);
@@ -186,17 +156,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns what the arcade body touched at its last tick, moving into it.
 
-	    - is_grounded: it is standing on a collider or a solid cell. Gravity presses it down each
-	      tick, so it reads grounded while it stands.
-	    - is_blocked_left, is_blocked_right: it was stopped on that side.
-	    - is_blocked_above: it was stopped on its top (it hit its head).
-	    - get_air_time: the seconds since it was last grounded, or 0 while it is grounded.
-
-	    A side reads blocked only while the arcade body moves that way. A body walking into a wall
-	    each tick, as when a key is held, reads blocked. One stopped there and left still doesn't.
-
-	    To allow a jump a moment after walking off a ledge (coyote time), check that the air time
-	    is short.
+	    See Arcade2d.isGrounded for the rest.
 	**/
 	public inline function getAirTime():Float
 		return Raw.wgf_arcade2d_get_air_time(this);
@@ -241,16 +201,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets the grid from a placed Tiled map's tile layer (wgf_tilemap_layer.h).
 
-	    - A cell with a tile is solid, and an empty cell is open.
-	    - Each cell is the map's tile size.
-	    - Cell 0 is where the layer's top-left cell is in the parent's space. That includes the
-	      layer's offset, the placement of the map's root, and an infinite map's origin.
-	    - A layer scaled or turned under the parent is placed, but the grid isn't scaled or turned.
-	    - The grid copies the layer's cells as they are now. A cell set on the layer later must also
-	      be set here, with set_grid_cell.
-
-	    Also returns false for a layer that isn't a placed tile layer, a map that isn't orthogonal,
-	    or a map whose tiles aren't square.
+	    See Arcade2d.setGridFromLayer for the rest.
 	**/
 	public inline function clearGrid():Bool
 		return Raw.wgf_arcade2d_clear_grid(this);
@@ -258,16 +209,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets the grid from a placed Tiled map's tile layer (wgf_tilemap_layer.h).
 
-	    - A cell with a tile is solid, and an empty cell is open.
-	    - Each cell is the map's tile size.
-	    - Cell 0 is where the layer's top-left cell is in the parent's space. That includes the
-	      layer's offset, the placement of the map's root, and an infinite map's origin.
-	    - A layer scaled or turned under the parent is placed, but the grid isn't scaled or turned.
-	    - The grid copies the layer's cells as they are now. A cell set on the layer later must also
-	      be set here, with set_grid_cell.
-
-	    Also returns false for a layer that isn't a placed tile layer, a map that isn't orthogonal,
-	    or a map whose tiles aren't square.
+	    See Arcade2d.setGridFromLayer for the rest.
 	**/
 	public inline function getGridCell(column:Int, row:Int):Int
 		return Raw.wgf_arcade2d_get_grid_cell(this, column, row);
@@ -275,16 +217,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets the grid from a placed Tiled map's tile layer (wgf_tilemap_layer.h).
 
-	    - A cell with a tile is solid, and an empty cell is open.
-	    - Each cell is the map's tile size.
-	    - Cell 0 is where the layer's top-left cell is in the parent's space. That includes the
-	      layer's offset, the placement of the map's root, and an infinite map's origin.
-	    - A layer scaled or turned under the parent is placed, but the grid isn't scaled or turned.
-	    - The grid copies the layer's cells as they are now. A cell set on the layer later must also
-	      be set here, with set_grid_cell.
-
-	    Also returns false for a layer that isn't a placed tile layer, a map that isn't orthogonal,
-	    or a map whose tiles aren't square.
+	    See Arcade2d.setGridFromLayer for the rest.
 	**/
 	public inline function setGridCell(column:Int, row:Int, value:Int):Bool
 		return Raw.wgf_arcade2d_set_grid_cell(this, column, row, value);

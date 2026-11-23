@@ -99,14 +99,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the actor's parent, and reads its children.
 
-	    set_parent puts `actor` under `parent`, last among its children. The actor keeps its own
-	    transform, so it moves to where that transform places it relative to the new parent.
-	    A `parent` of 0 detaches it, and a detached actor is not drawn.
-
-	    set_parent returns false if:
-	    - `parent` isn't an actor.
-	    - `parent` is `actor`, or is under it.
-	    - `actor` is a 2D or 3D stage. Stages are always roots.
+	    See Actor.setParent for the rest.
 	**/
 	public inline function getParent():Actor
 		return Raw.wgf_actor_get_parent(this);
@@ -114,14 +107,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the actor's parent, and reads its children.
 
-	    set_parent puts `actor` under `parent`, last among its children. The actor keeps its own
-	    transform, so it moves to where that transform places it relative to the new parent.
-	    A `parent` of 0 detaches it, and a detached actor is not drawn.
-
-	    set_parent returns false if:
-	    - `parent` isn't an actor.
-	    - `parent` is `actor`, or is under it.
-	    - `actor` is a 2D or 3D stage. Stages are always roots.
+	    See Actor.setParent for the rest.
 	**/
 	public inline function getChildCount():Int
 		return Raw.wgf_actor_get_child_count(this);
@@ -146,10 +132,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets where `actor` is among its parent's children.
 
-	    On a 2D stage this is the drawing order: later children draw over earlier ones. An index
-	    past either end is clamped to that end, so a large index moves the actor to the front.
-
-	    set_index returns false if the actor has no parent.
+	    See Actor.setIndex for the rest.
 	**/
 	public inline function getIndex():Int
 		return Raw.wgf_actor_get_index(this);
@@ -168,10 +151,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the actor's transform, relative to its parent.
 
-	    - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
-	      It is kept as the rotation those angles make. get_rotation returns angles for the same
-	      rotation, which may not be the ones given (past a half turn, for example).
-	    - Scale 1 is the actor's own size.
+	    See Actor.setPosition for the rest.
 	**/
 	public inline function getPosition(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_actor_get_position(this, into);
@@ -179,10 +159,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the actor's transform, relative to its parent.
 
-	    - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
-	      It is kept as the rotation those angles make. get_rotation returns angles for the same
-	      rotation, which may not be the ones given (past a half turn, for example).
-	    - Scale 1 is the actor's own size.
+	    See Actor.setPosition for the rest.
 	**/
 	public inline function setRotation(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_actor_set_rotation(this, x, y, z);
@@ -190,10 +167,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the actor's transform, relative to its parent.
 
-	    - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
-	      It is kept as the rotation those angles make. get_rotation returns angles for the same
-	      rotation, which may not be the ones given (past a half turn, for example).
-	    - Scale 1 is the actor's own size.
+	    See Actor.setPosition for the rest.
 	**/
 	public inline function getRotation(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_actor_get_rotation(this, into);
@@ -201,10 +175,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the actor's transform, relative to its parent.
 
-	    - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
-	      It is kept as the rotation those angles make. get_rotation returns angles for the same
-	      rotation, which may not be the ones given (past a half turn, for example).
-	    - Scale 1 is the actor's own size.
+	    See Actor.setPosition for the rest.
 	**/
 	public inline function setScale(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_actor_set_scale(this, x, y, z);
@@ -212,10 +183,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the actor's transform, relative to its parent.
 
-	    - Rotation is three angles in radians, about x, then y, then z (see wgf_quat_from_euler).
-	      It is kept as the rotation those angles make. get_rotation returns angles for the same
-	      rotation, which may not be the ones given (past a half turn, for example).
-	    - Scale 1 is the actor's own size.
+	    See Actor.setPosition for the rest.
 	**/
 	public inline function getScale(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_actor_get_scale(this, into);
@@ -258,13 +226,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Gets or sets the positions of many actors at once.
 
-	    get_positions reads each of `actors` (`count` of them) into `out`, as x, y, z in turn. It
-	    reads as many as fit in `out_count` floats, and returns how many floats it filled. A handle
-	    that isn't an actor reads as 0, 0, 0.
-
-	    set_positions sets each from `positions`: x, y, z in turn, `positions_count` floats. It
-	    skips a handle that isn't an actor. It returns false if there aren't three floats for each
-	    actor.
+	    See Actor.getPositions for the rest.
 	**/
 	public static inline function setPositions(actors:Array<Actor>, positions:Array<Float>):Bool
 		return Raw.wgf_actor_set_positions(cast actors, positions);
@@ -286,13 +248,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns where the actor is in its tree's root's space. On a 2D stage, that is stage units.
 
-	    - The world position is the simulation's, as the transform is (see wgf_actor_snap). It is
-	      the same in a tick and in a frame.
-	    - The drawn position is where the actor is drawn this frame. A simulated actor, or one under
-	      a simulated actor, is drawn between its last two ticks. A camera that follows the actor in
-	      the frame reads this, so the camera moves as smoothly as the actor does.
-
-	    The two are the same for an actor with nothing simulated at or above it.
+	    See Actor.getWorldPosition for the rest.
 	**/
 	public inline function getDrawnPosition(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_actor_get_drawn_position(this, into);
@@ -312,11 +268,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Turns a direction in the actor's own space into its tree's root's space, at unit length.
 
-	    For example, (0, 0, -1) gives the actor's heading in the world, with no angles to read back
-	    (get_rotation's angles may not be the ones set). The world direction is the simulation's,
-	    and the drawn direction is this frame's, as with the positions above.
-
-	    Returns 0, 0, 0 for a direction of (0, 0, 0), or if `actor` isn't an actor.
+	    See Actor.getWorldDirection for the rest.
 	**/
 	public inline function getDrawnDirection(x:Float, y:Float, z:Float, ?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_actor_get_drawn_direction(this, x, y, z, into);
@@ -352,13 +304,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a name to find the actor by.
 
-	    - NULL or "" means no name (default: no name).
-	    - get_name returns "" for no name. The string is borrowed, and valid until the name changes
-	      or the actor is gone.
-	    - Its stage finds the actor by name (wgf_stage2d_find, wgf_stage3d_find) when it is the only
-	      actor so named there.
-	    - A path from any actor finds it (wgf_actor_find) when its name is unique among its
-	      siblings.
+	    See Actor.setName for the rest.
 	**/
 	public inline function getName():String
 		return Raw.wgf_actor_get_name(this);
@@ -412,32 +358,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the four flags that say what an actor takes part in.
 
-	    Each flag is the actor's own, and reads back as it was set.
-
-	      enabled   off: the actor and every actor under it are skipped altogether, by drawing and
-	                by every update, as if they weren't in the tree. An emitter under it isn't
-	                moved on. Use it to switch off a part of the game for now. It is the only flag
-	                that reaches the children. Their own flags are kept, so enabling the actor
-	                again brings each back as it was set.
-	      visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
-	                drawn. The actor is still placed, and its children are as they are. A glTF
-	                file's root (wgf_model.h) draws nothing itself, and stands for its file:
-	                hidden, its file's nodes aren't drawn or picked either. Actors a game put under
-	                those nodes are as they are. To hide a whole tree, turn enabled off.
-	      paused    on: the actor and every actor under it are frozen, but still drawn. Their
-	                behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
-	                lifetimes) and tweens leave them. What moves by itself holds still: an
-	                emitter's particles, a sprite's clip, a model's animation. Use it to hold a
-	                level under a pause menu (wgf_screen.h pauses the screens under the top one).
-	                Its colliders still meet as triggers. is_frozen returns true if the actor or
-	                any actor above it is paused.
-	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
-	                (wgf_pointer.h) pass through the actor to what is under it. Its children can
-	                still be hit, as a panel that isn't clickable can hold buttons that are. Only
-	                actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
-	                model, or a 3D shape. For any other kind this flag changes nothing.
-
-	    Defaults: enabled, visible, not paused, pickable.
+	    See Actor.setEnabled for the rest.
 	**/
 	public inline function isEnabled():Bool
 		return Raw.wgf_actor_is_enabled(this);
@@ -445,32 +366,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the four flags that say what an actor takes part in.
 
-	    Each flag is the actor's own, and reads back as it was set.
-
-	      enabled   off: the actor and every actor under it are skipped altogether, by drawing and
-	                by every update, as if they weren't in the tree. An emitter under it isn't
-	                moved on. Use it to switch off a part of the game for now. It is the only flag
-	                that reaches the children. Their own flags are kept, so enabling the actor
-	                again brings each back as it was set.
-	      visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
-	                drawn. The actor is still placed, and its children are as they are. A glTF
-	                file's root (wgf_model.h) draws nothing itself, and stands for its file:
-	                hidden, its file's nodes aren't drawn or picked either. Actors a game put under
-	                those nodes are as they are. To hide a whole tree, turn enabled off.
-	      paused    on: the actor and every actor under it are frozen, but still drawn. Their
-	                behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
-	                lifetimes) and tweens leave them. What moves by itself holds still: an
-	                emitter's particles, a sprite's clip, a model's animation. Use it to hold a
-	                level under a pause menu (wgf_screen.h pauses the screens under the top one).
-	                Its colliders still meet as triggers. is_frozen returns true if the actor or
-	                any actor above it is paused.
-	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
-	                (wgf_pointer.h) pass through the actor to what is under it. Its children can
-	                still be hit, as a panel that isn't clickable can hold buttons that are. Only
-	                actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
-	                model, or a 3D shape. For any other kind this flag changes nothing.
-
-	    Defaults: enabled, visible, not paused, pickable.
+	    See Actor.setEnabled for the rest.
 	**/
 	public inline function setPaused(paused:Bool):Bool
 		return Raw.wgf_actor_set_paused(this, paused);
@@ -478,32 +374,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the four flags that say what an actor takes part in.
 
-	    Each flag is the actor's own, and reads back as it was set.
-
-	      enabled   off: the actor and every actor under it are skipped altogether, by drawing and
-	                by every update, as if they weren't in the tree. An emitter under it isn't
-	                moved on. Use it to switch off a part of the game for now. It is the only flag
-	                that reaches the children. Their own flags are kept, so enabling the actor
-	                again brings each back as it was set.
-	      visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
-	                drawn. The actor is still placed, and its children are as they are. A glTF
-	                file's root (wgf_model.h) draws nothing itself, and stands for its file:
-	                hidden, its file's nodes aren't drawn or picked either. Actors a game put under
-	                those nodes are as they are. To hide a whole tree, turn enabled off.
-	      paused    on: the actor and every actor under it are frozen, but still drawn. Their
-	                behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
-	                lifetimes) and tweens leave them. What moves by itself holds still: an
-	                emitter's particles, a sprite's clip, a model's animation. Use it to hold a
-	                level under a pause menu (wgf_screen.h pauses the screens under the top one).
-	                Its colliders still meet as triggers. is_frozen returns true if the actor or
-	                any actor above it is paused.
-	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
-	                (wgf_pointer.h) pass through the actor to what is under it. Its children can
-	                still be hit, as a panel that isn't clickable can hold buttons that are. Only
-	                actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
-	                model, or a 3D shape. For any other kind this flag changes nothing.
-
-	    Defaults: enabled, visible, not paused, pickable.
+	    See Actor.setEnabled for the rest.
 	**/
 	public inline function isPaused():Bool
 		return Raw.wgf_actor_is_paused(this);
@@ -511,32 +382,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the four flags that say what an actor takes part in.
 
-	    Each flag is the actor's own, and reads back as it was set.
-
-	      enabled   off: the actor and every actor under it are skipped altogether, by drawing and
-	                by every update, as if they weren't in the tree. An emitter under it isn't
-	                moved on. Use it to switch off a part of the game for now. It is the only flag
-	                that reaches the children. Their own flags are kept, so enabling the actor
-	                again brings each back as it was set.
-	      visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
-	                drawn. The actor is still placed, and its children are as they are. A glTF
-	                file's root (wgf_model.h) draws nothing itself, and stands for its file:
-	                hidden, its file's nodes aren't drawn or picked either. Actors a game put under
-	                those nodes are as they are. To hide a whole tree, turn enabled off.
-	      paused    on: the actor and every actor under it are frozen, but still drawn. Their
-	                behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
-	                lifetimes) and tweens leave them. What moves by itself holds still: an
-	                emitter's particles, a sprite's clip, a model's animation. Use it to hold a
-	                level under a pause menu (wgf_screen.h pauses the screens under the top one).
-	                Its colliders still meet as triggers. is_frozen returns true if the actor or
-	                any actor above it is paused.
-	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
-	                (wgf_pointer.h) pass through the actor to what is under it. Its children can
-	                still be hit, as a panel that isn't clickable can hold buttons that are. Only
-	                actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
-	                model, or a 3D shape. For any other kind this flag changes nothing.
-
-	    Defaults: enabled, visible, not paused, pickable.
+	    See Actor.setEnabled for the rest.
 	**/
 	public inline function isFrozen():Bool
 		return Raw.wgf_actor_is_frozen(this);
@@ -544,32 +390,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the four flags that say what an actor takes part in.
 
-	    Each flag is the actor's own, and reads back as it was set.
-
-	      enabled   off: the actor and every actor under it are skipped altogether, by drawing and
-	                by every update, as if they weren't in the tree. An emitter under it isn't
-	                moved on. Use it to switch off a part of the game for now. It is the only flag
-	                that reaches the children. Their own flags are kept, so enabling the actor
-	                again brings each back as it was set.
-	      visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
-	                drawn. The actor is still placed, and its children are as they are. A glTF
-	                file's root (wgf_model.h) draws nothing itself, and stands for its file:
-	                hidden, its file's nodes aren't drawn or picked either. Actors a game put under
-	                those nodes are as they are. To hide a whole tree, turn enabled off.
-	      paused    on: the actor and every actor under it are frozen, but still drawn. Their
-	                behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
-	                lifetimes) and tweens leave them. What moves by itself holds still: an
-	                emitter's particles, a sprite's clip, a model's animation. Use it to hold a
-	                level under a pause menu (wgf_screen.h pauses the screens under the top one).
-	                Its colliders still meet as triggers. is_frozen returns true if the actor or
-	                any actor above it is paused.
-	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
-	                (wgf_pointer.h) pass through the actor to what is under it. Its children can
-	                still be hit, as a panel that isn't clickable can hold buttons that are. Only
-	                actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
-	                model, or a 3D shape. For any other kind this flag changes nothing.
-
-	    Defaults: enabled, visible, not paused, pickable.
+	    See Actor.setEnabled for the rest.
 	**/
 	public inline function setVisible(visible:Bool):Bool
 		return Raw.wgf_actor_set_visible(this, visible);
@@ -577,32 +398,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the four flags that say what an actor takes part in.
 
-	    Each flag is the actor's own, and reads back as it was set.
-
-	      enabled   off: the actor and every actor under it are skipped altogether, by drawing and
-	                by every update, as if they weren't in the tree. An emitter under it isn't
-	                moved on. Use it to switch off a part of the game for now. It is the only flag
-	                that reaches the children. Their own flags are kept, so enabling the actor
-	                again brings each back as it was set.
-	      visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
-	                drawn. The actor is still placed, and its children are as they are. A glTF
-	                file's root (wgf_model.h) draws nothing itself, and stands for its file:
-	                hidden, its file's nodes aren't drawn or picked either. Actors a game put under
-	                those nodes are as they are. To hide a whole tree, turn enabled off.
-	      paused    on: the actor and every actor under it are frozen, but still drawn. Their
-	                behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
-	                lifetimes) and tweens leave them. What moves by itself holds still: an
-	                emitter's particles, a sprite's clip, a model's animation. Use it to hold a
-	                level under a pause menu (wgf_screen.h pauses the screens under the top one).
-	                Its colliders still meet as triggers. is_frozen returns true if the actor or
-	                any actor above it is paused.
-	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
-	                (wgf_pointer.h) pass through the actor to what is under it. Its children can
-	                still be hit, as a panel that isn't clickable can hold buttons that are. Only
-	                actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
-	                model, or a 3D shape. For any other kind this flag changes nothing.
-
-	    Defaults: enabled, visible, not paused, pickable.
+	    See Actor.setEnabled for the rest.
 	**/
 	public inline function isVisible():Bool
 		return Raw.wgf_actor_is_visible(this);
@@ -610,32 +406,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the four flags that say what an actor takes part in.
 
-	    Each flag is the actor's own, and reads back as it was set.
-
-	      enabled   off: the actor and every actor under it are skipped altogether, by drawing and
-	                by every update, as if they weren't in the tree. An emitter under it isn't
-	                moved on. Use it to switch off a part of the game for now. It is the only flag
-	                that reaches the children. Their own flags are kept, so enabling the actor
-	                again brings each back as it was set.
-	      visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
-	                drawn. The actor is still placed, and its children are as they are. A glTF
-	                file's root (wgf_model.h) draws nothing itself, and stands for its file:
-	                hidden, its file's nodes aren't drawn or picked either. Actors a game put under
-	                those nodes are as they are. To hide a whole tree, turn enabled off.
-	      paused    on: the actor and every actor under it are frozen, but still drawn. Their
-	                behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
-	                lifetimes) and tweens leave them. What moves by itself holds still: an
-	                emitter's particles, a sprite's clip, a model's animation. Use it to hold a
-	                level under a pause menu (wgf_screen.h pauses the screens under the top one).
-	                Its colliders still meet as triggers. is_frozen returns true if the actor or
-	                any actor above it is paused.
-	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
-	                (wgf_pointer.h) pass through the actor to what is under it. Its children can
-	                still be hit, as a panel that isn't clickable can hold buttons that are. Only
-	                actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
-	                model, or a 3D shape. For any other kind this flag changes nothing.
-
-	    Defaults: enabled, visible, not paused, pickable.
+	    See Actor.setEnabled for the rest.
 	**/
 	public inline function setPickable(pickable:Bool):Bool
 		return Raw.wgf_actor_set_pickable(this, pickable);
@@ -643,32 +414,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the four flags that say what an actor takes part in.
 
-	    Each flag is the actor's own, and reads back as it was set.
-
-	      enabled   off: the actor and every actor under it are skipped altogether, by drawing and
-	                by every update, as if they weren't in the tree. An emitter under it isn't
-	                moved on. Use it to switch off a part of the game for now. It is the only flag
-	                that reaches the children. Their own flags are kept, so enabling the actor
-	                again brings each back as it was set.
-	      visible   off: the actor's own output is off. A sprite, shape, text, or emitter isn't
-	                drawn. The actor is still placed, and its children are as they are. A glTF
-	                file's root (wgf_model.h) draws nothing itself, and stands for its file:
-	                hidden, its file's nodes aren't drawn or picked either. Actors a game put under
-	                those nodes are as they are. To hide a whole tree, turn enabled off.
-	      paused    on: the actor and every actor under it are frozen, but still drawn. Their
-	                behaviors don't tick. Their components' systems (motion, arcade bodies, bounds,
-	                lifetimes) and tweens leave them. What moves by itself holds still: an
-	                emitter's particles, a sprite's clip, a model's animation. Use it to hold a
-	                level under a pause menu (wgf_screen.h pauses the screens under the top one).
-	                Its colliders still meet as triggers. is_frozen returns true if the actor or
-	                any actor above it is paused.
-	      pickable  off: a pick (wgf_stage2d_pick, wgf_stage3d_pick) and the pointer
-	                (wgf_pointer.h) pass through the actor to what is under it. Its children can
-	                still be hit, as a panel that isn't clickable can hold buttons that are. Only
-	                actors with a surface to hit are ever picked: a sprite, a 2D shape, a text, a
-	                model, or a 3D shape. For any other kind this flag changes nothing.
-
-	    Defaults: enabled, visible, not paused, pickable.
+	    See Actor.setEnabled for the rest.
 	**/
 	public inline function isPickable():Bool
 		return Raw.wgf_actor_is_pickable(this);
@@ -692,15 +438,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Adds, removes, or checks for a component on an actor.
 
-	    - add_component adds one with its defaults, which each component's header lists. Adding a
-	      component the actor already has keeps it as it is.
-	    - remove_component ends it. A voice is stopped and destroyed.
-
-	    Returns false for a handle that isn't an actor, or a component that isn't one.
-	    remove_component also returns false for a component the actor doesn't have.
-
-	    A body or a vehicle belongs to physics (wgf_physics3d.h), an optional part. Adding one
-	    before physics has started is refused (logged once).
+	    See Actor.addComponent for the rest.
 	**/
 	public inline function removeComponent(component:Component):Bool
 		return Raw.wgf_actor_remove_component(this, component);
@@ -708,15 +446,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Adds, removes, or checks for a component on an actor.
 
-	    - add_component adds one with its defaults, which each component's header lists. Adding a
-	      component the actor already has keeps it as it is.
-	    - remove_component ends it. A voice is stopped and destroyed.
-
-	    Returns false for a handle that isn't an actor, or a component that isn't one.
-	    remove_component also returns false for a component the actor doesn't have.
-
-	    A body or a vehicle belongs to physics (wgf_physics3d.h), an optional part. Adding one
-	    before physics has started is refused (logged once).
+	    See Actor.addComponent for the rest.
 	**/
 	public inline function hasComponent(component:Component):Bool
 		return Raw.wgf_actor_has_component(this, component);
@@ -746,10 +476,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Finds the actors with a component, oldest first.
 
-	    An actor's age is when its first component or behavior was added. find_with_component fills
-	    `out` with as many as fit in `count`, and returns how many it filled. count_with_component
-	    returns how many there are, to size `out`. Each component is indexed, so neither call looks
-	    at every actor. NONE, or a value that isn't a component, finds none.
+	    See Actor.findWithComponent for the rest.
 	**/
 	public static inline function countWithComponent(component:Component):Int
 		return Raw.wgf_actor_count_with_component(component);
@@ -781,9 +508,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Lists the actor's behaviors, in the order they were added.
 
-	    - get_behavior_count returns how many there are.
-	    - get_behavior returns the id of the one at `index`, or 0 past the end.
-	    - find_behavior returns the id of the first one named `name`, or 0 for none.
+	    See Actor.getBehaviorCount for the rest.
 	**/
 	public inline function getBehavior(index:Int):Int
 		return Raw.wgf_actor_get_behavior(this, index);
@@ -791,9 +516,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Lists the actor's behaviors, in the order they were added.
 
-	    - get_behavior_count returns how many there are.
-	    - get_behavior returns the id of the one at `index`, or 0 past the end.
-	    - find_behavior returns the id of the first one named `name`, or 0 for none.
+	    See Actor.getBehaviorCount for the rest.
 	**/
 	public inline function findBehavior(name:String):Int
 		return Raw.wgf_actor_find_behavior(this, name);
@@ -812,10 +535,7 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	/**
 	    Finds the actors with a behavior named `name`, oldest first.
 
-	    An actor's age is when its first component or behavior was added. find_with_behavior fills
-	    `out` with as many as fit in `count`, and returns how many it filled. count_with_behavior
-	    returns how many there are, to size `out`. An actor with two behaviors of that name counts
-	    once. Each name is indexed, so neither call looks at every actor.
+	    See Actor.findWithBehavior for the rest.
 	**/
 	public static inline function countWithBehavior(name:String):Int
 		return Raw.wgf_actor_count_with_behavior(name);

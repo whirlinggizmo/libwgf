@@ -40,23 +40,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a parameter, as text.
 
-	    - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
-	      removes it. It also returns false for a key or value that breaks the limits, or a 33rd
-	      parameter.
-	    - get_param returns the value. The actor owns the string, valid until it changes. It
-	      returns "" for a parameter the behavior doesn't have.
-	    - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
-	      doesn't have, or one that isn't a number.
-
-	    A value starting with '@' refers to another actor. The actor is found once, when the value
-	    is set, and again when all of a scene's actors are made. It is then kept, so
-	    get_param_actor returns it without a search.
-	    - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
-	    - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
-	    - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
-
-	    get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
-	    actor, or an actor since destroyed.
+	    See BehaviorComponent.setParam for the rest.
 	**/
 	public inline function getParam(behavior:Int, key:String):String
 		return Raw.wgf_behavior_get_param(this, behavior, key);
@@ -64,23 +48,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a parameter, as text.
 
-	    - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
-	      removes it. It also returns false for a key or value that breaks the limits, or a 33rd
-	      parameter.
-	    - get_param returns the value. The actor owns the string, valid until it changes. It
-	      returns "" for a parameter the behavior doesn't have.
-	    - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
-	      doesn't have, or one that isn't a number.
-
-	    A value starting with '@' refers to another actor. The actor is found once, when the value
-	    is set, and again when all of a scene's actors are made. It is then kept, so
-	    get_param_actor returns it without a search.
-	    - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
-	    - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
-	    - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
-
-	    get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
-	    actor, or an actor since destroyed.
+	    See BehaviorComponent.setParam for the rest.
 	**/
 	public inline function getParamNumber(behavior:Int, key:String):Float
 		return Raw.wgf_behavior_get_param_number(this, behavior, key);
@@ -88,23 +56,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a parameter, as text.
 
-	    - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
-	      removes it. It also returns false for a key or value that breaks the limits, or a 33rd
-	      parameter.
-	    - get_param returns the value. The actor owns the string, valid until it changes. It
-	      returns "" for a parameter the behavior doesn't have.
-	    - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
-	      doesn't have, or one that isn't a number.
-
-	    A value starting with '@' refers to another actor. The actor is found once, when the value
-	    is set, and again when all of a scene's actors are made. It is then kept, so
-	    get_param_actor returns it without a search.
-	    - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
-	    - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
-	    - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
-
-	    get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
-	    actor, or an actor since destroyed.
+	    See BehaviorComponent.setParam for the rest.
 	**/
 	public inline function getParamActor(behavior:Int, key:String):Actor
 		return Raw.wgf_behavior_get_param_actor(this, behavior, key);
@@ -112,23 +64,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a parameter, as text.
 
-	    - set_param sets `key` to `value`, adding the parameter the first time. A NULL `value`
-	      removes it. It also returns false for a key or value that breaks the limits, or a 33rd
-	      parameter.
-	    - get_param returns the value. The actor owns the string, valid until it changes. It
-	      returns "" for a parameter the behavior doesn't have.
-	    - get_param_number reads the value as a number. It returns 0 for a parameter the behavior
-	      doesn't have, or one that isn't a number.
-
-	    A value starting with '@' refers to another actor. The actor is found once, when the value
-	    is set, and again when all of a scene's actors are made. It is then kept, so
-	    get_param_actor returns it without a search.
-	    - "@start_gate" is the one actor with that name on this actor's stage (wgf_stage2d_find).
-	    - "@car/wheel_rl" is a path from that actor (wgf_actor_find).
-	    - "@./flame" is a path from this actor, and "@../gun" a path from its parent.
-
-	    get_param_actor returns 0 for a parameter that isn't a reference, a reference that found no
-	    actor, or an actor since destroyed.
+	    See BehaviorComponent.setParam for the rest.
 	**/
 	public inline function hasParam(behavior:Int, key:String):Bool
 		return Raw.wgf_behavior_has_param(this, behavior, key);

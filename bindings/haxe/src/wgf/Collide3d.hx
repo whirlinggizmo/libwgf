@@ -47,7 +47,7 @@ class Collide3d {
 	/**
 	    Overlap tests: two boxes, two spheres, or a sphere and a box.
 
-	    Touching doesn't count as overlapping.
+	    See Collide3d.boxBox for the rest.
 	**/
 	public static inline function sphereSphere(ax:Float, ay:Float, az:Float, ar:Float, bx:Float, by:Float, bz:Float, br:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_sphere_sphere(ax, ay, az, ar, bx, by, bz, br, hit);
@@ -55,7 +55,7 @@ class Collide3d {
 	/**
 	    Overlap tests: two boxes, two spheres, or a sphere and a box.
 
-	    Touching doesn't count as overlapping.
+	    See Collide3d.boxBox for the rest.
 	**/
 	public static inline function sphereBox(cx:Float, cy:Float, cz:Float, r:Float, x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_sphere_box(cx, cy, cz, r, x0, y0, z0, x1, y1, z1, hit);
@@ -76,12 +76,7 @@ class Collide3d {
 	/**
 	    Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
 
-	    - Only a meeting at or after the ray's origin counts.
-	    - A triangle is its points in order, and either face is hit.
-	    - The ray goes on without end. The time in the hit says how far it went, so a game that
-	      wants a segment keeps only a time of 1 or less.
-
-	    Returns false if the ray meets none.
+	    See Collide3d.raySphere for the rest.
 	**/
 	public static inline function rayBox(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, x0:Float, y0:Float, z0:Float, x1:Float, y1:Float, z1:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_ray_box(ox, oy, oz, dx, dy, dz, x0, y0, z0, x1, y1, z1, hit);
@@ -89,12 +84,7 @@ class Collide3d {
 	/**
 	    Casts a ray against a sphere, a box, or a triangle, and finds where it first meets it.
 
-	    - Only a meeting at or after the ray's origin counts.
-	    - A triangle is its points in order, and either face is hit.
-	    - The ray goes on without end. The time in the hit says how far it went, so a game that
-	      wants a segment keeps only a time of 1 or less.
-
-	    Returns false if the ray meets none.
+	    See Collide3d.raySphere for the rest.
 	**/
 	public static inline function rayTriangle(ox:Float, oy:Float, oz:Float, dx:Float, dy:Float, dz:Float, points:Array<Float>, hit:Array<Float>):Bool
 		return Raw.wgf_collide3d_ray_triangle(ox, oy, oz, dx, dy, dz, points, hit);

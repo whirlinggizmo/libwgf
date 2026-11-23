@@ -24,16 +24,7 @@ class Debug {
 	/**
 	    Shows, hides, or reports the frame-rate overlay, for a program under development.
 
-	    The overlay reads "<fps> FPS <cost> ms": the frames a second, and a frame's own cost
-	    (see wgf_loop.h). The runtime draws it every frame, over everything the program drew.
-
-	    - (x, y) is its position, in logical pixels.
-	    - `font` is the font to draw it in. 0 is the built-in font.
-	    - `size` is its size. A size of 0 or less draws nothing, so it isn't shown.
-	    - `color` is its color.
-
-	    It is off by default. Showing it again moves or restyles it. A program that never shows
-	    it links none of it.
+	    See Debug.showFps for the rest.
 	**/
 	public static inline function hideFps():Void
 		Raw.wgf_debug_hide_fps();
@@ -41,16 +32,7 @@ class Debug {
 	/**
 	    Shows, hides, or reports the frame-rate overlay, for a program under development.
 
-	    The overlay reads "<fps> FPS <cost> ms": the frames a second, and a frame's own cost
-	    (see wgf_loop.h). The runtime draws it every frame, over everything the program drew.
-
-	    - (x, y) is its position, in logical pixels.
-	    - `font` is the font to draw it in. 0 is the built-in font.
-	    - `size` is its size. A size of 0 or less draws nothing, so it isn't shown.
-	    - `color` is its color.
-
-	    It is off by default. Showing it again moves or restyles it. A program that never shows
-	    it links none of it.
+	    See Debug.showFps for the rest.
 	**/
 	public static inline function isFpsShown():Bool
 		return Raw.wgf_debug_is_fps_shown();
@@ -84,13 +66,7 @@ class Debug {
 	/**
 	    Starts, stops, or reports a recording of frame stats.
 
-	    - A recording runs from the next frame's end until it is stopped. It keeps its latest
-	      65,536 frames.
-	    - Starting again drops what the recording held.
-	    - Once stopped, its stats are kept for reading (wgf_debug_get_recorded_frame_stat) until
-	      the next start.
-	    - Stop returns false, and keeps nothing, if no recording was started.
-	    - Recording doesn't change the stats of the last half second.
+	    See Debug.startFrameRecording for the rest.
 	**/
 	public static inline function stopFrameRecording():Bool
 		return Raw.wgf_debug_stop_frame_recording();
@@ -98,13 +74,7 @@ class Debug {
 	/**
 	    Starts, stops, or reports a recording of frame stats.
 
-	    - A recording runs from the next frame's end until it is stopped. It keeps its latest
-	      65,536 frames.
-	    - Starting again drops what the recording held.
-	    - Once stopped, its stats are kept for reading (wgf_debug_get_recorded_frame_stat) until
-	      the next start.
-	    - Stop returns false, and keeps nothing, if no recording was started.
-	    - Recording doesn't change the stats of the last half second.
+	    See Debug.startFrameRecording for the rest.
 	**/
 	public static inline function isFrameRecording():Bool
 		return Raw.wgf_debug_is_frame_recording();

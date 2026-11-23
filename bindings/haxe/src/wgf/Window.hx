@@ -22,7 +22,7 @@ class Window {
 	/**
 	    Sets or gets the window's title (default: "libwgf").
 
-	    Natively it is the window's title bar. On the web it is the page's title. NULL counts as "".
+	    See Window.setTitle for the rest.
 	**/
 	public static inline function getTitle():String
 		return Raw.wgf_window_get_title();
@@ -47,16 +47,7 @@ class Window {
 	/**
 	    Sets or gets the size inside the window's frame, in logical pixels (default: 1024 by 768).
 
-	    Returns false for a width or height under 1.
-
-	    On the web it is the canvas's size on the page, left to the page unless set. Once set, it is
-	    the canvas's own style, which wins over the page's. The canvas then stays that size, at the
-	    page's top left, whatever the browser window does. So a game meant to fill the page doesn't
-	    set it on the web.
-
-	    A game written for one size sets a presentation (wgf_presentation.h) instead. That fits the
-	    game to whatever size the window is. Natively, it also opens the window at that size when
-	    this size isn't set.
+	    See Window.setSize for the rest.
 	**/
 	public static inline function getWidth():Int
 		return Raw.wgf_window_get_width();
@@ -64,16 +55,7 @@ class Window {
 	/**
 	    Sets or gets the size inside the window's frame, in logical pixels (default: 1024 by 768).
 
-	    Returns false for a width or height under 1.
-
-	    On the web it is the canvas's size on the page, left to the page unless set. Once set, it is
-	    the canvas's own style, which wins over the page's. The canvas then stays that size, at the
-	    page's top left, whatever the browser window does. So a game meant to fill the page doesn't
-	    set it on the web.
-
-	    A game written for one size sets a presentation (wgf_presentation.h) instead. That fits the
-	    game to whatever size the window is. Natively, it also opens the window at that size when
-	    this size isn't set.
+	    See Window.setSize for the rest.
 	**/
 	public static inline function getHeight():Int
 		return Raw.wgf_window_get_height();
@@ -104,22 +86,7 @@ class Window {
 	/**
 	    Asks for the window to fill the screen, or to stop (default: off).
 
-	    The answer is wgf_window_is_fullscreen, not the return value.
-	    - Returns false if there is nothing to request (see wgf_window_can_fullscreen).
-	    - Returns true if the request was made. That doesn't mean it was granted. Even on the
-	      desktop, the switch has not happened yet when this returns.
-
-	    On the web the browser grants it only inside a tap, a click, or a key press, and a frame
-	    comes after those. So a refused request is held, and asked again inside the next one.
-	    - Asked as Play is pressed, it is granted by that tap's release or the next.
-	    - Asked at start, it is granted by the player's first tap anywhere.
-	    - Once granted, it is no longer held. A player who leaves fullscreen stays out until it is
-	      asked again.
-
-	    Asked before the window opens, the window opens filling the screen. On the web the request
-	    is held for the first tap.
-
-	    The call is named request_ because the platform may refuse it, as every such call is.
+	    See Window.requestFullscreen for the rest.
 	**/
 	public static inline function isFullscreen():Bool
 		return Raw.wgf_window_is_fullscreen();
@@ -146,9 +113,7 @@ class Window {
 	/**
 	    Sets or gets where the window is: its top-left in the desktop's coordinates.
 
-	    0, 0 is the top-left of the main monitor. These work only once the window is open. Setting
-	    returns false, and getting returns 0, where programs don't place their windows: the web, and
-	    a Wayland desktop, whose compositor places them.
+	    See Window.setPosition for the rest.
 	**/
 	public static inline function getX():Int
 		return Raw.wgf_window_get_x();
@@ -156,9 +121,7 @@ class Window {
 	/**
 	    Sets or gets where the window is: its top-left in the desktop's coordinates.
 
-	    0, 0 is the top-left of the main monitor. These work only once the window is open. Setting
-	    returns false, and getting returns 0, where programs don't place their windows: the web, and
-	    a Wayland desktop, whose compositor places them.
+	    See Window.setPosition for the rest.
 	**/
 	public static inline function getY():Int
 		return Raw.wgf_window_get_y();
@@ -180,13 +143,7 @@ class Window {
 	/**
 	    Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
 
-	    - There is at least one monitor: the screen.
-	    - Moving the window to another monitor returns false where programs don't place their
-	      windows.
-	    - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
-	    - A monitor that isn't there gives 0 and "".
-
-	    These work only once the window is open.
+	    See Window.getMonitorCount for the rest.
 	**/
 	public static inline function setMonitor(monitor:Int):Bool
 		return Raw.wgf_window_set_monitor(monitor);
@@ -194,13 +151,7 @@ class Window {
 	/**
 	    Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
 
-	    - There is at least one monitor: the screen.
-	    - Moving the window to another monitor returns false where programs don't place their
-	      windows.
-	    - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
-	    - A monitor that isn't there gives 0 and "".
-
-	    These work only once the window is open.
+	    See Window.getMonitorCount for the rest.
 	**/
 	public static inline function getMonitor():Int
 		return Raw.wgf_window_get_monitor();
@@ -208,13 +159,7 @@ class Window {
 	/**
 	    Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
 
-	    - There is at least one monitor: the screen.
-	    - Moving the window to another monitor returns false where programs don't place their
-	      windows.
-	    - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
-	    - A monitor that isn't there gives 0 and "".
-
-	    These work only once the window is open.
+	    See Window.getMonitorCount for the rest.
 	**/
 	public static inline function getMonitorWidth(monitor:Int):Int
 		return Raw.wgf_window_get_monitor_width(monitor);
@@ -222,13 +167,7 @@ class Window {
 	/**
 	    Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
 
-	    - There is at least one monitor: the screen.
-	    - Moving the window to another monitor returns false where programs don't place their
-	      windows.
-	    - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
-	    - A monitor that isn't there gives 0 and "".
-
-	    These work only once the window is open.
+	    See Window.getMonitorCount for the rest.
 	**/
 	public static inline function getMonitorHeight(monitor:Int):Int
 		return Raw.wgf_window_get_monitor_height(monitor);
@@ -236,13 +175,7 @@ class Window {
 	/**
 	    Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
 
-	    - There is at least one monitor: the screen.
-	    - Moving the window to another monitor returns false where programs don't place their
-	      windows.
-	    - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
-	    - A monitor that isn't there gives 0 and "".
-
-	    These work only once the window is open.
+	    See Window.getMonitorCount for the rest.
 	**/
 	public static inline function getMonitorX(monitor:Int):Int
 		return Raw.wgf_window_get_monitor_x(monitor);
@@ -250,13 +183,7 @@ class Window {
 	/**
 	    Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
 
-	    - There is at least one monitor: the screen.
-	    - Moving the window to another monitor returns false where programs don't place their
-	      windows.
-	    - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
-	    - A monitor that isn't there gives 0 and "".
-
-	    These work only once the window is open.
+	    See Window.getMonitorCount for the rest.
 	**/
 	public static inline function getMonitorY(monitor:Int):Int
 		return Raw.wgf_window_get_monitor_y(monitor);
@@ -264,13 +191,7 @@ class Window {
 	/**
 	    Lists the monitors, numbered 0 up to the count, and sets or gets the one the window is on.
 
-	    - There is at least one monitor: the screen.
-	    - Moving the window to another monitor returns false where programs don't place their
-	      windows.
-	    - A monitor's size is in logical pixels, and its position in the desktop's coordinates.
-	    - A monitor that isn't there gives 0 and "".
-
-	    These work only once the window is open.
+	    See Window.getMonitorCount for the rest.
 	**/
 	public static inline function getMonitorName(monitor:Int):String
 		return Raw.wgf_window_get_monitor_name(monitor);
@@ -287,8 +208,7 @@ class Window {
 	/**
 	    Sets or gets whether the window is shown or hidden (default: shown).
 
-	    The program runs either way. Hiding the window at open, then showing it once loaded, avoids
-	    showing an empty window.
+	    See Window.setVisible for the rest.
 	**/
 	public static inline function isVisible():Bool
 		return Raw.wgf_window_is_visible();
@@ -306,7 +226,7 @@ class Window {
 	    Sets or gets whether the user can resize the window (default: true), and whether it has a
 	    title bar and border (default: true).
 
-	    These are for the desktop only. The web ignores them.
+	    See Window.setResizable for the rest.
 	**/
 	public static inline function isResizable():Bool
 		return Raw.wgf_window_is_resizable();
@@ -315,7 +235,7 @@ class Window {
 	    Sets or gets whether the user can resize the window (default: true), and whether it has a
 	    title bar and border (default: true).
 
-	    These are for the desktop only. The web ignores them.
+	    See Window.setResizable for the rest.
 	**/
 	public static inline function setDecorated(decorated:Bool):Void
 		Raw.wgf_window_set_decorated(decorated);
@@ -324,7 +244,7 @@ class Window {
 	    Sets or gets whether the user can resize the window (default: true), and whether it has a
 	    title bar and border (default: true).
 
-	    These are for the desktop only. The web ignores them.
+	    See Window.setResizable for the rest.
 	**/
 	public static inline function isDecorated():Bool
 		return Raw.wgf_window_is_decorated();
@@ -376,18 +296,7 @@ class Window {
 	/**
 	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
 
-	      transparent  what is behind the window shows through where gfx clears with
-	                   alpha below 1 (default: off). Desktop: where the window system
-	                   allows it. Web: the page under the canvas shows
-	      high_dpi     draw at the display's full density (default: on). Off draws one
-	                   pixel per logical pixel, scaled up by the display: fewer pixels,
-	                   softer edges
-	      vsync        wait for the display between frames (default: on). Off runs as
-	                   fast as it can, or at the target fps. The web is always in step
-	                   with the display
-	      msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-	                   is a request, and a platform may give fewer samples. gfx draws
-	                   with what the window got
+	    See Window.setTransparent for the rest.
 	**/
 	public static inline function isTransparent():Bool
 		return Raw.wgf_window_is_transparent();
@@ -395,18 +304,7 @@ class Window {
 	/**
 	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
 
-	      transparent  what is behind the window shows through where gfx clears with
-	                   alpha below 1 (default: off). Desktop: where the window system
-	                   allows it. Web: the page under the canvas shows
-	      high_dpi     draw at the display's full density (default: on). Off draws one
-	                   pixel per logical pixel, scaled up by the display: fewer pixels,
-	                   softer edges
-	      vsync        wait for the display between frames (default: on). Off runs as
-	                   fast as it can, or at the target fps. The web is always in step
-	                   with the display
-	      msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-	                   is a request, and a platform may give fewer samples. gfx draws
-	                   with what the window got
+	    See Window.setTransparent for the rest.
 	**/
 	public static inline function setHighDpi(high_dpi:Bool):Bool
 		return Raw.wgf_window_set_high_dpi(high_dpi);
@@ -414,18 +312,7 @@ class Window {
 	/**
 	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
 
-	      transparent  what is behind the window shows through where gfx clears with
-	                   alpha below 1 (default: off). Desktop: where the window system
-	                   allows it. Web: the page under the canvas shows
-	      high_dpi     draw at the display's full density (default: on). Off draws one
-	                   pixel per logical pixel, scaled up by the display: fewer pixels,
-	                   softer edges
-	      vsync        wait for the display between frames (default: on). Off runs as
-	                   fast as it can, or at the target fps. The web is always in step
-	                   with the display
-	      msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-	                   is a request, and a platform may give fewer samples. gfx draws
-	                   with what the window got
+	    See Window.setTransparent for the rest.
 	**/
 	public static inline function isHighDpi():Bool
 		return Raw.wgf_window_is_high_dpi();
@@ -433,18 +320,7 @@ class Window {
 	/**
 	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
 
-	      transparent  what is behind the window shows through where gfx clears with
-	                   alpha below 1 (default: off). Desktop: where the window system
-	                   allows it. Web: the page under the canvas shows
-	      high_dpi     draw at the display's full density (default: on). Off draws one
-	                   pixel per logical pixel, scaled up by the display: fewer pixels,
-	                   softer edges
-	      vsync        wait for the display between frames (default: on). Off runs as
-	                   fast as it can, or at the target fps. The web is always in step
-	                   with the display
-	      msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-	                   is a request, and a platform may give fewer samples. gfx draws
-	                   with what the window got
+	    See Window.setTransparent for the rest.
 	**/
 	public static inline function setVsync(vsync:Bool):Bool
 		return Raw.wgf_window_set_vsync(vsync);
@@ -452,18 +328,7 @@ class Window {
 	/**
 	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
 
-	      transparent  what is behind the window shows through where gfx clears with
-	                   alpha below 1 (default: off). Desktop: where the window system
-	                   allows it. Web: the page under the canvas shows
-	      high_dpi     draw at the display's full density (default: on). Off draws one
-	                   pixel per logical pixel, scaled up by the display: fewer pixels,
-	                   softer edges
-	      vsync        wait for the display between frames (default: on). Off runs as
-	                   fast as it can, or at the target fps. The web is always in step
-	                   with the display
-	      msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-	                   is a request, and a platform may give fewer samples. gfx draws
-	                   with what the window got
+	    See Window.setTransparent for the rest.
 	**/
 	public static inline function isVsync():Bool
 		return Raw.wgf_window_is_vsync();
@@ -471,18 +336,7 @@ class Window {
 	/**
 	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
 
-	      transparent  what is behind the window shows through where gfx clears with
-	                   alpha below 1 (default: off). Desktop: where the window system
-	                   allows it. Web: the page under the canvas shows
-	      high_dpi     draw at the display's full density (default: on). Off draws one
-	                   pixel per logical pixel, scaled up by the display: fewer pixels,
-	                   softer edges
-	      vsync        wait for the display between frames (default: on). Off runs as
-	                   fast as it can, or at the target fps. The web is always in step
-	                   with the display
-	      msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-	                   is a request, and a platform may give fewer samples. gfx draws
-	                   with what the window got
+	    See Window.setTransparent for the rest.
 	**/
 	public static inline function setMsaa(msaa:Bool):Bool
 		return Raw.wgf_window_set_msaa(msaa);
@@ -490,18 +344,7 @@ class Window {
 	/**
 	    Sets or gets options fixed when the window opens. A setter returns false once it has opened.
 
-	      transparent  what is behind the window shows through where gfx clears with
-	                   alpha below 1 (default: off). Desktop: where the window system
-	                   allows it. Web: the page under the canvas shows
-	      high_dpi     draw at the display's full density (default: on). Off draws one
-	                   pixel per logical pixel, scaled up by the display: fewer pixels,
-	                   softer edges
-	      vsync        wait for the display between frames (default: on). Off runs as
-	                   fast as it can, or at the target fps. The web is always in step
-	                   with the display
-	      msaa         smooth edges by drawing with 4 samples a pixel (default: off). It
-	                   is a request, and a platform may give fewer samples. gfx draws
-	                   with what the window got
+	    See Window.setTransparent for the rest.
 	**/
 	public static inline function isMsaa():Bool
 		return Raw.wgf_window_is_msaa();
@@ -536,14 +379,7 @@ class Window {
 	    Returns the safe area's insets: how far in from each edge of the window the display covers
 	    or keeps for itself, in logical pixels.
 
-	    That covered area is a phone's notch, rounded corners, and home indicator, where a HUD and
-	    buttons shouldn't go.
-	    - On the web, they are the page's CSS safe-area insets (env(safe-area-inset-*)), less what
-	      lies outside the canvas, each at most the window's size. A browser reports them only to a
-	      page whose viewport meta has viewport-fit=cover, as libwgf's pages do.
-	    - Natively they are 0, since nothing covers a desktop's window.
-
-	    They are read as they are now, and change as the device turns or the window is resized.
+	    See Window.getSafeInsetTop for the rest.
 	**/
 	public static inline function getSafeInsetRight():Int
 		return Raw.wgf_window_get_safe_inset_right();
@@ -552,14 +388,7 @@ class Window {
 	    Returns the safe area's insets: how far in from each edge of the window the display covers
 	    or keeps for itself, in logical pixels.
 
-	    That covered area is a phone's notch, rounded corners, and home indicator, where a HUD and
-	    buttons shouldn't go.
-	    - On the web, they are the page's CSS safe-area insets (env(safe-area-inset-*)), less what
-	      lies outside the canvas, each at most the window's size. A browser reports them only to a
-	      page whose viewport meta has viewport-fit=cover, as libwgf's pages do.
-	    - Natively they are 0, since nothing covers a desktop's window.
-
-	    They are read as they are now, and change as the device turns or the window is resized.
+	    See Window.getSafeInsetTop for the rest.
 	**/
 	public static inline function getSafeInsetBottom():Int
 		return Raw.wgf_window_get_safe_inset_bottom();
@@ -568,14 +397,7 @@ class Window {
 	    Returns the safe area's insets: how far in from each edge of the window the display covers
 	    or keeps for itself, in logical pixels.
 
-	    That covered area is a phone's notch, rounded corners, and home indicator, where a HUD and
-	    buttons shouldn't go.
-	    - On the web, they are the page's CSS safe-area insets (env(safe-area-inset-*)), less what
-	      lies outside the canvas, each at most the window's size. A browser reports them only to a
-	      page whose viewport meta has viewport-fit=cover, as libwgf's pages do.
-	    - Natively they are 0, since nothing covers a desktop's window.
-
-	    They are read as they are now, and change as the device turns or the window is resized.
+	    See Window.getSafeInsetTop for the rest.
 	**/
 	public static inline function getSafeInsetLeft():Int
 		return Raw.wgf_window_get_safe_inset_left();

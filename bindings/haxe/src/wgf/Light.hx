@@ -18,7 +18,7 @@ import wgf.impl.Raw;
 	/**
 	    Creates a white light of intensity 1, with no range limit, and a spot cone of pi/6 to pi/4.
 
-	    Returns 0 if `type` isn't a light type, or if there is no room for another actor.
+	    See Light.create for the rest.
 	**/
 	public inline function getType():LightType
 		return Raw.wgf_light_get_type(this);
@@ -46,7 +46,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how strong the light is: its color times this (default: 1).
 
-	    It is clamped to 0 or more.
+	    See Light.setIntensity for the rest.
 	**/
 	public inline function getIntensity():Float
 		return Raw.wgf_light_get_intensity(this);
@@ -62,7 +62,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how far a point or spot light reaches, in units (default: 0, unlimited).
 
-	    The light fades to nothing at its range. A range below 0 is clamped to 0.
+	    See Light.setRange for the rest.
 	**/
 	public inline function getRange():Float
 		return Raw.wgf_light_get_range(this);
@@ -83,12 +83,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a spot light's cone, in radians from its direction.
 
-	    - Inside `inner`, the light is full.
-	    - Past `outer`, there is none.
-	    - Between them, it fades smoothly.
-
-	    These are glTF's innerConeAngle and outerConeAngle. `outer` is clamped to 0..pi/2, and
-	    `inner` to 0..outer.
+	    See Light.setSpotCone for the rest.
 	**/
 	public inline function getSpotInnerAngle():Float
 		return Raw.wgf_light_get_spot_inner_angle(this);
@@ -96,12 +91,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a spot light's cone, in radians from its direction.
 
-	    - Inside `inner`, the light is full.
-	    - Past `outer`, there is none.
-	    - Between them, it fades smoothly.
-
-	    These are glTF's innerConeAngle and outerConeAngle. `outer` is clamped to 0..pi/2, and
-	    `inner` to 0..outer.
+	    See Light.setSpotCone for the rest.
 	**/
 	public inline function getSpotOuterAngle():Float
 		return Raw.wgf_light_get_spot_outer_angle(this);
@@ -129,19 +119,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets whether the light casts shadows (default: off).
 
-	    A casting light draws what it can see into a depth map once a frame. Surfaces behind another
-	    surface are then darkened. Shadows are off by default because a map costs a pass and its
-	    memory.
-
-	    - Models cast and receive shadows (wgf_model_set_shadow_casting and
-	      wgf_model_set_shadow_receiving; both on by default). Their see-through parts cast nothing.
-	    - Directional and spot lights cast. A point light doesn't: turning it on is refused (returns
-	      false, warned), since it would need six maps, one each way.
-	    - Up to 4 lights cast at once: the first ones a stage's draw finds in its tree. Past that, a
-	      light lights the stage without shadowing it.
-	    - Shadows fall on the frame's first stage drawn with a casting light. A stage drawn after it
-	      (a HUD's) is lit without shadows.
-	    - A model out of the camera's view still casts when its shadow reaches the view.
+	    See Light.setShadowCasting for the rest.
 	**/
 	public inline function isShadowCasting():Bool
 		return Raw.wgf_light_is_shadow_casting(this);
@@ -162,12 +140,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how far the light's shadows reach, in units (default: 50).
 
-	    - A directional light covers that much of what the camera sees. It uses one map, fitted
-	      around the view and snapped to its texels (no cascades). So a shorter distance gives a
-	      sharper shadow.
-	    - A spot light covers its cone out to this distance or its range, whichever is nearer.
-
-	    set_shadow_distance returns false, and changes nothing, for a distance of 0 or less.
+	    See Light.setShadowDistance for the rest.
 	**/
 	public inline function getShadowDistance():Float
 		return Raw.wgf_light_get_shadow_distance(this);
@@ -187,11 +160,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the size of the light's shadow map, in pixels each way (default: 2048).
 
-	    The size is clamped to 256..4096 and rounded down to a power of two. Bigger is sharper and
-	    slower. The casting lights share one map, so they all get the largest size any of them asked
-	    for. get_shadow_map_size returns the size the GPU gets.
-
-	    set_shadow_map_size returns false for a size below 1.
+	    See Light.setShadowMapSize for the rest.
 	**/
 	public inline function getShadowMapSize():Int
 		return Raw.wgf_light_get_shadow_map_size(this);
@@ -207,7 +176,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how much of the light a shadow blocks, 0..1 (default: 1, all of it).
 
-	    It is clamped to 0..1.
+	    See Light.setShadowStrength for the rest.
 	**/
 	public inline function getShadowStrength():Float
 		return Raw.wgf_light_get_shadow_strength(this);
@@ -223,7 +192,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets a color mixed into what a shadow leaves behind (default: black, nothing added).
 
-	    It is scaled by how deep the shadow is. Use it to stylize shadows, as blue or warm ones.
+	    See Light.setShadowColor for the rest.
 	**/
 	public inline function getShadowColor():Int
 		return Raw.wgf_light_get_shadow_color(this);
@@ -247,13 +216,7 @@ import wgf.impl.Raw;
 	    Sets or gets the depth offsets that keep a surface from shadowing itself, in shadow-map
 	    texels (default: 1 and 4).
 
-	    - `constant` always applies.
-	    - `slope` is scaled by how steeply the surface faces away from the light.
-
-	    Too little bias and lit surfaces stripe ("shadow acne"). Too much, and a shadow creeps away
-	    from its caster.
-
-	    set_shadow_bias returns false, and changes nothing, if either is negative.
+	    See Light.setShadowBias for the rest.
 	**/
 	public inline function getShadowBiasConstant():Float
 		return Raw.wgf_light_get_shadow_bias_constant(this);
@@ -262,13 +225,7 @@ import wgf.impl.Raw;
 	    Sets or gets the depth offsets that keep a surface from shadowing itself, in shadow-map
 	    texels (default: 1 and 4).
 
-	    - `constant` always applies.
-	    - `slope` is scaled by how steeply the surface faces away from the light.
-
-	    Too little bias and lit surfaces stripe ("shadow acne"). Too much, and a shadow creeps away
-	    from its caster.
-
-	    set_shadow_bias returns false, and changes nothing, if either is negative.
+	    See Light.setShadowBias for the rest.
 	**/
 	public inline function getShadowBiasSlope():Float
 		return Raw.wgf_light_get_shadow_bias_slope(this);

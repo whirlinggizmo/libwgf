@@ -78,10 +78,7 @@ class Tilt {
 	    Returns how far the device is tilted from level, -1 to 1. A tilt of the range's degrees
 	    reads 1 (see wgf_tilt_set_range).
 
-	    - x is across the screen, right positive.
-	    - y is up and down the screen, down positive.
-
-	    Returns 0 while calibrating, or while the status isn't ON.
+	    See Tilt.getX for the rest.
 	**/
 	public static inline function getY():Float
 		return Raw.wgf_tilt_get_y();

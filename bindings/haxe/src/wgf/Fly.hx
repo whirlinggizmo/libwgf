@@ -48,11 +48,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the mode the camera is flown in (default: NONE).
 
-	    - NONE stops flying it. It stays where it is, and its settings are kept.
-	    - When it starts flying, its look is taken from where it faces now.
-
-	    set_mode returns false if `camera` isn't a 3D camera, if `mode` isn't a mode, or if 64
-	    cameras already have a mode or a setting.
+	    See Fly.setMode for the rest.
 	**/
 	public inline function getMode():FlyMode
 		return Raw.wgf_fly_get_mode(this);
@@ -71,10 +67,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how fast the camera moves, in world units a second (default: 5.4).
 
-	    A stick pushed part way moves it at that part of the speed.
-
-	    set_speed returns false for a negative speed. Like every setter here, it also returns false
-	    for a camera set_mode would refuse.
+	    See Fly.setSpeed for the rest.
 	**/
 	public inline function getSpeed():Float
 		return Raw.wgf_fly_get_speed(this);
@@ -94,9 +87,7 @@ import wgf.impl.Raw;
 	    Sets or gets how far the mouse turns the camera, in radians a logical pixel (default:
 	    0.003).
 
-	    At 0, the mouse doesn't look.
-
-	    set_sensitivity returns false for a negative value.
+	    See Fly.setSensitivity for the rest.
 	**/
 	public inline function getSensitivity():Float
 		return Raw.wgf_fly_get_sensitivity(this);
@@ -114,7 +105,7 @@ import wgf.impl.Raw;
 	    Sets or gets how fast a stick pushed all the way turns the camera, in radians a second
 	    (default: 2).
 
-	    set_turn_speed returns false for a negative value.
+	    See Fly.setTurnSpeed for the rest.
 	**/
 	public inline function getTurnSpeed():Float
 		return Raw.wgf_fly_get_turn_speed(this);
@@ -135,12 +126,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where the camera looks. Setting it turns the camera at once.
 
-	    - `yaw` is in radians about y. 0 faces -z, and a quarter turn faces -x.
-	    - `pitch` is in radians up, clamped to just short of straight up or down.
-
-	    get_look returns where it looks now, as yaw (-pi to pi) and pitch.
-
-	    set_look returns false for a value that isn't finite.
+	    See Fly.setLook for the rest.
 	**/
 	public inline function getLook(?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_fly_get_look(this, into);
@@ -158,9 +144,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets whether the mouse looks only while its right button is held (default: false).
 
-	    - true: the mouse looks only while the right button is held, and the pointer is locked while
-	      it is. Use it for a debug camera beside a game's own clicks.
-	    - false: the mouse always looks, and the pointer is locked while the camera flies.
+	    See Fly.setLookHeld for the rest.
 	**/
 	public inline function isLookHeld():Bool
 		return Raw.wgf_fly_is_look_held(this);

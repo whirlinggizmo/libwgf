@@ -22,8 +22,7 @@ class Version {
 	/**
 	    Returns one part of the libwgf version as a number.
 
-	    A binding checks these numbers at start against the version it was built for. It refuses
-	    a library of another major or minor version. A different patch number is compatible.
+	    See Version.getMajor for the rest.
 	**/
 	public static inline function getMinor():Int
 		return Raw.wgf_version_get_minor();
@@ -31,8 +30,7 @@ class Version {
 	/**
 	    Returns one part of the libwgf version as a number.
 
-	    A binding checks these numbers at start against the version it was built for. It refuses
-	    a library of another major or minor version. A different patch number is compatible.
+	    See Version.getMajor for the rest.
 	**/
 	public static inline function getPatch():Int
 		return Raw.wgf_version_get_patch();

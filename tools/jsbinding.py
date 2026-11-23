@@ -121,7 +121,7 @@ def jsdoc(text):
 class Emitter:
     def __init__(self, binding):
         self.b = binding
-        self.docs = binding.docs()
+        self.docs = binding.member_docs()
 
     # ---- types -----------------------------------------------------------------------
 

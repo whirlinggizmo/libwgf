@@ -82,8 +82,7 @@ class Mouse {
 	    Sets or gets whether the pointer is locked to the window and hidden, for mouse look
 	    (default: off).
 
-	    While locked, the position stays put and the delta keeps coming. On the web the browser
-	    grants the lock only during a click or key press, and the user can end it (Escape).
+	    See Mouse.setLocked for the rest.
 	**/
 	public static inline function isLocked():Bool
 		return Raw.wgf_mouse_is_locked();

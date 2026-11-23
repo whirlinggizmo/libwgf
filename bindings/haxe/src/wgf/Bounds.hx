@@ -49,10 +49,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets whether the rectangle is the presentation's visible area (default: off).
 
-	    The visible area (wgf_presentation.h) is read each tick. An actor that wraps at the screen's
-	    edge then wraps at the window's edge, whatever its size. A scene file sets this with
-	    `bounds visible=true`. get_rect returns the rectangle as it is now. Setting a rectangle
-	    turns this off.
+	    See Bounds.setVisible for the rest.
 	**/
 	public inline function isVisible():Bool
 		return Raw.wgf_bounds_is_visible(this);

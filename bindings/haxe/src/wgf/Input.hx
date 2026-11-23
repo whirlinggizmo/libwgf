@@ -37,12 +37,7 @@ class Input {
 	    Sets or gets whether a UI has the pointer or the keyboard, so game controls should leave it
 	    alone.
 
-	    Game controls are camera drags, selection, and hotkeys. The flags are advisory: input keeps
-	    reporting everything, and game code checks these first.
-
-	    Each is captured while the game's UI says so, and a setting stays until it is set again.
-	    libwgf's UI (wgf_ui.h) sets both from its own hit testing and focus in every frame it is
-	    drawn. It lets them go in a frame it isn't drawn.
+	    See Input.setPointerCaptured for the rest.
 	**/
 	public static inline function isPointerCaptured():Bool
 		return Raw.wgf_input_is_pointer_captured();
@@ -51,12 +46,7 @@ class Input {
 	    Sets or gets whether a UI has the pointer or the keyboard, so game controls should leave it
 	    alone.
 
-	    Game controls are camera drags, selection, and hotkeys. The flags are advisory: input keeps
-	    reporting everything, and game code checks these first.
-
-	    Each is captured while the game's UI says so, and a setting stays until it is set again.
-	    libwgf's UI (wgf_ui.h) sets both from its own hit testing and focus in every frame it is
-	    drawn. It lets them go in a frame it isn't drawn.
+	    See Input.setPointerCaptured for the rest.
 	**/
 	public static inline function setKeyboardCaptured(captured:Bool):Void
 		Raw.wgf_input_set_keyboard_captured(captured);
@@ -65,12 +55,7 @@ class Input {
 	    Sets or gets whether a UI has the pointer or the keyboard, so game controls should leave it
 	    alone.
 
-	    Game controls are camera drags, selection, and hotkeys. The flags are advisory: input keeps
-	    reporting everything, and game code checks these first.
-
-	    Each is captured while the game's UI says so, and a setting stays until it is set again.
-	    libwgf's UI (wgf_ui.h) sets both from its own hit testing and focus in every frame it is
-	    drawn. It lets them go in a frame it isn't drawn.
+	    See Input.setPointerCaptured for the rest.
 	**/
 	public static inline function isKeyboardCaptured():Bool
 		return Raw.wgf_input_is_keyboard_captured();
@@ -91,12 +76,7 @@ class Input {
 	/**
 	    Sets or gets the text on the system's clipboard.
 
-	    - Text is UTF-8, at most 64 KB.
-	    - The string read is valid until the next clipboard call.
-	    - On the web, a copy works only in the frame of an input, as browsers allow. A read returns
-	      what the page last copied or was pasted.
-
-	    wgf_input_set_clipboard returns false for NULL.
+	    See Input.setClipboard for the rest.
 	**/
 	public static inline function getClipboard():String
 		return Raw.wgf_input_get_clipboard();

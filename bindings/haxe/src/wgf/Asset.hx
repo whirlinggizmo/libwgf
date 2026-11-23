@@ -156,9 +156,7 @@ class Asset {
 	/**
 	    Sets or gets whether the program does downloads (default: off).
 
-	    Turning it off fails the requests not yet taken, at the next update. Requests already
-	    taken are still answered. The setter returns false on the web, where the browser
-	    downloads.
+	    See Asset.setFetching for the rest.
 	**/
 	public static inline function isFetching():Bool
 		return Raw.wgf_asset_is_fetching();
@@ -182,8 +180,7 @@ class Asset {
 	/**
 	    Returns the URL a request downloads, and the destination to write it to.
 
-	    Each string is borrowed, valid until the next call. Returns "" for a handle that isn't a
-	    request waiting on its answer, and for a ping's destination.
+	    See Asset.fetchGetUrl for the rest.
 	**/
 	public static inline function fetchGetDest(request:AssetTask):String
 		return Raw.wgf_asset_fetch_get_dest(request);
@@ -228,13 +225,7 @@ class Asset {
 	    Sets or gets the fetch timeout, natively: the seconds a request may go unanswered, once
 	    the downloader has taken it, before it fails (default: 0, which waits for ever).
 
-	    Only a downloader can tell a slow download from a stalled one, as curl's low-speed limit
-	    does. So the default hides nothing: a downloader that drops requests is a bug that shows
-	    as tasks staying PENDING.
-
-	    The setter returns false for a negative or non-finite value. It also returns false on
-	    the web, where the browser fetches and the fetch has no timeout of its own, and stores
-	    nothing there.
+	    See Asset.setFetchTimeout for the rest.
 	**/
 	public static inline function getFetchTimeout():Float
 		return Raw.wgf_asset_get_fetch_timeout();
@@ -422,28 +413,7 @@ class Asset {
 	    mods, translations, or a CDN. Files whose path starts with `prefix` are looked for under
 	    `target` instead:
 
-	      wgf_asset_add_redirect("textures/", "mods/hd/textures/");
-	          textures/rock.png loads mods/hd/textures/rock.png if it exists, else its own
-	      wgf_asset_add_redirect("models/", "https://cdn.example.com/game/models/");
-	          a target with "://" is where the file downloads from (by the browser, or
-	          natively by the program's fetcher). It is still cached and loaded as models/...
-
-	    - Path rules stack. Every matching rule is tried, the last added first, then the file's
-	      own path. So later rules sit on top: a mod over a mod, or fr-CA over fr.
-	    - A file missing under a path rule isn't an error. The next rule is tried (on the web,
-	      with a request each).
-	    - A download rule doesn't stack. The newest matching one is where the file downloads
-	      from.
-	    - Prefixes are plain text, matched at the start: "textures/", not "*.png".
-
-	    Redirects apply to every file a create loads, or an ensure makes local unless it gave a
-	    fetch_url. They also apply to the files those name, such as a model's buffers and images,
-	    beside wherever the model came from. wgf_resource_get_path and wgf_asset_task_get_path
-	    say which file was found.
-
-	    There can be up to 32 rules. add_redirect returns false when they are full, for an empty
-	    prefix or target, or for a prefix or path target not under the host (as
-	    wgf_asset_ensure reads a path). A trailing "/" is kept.
+	    See Asset.addRedirect for the rest.
 	**/
 	public static inline function clearRedirects():Void
 		Raw.wgf_asset_clear_redirects();

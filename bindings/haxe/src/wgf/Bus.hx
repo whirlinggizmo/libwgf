@@ -87,12 +87,7 @@ abstract Bus(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the bus's volume.
 
-	    - 1 plays its voices as they are.
-	    - 0 is silent.
-	    - Above 1 is louder, and may clip.
-
-	    Setting it ends a fade. Returns false for a negative or non-finite volume, and for a handle
-	    that isn't a bus.
+	    See Bus.setVolume for the rest.
 	**/
 	public inline function getVolume():Float
 		return Raw.wgf_bus_get_volume(this);
@@ -109,8 +104,7 @@ abstract Bus(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets whether the bus is muted.
 
-	    While muted, its heard volume is 0, and so is everything heard through it or a bus under it.
-	    Its volume is kept for unmuting. Returns false only for a handle that isn't a bus.
+	    See Bus.setMuted for the rest.
 	**/
 	public inline function isMuted():Bool
 		return Raw.wgf_bus_is_muted(this);
@@ -141,13 +135,7 @@ abstract Bus(Int) from Int to Int to wgf.Handle {
 	/**
 	    Fades the bus's volume to `volume` over `seconds` of the runtime's frames.
 
-	    - The fade is even in decibels, as an ear hears it. Silence is taken as -60 dB.
-	    - 0 seconds or less sets the volume at once.
-	    - A new fade, or setting the volume, ends the fade before it.
-	    - wgf_bus_is_fading returns whether a fade has not yet ended.
-
-	    Returns false for a negative or non-finite volume, non-finite seconds, or a handle that isn't
-	    a bus.
+	    See Bus.fade for the rest.
 	**/
 	public inline function isFading():Bool
 		return Raw.wgf_bus_is_fading(this);

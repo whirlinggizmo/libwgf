@@ -65,9 +65,7 @@ class Loop {
 	    Sets or gets how fast ticks run against real time (default: 1). A scale below 0 is
 	    clamped to 0.
 
-	    - 1 is normal speed.
-	    - 0.5 is slow motion.
-	    - 0 is paused: no ticks run, while frames still draw and read input.
+	    See Loop.setTimeScale for the rest.
 	**/
 	public static inline function getTimeScale():Float
 		return Raw.wgf_loop_get_time_scale();
@@ -102,8 +100,7 @@ class Loop {
 	    Sets or gets the most frames a second, to save power or heat. 0 or less is the
 	    display's rate (default: 0).
 
-	    With vsync on, a cap can only lower the rate. On the web, a frame the browser offers too
-	    early is skipped.
+	    See Loop.setTargetFps for the rest.
 	**/
 	public static inline function getTargetFps():Int
 		return Raw.wgf_loop_get_target_fps();

@@ -103,12 +103,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's shape, centered on the actor (default: a box of 1 by 1 by 1).
 
-	    - `x`, `y`, `z` mean what the shape says (see wgf_body3d_shape_t). Each is at least 0.01.
-	    - CONVEX and MESH take no size. Their models' meshes are read when the body is made, and
-	      a model not yet loaded is left out.
-	    - A mesh can only be static. On another type it is its convex hull.
-
-	    get_size returns `x`, `y`, `z` as set.
+	    See Body3d.setShape for the rest.
 	**/
 	public inline function getShape():Body3dShape
 		return Raw.wgf_body3d_get_shape(this);
@@ -116,12 +111,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's shape, centered on the actor (default: a box of 1 by 1 by 1).
 
-	    - `x`, `y`, `z` mean what the shape says (see wgf_body3d_shape_t). Each is at least 0.01.
-	    - CONVEX and MESH take no size. Their models' meshes are read when the body is made, and
-	      a model not yet loaded is left out.
-	    - A mesh can only be static. On another type it is its convex hull.
-
-	    get_size returns `x`, `y`, `z` as set.
+	    See Body3d.setShape for the rest.
 	**/
 	public inline function getSize(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_body3d_get_size(this, into);
@@ -142,10 +132,7 @@ import wgf.impl.Raw;
 	    Sets or gets the shape's offset and the center of mass's offset, in the actor's space
 	    (default: 0, 0, 0 for each).
 
-	    - The offset is where the shape is centered from its actor. Use it for a gate's sensor on
-	      the road, with its actor at the gate's foot.
-	    - The mass offset is how far the center of mass is from the shape's own. Set it low on a
-	      car, so it doesn't roll.
+	    See Body3d.setOffset for the rest.
 	**/
 	public inline function getOffset(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_body3d_get_offset(this, into);
@@ -154,10 +141,7 @@ import wgf.impl.Raw;
 	    Sets or gets the shape's offset and the center of mass's offset, in the actor's space
 	    (default: 0, 0, 0 for each).
 
-	    - The offset is where the shape is centered from its actor. Use it for a gate's sensor on
-	      the road, with its actor at the gate's foot.
-	    - The mass offset is how far the center of mass is from the shape's own. Set it low on a
-	      car, so it doesn't roll.
+	    See Body3d.setOffset for the rest.
 	**/
 	public inline function setMassOffset(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_body3d_set_mass_offset(this, x, y, z);
@@ -166,10 +150,7 @@ import wgf.impl.Raw;
 	    Sets or gets the shape's offset and the center of mass's offset, in the actor's space
 	    (default: 0, 0, 0 for each).
 
-	    - The offset is where the shape is centered from its actor. Use it for a gate's sensor on
-	      the road, with its actor at the gate's foot.
-	    - The mass offset is how far the center of mass is from the shape's own. Set it low on a
-	      car, so it doesn't roll.
+	    See Body3d.setOffset for the rest.
 	**/
 	public inline function getMassOffset(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_body3d_get_mass_offset(this, into);
@@ -200,8 +181,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets friction and bounce. Each is taken for a pair of bodies together.
 
-	    - friction: 0 is ice and 1 is rubber (default: 0.5). It is clamped to 0 or more.
-	    - bounce: 0 is none and 1 is all of it (default: 0). It is clamped to 0 to 1.
+	    See Body3d.setFriction for the rest.
 	**/
 	public inline function getFriction():Float
 		return Raw.wgf_body3d_get_friction(this);
@@ -209,8 +189,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets friction and bounce. Each is taken for a pair of bodies together.
 
-	    - friction: 0 is ice and 1 is rubber (default: 0.5). It is clamped to 0 or more.
-	    - bounce: 0 is none and 1 is all of it (default: 0). It is clamped to 0 to 1.
+	    See Body3d.setFriction for the rest.
 	**/
 	public inline function setBounce(bounce:Float):Bool
 		return Raw.wgf_body3d_set_bounce(this, bounce);
@@ -218,8 +197,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets friction and bounce. Each is taken for a pair of bodies together.
 
-	    - friction: 0 is ice and 1 is rubber (default: 0.5). It is clamped to 0 or more.
-	    - bounce: 0 is none and 1 is all of it (default: 0). It is clamped to 0 to 1.
+	    See Body3d.setFriction for the rest.
 	**/
 	public inline function getBounce():Float
 		return Raw.wgf_body3d_get_bounce(this);
@@ -257,15 +235,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
 
-	    Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
-	    (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
-
-	    - Each is 15 bits (1 to 0x7FFF).
-	    - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
-	      them, whatever their masks are.
-	    - To make two bodies pass through each other, leave each one's layer out of the other's
-	      mask. That goes for a moving body and a static one too.
-	    - Two static bodies never meet.
+	    See Body3d.setLayer for the rest.
 	**/
 	public inline function getLayer():Int
 		return Raw.wgf_body3d_get_layer(this);
@@ -273,15 +243,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
 
-	    Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
-	    (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
-
-	    - Each is 15 bits (1 to 0x7FFF).
-	    - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
-	      them, whatever their masks are.
-	    - To make two bodies pass through each other, leave each one's layer out of the other's
-	      mask. That goes for a moving body and a static one too.
-	    - Two static bodies never meet.
+	    See Body3d.setLayer for the rest.
 	**/
 	public inline function setMask(mask:Int):Bool
 		return Raw.wgf_body3d_set_mask(this, mask);
@@ -289,15 +251,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's layer and mask: what it meets (defaults: layer 1, mask every layer).
 
-	    Two bodies meet when either one's mask has a bit of the other's layer, as two colliders do
-	    (wgf_collider.h). Meeting means they collide, or a sensor tells of the other.
-
-	    - Each is 15 bits (1 to 0x7FFF).
-	    - Put the mask on the body that cares: a bullet whose mask has the enemies' layer meets
-	      them, whatever their masks are.
-	    - To make two bodies pass through each other, leave each one's layer out of the other's
-	      mask. That goes for a moving body and a static one too.
-	    - Two static bodies never meet.
+	    See Body3d.setLayer for the rest.
 	**/
 	public inline function getMask():Int
 		return Raw.wgf_body3d_get_mask(this);
@@ -318,12 +272,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's velocity and spin, in its stage's space, or gives it a push.
 
-	    - The velocity is in units a second.
-	    - The spin is in radians a second about each axis.
-	    - add_impulse pushes it through its center, in kilogram units a second.
-
-	    A body not yet made in the world (before its first tick) reads 0, and takes them when it
-	    is made.
+	    See Body3d.setVelocity for the rest.
 	**/
 	public inline function getVelocity(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_body3d_get_velocity(this, into);
@@ -331,12 +280,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's velocity and spin, in its stage's space, or gives it a push.
 
-	    - The velocity is in units a second.
-	    - The spin is in radians a second about each axis.
-	    - add_impulse pushes it through its center, in kilogram units a second.
-
-	    A body not yet made in the world (before its first tick) reads 0, and takes them when it
-	    is made.
+	    See Body3d.setVelocity for the rest.
 	**/
 	public inline function setSpin(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_body3d_set_spin(this, x, y, z);
@@ -344,12 +288,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's velocity and spin, in its stage's space, or gives it a push.
 
-	    - The velocity is in units a second.
-	    - The spin is in radians a second about each axis.
-	    - add_impulse pushes it through its center, in kilogram units a second.
-
-	    A body not yet made in the world (before its first tick) reads 0, and takes them when it
-	    is made.
+	    See Body3d.setVelocity for the rest.
 	**/
 	public inline function getSpin(?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_body3d_get_spin(this, into);
@@ -357,12 +296,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the body's velocity and spin, in its stage's space, or gives it a push.
 
-	    - The velocity is in units a second.
-	    - The spin is in radians a second about each axis.
-	    - add_impulse pushes it through its center, in kilogram units a second.
-
-	    A body not yet made in the world (before its first tick) reads 0, and takes them when it
-	    is made.
+	    See Body3d.setVelocity for the rest.
 	**/
 	public inline function addImpulse(x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_body3d_add_impulse(this, x, y, z);

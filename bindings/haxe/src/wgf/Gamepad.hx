@@ -49,8 +49,7 @@ class Gamepad {
 	/**
 	    Returns the state of `button`: UP, PRESSED, DOWN, or RELEASED, as for keys.
 
-	    A pad unplugged while a button is held releases that button. Returns UP for a pad or button
-	    that isn't one.
+	    See Gamepad.getButtonState for the rest.
 	**/
 	public static inline function isDown(pad:Int, button:GamepadButton):Bool
 		return Raw.wgf_gamepad_is_down(pad, button);
@@ -58,8 +57,7 @@ class Gamepad {
 	/**
 	    Returns the state of `button`: UP, PRESSED, DOWN, or RELEASED, as for keys.
 
-	    A pad unplugged while a button is held releases that button. Returns UP for a pad or button
-	    that isn't one.
+	    See Gamepad.getButtonState for the rest.
 	**/
 	public static inline function isPressed(pad:Int, button:GamepadButton):Bool
 		return Raw.wgf_gamepad_is_pressed(pad, button);
@@ -67,8 +65,7 @@ class Gamepad {
 	/**
 	    Returns the state of `button`: UP, PRESSED, DOWN, or RELEASED, as for keys.
 
-	    A pad unplugged while a button is held releases that button. Returns UP for a pad or button
-	    that isn't one.
+	    See Gamepad.getButtonState for the rest.
 	**/
 	public static inline function isReleased(pad:Int, button:GamepadButton):Bool
 		return Raw.wgf_gamepad_is_released(pad, button);
@@ -116,7 +113,7 @@ class Gamepad {
 	/**
 	    Sets or gets the dead zone: how far from the middle a stick still counts as the middle.
 
-	    It is the same for every pad, clamped to 0 to 0.9 (default: 0.15).
+	    See Gamepad.setDeadzone for the rest.
 	**/
 	public static inline function getDeadzone():Float
 		return Raw.wgf_gamepad_get_deadzone();

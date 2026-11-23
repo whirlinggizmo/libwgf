@@ -23,9 +23,7 @@ class Color {
 	/**
 	    Makes a color from components, clamped.
 
-	    - make takes components from 0 to 255.
-	    - make_float takes components from 0 to 1, and rounds to the nearest 8-bit step.
-	    - Out-of-range components saturate. They never spill into the next channel.
+	    See Color.make for the rest.
 	**/
 	public static inline function makeFloat(r:Float, g:Float, b:Float, a:Float):Int
 		return Raw.wgf_color_make_float(r, g, b, a);
@@ -82,11 +80,7 @@ class Color {
 	/**
 	    Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
 
-	    - `hue` is in degrees, wrapped into 0..360.
-	    - `saturation` and `value` are 0..1, clamped.
-	    - `a`, the alpha, is 0..255.
-
-	    Use it to walk a palette round the color wheel, or for a hit flash.
+	    See Color.makeHsv for the rest.
 	**/
 	public static inline function getHue(color:Int):Float
 		return Raw.wgf_color_get_hue(color);
@@ -94,11 +88,7 @@ class Color {
 	/**
 	    Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
 
-	    - `hue` is in degrees, wrapped into 0..360.
-	    - `saturation` and `value` are 0..1, clamped.
-	    - `a`, the alpha, is 0..255.
-
-	    Use it to walk a palette round the color wheel, or for a hit flash.
+	    See Color.makeHsv for the rest.
 	**/
 	public static inline function getSaturation(color:Int):Float
 		return Raw.wgf_color_get_saturation(color);
@@ -106,11 +96,7 @@ class Color {
 	/**
 	    Makes a color from hue, saturation, and value, or gets a color's hue, saturation, and value.
 
-	    - `hue` is in degrees, wrapped into 0..360.
-	    - `saturation` and `value` are 0..1, clamped.
-	    - `a`, the alpha, is 0..255.
-
-	    Use it to walk a palette round the color wheel, or for a hit flash.
+	    See Color.makeHsv for the rest.
 	**/
 	public static inline function getValue(color:Int):Float
 		return Raw.wgf_color_get_value(color);
@@ -128,9 +114,7 @@ class Color {
 	/**
 	    Brightens or multiplies a color.
 
-	    - brighten makes `color` lighter toward white by `amount` (0..1), or darker toward black
-	      by a negative `amount`. Its alpha is kept.
-	    - multiply multiplies two colors channel by channel, as a tint is applied.
+	    See Color.brighten for the rest.
 	**/
 	public static inline function multiply(color:Int, by:Int):Int
 		return Raw.wgf_color_multiply(color, by);

@@ -92,10 +92,7 @@ import wgf.impl.Raw;
 	/**
 	    Returns the column and the row at the point `x`, `y`.
 
-	    The point is in the layer's parent's units: the placed map's, which are the map's pixels
-	    from its top-left. It goes through the layer's own place, turn, and scale. It works outside
-	    the layer too: below 0, or at its columns or rows and past. Returns 0 for an actor that
-	    isn't a placed layer.
+	    See TilemapLayer.getColumnAt for the rest.
 	**/
 	public inline function getRowAt(x:Float, y:Float):Int
 		return Raw.wgf_tilemap_layer_get_row_at(this, x, y);

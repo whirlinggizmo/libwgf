@@ -109,8 +109,7 @@ abstract Sheet(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns a frame's name, and the index of the frame named `name`.
 
-	    - get_frame_name returns "" for a grid's frame, or an `index` outside the sheet.
-	    - find_frame returns -1 if no frame has that name.
+	    See Sheet.getFrameName for the rest.
 	**/
 	public inline function findFrame(name:String):Int
 		return Raw.wgf_sheet_find_frame(this, name);
@@ -139,20 +138,7 @@ abstract Sheet(Int) from Int to Int to wgf.Handle {
 	/**
 	    Adds a clip named `name`, replacing any clip of that name.
 
-	    - `frames` lists the sheet's frames by index, `count` of them.
-	    - Each frame shows for `seconds`. With 0, each frame shows for its own duration, as an
-	      atlas gives it.
-	    - The clip runs in `direction`.
-
-	    A sheet has at most 64 clips. add_clip returns false for:
-	    - a `name` that is empty or over 63 bytes;
-	    - no frames;
-	    - `seconds` below 0, or not finite;
-	    - a `direction` that isn't a direction;
-	    - a new name when the sheet already has 64 clips.
-
-	    The other calls return how many clips the sheet has, one clip's name ("" for none), and the
-	    index of the clip named `name` (-1 for none).
+	    See Sheet.addClip for the rest.
 	**/
 	public inline function getClipCount():Int
 		return Raw.wgf_sheet_get_clip_count(this);
@@ -160,20 +146,7 @@ abstract Sheet(Int) from Int to Int to wgf.Handle {
 	/**
 	    Adds a clip named `name`, replacing any clip of that name.
 
-	    - `frames` lists the sheet's frames by index, `count` of them.
-	    - Each frame shows for `seconds`. With 0, each frame shows for its own duration, as an
-	      atlas gives it.
-	    - The clip runs in `direction`.
-
-	    A sheet has at most 64 clips. add_clip returns false for:
-	    - a `name` that is empty or over 63 bytes;
-	    - no frames;
-	    - `seconds` below 0, or not finite;
-	    - a `direction` that isn't a direction;
-	    - a new name when the sheet already has 64 clips.
-
-	    The other calls return how many clips the sheet has, one clip's name ("" for none), and the
-	    index of the clip named `name` (-1 for none).
+	    See Sheet.addClip for the rest.
 	**/
 	public inline function getClipName(index:Int):String
 		return Raw.wgf_sheet_get_clip_name(this, index);
@@ -181,20 +154,7 @@ abstract Sheet(Int) from Int to Int to wgf.Handle {
 	/**
 	    Adds a clip named `name`, replacing any clip of that name.
 
-	    - `frames` lists the sheet's frames by index, `count` of them.
-	    - Each frame shows for `seconds`. With 0, each frame shows for its own duration, as an
-	      atlas gives it.
-	    - The clip runs in `direction`.
-
-	    A sheet has at most 64 clips. add_clip returns false for:
-	    - a `name` that is empty or over 63 bytes;
-	    - no frames;
-	    - `seconds` below 0, or not finite;
-	    - a `direction` that isn't a direction;
-	    - a new name when the sheet already has 64 clips.
-
-	    The other calls return how many clips the sheet has, one clip's name ("" for none), and the
-	    index of the clip named `name` (-1 for none).
+	    See Sheet.addClip for the rest.
 	**/
 	public inline function findClip(name:String):Int
 		return Raw.wgf_sheet_find_clip(this, name);
@@ -215,12 +175,7 @@ abstract Sheet(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets an event on a clip's frame: a footstep's sound, or an attack's hit frame.
 
-	    `event` (above 0) is raised each time the clip comes to its `place`th frame. Places count
-	    from 0, the first frame, by place in the clip as it was added. An `event` of 0 removes the
-	    event. The sprite playing the clip reads the events (wgf_sprite_take_clip_events).
-
-	    The setter returns false for a clip the sheet doesn't have, a `place` outside the clip, or
-	    an `event` below 0.
+	    See Sheet.setClipEvent for the rest.
 	**/
 	public inline function getClipEvent(clip:String, place:Int):Int
 		return Raw.wgf_sheet_get_clip_event(this, clip, place);

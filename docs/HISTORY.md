@@ -1040,6 +1040,10 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## A group's doc is written once in the bindings (2026-11-23)
+
+One header comment often documents a group of calls, and the bindings copied it onto every one: `Model.hx` carried a 60-line block on each animation call. Now the group's first call keeps the whole doc. Each other call gets its first paragraph and "See `Model.getAnimationCount` for the rest.", so a hover still says what the call does. The generated Haxe, `.js`, and `.d.ts` files are 20,000 lines shorter. The API site already linked these, and is unchanged. From the examples' friction list.
+
 ## A Behavior class in the JS binding (2026-11-23)
 
 The first fix from the examples' friction list, and the one four agents reported. The JS binding had no behavior class, so every JS program with behaviors carried its own event loop, and four of the eight examples read differently in JS than in Haxe.

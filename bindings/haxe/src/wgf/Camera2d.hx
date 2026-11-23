@@ -35,7 +35,7 @@ import wgf.impl.Raw;
 	    Sets or gets the camera's zoom: how big actors look. A zoom of 2 draws everything twice as
 	    big (default: 1).
 
-	    set_zoom returns false for a zoom of 0 or less.
+	    See Camera2d.setZoom for the rest.
 	**/
 	public inline function getZoom():Float
 		return Raw.wgf_camera2d_get_zoom(this);

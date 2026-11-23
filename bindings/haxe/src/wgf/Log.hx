@@ -58,15 +58,7 @@ class Log {
 	    Keeps the last lines logged for the program to read, such as for a game's console or a
 	    bug report.
 
-	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
-	      the lines already kept. It returns false for a count outside 0 to 1024.
-	    - get_history_line returns a line as the console shows it, without its level, such as
-	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
-	    - get_history_level returns that line's level.
-	    - For an index outside the lines kept, they return "" and TRACE.
-
-	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
-	    just as they aren't shown.
+	    See Log.setHistory for the rest.
 	**/
 	public static inline function getHistory():Int
 		return Raw.wgf_log_get_history();
@@ -75,15 +67,7 @@ class Log {
 	    Keeps the last lines logged for the program to read, such as for a game's console or a
 	    bug report.
 
-	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
-	      the lines already kept. It returns false for a count outside 0 to 1024.
-	    - get_history_line returns a line as the console shows it, without its level, such as
-	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
-	    - get_history_level returns that line's level.
-	    - For an index outside the lines kept, they return "" and TRACE.
-
-	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
-	    just as they aren't shown.
+	    See Log.setHistory for the rest.
 	**/
 	public static inline function getHistoryCount():Int
 		return Raw.wgf_log_get_history_count();
@@ -92,15 +76,7 @@ class Log {
 	    Keeps the last lines logged for the program to read, such as for a game's console or a
 	    bug report.
 
-	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
-	      the lines already kept. It returns false for a count outside 0 to 1024.
-	    - get_history_line returns a line as the console shows it, without its level, such as
-	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
-	    - get_history_level returns that line's level.
-	    - For an index outside the lines kept, they return "" and TRACE.
-
-	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
-	    just as they aren't shown.
+	    See Log.setHistory for the rest.
 	**/
 	public static inline function getHistoryLine(index:Int):String
 		return Raw.wgf_log_get_history_line(index);
@@ -109,15 +85,7 @@ class Log {
 	    Keeps the last lines logged for the program to read, such as for a game's console or a
 	    bug report.
 
-	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
-	      the lines already kept. It returns false for a count outside 0 to 1024.
-	    - get_history_line returns a line as the console shows it, without its level, such as
-	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
-	    - get_history_level returns that line's level.
-	    - For an index outside the lines kept, they return "" and TRACE.
-
-	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
-	    just as they aren't shown.
+	    See Log.setHistory for the rest.
 	**/
 	public static inline function getHistoryLevel(index:Int):LogLevel
 		return Raw.wgf_log_get_history_level(index);
@@ -126,15 +94,7 @@ class Log {
 	    Keeps the last lines logged for the program to read, such as for a game's console or a
 	    bug report.
 
-	    - set_history keeps the last `count` lines, at most 1024 (default: 0, none). It forgets
-	      the lines already kept. It returns false for a count outside 0 to 1024.
-	    - get_history_line returns a line as the console shows it, without its level, such as
-	      "file.c:12: text" (255 bytes at most). Index 0 is the oldest.
-	    - get_history_level returns that line's level.
-	    - For an index outside the lines kept, they return "" and TRACE.
-
-	    A line read is a copy, valid until the next read. Lines below the level aren't kept,
-	    just as they aren't shown.
+	    See Log.setHistory for the rest.
 	**/
 	public static inline function clearHistory():Void
 		Raw.wgf_log_clear_history();

@@ -121,11 +121,7 @@ abstract Document(Int) from Int to Int to wgf.Handle {
 	/**
 	    Shows or hides a document, or gets whether it is shown.
 
-	    A shown document is drawn by wgf_ui_draw_documents, and worked by the input. A document
-	    asked to show while it loads is shown once it is READY. Shown documents are drawn in the
-	    order they were last shown, the last on top.
-
-	    Returns false for a handle that isn't a document, or one that FAILED.
+	    See Document.setVisible for the rest.
 	**/
 	public inline function isVisible():Bool
 		return Raw.wgf_document_is_visible(this);
@@ -153,12 +149,7 @@ abstract Document(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets the element of `document` that has the focus (0 for none).
 
-	    Setting it moves the focus there, shown as keys move it (`:focus-visible`). 0 takes the
-	    focus from the document.
-
-	    The setter returns false for a handle that isn't a document, an element of another
-	    document, or an element that can't take the focus. An element can't take it if it is
-	    hidden, disabled, or neither a form control nor `tab-index: auto`.
+	    See Document.setFocus for the rest.
 	**/
 	public inline function getFocus():Element
 		return Raw.wgf_document_get_focus(this);
@@ -184,15 +175,7 @@ abstract Document(Int) from Int to Int to wgf.Handle {
 	    Returns how many events of `document` wait, or takes the oldest, since they were last
 	    taken.
 
-	    take_events fills `out` with two ints an event: the event (a wgf_document_event_t) and its
-	    element (a wgf_element_t). It takes as many whole events as fit in `count` ints, oldest
-	    first, and returns how many ints it filled.
-
-	    An event's element is the one it happened to. If that element has no id, it is the nearest
-	    element around it that has one: a click on a button's label is the button's.
-
-	    Events wait while nobody takes them. Past 1024, the oldest are dropped. Returns 0 for a
-	    handle that isn't a document, or no array.
+	    See Document.getEventCount for the rest.
 	**/
 	public inline function takeEvents(out:Array<Int>):Int
 		return Raw.wgf_document_take_events(this, out);

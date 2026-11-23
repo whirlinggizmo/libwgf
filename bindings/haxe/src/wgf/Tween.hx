@@ -39,16 +39,7 @@ abstract Tween(Int) from Int to Int to wgf.Handle {
 	    Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
 	    ease (wgf_ease.h).
 
-	    Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
-
-	    - An actor's tween starts from where the actor is when the tween begins, after its delay.
-	    - It ends with the actor: a tween of a destroyed actor is let go of.
-	    - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
-	      wgf_handle_is_alive), which is how your game knows it ended.
-	    - There can be at most 4096 tweens.
-
-	    Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
-	    finite, an actor that isn't one, or no room for another tween.
+	    See Tween.create for the rest.
 	**/
 	public static inline function move(actor:Actor, x:Float, y:Float, z:Float, seconds:Float, easing:Easing):Tween
 		return Raw.wgf_tween_move(actor, x, y, z, seconds, easing);
@@ -57,16 +48,7 @@ abstract Tween(Int) from Int to Int to wgf.Handle {
 	    Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
 	    ease (wgf_ease.h).
 
-	    Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
-
-	    - An actor's tween starts from where the actor is when the tween begins, after its delay.
-	    - It ends with the actor: a tween of a destroyed actor is let go of.
-	    - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
-	      wgf_handle_is_alive), which is how your game knows it ended.
-	    - There can be at most 4096 tweens.
-
-	    Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
-	    finite, an actor that isn't one, or no room for another tween.
+	    See Tween.create for the rest.
 	**/
 	public static inline function turn(actor:Actor, x:Float, y:Float, z:Float, seconds:Float, easing:Easing):Tween
 		return Raw.wgf_tween_turn(actor, x, y, z, seconds, easing);
@@ -75,16 +57,7 @@ abstract Tween(Int) from Int to Int to wgf.Handle {
 	    Tweens: move a number, or an actor's position, turn, or scale, to a value over seconds on an
 	    ease (wgf_ease.h).
 
-	    Tweens step on the tick clock (wgf_loop.h), so an autopilot's run is the same each time.
-
-	    - An actor's tween starts from where the actor is when the tween begins, after its delay.
-	    - It ends with the actor: a tween of a destroyed actor is let go of.
-	    - A tween that ends, its repeats done, is let go of too. Its handle is then dead (see
-	      wgf_handle_is_alive), which is how your game knows it ended.
-	    - There can be at most 4096 tweens.
-
-	    Each call below creates a tween, running. Each returns 0 for `seconds` not above 0 or not
-	    finite, an actor that isn't one, or no room for another tween.
+	    See Tween.create for the rest.
 	**/
 	public static inline function scale(actor:Actor, x:Float, y:Float, z:Float, seconds:Float, easing:Easing):Tween
 		return Raw.wgf_tween_scale(actor, x, y, z, seconds, easing);
@@ -136,7 +109,7 @@ abstract Tween(Int) from Int to Int to wgf.Handle {
 	    Sets or gets how many more times a tween runs after the first (default: 0), and whether each
 	    run after the first goes back the way it came (yoyo).
 
-	    A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
+	    See Tween.setRepeat for the rest.
 	**/
 	public inline function getRepeat():Int
 		return Raw.wgf_tween_get_repeat(this);
@@ -145,7 +118,7 @@ abstract Tween(Int) from Int to Int to wgf.Handle {
 	    Sets or gets how many more times a tween runs after the first (default: 0), and whether each
 	    run after the first goes back the way it came (yoyo).
 
-	    A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
+	    See Tween.setRepeat for the rest.
 	**/
 	public inline function setYoyo(yoyo:Bool):Bool
 		return Raw.wgf_tween_set_yoyo(this, yoyo);
@@ -154,7 +127,7 @@ abstract Tween(Int) from Int to Int to wgf.Handle {
 	    Sets or gets how many more times a tween runs after the first (default: 0), and whether each
 	    run after the first goes back the way it came (yoyo).
 
-	    A repeat of -1 runs it for ever. set_repeat refuses a count below -1.
+	    See Tween.setRepeat for the rest.
 	**/
 	public inline function isYoyo():Bool
 		return Raw.wgf_tween_is_yoyo(this);

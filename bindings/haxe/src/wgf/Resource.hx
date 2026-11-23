@@ -87,20 +87,7 @@ class Resource {
 	    Sets or gets the load budget: the milliseconds each frame may spend on loading, so that
 	    loading doesn't stall the frames it runs beside (default: 4).
 
-	    - The budget covers finishing loads on the main thread, such as GPU uploads.
-	    - On the web, where there are no worker threads, it also covers preparing the
-	      resources that prepare in steps, such as an environment.
-	    - At least one step runs each frame, however small the budget. So one large file can
-	      exceed it: a 4096x4096 texture is one upload of about 45 ms.
-	    - 0 finishes one step a frame.
-	    - It applies to every load, whether the file is bundled, cached, or fetched.
-
-	    The smaller the budget, the longer loading takes, and more so where frames are slow. A
-	    loading screen, with nothing else to draw, can raise it (to 16 ms, say) and set it back
-	    once loaded. A measurement of every frame of a run, such as tools/bench/measure_frames.py,
-	    counts those as slow frames too.
-
-	    The setter returns false, and changes nothing, for a negative or non-finite value.
+	    See Resource.setLoadBudget for the rest.
 	**/
 	public static inline function getLoadBudget():Float
 		return Raw.wgf_resource_get_load_budget();

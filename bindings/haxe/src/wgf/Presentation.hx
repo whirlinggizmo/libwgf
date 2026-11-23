@@ -80,8 +80,7 @@ class Presentation {
 	/**
 	    Sets or gets the color of the bars (default: black).
 
-	    The bars, under FIT and INTEGER, are the framebuffer outside the visible area. Nothing is
-	    drawn in them.
+	    See Presentation.setBarColor for the rest.
 	**/
 	public static inline function getBarColor():Int
 		return Raw.wgf_presentation_get_bar_color();

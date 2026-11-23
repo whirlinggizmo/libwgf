@@ -41,8 +41,7 @@ abstract FsTask(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns a DONE read's bytes, or a list's text, and their size.
 
-	    The bytes end in a NUL, so they also read as text. They are valid until the task is
-	    destroyed. Any other task gives NULL, 0, and "".
+	    See FsTask.getData for the rest.
 	**/
 	public inline function getSize():Int
 		return Raw.wgf_fs_task_get_size(this);
@@ -50,8 +49,7 @@ abstract FsTask(Int) from Int to Int to wgf.Handle {
 	/**
 	    Returns a DONE read's bytes, or a list's text, and their size.
 
-	    The bytes end in a NUL, so they also read as text. They are valid until the task is
-	    destroyed. Any other task gives NULL, 0, and "".
+	    See FsTask.getData for the rest.
 	**/
 	public inline function getText():String
 		return Raw.wgf_fs_task_get_text(this);

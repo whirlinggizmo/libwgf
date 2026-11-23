@@ -60,13 +60,7 @@ class Fs {
 	/**
 	    Sets or gets the root that paths resolve against.
 
-	    - Natively the root is a directory, absolute or relative to the working directory. The
-	      default is the program's own directory, where its executable is. Where that can't be
-	      told, the default is the working directory.
-	    - On the web the default is "/wgf". Another root is another browser store, and requests
-	      wait while it opens.
-
-	    The setter returns false if core isn't running.
+	    See Fs.setRoot for the rest.
 	**/
 	public static inline function getRoot():String
 		return Raw.wgf_fs_get_root();
@@ -93,9 +87,7 @@ class Fs {
 	/**
 	    Writes `data` to `path`, making the parent directories.
 
-	    `data` is copied before the call returns. The task is DONE once the file is written, so
-	    a read of the path then gives the new bytes. On the web, the copy kept between visits is
-	    stored in the background after that.
+	    See Fs.write for the rest.
 	**/
 	public static inline function exists(path:String):FsTask
 		return Raw.wgf_fs_exists(path);
@@ -103,9 +95,7 @@ class Fs {
 	/**
 	    Writes `data` to `path`, making the parent directories.
 
-	    `data` is copied before the call returns. The task is DONE once the file is written, so
-	    a read of the path then gives the new bytes. On the web, the copy kept between visits is
-	    stored in the background after that.
+	    See Fs.write for the rest.
 	**/
 	public static inline function remove(path:String):FsTask
 		return Raw.wgf_fs_remove(path);

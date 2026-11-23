@@ -52,8 +52,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets what the text says, in UTF-8. The setter copies the string.
 
-	    The string get_string returns belongs to the actor. It is valid until the next
-	    set_string, or until the actor is destroyed.
+	    See Text.setString for the rest.
 	**/
 	public inline function getString():String
 		return Raw.wgf_text_get_string(this);
@@ -74,10 +73,7 @@ import wgf.impl.Raw;
 	    Sets or gets the text's font size: the height of its lines in stage units, before the
 	    actor's scale.
 
-	    It is called a font size so it isn't taken for a sprite's size. A size of 0 or less (the
-	    default) is 16 on a 2D stage, and 1 on a 3D one. The getter returns the size it draws at.
-
-	    The setter returns false for a handle that isn't text.
+	    See Text.setFontSize for the rest.
 	**/
 	public inline function getFontSize():Float
 		return Raw.wgf_text_get_font_size(this);
@@ -112,14 +108,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets the width the text's lines wrap to, in stage units (default: 0).
 
-	    - Lines wrap at spaces and tabs to fit `width`.
-	    - A word wider than `width` keeps a line to itself.
-	    - 0 wraps nothing.
-	    - Newlines always break a line.
-	    - For its alignment, a wrapped block is `width` wide, or as wide as its widest line where
-	      a word is wider.
-
-	    The setter returns false for a `width` below 0.
+	    See Text.setWrapWidth for the rest.
 	**/
 	public inline function getWrapWidth():Float
 		return Raw.wgf_text_get_wrap_width(this);
@@ -136,8 +125,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where the block sits relative to the actor's position, on each axis.
 
-	    Lines line up the same way inside the block. The setter returns false for a value that
-	    isn't an alignment.
+	    See Text.setAlign for the rest.
 	**/
 	public inline function getHalign():TextHalign
 		return Raw.wgf_text_get_halign(this);
@@ -145,8 +133,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets where the block sits relative to the actor's position, on each axis.
 
-	    Lines line up the same way inside the block. The setter returns false for a value that
-	    isn't an alignment.
+	    See Text.setAlign for the rest.
 	**/
 	public inline function getValign():TextValign
 		return Raw.wgf_text_get_valign(this);
@@ -165,8 +152,7 @@ import wgf.impl.Raw;
 	    Sets or gets the spacing added between the text's letters and between its lines, in
 	    logical pixels.
 
-	    Both start at 0. Spacing below 0 tightens the text. The setter returns false for numbers
-	    that aren't finite.
+	    See Text.setSpacing for the rest.
 	**/
 	public inline function getLetterSpacing():Float
 		return Raw.wgf_text_get_letter_spacing(this);
@@ -175,8 +161,7 @@ import wgf.impl.Raw;
 	    Sets or gets the spacing added between the text's letters and between its lines, in
 	    logical pixels.
 
-	    Both start at 0. Spacing below 0 tightens the text. The setter returns false for numbers
-	    that aren't finite.
+	    See Text.setSpacing for the rest.
 	**/
 	public inline function getLineSpacing():Float
 		return Raw.wgf_text_get_line_spacing(this);
@@ -201,14 +186,7 @@ import wgf.impl.Raw;
 	    Sets or gets which way the text's block faces on a 3D stage, as a sprite's does
 	    (wgf_sprite.h).
 
-	    It faces one of these:
-	    - the camera (the default);
-	    - the camera, turning about Y only;
-	    - up, lying flat;
-	    - the way its actor is turned.
-
-	    Text on a 2D stage is flat on the screen whatever this says. The setter returns false if
-	    `facing` isn't a facing.
+	    See Text.setFacing for the rest.
 	**/
 	public inline function getFacing():SpriteFacing
 		return Raw.wgf_text_get_facing(this);
@@ -227,10 +205,7 @@ import wgf.impl.Raw;
 	/**
 	    Sets or gets how far nearer the camera the text is drawn on a 3D stage, in stage units.
 
-	    It works as a sprite's does (wgf_sprite_set_depth_offset). Use it for text over the sprite
-	    it labels, to keep the text in front at a distance.
-
-	    The setter returns false for a handle that isn't text, or an `offset` that isn't finite.
+	    See Text.setDepthOffset for the rest.
 	**/
 	public inline function getDepthOffset():Float
 		return Raw.wgf_text_get_depth_offset(this);

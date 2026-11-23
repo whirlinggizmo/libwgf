@@ -221,6 +221,29 @@ class Binding:
             last = f
         return out
 
+    def member_docs(self, name_of=None):
+        """docs(), for a binding's own files, where a reader meets one call at a time: a call
+        that takes its group's doc gets the doc's first paragraph alone when there is more,
+        and is sent to the group's first call for the rest, named by `name_of` (its C name
+        without one). So a long doc is written once, not on every call of its group."""
+        docs, owner, out = self.docs(), {}, {}
+        for f in self.api.functions.values():
+            doc = docs[f.name]
+            if f.doc:
+                owner[(f.header, doc)] = f.name
+            first = owner.get((f.header, doc))
+            paragraphs = doc.split('\n\n')
+            if f.doc or first is None or len(paragraphs) < 2:
+                out[f.name] = doc
+            else:
+                out[f.name] = f'{paragraphs[0]}\n\nSee {name_of(first) if name_of else first} for the rest.'
+        return out
+
+    def haxe_name(self, cname):
+        """A call's name in the typed API: `Type.member`."""
+        haxe, member = self.place(self.api.functions[cname])[:2]
+        return f'{haxe}.{member}'
+
 
 def haxe_params(binding, f, raw):
     """The Haxe parameter list: (name, type) each, `into` last for a vector result."""

@@ -48,13 +48,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets an element's content, as plain text or as RML.
 
-	    - set_text shows `text` as it is, with no markup.
-	    - set_rml parses `rml` and makes its elements.
-	    - get_text returns the text of every element inside it, in order.
-	    - get_rml returns its content as RML.
-
-	    Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
-	    until the next call in this header that returns text.
+	    See Element.setText for the rest.
 	**/
 	public inline function getText():String
 		return Raw.wgf_element_get_text(this);
@@ -62,13 +56,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets an element's content, as plain text or as RML.
 
-	    - set_text shows `text` as it is, with no markup.
-	    - set_rml parses `rml` and makes its elements.
-	    - get_text returns the text of every element inside it, in order.
-	    - get_rml returns its content as RML.
-
-	    Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
-	    until the next call in this header that returns text.
+	    See Element.setText for the rest.
 	**/
 	public inline function setRml(rml:String):Bool
 		return Raw.wgf_element_set_rml(this, rml);
@@ -76,13 +64,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets an element's content, as plain text or as RML.
 
-	    - set_text shows `text` as it is, with no markup.
-	    - set_rml parses `rml` and makes its elements.
-	    - get_text returns the text of every element inside it, in order.
-	    - get_rml returns its content as RML.
-
-	    Returns false for a handle that isn't an element, or no text. Text a getter returns is valid
-	    until the next call in this header that returns text.
+	    See Element.setText for the rest.
 	**/
 	public inline function getRml():String
 		return Raw.wgf_element_get_rml(this);
@@ -104,11 +86,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	    Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
 	    `value`.
 
-	    - get_attribute returns "" for an attribute that isn't set.
-	    - has_attribute returns whether it is set.
-	    - remove_attribute unsets it, and returns false if it wasn't set.
-
-	    Returns false for a handle that isn't an element, or no name.
+	    See Element.setAttribute for the rest.
 	**/
 	public inline function getAttribute(name:String):String
 		return Raw.wgf_element_get_attribute(this, name);
@@ -117,11 +95,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	    Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
 	    `value`.
 
-	    - get_attribute returns "" for an attribute that isn't set.
-	    - has_attribute returns whether it is set.
-	    - remove_attribute unsets it, and returns false if it wasn't set.
-
-	    Returns false for a handle that isn't an element, or no name.
+	    See Element.setAttribute for the rest.
 	**/
 	public inline function hasAttribute(name:String):Bool
 		return Raw.wgf_element_has_attribute(this, name);
@@ -130,11 +104,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	    Sets, gets, checks, or removes an attribute, such as `class`, `src`, or a form control's
 	    `value`.
 
-	    - get_attribute returns "" for an attribute that isn't set.
-	    - has_attribute returns whether it is set.
-	    - remove_attribute unsets it, and returns false if it wasn't set.
-
-	    Returns false for a handle that isn't an element, or no name.
+	    See Element.setAttribute for the rest.
 	**/
 	public inline function removeAttribute(name:String):Bool
 		return Raw.wgf_element_remove_attribute(this, name);
@@ -171,12 +141,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	    Sets or gets an RCSS property on the element itself, over its style sheets' value
 	    (`"color"`, `"#ffcc00"`).
 
-	    - A `value` of "" or NULL takes the element's own value off.
-	    - get_property returns the property's value as the element has it now, from wherever it
-	      comes, as RCSS text. It returns "" for a name that isn't a property.
-
-	    The setter returns false for a handle that isn't an element, a name that isn't a property, or
-	    a value that isn't one of its values (logged).
+	    See Element.setProperty for the rest.
 	**/
 	public inline function getProperty(name:String):String
 		return Raw.wgf_element_get_property(this, name);
@@ -200,15 +165,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a form control's value, as text or as a number.
 
-	    - The value is a text field's text, a slider's number, a choice's chosen value, or a
-	      checkbox's own value.
-	    - As a number: a slider's value is clamped to its range. Text is read as a number, and text
-	      that isn't one reads 0.
-	    - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
-	      number among them. A tab chosen by the player raises the tabset's CHANGE.
-
-	    Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
-	    control or a tabset. set_value takes a form control only.
+	    See Element.setValue for the rest.
 	**/
 	public inline function getValue():String
 		return Raw.wgf_element_get_value(this);
@@ -216,15 +173,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a form control's value, as text or as a number.
 
-	    - The value is a text field's text, a slider's number, a choice's chosen value, or a
-	      checkbox's own value.
-	    - As a number: a slider's value is clamped to its range. Text is read as a number, and text
-	      that isn't one reads 0.
-	    - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
-	      number among them. A tab chosen by the player raises the tabset's CHANGE.
-
-	    Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
-	    control or a tabset. set_value takes a form control only.
+	    See Element.setValue for the rest.
 	**/
 	public inline function setNumber(value:Float):Bool
 		return Raw.wgf_element_set_number(this, value);
@@ -232,15 +181,7 @@ abstract Element(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a form control's value, as text or as a number.
 
-	    - The value is a text field's text, a slider's number, a choice's chosen value, or a
-	      checkbox's own value.
-	    - As a number: a slider's value is clamped to its range. Text is read as a number, and text
-	      that isn't one reads 0.
-	    - A tabset's number is its chosen tab, from 0 in its `<tabs>`' order. Set it as a whole
-	      number among them. A tab chosen by the player raises the tabset's CHANGE.
-
-	    Setting either raises no event. Returns false (and "", or 0) for a handle that isn't a form
-	    control or a tabset. set_value takes a form control only.
+	    See Element.setValue for the rest.
 	**/
 	public inline function getNumber():Float
 		return Raw.wgf_element_get_number(this);

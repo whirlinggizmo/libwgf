@@ -71,11 +71,7 @@ class Random {
 	/**
 	    Creates a generator of the game's own, seeded with `seed`, and destroys one.
 
-	    Use one where a part of the game should draw its own numbers, such as a world's layout.
-	    Then the program's sequence, which an autopilot seeds, stays the game's. A generator
-	    takes the same steps as the program's, so a seed gives the same numbers everywhere.
-
-	    Returns 0 if there are already 4096 generators.
+	    See Random.create for the rest.
 	**/
 	public static inline function destroy(generator:Generator):Void
 		Raw.wgf_random_destroy(generator);

@@ -80,10 +80,7 @@ class Collide2d {
 	/**
 	    Point tests. Each returns whether the point px, py is inside the shape.
 
-	    - A rectangle: its left and top edges count as inside, its right and bottom edges don't.
-	    - A circle.
-	    - A triangle.
-	    - A polygon, convex or not, tested by counting crossings.
+	    See Collide2d.pointInRect for the rest.
 	**/
 	public static inline function pointInCircle(px:Float, py:Float, cx:Float, cy:Float, r:Float):Bool
 		return Raw.wgf_collide2d_point_in_circle(px, py, cx, cy, r);
@@ -91,10 +88,7 @@ class Collide2d {
 	/**
 	    Point tests. Each returns whether the point px, py is inside the shape.
 
-	    - A rectangle: its left and top edges count as inside, its right and bottom edges don't.
-	    - A circle.
-	    - A triangle.
-	    - A polygon, convex or not, tested by counting crossings.
+	    See Collide2d.pointInRect for the rest.
 	**/
 	public static inline function pointInTriangle(px:Float, py:Float, x0:Float, y0:Float, x1:Float, y1:Float, x2:Float, y2:Float):Bool
 		return Raw.wgf_collide2d_point_in_triangle(px, py, x0, y0, x1, y1, x2, y2);
@@ -102,10 +96,7 @@ class Collide2d {
 	/**
 	    Point tests. Each returns whether the point px, py is inside the shape.
 
-	    - A rectangle: its left and top edges count as inside, its right and bottom edges don't.
-	    - A circle.
-	    - A triangle.
-	    - A polygon, convex or not, tested by counting crossings.
+	    See Collide2d.pointInRect for the rest.
 	**/
 	public static inline function pointInPolygon(px:Float, py:Float, points:Array<Float>):Bool
 		return Raw.wgf_collide2d_point_in_polygon(px, py, points);
@@ -131,8 +122,7 @@ class Collide2d {
 	/**
 	    Casts a ray from ox, oy along dx, dy against a rectangle or a circle.
 
-	    The ray is dx, dy long: time 1 is its end. The hit holds the time, the point, and the
-	    normal.
+	    See Collide2d.rayRect for the rest.
 	**/
 	public static inline function rayCircle(ox:Float, oy:Float, dx:Float, dy:Float, cx:Float, cy:Float, r:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_ray_circle(ox, oy, dx, dy, cx, cy, r, hit);
@@ -149,8 +139,7 @@ class Collide2d {
 	/**
 	    Sweeps a rectangle, or a circle, by dx, dy, and tests whether it meets another on the way.
 
-	    The hit holds the time, the moving shape's top-left (for a circle, its center) at that
-	    time, and the normal. If they already overlap, the time is 0 and there is no normal.
+	    See Collide2d.sweepRectRect for the rest.
 	**/
 	public static inline function sweepCircleCircle(ax:Float, ay:Float, ar:Float, dx:Float, dy:Float, bx:Float, by:Float, br:Float, hit:Array<Float>):Bool
 		return Raw.wgf_collide2d_sweep_circle_circle(ax, ay, ar, dx, dy, bx, by, br, hit);
@@ -181,22 +170,7 @@ class Collide2d {
 	/**
 	    Moves a box by dx, dy and slides it along the solids it meets.
 
-	    The box's top-left is at x, y, and it is w by h. It moves across first, and stops at the
-	    nearest solid's side in the direction it moves. Then it moves down or up at its new x, in
-	    the same way. A box that starts inside a solid is left where it is on that axis.
-
-	    As many of these values as fit in `out_count` are written to `out`:
-	    - 0, 1: where the box ended, x and y.
-	    - 2 to 5: whether its left, right, top, and bottom met a solid, 1 or 0. A bottom of 1
-	      means the box is standing on a solid.
-
-	    The solids are one of these:
-	    - move_rects: solid rectangles in `rects`, four floats each, `count` floats in all.
-	    - move_cells: a grid of `count` cells in `cells`, row by row from the top, `columns` to a
-	      row. A nonzero cell is solid. Each cell is `size` square, and cell 0's top-left is at
-	      0, 0. Outside the grid is open.
-
-	    Returns false if there is no `out` (NULL, or an `out_count` of 0).
+	    See Collide2d.moveRects for the rest.
 	**/
 	public static inline function moveCells(x:Float, y:Float, w:Float, h:Float, dx:Float, dy:Float, size:Float, cells:Array<Int>, columns:Int, out:Array<Float>):Bool
 		return Raw.wgf_collide2d_move_cells(x, y, w, h, dx, dy, size, cells, columns, out);

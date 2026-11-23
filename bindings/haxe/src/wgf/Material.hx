@@ -172,9 +172,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function getInt(name:String):Int
 		return Raw.wgf_material_get_int(this, name);
@@ -182,9 +180,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function setFloat(name:String, value:Float):Bool
 		return Raw.wgf_material_set_float(this, name, value);
@@ -192,9 +188,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function getFloat(name:String):Float
 		return Raw.wgf_material_get_float(this, name);
@@ -202,9 +196,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function setVec2(name:String, x:Float, y:Float):Bool
 		return Raw.wgf_material_set_vec2(this, name, x, y);
@@ -212,9 +204,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function getVec2(name:String, ?into:wgf.Vec2):wgf.Vec2
 		return Raw.wgf_material_get_vec2(this, name, into);
@@ -222,9 +212,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function setVec3(name:String, x:Float, y:Float, z:Float):Bool
 		return Raw.wgf_material_set_vec3(this, name, x, y, z);
@@ -232,9 +220,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function getVec3(name:String, ?into:wgf.Vec3):wgf.Vec3
 		return Raw.wgf_material_get_vec3(this, name, into);
@@ -242,9 +228,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function setVec4(name:String, x:Float, y:Float, z:Float, w:Float):Bool
 		return Raw.wgf_material_set_vec4(this, name, x, y, z, w);
@@ -252,9 +236,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function getVec4(name:String, ?into:wgf.Vec4):wgf.Vec4
 		return Raw.wgf_material_get_vec4(this, name, into);
@@ -262,9 +244,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	/**
 	    Sets or gets a parameter by name, from the table above.
 
-	    - set_int refuses a texture coordinate set other than 0 or 1.
-	    - set_color takes an sRGB color for a vec3 or vec4 parameter and stores it as linear.
-	      Its alpha is stored unchanged. Read it back with get_vec3 or get_vec4.
+	    See Material.setInt for the rest.
 	**/
 	public inline function setColor(name:String, color:Int):Bool
 		return Raw.wgf_material_set_color(this, name, color);
@@ -304,13 +284,7 @@ abstract Material(Int) from Int to Int to wgf.Handle {
 	    `name`, sampled as a samplerCube (wgf.glsl). The material holds its own reference to the
 	    cubemap, and 0 clears it.
 
-	    Returns false for a material with built-in shading, a handle that isn't a cubemap, or a
-	    name that is one of the shader's texture2Ds (set those with wgf_material_set_texture).
-	    If the shader is still loading, the cubemap is kept and checked once the shader is
-	    READY. A wrong name is then dropped with a warning.
-
-	    set_texture refuses a textureCube's name in the same way, and each getter returns 0 for
-	    the other kind.
+	    See Material.setCubemap for the rest.
 	**/
 	public inline function getCubemap(name:String):Cubemap
 		return Raw.wgf_material_get_cubemap(this, name);
