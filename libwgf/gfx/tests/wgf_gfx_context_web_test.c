@@ -27,6 +27,7 @@
 #include "wgf_stage3d.h"
 #include "wgf_texture.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* A lost WebGL context, in a browser (tools/run_in_browser.py): a scene of every part it is
  * practical to show -- a texture from a file and the same image as a glTF file's, each over
@@ -367,7 +368,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
-    wgf_window_set_size(WIDTH, HEIGHT);
+    web_canvas_set_size(WIDTH, HEIGHT);
     wgf_render_set_clear_color(WGF_COLOR_DARKGRAY);
     wgf_app_run(NULL, on_tick, on_frame, NULL, NULL);
     return 0;

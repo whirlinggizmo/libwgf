@@ -36,7 +36,6 @@ static void frame(void *user)
 
 int main(void)
 {
-    wgf_window_set_size(256, 256);
     wgf_app_run(init, NULL, frame, NULL, NULL);
     return 0;
 }

@@ -7,6 +7,7 @@
 #include "texture/wgf_gfx_png_priv.h"
 #include "wgf_app.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* The browser's image decode, in a page (tools/run_in_browser.py): a PNG written here, of opaque,
  * half-transparent, and clear pixels in colors, decoded by the browser a frame or more later, its
@@ -80,7 +81,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
-    wgf_window_set_size(16, 16);
+    web_canvas_set_size(16, 16);
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
     return 0;
 }

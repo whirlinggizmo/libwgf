@@ -127,7 +127,6 @@ static void on_frame(void *user)
 /* The page's canvas, 64 by 64, through app's runtime: the test runs in a frame. */
 int main(void)
 {
-    wgf_window_set_size(64, 64);
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
     return 0;
 }

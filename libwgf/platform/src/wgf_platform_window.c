@@ -65,7 +65,6 @@ void wgf_platform_priv_get_presentation(wgf_platform_priv_presentation_t *out)
 void wgf_platform_priv_window_describe(wgf_platform_priv_desc_t *desc)
 {
     desc->width = window.width;
-    desc->size_set = window.size_set;
     desc->height = window.height;
     desc->title = window.title;
     desc->fullscreen = window.fullscreen;
@@ -141,13 +140,15 @@ bool wgf_window_set_size(int width, int height)
 
 int wgf_window_get_width(void)
 {
-    if (!window.open) return window.width;
+    int width = 0, height = 0;
+    if (!window.open) return wgf_platform_priv_get_unopened_size(&width, &height) ? width : window.width;
     return (int)((float)wgf_platform_priv_get_framebuffer_width() / wgf_platform_priv_get_dpi_scale() + 0.5f);
 }
 
 int wgf_window_get_height(void)
 {
-    if (!window.open) return window.height;
+    int width = 0, height = 0;
+    if (!window.open) return wgf_platform_priv_get_unopened_size(&width, &height) ? height : window.height;
     return (int)((float)wgf_platform_priv_get_framebuffer_height() / wgf_platform_priv_get_dpi_scale() +
                  0.5f);
 }

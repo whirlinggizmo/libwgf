@@ -36,7 +36,6 @@ static void on_init(void)
        now, as soon as there is one */
     wgf_platform_priv_set_style(run_desc.resizable, run_desc.decorated);
     if (!run_desc.visible) sapp_set_window_visible(false);
-    wgf_platform_priv_sokol_open(run_desc.width, run_desc.height, run_desc.size_set);
     run_desc.init();
 }
 

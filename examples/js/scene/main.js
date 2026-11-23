@@ -124,8 +124,7 @@ function publish() {
 }
 
 Window.setTitle("libwgf scene (JS)");
-// The design size, fitted to any window or page. Window.setSize would fix the canvas at that
-// size on the web, unscaled, so it is left to the presentation.
+// The design size, fitted to any window or page. A desktop window opens at this size.
 Presentation.set(PresentationMode.FIT, 800, 450);
 Window.setMsaa(true);
 App.run(init, null, frame, null);

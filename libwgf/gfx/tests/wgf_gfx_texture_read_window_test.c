@@ -3,6 +3,7 @@
 #include <string.h>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include "wgf_web_canvas.h"
 #define finish emscripten_force_exit
 #else
 #define finish exit
@@ -180,7 +181,9 @@ static void init(void *user)
 int main(void)
 {
     wgf_window_set_size(64, 32);
-#ifndef __EMSCRIPTEN__
+#ifdef __EMSCRIPTEN__
+    web_canvas_set_size(64, 32); /* the page sizes the canvas */
+#else
     wgf_window_set_msaa(true);
 #endif
     wgf_app_run(init, NULL, on_frame, NULL, NULL);

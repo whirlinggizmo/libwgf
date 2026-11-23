@@ -16,6 +16,7 @@
 #include "wgf_stage3d.h"
 #include "wgf_texture.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* Render targets, in a browser (tools/run_in_browser.py) on a WebGL2 canvas, their
  * pixels read back through the screen they are drawn on: a 32 by 32 target with a stage
@@ -140,7 +141,7 @@ int main(void)
     wgf_material_t red;
     wgf_actor_t camera, plane;
 
-    wgf_window_set_size(64, 32);
+    web_canvas_set_size(64, 32);
     wgf_render_set_clear_color(WGF_COLOR_BLACK);
     stage = wgf_stage3d_create();
     wgf_stage3d_set_tonemap(stage, WGF_STAGE3D_TONEMAP_NONE, 0.0f);

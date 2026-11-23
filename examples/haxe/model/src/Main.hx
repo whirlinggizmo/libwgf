@@ -34,8 +34,7 @@ class Main {
 
 	static function main() {
 		Window.setTitle("libwgf model (Haxe)");
-		// The design size, fitted to any window or page. Window.setSize would fix the canvas at that
-		// size on the web, unscaled, so it is left to the presentation.
+		// The design size, fitted to any window or page. A desktop window opens at this size.
 		Presentation.set(PresentationMode.FIT, 1000, 600);
 		Window.setMsaa(true);
 		Window.setResizable(true);

@@ -19,6 +19,7 @@
 #include "wgf_resource.h"
 #include "wgf_stage3d.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* Environments' pixels, libwgt's background test and more: an equirectangular .hdr whose
  * radiance tells its direction (0.5 + 0.5 x the direction, each channel an axis). Drawn
@@ -216,7 +217,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
-    wgf_window_set_size(SIZE, SIZE);
+    web_canvas_set_size(SIZE, SIZE);
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
     return 0;
 }

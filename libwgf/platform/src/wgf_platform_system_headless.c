@@ -212,6 +212,12 @@ bool wgf_platform_priv_set_size(int width, int height)
     return true;
 }
 
+bool wgf_platform_priv_get_unopened_size(int *width, int *height)
+{
+    (void)width, (void)height;
+    return false;
+}
+
 bool wgf_platform_priv_has_fullscreen(void)
 {
     return false;

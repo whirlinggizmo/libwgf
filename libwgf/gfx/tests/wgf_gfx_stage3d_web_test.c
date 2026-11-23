@@ -20,6 +20,7 @@
 #include "wgf_sprite.h"
 #include "wgf_stage3d.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* A stage, in a browser (tools/run_in_browser.py) on a WebGL2 canvas, its pixels read
  * back: an unlit red cube in front of the camera, its color exact (no tone
@@ -127,7 +128,7 @@ int main(void)
     wgf_material_t red, blue;
     wgf_actor_t model;
 
-    wgf_window_set_size(64, 32);
+    web_canvas_set_size(64, 32);
     wgf_render_set_clear_color(WGF_COLOR_DARKGRAY);
     wgf_presentation_set_bar_color(WGF_COLOR_BLUE);
     stage = wgf_stage3d_create();

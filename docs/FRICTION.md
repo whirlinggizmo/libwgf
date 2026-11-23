@@ -884,7 +884,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** The examples now set a design size through the presentation alone, with a comment saying why.
 - **Cost:** Five of the eight examples shipped their first screenshots cropped, and seven of eight agents didn't notice.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "The page sizes the web canvas".
 
 ### examples: generated docs repeat a group's comment on every member
 

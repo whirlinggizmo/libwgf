@@ -17,7 +17,6 @@ typedef struct wgf_platform_priv_desc_t {
     void (*event)(const sapp_event *event);
     void (*shutdown)(void);
     int width, height; /* logical */
-    bool size_set;     /* the program set the size (on the web, else the page lays out the canvas) */
     const char *title;
     bool fullscreen;
     bool high_dpi;
@@ -118,10 +117,6 @@ void wgf_platform_priv_gpu_keep(bool keep);
  * end (false). On the web, main returns while the browser runs the frames, which
  * would otherwise end the program before the first; natively, nothing to do. */
 void wgf_platform_priv_sokol_hold(bool hold);
-/* sokol_app only: the window has opened, `width` by `height` (logical), which the
- * program set if `size_set`. On the web the canvas is laid out by the page, so it
- * takes the size only when the program set one; natively, sokol_app opened it so. */
-void wgf_platform_priv_sokol_open(int width, int height, bool size_set);
 /* sokol_app only: before each frame, what the page's own elements were given since (the
  * web's on-screen keyboard: wgf_platform_priv_show_keyboard), delivered as the window's
  * events through `deliver`; natively nothing. */
@@ -143,7 +138,11 @@ void wgf_platform_priv_set_title(const char *title);
 bool wgf_platform_priv_set_icon(const unsigned char *rgba, int size, int width, int height);
 /* Each frame's end: the window's size kept, for wgf_window_is_resized. */
 void wgf_platform_priv_window_end_frame(void);
+/* On the web the page sizes the canvas, so this changes nothing and returns true. */
 bool wgf_platform_priv_set_size(int width, int height); /* logical */
+/* Gets the size (logical) the window has before it opens, where the platform knows it: on the
+ * web, the canvas's on the page. False natively, where it is the size the program set. */
+bool wgf_platform_priv_get_unopened_size(int *width, int *height);
 bool wgf_platform_priv_has_fullscreen(void);
 void wgf_platform_priv_set_fullscreen(bool fullscreen);
 bool wgf_platform_priv_is_fullscreen(void);

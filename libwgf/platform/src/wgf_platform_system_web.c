@@ -11,17 +11,15 @@
 /* The window on the web, where it is the page's canvas: what differs from the
  * desktop. */
 
-/* The canvas's size on the page, in CSS pixels (logical); sokol_app reads it again
- * on a resize event, so one is sent. Whether it took: the page's CSS can override
- * it. */
-EM_JS(int, canvas_set_size, (int width, int height), {
+/* The canvas's size on the page, in CSS pixels (logical), into `out`: whether there is a
+ * canvas. The page sizes it, never the program. */
+EM_JS(int, canvas_get_size, (int *out), {
     const canvas = Module.canvas;
     if (!canvas) return 0;
-    canvas.style.width = width + "px";
-    canvas.style.height = height + "px";
-    window.dispatchEvent(new Event("resize"));
     const rect = canvas.getBoundingClientRect();
-    return Math.round(rect.width) === width && Math.round(rect.height) === height ? 1 : 0;
+    HEAP32[out >> 2] = Math.round(rect.width);
+    HEAP32[(out >> 2) + 1] = Math.round(rect.height);
+    return 1;
 })
 EM_JS(int, document_has_focus, (void), { return document.hasFocus() ? 1 : 0; })
 EM_JS(int, screen_width, (void), { return window.screen.width | 0; })
@@ -38,14 +36,19 @@ void wgf_platform_priv_sokol_hold(bool hold)
     }
 }
 
-void wgf_platform_priv_sokol_open(int width, int height, bool size_set)
-{
-    if (size_set) canvas_set_size(width, height);
-}
-
 bool wgf_platform_priv_set_size(int width, int height)
 {
-    return canvas_set_size(width, height) != 0;
+    (void)width, (void)height;
+    return true; /* the page sizes the canvas */
+}
+
+bool wgf_platform_priv_get_unopened_size(int *width, int *height)
+{
+    int size[2];
+    if (!canvas_get_size(size)) return false;
+    *width = size[0];
+    *height = size[1];
+    return true;
 }
 
 bool wgf_platform_priv_can_quit(void)

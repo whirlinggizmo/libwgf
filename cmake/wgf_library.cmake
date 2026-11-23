@@ -111,6 +111,8 @@ function(wgf_web_test layer name visits)
     add_executable(${name} "${CMAKE_CURRENT_SOURCE_DIR}/tests/${name}.c")
     set_target_properties(${name} PROPERTIES WGF_TEST ON) # not a page: no release page flags (platform)
     target_link_libraries(${name} PRIVATE wgf wgf_${layer}_priv)
+    # wgf_web_canvas.h, which sizes the page's canvas for a test
+    target_include_directories(${name} PRIVATE "${PROJECT_SOURCE_DIR}/libwgf/platform/tests")
     wgf_target_defaults(${name})
     target_link_options(${name} PRIVATE -sEXIT_RUNTIME=1)
     add_test(NAME ${name}

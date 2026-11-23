@@ -23,9 +23,10 @@ void wgf_platform_priv_sokol_hold(bool hold)
     (void)hold; /* sapp_run returns when the program has quit */
 }
 
-void wgf_platform_priv_sokol_open(int width, int height, bool size_set)
+bool wgf_platform_priv_get_unopened_size(int *width, int *height)
 {
-    (void)width, (void)height, (void)size_set; /* sapp_run opened it at that size */
+    (void)width, (void)height;
+    return false; /* sapp_run opens it at the size the program set */
 }
 
 bool wgf_platform_priv_set_size(int width, int height)

@@ -48,7 +48,7 @@ class Main {
 		Window.setResizable(true);
 		Window.setMsaa(true);
 		// the design at least, the window filled: the HUD keeps to the window's edges. The window
-		// opens at the design's size natively; on the web the canvas fills the page (no Window.setSize)
+		// opens at the design's size natively; on the web the page sizes the canvas
 		Presentation.set(PresentationMode.EXPAND, WIDTH, HEIGHT);
 		Runtime.run(init, tick, frame, null);
 	}

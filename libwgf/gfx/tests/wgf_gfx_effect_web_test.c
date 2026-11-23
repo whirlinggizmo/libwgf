@@ -14,6 +14,7 @@
 #include "wgf_resource.h"
 #include "wgf_shader.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* Screen effects, in a browser (tools/run_in_browser.py) on a WebGL2 canvas, their
  * pixels read back: a 64 by 32 frame, a yellow square at its top-left and the rest black,
@@ -124,7 +125,7 @@ static void init(void *user)
 
 int main(void)
 {
-    wgf_window_set_size(64, 32);
+    web_canvas_set_size(64, 32);
     wgf_render_set_clear_color(WGF_COLOR_BLACK);
     wgf_app_run(init, NULL, on_frame, NULL, NULL);
     return 0;

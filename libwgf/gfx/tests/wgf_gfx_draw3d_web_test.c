@@ -11,6 +11,7 @@
 #include "wgf_presentation.h"
 #include "wgf_render.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* Immediate mode in 3D, in a browser (tools/run_in_browser.py) on a WebGL2 canvas, its
  * pixels read back: a red cube in front of a camera, a larger green one behind it drawn
@@ -77,7 +78,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
-    wgf_window_set_size(64, 32);
+    web_canvas_set_size(64, 32);
     wgf_render_set_clear_color(WGF_COLOR_DARKGRAY);
     wgf_presentation_set_bar_color(WGF_COLOR_BLUE);
     camera = wgf_camera3d_create();

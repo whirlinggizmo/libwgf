@@ -12,6 +12,7 @@
 #include "wgf_presentation.h"
 #include "wgf_render.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* The presentation, in a browser (tools/run_in_browser.py) on a WebGL2 canvas: a 32 by
  * 32 design fitted to a 64 by 32 canvas (bars left and right), then the canvas resized to
@@ -67,7 +68,7 @@ static void on_frame(void *user)
         expect_pixel(30, 20, WGF_COLOR_DARKGRAY, "the design: the clear color");
         expect_pixel(18, 2, WGF_COLOR_RED, "the design's corner, drawn at the fitted corner");
         expect_pixel(12, 14, WGF_COLOR_BLUE, "drawing outside the design isn't in the bar");
-        wgf_window_set_size(32, 64); /* a resized window: bars above and below from here */
+        web_canvas_set_size(32, 64); /* a resized window: bars above and below from here */
     } else if (frames == 10) {
 
         height = 64;
@@ -87,7 +88,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
-    wgf_window_set_size(64, 32);
+    web_canvas_set_size(64, 32);
     expect(wgf_presentation_set(WGF_PRESENTATION_MODE_FIT, 32, 32), "fit, 32 by 32");
     wgf_presentation_set_bar_color(WGF_COLOR_BLUE);
     wgf_render_set_clear_color(WGF_COLOR_DARKGRAY);

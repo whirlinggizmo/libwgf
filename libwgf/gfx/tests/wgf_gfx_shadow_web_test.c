@@ -15,6 +15,7 @@
 #include "wgf_resource.h"
 #include "wgf_stage3d.h"
 #include "wgf_window.h"
+#include "wgf_web_canvas.h"
 
 /* Where a shadow starts, measured, libwgt's test (wgrender's pillar): a thin pillar on a
  * floor, seen straight down through an orthographic camera 4 units tall on a 400-pixel
@@ -161,7 +162,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
-    wgf_window_set_size(400, 400);
+    web_canvas_set_size(400, 400);
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
     return 0;
 }

@@ -4377,14 +4377,15 @@ export function wgf_window_get_title() {
  *
  * Returns false for a width or height under 1.
  *
- * On the web it is the canvas's size on the page, left to the page unless set. Once set, it is
- * the canvas's own style, which wins over the page's. The canvas then stays that size, at the
- * page's top left, whatever the browser window does. So a game meant to fill the page doesn't
- * set it on the web.
+ * On the web the window is the page's canvas, and the page sizes it:
  *
- * A game written for one size sets a presentation (wgf_presentation.h) instead. That fits the
- * game to whatever size the window is. Natively, it also opens the window at that size when
- * this size isn't set.
+ * - Setting the size changes nothing there, and returns true.
+ * - The getters return the canvas's size on the page, before the run and during it.
+ * - A page that wants a fixed size gives the canvas one in its CSS.
+ *
+ * A game written for one size sets a presentation (wgf_presentation.h). That fits the game to
+ * whatever size the window is. Natively, it also opens the window at that size when this size
+ * isn't set.
  */
 export function wgf_window_set_size(width, height) {
     const value = host["_wgf_window_set_size"](width, height);

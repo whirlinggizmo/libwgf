@@ -58,6 +58,8 @@ static void on_frame(void *user)
     expect(run->inits == 1, "init ran once, before the frames");
     expect(wgf_render_get_width() == 64 && wgf_render_get_height() == 64, "frames are the canvas's size");
     expect(wgf_window_get_width() == 64, "the window is the canvas");
+    expect(wgf_window_set_size(320, 200), "a size set on the web is taken");
+    expect(wgf_window_get_width() == 64 && wgf_window_get_height() == 64, "and the page still sizes the canvas");
     expect(wgf_loop_get_frame_delta() > 0.0f, "frames have a delta");
     wgf_draw_rectangle(8, 8, 16, 16, WGF_COLOR_GOLD);
     wgf_gfx_priv_end_frame();
