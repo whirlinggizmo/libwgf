@@ -1,6 +1,7 @@
-# libwgf's games on GitHub Pages: every game's web export (tools/build_pages.py), each
-# smoke-tested in Chrome (and held to its size budget, if its wgf.json gives one), deployed daily and on demand (gh
-# workflow run pages, or the Actions tab), not on every push.
+# libwgf on GitHub Pages (tools/build_pages.py): every game's web export, each smoke-tested in Chrome
+# (and held to its size budget, if its wgf.json gives one), every C example and scene in the launcher,
+# and the API reference; deployed daily and on demand (gh workflow run pages, or the Actions tab), not on
+# every push.
 name: pages
 
 on:
@@ -39,7 +40,7 @@ jobs:
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.7
-      - name: Every game exported for the web
+      - name: Every game exported for the web, the examples, and the API reference
         run: python3 tools/build_pages.py --out _site
       - uses: actions/upload-pages-artifact@v3
         with:
