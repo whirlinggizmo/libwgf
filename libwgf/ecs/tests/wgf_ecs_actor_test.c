@@ -7,7 +7,7 @@
 #include "wgf_behavior.h"
 #include "wgf_bounds.h"
 #include "wgf_stage2d.h"
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 #include "wgf_collider.h"
 #include "wgf_component.h"
 #include "wgf_core_part_priv.h"
@@ -76,9 +76,9 @@ int main(void)
     expect(wgf_actor_add_component(ship, WGF_COMPONENT_COLLIDER) && wgf_collider_get_radius(ship) == 1 &&
                wgf_collider_get_layer(ship) == 1 && wgf_collider_get_mask(ship) == -1,
            "a collider of radius 1, layer 1, meeting everything");
-    expect(wgf_actor_add_component(ship, WGF_COMPONENT_BODY2D) && wgf_actor_has_component(ship, WGF_COMPONENT_BODY2D) &&
-               wgf_body2d_get_solid_mask(ship) == -1 && wgf_actor_remove_component(ship, WGF_COMPONENT_BODY2D) &&
-               !wgf_actor_has_component(ship, WGF_COMPONENT_BODY2D) && !wgf_actor_add_component(ship, (wgf_component_t)9),
+    expect(wgf_actor_add_component(ship, WGF_COMPONENT_ARCADE2D) && wgf_actor_has_component(ship, WGF_COMPONENT_ARCADE2D) &&
+               wgf_arcade2d_get_solid_mask(ship) == -1 && wgf_actor_remove_component(ship, WGF_COMPONENT_ARCADE2D) &&
+               !wgf_actor_has_component(ship, WGF_COMPONENT_ARCADE2D) && !wgf_actor_add_component(ship, (wgf_component_t)9),
            "a 2D body added and removed; a component that isn't one refused");
     expect(wgf_actor_add_component(ship, WGF_COMPONENT_VOICE) && wgf_actor_get_voice(ship) != 0 &&
                wgf_voice_get_sound(wgf_actor_get_voice(ship)) == 0,

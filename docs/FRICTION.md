@@ -337,7 +337,7 @@ Racer (milestone 2), from step 4: the game-developer session that wrote the driv
 - **Workaround:** the grid moved to 12 m; the line triggers about 8 m early, the same every lap
 - **Cost:** 10 minutes, a re-record
 - **Found by:** the racer's session (its #8)
-- **Triage:** fixed in step 5: a body of type sensor (`wgf_body.h`), a box among its shapes, raising the ecs's trigger events to both; the ecs's colliders stay spheres
+- **Triage:** fixed in step 5: a body of type sensor (`wgf_body3d.h`), a box among its shapes, raising the ecs's trigger events to both; the ecs's colliders stay spheres
 
 ### Racer: no mesh from vertices; the track is 763 models
 
@@ -438,7 +438,7 @@ Racer (milestone 2), from step 5: the game-developer session's part 2, the car o
 - **Workaround:** geometry: a flat 0.4 m body box, the wheels attached just below its middle on a 2.0 m track, grip 1.5; the model drawn taller than the physics box
 - **Cost:** 30 minutes, three tries
 - **Found by:** the racer's session (its P3)
-- **Triage:** fixed in step 5: `wgf_body_set_mass_offset` (`mass_offset=` in a scene) moves the center of mass off the shape's, and `wgf_vehicle_set_anti_roll` (`anti_roll=`) gives each axle an anti-roll bar, taken at once
+- **Triage:** fixed in step 5: `wgf_body3d_set_mass_offset` (`mass_offset=` in a scene) moves the center of mass off the shape's, and `wgf_vehicle_set_anti_roll` (`anti_roll=`) gives each axle an anti-roll bar, taken at once
 
 ### Racer: wheel slip read 1/60 rolling and 1 driving
 
@@ -460,7 +460,7 @@ Racer (milestone 2), from step 5: the game-developer session's part 2, the car o
 
 ### Racer: grass is ice, not drag, and settings remake a body at rest
 
-- **Where:** the game's grass (`Drive.hx:51-56`); `wgf_body.h`'s "made again ... at rest"
+- **Where:** the game's grass (`Drive.hx:51-56`); `wgf_body3d.h`'s "made again ... at rest"
 - **Missing:** a drag on a surface: friction takes grip but not speed, and a body's settings changed during a race remade it at rest, ruling out damping as drag, or any live tuning
 - **Workaround:** grass friction 0.7, and a game-side drag on the vehicle's input while on grass
 - **Cost:** 15 minutes; live tuning designed around, never tried
@@ -474,7 +474,7 @@ Racer (milestone 2), from step 5: the game-developer session's part 2, the car o
 - **Workaround:** the actor raised, its parts lowered
 - **Cost:** 5 minutes
 - **Found by:** the racer's session (its P8)
-- **Triage:** fixed in step 5: `wgf_body_set_offset` (`offset=`) centers the shape off its actor
+- **Triage:** fixed in step 5: `wgf_body3d_set_offset` (`offset=`) centers the shape off its actor
 
 ### Racer: `wgf screenshot --autopilot` stopped at the first failed expectation
 
@@ -492,7 +492,7 @@ Racer (milestone 2), from step 5: the game-developer session's part 2, the car o
 - **Workaround:** the C example read for the keys; the budget raised to 550 KB
 - **Cost:** minutes
 - **Found by:** the racer's session (its P2, P7, P10, P12)
-- **Triage:** fixed in step 5: BUILDING.md's components table has `body` and `vehicle` with their units and says how a mesh body reads its models; the template's README says what physics costs; `wgf_body.h` says a convex or mesh shape takes each model's scale
+- **Triage:** fixed in step 5: BUILDING.md's components table has `body` and `vehicle` with their units and says how a mesh body reads its models; the template's README says what physics costs; `wgf_body3d.h` says a convex or mesh shape takes each model's scale
 
 ### Racer: the debug view's lines dashed on coplanar asphalt
 

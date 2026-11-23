@@ -1,5 +1,5 @@
 #include "wgf_vehicle.h"
-#include "wgf_physics.h"
+#include "wgf_physics3d.h"
 
 #include <math.h>
 #include <stdarg.h>
@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "actor/wgf_gfx_actor_priv.h"
-#include "wgf_body.h"
+#include "wgf_body3d.h"
 #include "wgf_component.h"
 #include "wgf_core_load_priv.h" /* WGF_CORE_PRIV_ON_LINK */
 #include "wgf_ecs_priv.h"
@@ -17,7 +17,7 @@
 #include "wgf_quat.h"
 
 /* Vehicles (wgf_vehicle.h): the vehicle component, a file of its own linked on purpose
- * (wgf_physics_enable_vehicles, or a game's "vehicles" feature), so a program with physics and
+ * (wgf_physics3d_enable_vehicles, or a game's "vehicles" feature), so a program with physics and
  * no car carries none of Jolt's VehicleConstraint. physics3d (wgf_physics3d.c) reaches it
  * through the hooks this file sets as it is linked: its component made as physics starts, each
  * vehicle made where it changed and given its driver's input before each step, its wheels set
@@ -113,7 +113,7 @@ static void find_wheels(wgf_actor_t actor, vehicle_t *v)
         if (rest != NULL) *rest++ = '\0';
         wheel = wgf_actor_find(actor, name);
         if (wheel == 0 || wgf_actor_get_parent(wheel) != actor) {
-            wgf_log_warn("wgf_physics: a vehicle's wheel \"%s\" isn't one of its children", name);
+            wgf_log_warn("wgf_physics3d: a vehicle's wheel \"%s\" isn't one of its children", name);
             v->wheel_count = 0;
             break;
         }
@@ -134,8 +134,8 @@ static void make_vehicle(wgf_actor_t actor, vehicle_t *v)
     unmake_vehicle(v);
     find_wheels(actor, v);
     v->dirty = false;
-    if (!has_body || body == WGF_PHYSICS3D_PRIV_NO_BODY || type != WGF_BODY_TYPE_DYNAMIC || v->wheel_count < 2) {
-        if (v->wheel_count >= 2) wgf_log_warn("wgf_physics: a vehicle needs a dynamic body on its actor");
+    if (!has_body || body == WGF_PHYSICS3D_PRIV_NO_BODY || type != WGF_BODY3D_TYPE_DYNAMIC || v->wheel_count < 2) {
+        if (v->wheel_count >= 2) wgf_log_warn("wgf_physics3d: a vehicle needs a dynamic body on its actor");
         return;
     }
     memset(&d, 0, sizeof(d));
@@ -161,7 +161,7 @@ static void make_vehicle(wgf_actor_t actor, vehicle_t *v)
     d.gear_count = v->gear_count;
     d.drive = v->drive;
     v->index = wgf_physics3d_priv_jolt_vehicle_create(body, &d);
-    if (v->index < 0) wgf_log_warn("wgf_physics: a vehicle couldn't be made (more than 64?)");
+    if (v->index < 0) wgf_log_warn("wgf_physics3d: a vehicle couldn't be made (more than 64?)");
 }
 
 static void vehicle_add(wgf_actor_t actor)
@@ -221,7 +221,7 @@ static void vehicle_set(wgf_actor_t actor, const char *key, const char *text)
     } else if (strcmp(key, "drive") == 0) {
         const int w = word_of(text, drives_words, 3);
         if (w >= 0) v->drive = w;
-        else wgf_log_warn("wgf_physics: a vehicle's drive is front, rear, or all (\"%s\")", text);
+        else wgf_log_warn("wgf_physics3d: a vehicle's drive is front, rear, or all (\"%s\")", text);
     }
 }
 
@@ -342,7 +342,7 @@ WGF_CORE_PRIV_ON_LINK(link_vehicles)
     wgf_physics3d_priv_set_vehicles(&hooks);
 }
 
-bool wgf_physics_enable_vehicles(void)
+bool wgf_physics3d_enable_vehicles(void)
 {
     wgf_physics3d_priv_set_vehicles(&hooks);
     return true;

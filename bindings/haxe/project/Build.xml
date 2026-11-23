@@ -21,15 +21,15 @@
 			<flag value="/INCLUDE:wgf_mesh_create" if="MSVC_VER"/>
 			<flag value="-Wl,-u,wgf_mesh_create" unless="MSVC_VER"/>
 		</section>
-		<!-- -D wgf_characters: characters linked (its "characters" feature), as wgf_physics_enable_characters does -->
+		<!-- -D wgf_characters: characters linked (its "characters" feature), as wgf_physics3d_enable_characters does -->
 		<section if="wgf_characters">
-			<flag value="/INCLUDE:wgf_physics_enable_characters" if="MSVC_VER"/>
-			<flag value="-Wl,-u,wgf_physics_enable_characters" unless="MSVC_VER"/>
+			<flag value="/INCLUDE:wgf_physics3d_enable_characters" if="MSVC_VER"/>
+			<flag value="-Wl,-u,wgf_physics3d_enable_characters" unless="MSVC_VER"/>
 		</section>
-		<!-- -D wgf_vehicles: vehicles linked (its "vehicles" feature), as wgf_physics_enable_vehicles does -->
+		<!-- -D wgf_vehicles: vehicles linked (its "vehicles" feature), as wgf_physics3d_enable_vehicles does -->
 		<section if="wgf_vehicles">
-			<flag value="/INCLUDE:wgf_physics_enable_vehicles" if="MSVC_VER"/>
-			<flag value="-Wl,-u,wgf_physics_enable_vehicles" unless="MSVC_VER"/>
+			<flag value="/INCLUDE:wgf_physics3d_enable_vehicles" if="MSVC_VER"/>
+			<flag value="-Wl,-u,wgf_physics3d_enable_vehicles" unless="MSVC_VER"/>
 		</section>
 		<!-- -D wgf_bitmap_fonts: what reads a bitmap font's file linked (its "bitmap_fonts" feature) -->
 		<section if="wgf_bitmap_fonts">

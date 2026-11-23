@@ -2,7 +2,7 @@
 
 #include "wgf_actor.h"
 #include "wgf_app.h"
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 #include "wgf_camera2d.h"
 #include "wgf_collider.h"
 #include "wgf_color.h"
@@ -93,7 +93,7 @@ static void init(void *user)
             }
         }
     }
-    wgf_body2d_set_grid(world, cells, ROWS * COLUMNS, COLUMNS, CELL, LEFT, TOP);
+    wgf_arcade2d_set_grid(world, cells, ROWS * COLUMNS, COLUMNS, CELL, LEFT, TOP);
 
     platform = block(120, 108, 128, 16, WGF_COLOR_SKYBLUE); /* a solid collider, not a cell */
     wgf_shape2d_set_pivot(platform, 0.5f, 0.5f);
@@ -121,11 +121,11 @@ static void init(void *user)
 
     hero = block(-300, 150, 20, 28, WGF_COLOR_ORANGE);
     wgf_shape2d_set_pivot(hero, 0.5f, 0.5f);
-    wgf_actor_add_component(hero, WGF_COMPONENT_BODY2D);
-    wgf_body2d_set_size(hero, 20, 28);
-    wgf_body2d_set_gravity(hero, 1400);
-    wgf_body2d_set_max_fall_speed(hero, 900);
-    wgf_body2d_set_solid_mask(hero, 1); /* the platform; the coins on layer 2 are triggers */
+    wgf_actor_add_component(hero, WGF_COMPONENT_ARCADE2D);
+    wgf_arcade2d_set_size(hero, 20, 28);
+    wgf_arcade2d_set_gravity(hero, 1400);
+    wgf_arcade2d_set_max_fall_speed(hero, 900);
+    wgf_arcade2d_set_solid_mask(hero, 1); /* the platform; the coins on layer 2 are triggers */
     wgf_actor_add_component(hero, WGF_COMPONENT_COLLIDER);
     wgf_collider_set_rectangle(hero, 20, 28);
     wgf_collider_set_layer(hero, 4);
@@ -152,15 +152,15 @@ static void frame(void *user)
     since_jump += dt;
     played = played || left || right || jump;
     if (!played) { /* by itself: turned back at a wall, a jump every second and a half */
-        if ((facing > 0 && wgf_body2d_is_blocked_right(hero)) || (facing < 0 && wgf_body2d_is_blocked_left(hero))) {
+        if ((facing > 0 && wgf_arcade2d_is_blocked_right(hero)) || (facing < 0 && wgf_arcade2d_is_blocked_left(hero))) {
             facing = -facing;
         }
         jump = since_jump > 1.5f;
     }
-    wgf_body2d_set_velocity(hero, played ? (right ? RUN : 0) - (left ? RUN : 0) : RUN * (float)facing,
-                            wgf_body2d_get_velocity(hero).y);
-    if (jump && wgf_body2d_get_air_time(hero) < COYOTE) { /* grounded, or just off a ledge */
-        wgf_body2d_set_velocity(hero, wgf_body2d_get_velocity(hero).x, -JUMP);
+    wgf_arcade2d_set_velocity(hero, played ? (right ? RUN : 0) - (left ? RUN : 0) : RUN * (float)facing,
+                            wgf_arcade2d_get_velocity(hero).y);
+    if (jump && wgf_arcade2d_get_air_time(hero) < COYOTE) { /* grounded, or just off a ledge */
+        wgf_arcade2d_set_velocity(hero, wgf_arcade2d_get_velocity(hero).x, -JUMP);
         since_jump = 0;
     }
 
@@ -173,7 +173,7 @@ static void frame(void *user)
         }
     }
     snprintf(text, sizeof(text), "libwgf: ecs-platformer   coins %d of %d%s", coins_taken, coins_taken + coins_left,
-             wgf_body2d_is_grounded(hero) ? "" : "   (in the air)");
+             wgf_arcade2d_is_grounded(hero) ? "" : "   (in the air)");
     wgf_text_set_string(label, text);
     wgf_stage2d_draw(world);
 }

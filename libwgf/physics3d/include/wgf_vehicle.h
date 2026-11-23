@@ -13,9 +13,9 @@ extern "C" {
 #endif
 
 /* A wheeled vehicle (WGF_COMPONENT_VEHICLE, wgf_component.h) on an actor with a dynamic
- * body (wgf_body.h): wheels on springs, an engine, an automatic gearbox, and differentials,
+ * body (wgf_body3d.h): wheels on springs, an engine, an automatic gearbox, and differentials,
  * driven by the program's intent (set_input), each tick, in the physics world
- * (wgf_physics.h). It faces its actor's +z, +y up.
+ * (wgf_physics3d.h). It faces its actor's +z, +y up.
  *
  * Its wheels are actors under it, given in left and right pairs, front first: where each
  * is as the vehicle is made is where it attaches (its spring at rest), and each tick it is

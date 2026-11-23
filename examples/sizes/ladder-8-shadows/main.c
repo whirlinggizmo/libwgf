@@ -2,7 +2,7 @@
 
 #include "wgf_app.h"
 #include "wgf_asset.h"
-#include "wgf_body.h"
+#include "wgf_body3d.h"
 #include "wgf_camera3d.h"
 #include "wgf_stage2d.h"
 #include "wgf_color.h"
@@ -12,7 +12,7 @@
 #include "wgf_mesh.h"
 #include "wgf_model.h"
 #include "wgf_motion.h"
-#include "wgf_physics.h"
+#include "wgf_physics3d.h"
 #include "wgf_actor.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
@@ -71,16 +71,16 @@ static void init(void *user)
             wgf_actor_set_parent(lamp, stage);
         }
         wgf_actor_set_parent(model, stage);
-        wgf_physics_set_gravity(0, -9.81f, 0);
+        wgf_physics3d_set_gravity(0, -9.81f, 0);
         wgf_actor_set_position(model, 0, 3, 0);
-        wgf_actor_add_component(model, WGF_COMPONENT_BODY); /* a dynamic box of 1 by 1 by 1 */
+        wgf_actor_add_component(model, WGF_COMPONENT_BODY3D); /* a dynamic box of 1 by 1 by 1 */
         {
             const wgf_actor_t floor_actor = wgf_actor_create();
             wgf_actor_set_position(floor_actor, 0, -1, 0);
             wgf_actor_set_parent(floor_actor, stage);
-            wgf_actor_add_component(floor_actor, WGF_COMPONENT_BODY);
-            wgf_body_set_type(floor_actor, WGF_BODY_TYPE_STATIC);
-            wgf_body_set_shape(floor_actor, WGF_BODY_SHAPE_BOX, 10, 1, 10);
+            wgf_actor_add_component(floor_actor, WGF_COMPONENT_BODY3D);
+            wgf_body3d_set_type(floor_actor, WGF_BODY3D_TYPE_STATIC);
+            wgf_body3d_set_shape(floor_actor, WGF_BODY3D_SHAPE_BOX, 10, 1, 10);
         }
     }
     world = wgf_stage2d_create();

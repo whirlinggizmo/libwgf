@@ -661,6 +661,51 @@ export declare const Actor: {
      */
     readonly isPickable: typeof raw.wgf_actor_is_pickable;
     /**
+     * add makes one with its defaults (each component's header says them); adding one it has
+     * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+     * that isn't an actor, or a component that isn't one; remove is false too for one it
+     * doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+     * before physics has started, it is refused, and logged once.
+     */
+    readonly addComponent: typeof raw.wgf_actor_add_component;
+    /**
+     * add makes one with its defaults (each component's header says them); adding one it has
+     * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+     * that isn't an actor, or a component that isn't one; remove is false too for one it
+     * doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+     * before physics has started, it is refused, and logged once.
+     */
+    readonly removeComponent: typeof raw.wgf_actor_remove_component;
+    /**
+     * add makes one with its defaults (each component's header says them); adding one it has
+     * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+     * that isn't an actor, or a component that isn't one; remove is false too for one it
+     * doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+     * before physics has started, it is refused, and logged once.
+     */
+    readonly hasComponent: typeof raw.wgf_actor_has_component;
+    /**
+     * The voice component's voice; 0 for an actor without one. The actor's: play it, never
+     * destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
+     * thrust, looping): it stops when the actor goes, with nothing for the game to end. A
+     * sound played once is wgf_sound_play's.
+     */
+    readonly getVoice: typeof raw.wgf_actor_get_voice;
+    /**
+     * The actors with a component, oldest first (by when their first component or behavior
+     * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+     * there are, to size `out`. Found by an index of each component, never by a look at every
+     * actor; NONE, or a value that isn't a component, finds none.
+     */
+    readonly findWithComponent: typeof raw.wgf_actor_find_with_component;
+    /**
+     * The actors with a component, oldest first (by when their first component or behavior
+     * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+     * there are, to size `out`. Found by an index of each component, never by a look at every
+     * actor; NONE, or a value that isn't a component, finds none.
+     */
+    readonly countWithComponent: typeof raw.wgf_actor_count_with_component;
+    /**
      * A behavior named `name` added to `actor`, after the ones it has: its id, or 0 when
      * `actor` isn't an actor, the name breaks the rule above, or it is out of memory.
      */
@@ -698,51 +743,6 @@ export declare const Actor: {
      * Found by an index of each name, never by a look at every actor.
      */
     readonly countWithBehavior: typeof raw.wgf_actor_count_with_behavior;
-    /**
-     * add makes one with its defaults (each component's header says them); adding one it has
-     * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
-     * that isn't an actor, or a component that isn't one; remove is false too for one it
-     * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
-     * before physics has started, it is refused, and logged once.
-     */
-    readonly addComponent: typeof raw.wgf_actor_add_component;
-    /**
-     * add makes one with its defaults (each component's header says them); adding one it has
-     * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
-     * that isn't an actor, or a component that isn't one; remove is false too for one it
-     * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
-     * before physics has started, it is refused, and logged once.
-     */
-    readonly removeComponent: typeof raw.wgf_actor_remove_component;
-    /**
-     * add makes one with its defaults (each component's header says them); adding one it has
-     * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
-     * that isn't an actor, or a component that isn't one; remove is false too for one it
-     * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
-     * before physics has started, it is refused, and logged once.
-     */
-    readonly hasComponent: typeof raw.wgf_actor_has_component;
-    /**
-     * The voice component's voice; 0 for an actor without one. The actor's: play it, never
-     * destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
-     * thrust, looping): it stops when the actor goes, with nothing for the game to end. A
-     * sound played once is wgf_sound_play's.
-     */
-    readonly getVoice: typeof raw.wgf_actor_get_voice;
-    /**
-     * The actors with a component, oldest first (by when their first component or behavior
-     * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
-     * there are, to size `out`. Found by an index of each component, never by a look at every
-     * actor; NONE, or a value that isn't a component, finds none.
-     */
-    readonly findWithComponent: typeof raw.wgf_actor_find_with_component;
-    /**
-     * The actors with a component, oldest first (by when their first component or behavior
-     * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
-     * there are, to size `out`. Found by an index of each component, never by a look at every
-     * actor; NONE, or a value that isn't a component, finds none.
-     */
-    readonly countWithComponent: typeof raw.wgf_actor_count_with_component;
     /**
      * How many actors have a component or a behavior: the simulated ones.
      */
@@ -848,6 +848,166 @@ export declare const App: {
      * given or isn't one. The last of a name given wins. False, "", or `otherwise` for NULL.
      */
     readonly getOptionFloat: typeof raw.wgf_app_get_option_float;
+};
+/** A handle of kind wgf_actor_t: the raw binding's branded type. */
+export type Arcade2d = raw.wgf_actor_t;
+/**
+ * A 2D body (WGF_COMPONENT_ARCADE2D), helix-legacy's Body2D: an arcade box that moves its
+ * actor each tick by its velocity and gravity, sliding along what is solid and stopping its
+ * velocity against it, and what it touches kept: the ground under it, a wall either side, a
+ * ceiling. A platformer's player or enemy; a top-down character, with no gravity. On a 2D
+ * stage, y down: gravity is + down, and the ground is under it.
+ *
+ * Its box is `size` about the actor's position, scaled by its scale (not turned). Each tick,
+ * after motion, gravity speeds its fall (held to its fastest fall), and it moves across then
+ * down (wgf_collide2d_move_rects), against two things under the same parent actor:
+ *   - colliders (wgf_collider.h) whose layer is in its solid mask, by their bounds (a
+ *     rectangle's own box; a circle's, a polygon's, a segment's box around it), switched on,
+ *     on actors without a body: bodies don't push or stop each other (their colliders meet
+ *     them as triggers);
+ *   - the parent's grid of solid cells (set_grid below): a tilemap's walls and floors.
+ * A body moves its actor itself: an actor with one should have no motion. Its collider, if it
+ * has one, isn't solid to it.
+ *
+ * Defaults: 1 by 1, still, no gravity, no fastest fall, a solid mask of every layer (-1).
+ * Every call is false (or 0) for an actor without a body.
+ */
+export declare const Arcade2d: {
+    /**
+     * False too for a size below 0, or not finite.
+     */
+    readonly setSize: typeof raw.wgf_arcade2d_set_size;
+    /**
+     * False too for a size below 0, or not finite.
+     */
+    readonly getSize: typeof raw.wgf_arcade2d_get_size;
+    /**
+     * Units a second, + right and down. False too for numbers that aren't finite.
+     */
+    readonly setVelocity: typeof raw.wgf_arcade2d_set_velocity;
+    /**
+     * Units a second, + right and down. False too for numbers that aren't finite.
+     */
+    readonly getVelocity: typeof raw.wgf_arcade2d_get_velocity;
+    /**
+     * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
+     * a number that isn't finite.
+     */
+    readonly setGravity: typeof raw.wgf_arcade2d_set_gravity;
+    /**
+     * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
+     * a number that isn't finite.
+     */
+    readonly getGravity: typeof raw.wgf_arcade2d_get_gravity;
+    /**
+     * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
+     * isn't finite.
+     */
+    readonly setMaxFallSpeed: typeof raw.wgf_arcade2d_set_max_fall_speed;
+    /**
+     * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
+     * isn't finite.
+     */
+    readonly getMaxFallSpeed: typeof raw.wgf_arcade2d_get_max_fall_speed;
+    /**
+     * The collider layers that are solid to it.
+     */
+    readonly setSolidMask: typeof raw.wgf_arcade2d_set_solid_mask;
+    /**
+     * The collider layers that are solid to it.
+     */
+    readonly getSolidMask: typeof raw.wgf_arcade2d_get_solid_mask;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly isGrounded: typeof raw.wgf_arcade2d_is_grounded;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly isBlockedLeft: typeof raw.wgf_arcade2d_is_blocked_left;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly isBlockedRight: typeof raw.wgf_arcade2d_is_blocked_right;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly isBlockedAbove: typeof raw.wgf_arcade2d_is_blocked_above;
+    /**
+     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+     */
+    readonly getAirTime: typeof raw.wgf_arcade2d_get_air_time;
+    /**
+     * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+     * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+     * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+     * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+     * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+     * none) and set (false outside it): a door opened, a block broken.
+     */
+    readonly setGrid: typeof raw.wgf_arcade2d_set_grid;
+    /**
+     * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+     * whose tiles aren't square.
+     */
+    readonly setGridFromLayer: typeof raw.wgf_arcade2d_set_grid_from_layer;
+    /**
+     * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+     * whose tiles aren't square.
+     */
+    readonly clearGrid: typeof raw.wgf_arcade2d_clear_grid;
+    /**
+     * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+     * whose tiles aren't square.
+     */
+    readonly getGridCell: typeof raw.wgf_arcade2d_get_grid_cell;
+    /**
+     * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+     * whose tiles aren't square.
+     */
+    readonly setGridCell: typeof raw.wgf_arcade2d_set_grid_cell;
+    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
+    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /**
  * Assets: where a resource's file comes from. A path is an asset: creating a resource
@@ -1353,7 +1513,7 @@ export declare const BehaviorComponent: {
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
-export type Body = raw.wgf_actor_t;
+export type Body3d = raw.wgf_actor_t;
 /**
  * A contact is told for two solid bodies that begin to touch, one of them moving (dynamic,
  * kinematic, or a character's): a CONTACT_BEGIN to each, with the other's layer, and a
@@ -1363,10 +1523,10 @@ export type Body = raw.wgf_actor_t;
  * moving body it may meet begins to overlap it, and a TRIGGER_EXIT when it stops (or goes),
  * each to both, with the other's layer; a behavior's onTriggerEnter.
  */
-export declare const Body: {
+export declare const Body3d: {
     /**
-     * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
-     * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+     * A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
+     * (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
      * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
      * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
      * car's drag on grass, set as it goes); its other settings take effect at the next tick,
@@ -1382,10 +1542,10 @@ export declare const Body: {
      * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
      * body.
      */
-    readonly setType: typeof raw.wgf_body_set_type;
+    readonly setType: typeof raw.wgf_body3d_set_type;
     /**
-     * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
-     * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+     * A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
+     * (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
      * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
      * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
      * car's drag on grass, set as it goes); its other settings take effect at the next tick,
@@ -1401,144 +1561,144 @@ export declare const Body: {
      * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
      * body.
      */
-    readonly getType: typeof raw.wgf_body_get_type;
+    readonly getType: typeof raw.wgf_body3d_get_type;
     /**
-     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
      * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
      * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
      * mesh can only be static: on another type it is its convex hull.
      */
-    readonly setShape: typeof raw.wgf_body_set_shape;
+    readonly setShape: typeof raw.wgf_body3d_set_shape;
     /**
-     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
      * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
      * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
      * mesh can only be static: on another type it is its convex hull.
      */
-    readonly getShape: typeof raw.wgf_body_get_shape;
+    readonly getShape: typeof raw.wgf_body3d_get_shape;
     /**
-     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+     * Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
      * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
      * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
      * mesh can only be static: on another type it is its convex hull.
      */
-    readonly getSize: typeof raw.wgf_body_get_size;
+    readonly getSize: typeof raw.wgf_body3d_get_size;
     /**
      * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
      * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
      * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
      */
-    readonly setOffset: typeof raw.wgf_body_set_offset;
+    readonly setOffset: typeof raw.wgf_body3d_set_offset;
     /**
      * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
      * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
      * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
      */
-    readonly getOffset: typeof raw.wgf_body_get_offset;
+    readonly getOffset: typeof raw.wgf_body3d_get_offset;
     /**
      * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
      * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
      * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
      */
-    readonly setMassOffset: typeof raw.wgf_body_set_mass_offset;
+    readonly setMassOffset: typeof raw.wgf_body3d_set_mass_offset;
     /**
      * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
      * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
      * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
      */
-    readonly getMassOffset: typeof raw.wgf_body_get_mass_offset;
+    readonly getMassOffset: typeof raw.wgf_body3d_get_mass_offset;
     /**
      * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
      */
-    readonly setMass: typeof raw.wgf_body_set_mass;
+    readonly setMass: typeof raw.wgf_body3d_set_mass;
     /**
      * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
      */
-    readonly getMass: typeof raw.wgf_body_get_mass;
+    readonly getMass: typeof raw.wgf_body3d_get_mass;
     /**
      * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
      * clamped to 0 to 1), each a pair's taken together.
      */
-    readonly setFriction: typeof raw.wgf_body_set_friction;
+    readonly setFriction: typeof raw.wgf_body3d_set_friction;
     /**
      * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
      * clamped to 0 to 1), each a pair's taken together.
      */
-    readonly getFriction: typeof raw.wgf_body_get_friction;
+    readonly getFriction: typeof raw.wgf_body3d_get_friction;
     /**
      * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
      * clamped to 0 to 1), each a pair's taken together.
      */
-    readonly setBounce: typeof raw.wgf_body_set_bounce;
+    readonly setBounce: typeof raw.wgf_body3d_set_bounce;
     /**
      * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
      * clamped to 0 to 1), each a pair's taken together.
      */
-    readonly getBounce: typeof raw.wgf_body_get_bounce;
+    readonly getBounce: typeof raw.wgf_body3d_get_bounce;
     /**
      * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
      * (linear, angular).
      */
-    readonly setDamping: typeof raw.wgf_body_set_damping;
+    readonly setDamping: typeof raw.wgf_body3d_set_damping;
     /**
      * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
      * (linear, angular).
      */
-    readonly getDamping: typeof raw.wgf_body_get_damping;
+    readonly getDamping: typeof raw.wgf_body3d_get_damping;
     /**
      * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
      * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
      * body meets every moving one its mask lets, and every moving one meets the static world.
      */
-    readonly setLayer: typeof raw.wgf_body_set_layer;
+    readonly setLayer: typeof raw.wgf_body3d_set_layer;
     /**
      * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
      * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
      * body meets every moving one its mask lets, and every moving one meets the static world.
      */
-    readonly getLayer: typeof raw.wgf_body_get_layer;
+    readonly getLayer: typeof raw.wgf_body3d_get_layer;
     /**
      * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
      * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
      * body meets every moving one its mask lets, and every moving one meets the static world.
      */
-    readonly setMask: typeof raw.wgf_body_set_mask;
+    readonly setMask: typeof raw.wgf_body3d_set_mask;
     /**
      * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
      * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
      * body meets every moving one its mask lets, and every moving one meets the static world.
      */
-    readonly getMask: typeof raw.wgf_body_get_mask;
+    readonly getMask: typeof raw.wgf_body3d_get_mask;
     /**
      * Its velocity (units a second) and spin (radians a second about each axis), in its
      * stage's space; and a push, an impulse (kg units a second) through its center. A body not
      * yet made in the world (before its first tick) reads 0 and takes them when it is.
      */
-    readonly setVelocity: typeof raw.wgf_body_set_velocity;
+    readonly setVelocity: typeof raw.wgf_body3d_set_velocity;
     /**
      * Its velocity (units a second) and spin (radians a second about each axis), in its
      * stage's space; and a push, an impulse (kg units a second) through its center. A body not
      * yet made in the world (before its first tick) reads 0 and takes them when it is.
      */
-    readonly getVelocity: typeof raw.wgf_body_get_velocity;
+    readonly getVelocity: typeof raw.wgf_body3d_get_velocity;
     /**
      * Its velocity (units a second) and spin (radians a second about each axis), in its
      * stage's space; and a push, an impulse (kg units a second) through its center. A body not
      * yet made in the world (before its first tick) reads 0 and takes them when it is.
      */
-    readonly setSpin: typeof raw.wgf_body_set_spin;
+    readonly setSpin: typeof raw.wgf_body3d_set_spin;
     /**
      * Its velocity (units a second) and spin (radians a second about each axis), in its
      * stage's space; and a push, an impulse (kg units a second) through its center. A body not
      * yet made in the world (before its first tick) reads 0 and takes them when it is.
      */
-    readonly getSpin: typeof raw.wgf_body_get_spin;
+    readonly getSpin: typeof raw.wgf_body3d_get_spin;
     /**
      * Its velocity (units a second) and spin (radians a second about each axis), in its
      * stage's space; and a push, an impulse (kg units a second) through its center. A body not
      * yet made in the world (before its first tick) reads 0 and takes them when it is.
      */
-    readonly addImpulse: typeof raw.wgf_body_add_impulse;
+    readonly addImpulse: typeof raw.wgf_body3d_add_impulse;
     /**
      * A character (Jolt's CharacterVirtual) is moved by its velocity each tick, sliding along
      * walls and slopes, climbing steps up to its step height and kept on the floor going down
@@ -1549,189 +1709,29 @@ export declare const Body: {
      * program sets puts it there. Rays, sensors, and queries find it as a body of its shape.
      * A capsule is its usual shape, its center at the actor.
      */
-    readonly isGrounded: typeof raw.wgf_body_is_grounded;
+    readonly isGrounded: typeof raw.wgf_body3d_is_grounded;
     /**
      * The ground it stands on's normal; 0, 0, 0 when it isn't standing, or isn't a character.
      */
-    readonly getGroundNormal: typeof raw.wgf_body_get_ground_normal;
+    readonly getGroundNormal: typeof raw.wgf_body3d_get_ground_normal;
     /**
      * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
      */
-    readonly setStepHeight: typeof raw.wgf_body_set_step_height;
+    readonly setStepHeight: typeof raw.wgf_body3d_set_step_height;
     /**
      * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
      */
-    readonly getStepHeight: typeof raw.wgf_body_get_step_height;
+    readonly getStepHeight: typeof raw.wgf_body3d_get_step_height;
     /**
      * The steepest ground it stands on, in radians from level (default 50 degrees), at the
      * next tick. Refuses one outside 0 to a right angle.
      */
-    readonly setMaxSlope: typeof raw.wgf_body_set_max_slope;
+    readonly setMaxSlope: typeof raw.wgf_body3d_set_max_slope;
     /**
      * The steepest ground it stands on, in radians from level (default 50 degrees), at the
      * next tick. Refuses one outside 0 to a right angle.
      */
-    readonly getMaxSlope: typeof raw.wgf_body_get_max_slope;
-    /** Whether the handle refers to something alive (wgf_handle_is_alive). */
-    readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
-};
-/** A handle of kind wgf_actor_t: the raw binding's branded type. */
-export type Body2d = raw.wgf_actor_t;
-/**
- * A 2D body (WGF_COMPONENT_BODY2D), helix-legacy's Body2D: an arcade box that moves its
- * actor each tick by its velocity and gravity, sliding along what is solid and stopping its
- * velocity against it, and what it touches kept: the ground under it, a wall either side, a
- * ceiling. A platformer's player or enemy; a top-down character, with no gravity. On a 2D
- * stage, y down: gravity is + down, and the ground is under it.
- *
- * Its box is `size` about the actor's position, scaled by its scale (not turned). Each tick,
- * after motion, gravity speeds its fall (held to its fastest fall), and it moves across then
- * down (wgf_collide2d_move_rects), against two things under the same parent actor:
- *   - colliders (wgf_collider.h) whose layer is in its solid mask, by their bounds (a
- *     rectangle's own box; a circle's, a polygon's, a segment's box around it), switched on,
- *     on actors without a body: bodies don't push or stop each other (their colliders meet
- *     them as triggers);
- *   - the parent's grid of solid cells (set_grid below): a tilemap's walls and floors.
- * A body moves its actor itself: an actor with one should have no motion. Its collider, if it
- * has one, isn't solid to it.
- *
- * Defaults: 1 by 1, still, no gravity, no fastest fall, a solid mask of every layer (-1).
- * Every call is false (or 0) for an actor without a body.
- */
-export declare const Body2d: {
-    /**
-     * False too for a size below 0, or not finite.
-     */
-    readonly setSize: typeof raw.wgf_body2d_set_size;
-    /**
-     * False too for a size below 0, or not finite.
-     */
-    readonly getSize: typeof raw.wgf_body2d_get_size;
-    /**
-     * Units a second, + right and down. False too for numbers that aren't finite.
-     */
-    readonly setVelocity: typeof raw.wgf_body2d_set_velocity;
-    /**
-     * Units a second, + right and down. False too for numbers that aren't finite.
-     */
-    readonly getVelocity: typeof raw.wgf_body2d_get_velocity;
-    /**
-     * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
-     * a number that isn't finite.
-     */
-    readonly setGravity: typeof raw.wgf_body2d_set_gravity;
-    /**
-     * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
-     * a number that isn't finite.
-     */
-    readonly getGravity: typeof raw.wgf_body2d_get_gravity;
-    /**
-     * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
-     * isn't finite.
-     */
-    readonly setMaxFallSpeed: typeof raw.wgf_body2d_set_max_fall_speed;
-    /**
-     * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
-     * isn't finite.
-     */
-    readonly getMaxFallSpeed: typeof raw.wgf_body2d_get_max_fall_speed;
-    /**
-     * The collider layers that are solid to it.
-     */
-    readonly setSolidMask: typeof raw.wgf_body2d_set_solid_mask;
-    /**
-     * The collider layers that are solid to it.
-     */
-    readonly getSolidMask: typeof raw.wgf_body2d_get_solid_mask;
-    /**
-     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
-     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
-     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
-     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
-     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
-     */
-    readonly isGrounded: typeof raw.wgf_body2d_is_grounded;
-    /**
-     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
-     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
-     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
-     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
-     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
-     */
-    readonly isBlockedLeft: typeof raw.wgf_body2d_is_blocked_left;
-    /**
-     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
-     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
-     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
-     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
-     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
-     */
-    readonly isBlockedRight: typeof raw.wgf_body2d_is_blocked_right;
-    /**
-     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
-     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
-     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
-     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
-     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
-     */
-    readonly isBlockedAbove: typeof raw.wgf_body2d_is_blocked_above;
-    /**
-     * What it touched at its last tick, moving into it: standing on something (grounded: gravity
-     * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
-     * side reads blocked only while it moves that way: a body walking into a wall each tick, as
-     * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
-     * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
-     */
-    readonly getAirTime: typeof raw.wgf_body2d_get_air_time;
-    /**
-     * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
-     * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
-     * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
-     * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
-     * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
-     * none) and set (false outside it): a door opened, a block broken.
-     */
-    readonly setGrid: typeof raw.wgf_body2d_set_grid;
-    /**
-     * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
-     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
-     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
-     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
-     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
-     * whose tiles aren't square.
-     */
-    readonly setGridFromLayer: typeof raw.wgf_body2d_set_grid_from_layer;
-    /**
-     * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
-     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
-     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
-     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
-     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
-     * whose tiles aren't square.
-     */
-    readonly clearGrid: typeof raw.wgf_body2d_clear_grid;
-    /**
-     * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
-     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
-     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
-     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
-     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
-     * whose tiles aren't square.
-     */
-    readonly getGridCell: typeof raw.wgf_body2d_get_grid_cell;
-    /**
-     * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
-     * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
-     * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
-     * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
-     * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
-     * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
-     * whose tiles aren't square.
-     */
-    readonly setGridCell: typeof raw.wgf_body2d_set_grid_cell;
+    readonly getMaxSlope: typeof raw.wgf_body3d_get_max_slope;
     /** Whether the handle refers to something alive (wgf_handle_is_alive). */
     readonly isAlive: (handle: raw.wgf_handle_t | 0) => boolean;
 };
@@ -2095,7 +2095,7 @@ export declare const Collide2d: {
 /**
  * 3D collision as plain math, raylib's shapes (its CheckCollision* and GetRayCollision*):
  * boxes, spheres, and rays against them and triangles, with no actor or body
- * (wgf_physics.h casts against a physics world). A box is axis-aligned, its least corner and
+ * (wgf_physics3d.h casts against a physics world). A box is axis-aligned, its least corner and
  * its greatest (x0, y0, z0, x1, y1, z1); a ray its origin and its direction, which needn't be
  * a unit vector.
  *
@@ -2156,7 +2156,7 @@ export type Collider = raw.wgf_actor_t;
  * that start to overlap raise TRIGGER_ENTER and two that stop raise TRIGGER_EXIT
  * (wgf_world.h), told to each. They overlap only where one's layer meets the other's mask:
  * (a's layer & b's mask) or (b's layer & a's mask). Nothing is pushed apart by it: how far
- * apart would part a pair is read (get_push), and a body (wgf_body2d.h) is stopped by solid
+ * apart would part a pair is read (get_push), and a body (wgf_arcade2d.h) is stopped by solid
  * ones. Only colliders under the same parent actor are compared, found by a sweep of their
  * bounds (a few thousand at once).
  *
@@ -6021,7 +6021,7 @@ export declare const Mesh: {
      *              are (sRGB, stored linear); the built-in shadings multiply the material's
      *              color by them, and a custom shader reads them as wgf_color; 0: white
      *
-     * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+     * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
      * was made with: make it again to collide with the new one.
      */
     readonly setPositions: typeof raw.wgf_mesh_set_positions;
@@ -6047,7 +6047,7 @@ export declare const Mesh: {
      *              are (sRGB, stored linear); the built-in shadings multiply the material's
      *              color by them, and a custom shader reads them as wgf_color; 0: white
      *
-     * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+     * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
      * was made with: make it again to collide with the new one.
      */
     readonly setNormals: typeof raw.wgf_mesh_set_normals;
@@ -6073,7 +6073,7 @@ export declare const Mesh: {
      *              are (sRGB, stored linear); the built-in shadings multiply the material's
      *              color by them, and a custom shader reads them as wgf_color; 0: white
      *
-     * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+     * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
      * was made with: make it again to collide with the new one.
      */
     readonly setUvs: typeof raw.wgf_mesh_set_uvs;
@@ -6099,7 +6099,7 @@ export declare const Mesh: {
      *              are (sRGB, stored linear); the built-in shadings multiply the material's
      *              color by them, and a custom shader reads them as wgf_color; 0: white
      *
-     * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+     * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
      * was made with: make it again to collide with the new one.
      */
     readonly setColors: typeof raw.wgf_mesh_set_colors;
@@ -7530,7 +7530,7 @@ export declare const Mouse: {
     readonly getCursor: typeof raw.wgf_mouse_get_cursor;
 };
 /**
- * Physics in 3D: rigid bodies on actors (wgf_body.h), and wheeled vehicles (wgf_vehicle.h),
+ * Physics in 3D: rigid bodies on actors (wgf_body3d.h), and wheeled vehicles (wgf_vehicle.h),
  * simulated in the tick, after the program's and the ecs's systems. One world for every
  * 3D stage, its gravity set here; a body's actor moves where the world moves it, drawn
  * between ticks as any simulated actor is (wgf_actor.h). The same steps make the same world
@@ -7538,58 +7538,58 @@ export declare const Mouse: {
  * browser.
  *
  * Physics is an optional part: a program that never starts it links none of it. It starts
- * with the first of these calls, or of wgf_body's or wgf_vehicle's; until then a body or a
+ * with the first of these calls, or of wgf_body3d's or wgf_vehicle's; until then a body or a
  * vehicle component (added, or a scene's line) is refused, and logged once. A game whose
  * scene has bodies sets the gravity before it loads the scene.
  */
-export declare const Physics: {
+export declare const Physics3d: {
     /**
-     * Characters (WGF_BODY_TYPE_CHARACTER, wgf_body.h: Jolt's CharacterVirtual), linked on purpose:
+     * Characters (WGF_BODY3D_TYPE_CHARACTER, wgf_body3d.h: Jolt's CharacterVirtual), linked on purpose:
      * this call links them (a game: "characters" in wgf.json's features), so a program with none
      * carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
      * a scene's too. Any time before the first character.
      */
-    readonly enableCharacters: typeof raw.wgf_physics_enable_characters;
+    readonly enableCharacters: typeof raw.wgf_physics3d_enable_characters;
     /**
-     * Characters (WGF_BODY_TYPE_CHARACTER, wgf_body.h: Jolt's CharacterVirtual), linked on purpose:
+     * Characters (WGF_BODY3D_TYPE_CHARACTER, wgf_body3d.h: Jolt's CharacterVirtual), linked on purpose:
      * this call links them (a game: "characters" in wgf.json's features), so a program with none
      * carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
      * a scene's too. Any time before the first character.
      */
-    readonly isCharactersEnabled: typeof raw.wgf_physics_is_characters_enabled;
+    readonly isCharactersEnabled: typeof raw.wgf_physics3d_is_characters_enabled;
     /**
      * Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
      * (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
      * none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
      * scene's too. Any time before the first vehicle.
      */
-    readonly enableVehicles: typeof raw.wgf_physics_enable_vehicles;
+    readonly enableVehicles: typeof raw.wgf_physics3d_enable_vehicles;
     /**
      * Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
      * (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
      * none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
      * scene's too. Any time before the first vehicle.
      */
-    readonly isVehiclesEnabled: typeof raw.wgf_physics_is_vehicles_enabled;
+    readonly isVehiclesEnabled: typeof raw.wgf_physics3d_is_vehicles_enabled;
     /**
      * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
      * starting physics. False only when physics couldn't start (logged).
      */
-    readonly setGravity: typeof raw.wgf_physics_set_gravity;
+    readonly setGravity: typeof raw.wgf_physics3d_set_gravity;
     /**
      * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
      * starting physics. False only when physics couldn't start (logged).
      */
-    readonly getGravity: typeof raw.wgf_physics_get_gravity;
+    readonly getGravity: typeof raw.wgf_physics3d_get_gravity;
     /**
      * Every body's shape outlined in `color` (a sensor's in half its alpha), and each vehicle's
      * wheels: a debug view, drawn into the 3D drawing begun (wgf_draw_begin_3d, wgf_draw.h);
      * nothing outside one, or before physics starts. A mesh is drawn by its triangles' edges.
      */
-    readonly drawBodies: typeof raw.wgf_physics_draw_bodies;
+    readonly drawBodies: typeof raw.wgf_physics3d_draw_bodies;
     /**
      * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
-     * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+     * each meeting the bodies whose layer is in `mask` (wgf_body3d_set_layer) and never a sensor;
      * starting physics.
      *
      * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
@@ -7599,10 +7599,10 @@ export declare const Physics: {
      * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
      * direction of no length, a distance or radius not above 0, or no array.
      */
-    readonly castRay: typeof raw.wgf_physics_cast_ray;
+    readonly castRay: typeof raw.wgf_physics3d_cast_ray;
     /**
      * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
-     * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+     * each meeting the bodies whose layer is in `mask` (wgf_body3d_set_layer) and never a sensor;
      * starting physics.
      *
      * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
@@ -7612,19 +7612,19 @@ export declare const Physics: {
      * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
      * direction of no length, a distance or radius not above 0, or no array.
      */
-    readonly castSphere: typeof raw.wgf_physics_cast_sphere;
+    readonly castSphere: typeof raw.wgf_physics3d_cast_sphere;
     /**
      * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
      * depth centered there (its axes the world's), in no order, as many as fit in `count`,
      * returning how many. 0 for none, a size not above 0, or no array.
      */
-    readonly overlapSphere: typeof raw.wgf_physics_overlap_sphere;
+    readonly overlapSphere: typeof raw.wgf_physics3d_overlap_sphere;
     /**
      * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
      * depth centered there (its axes the world's), in no order, as many as fit in `count`,
      * returning how many. 0 for none, a size not above 0, or no array.
      */
-    readonly overlapBox: typeof raw.wgf_physics_overlap_box;
+    readonly overlapBox: typeof raw.wgf_physics3d_overlap_box;
 };
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Pointer = raw.wgf_actor_t;
@@ -12700,10 +12700,10 @@ export type AssetCacheMode = raw.wgf_asset_cache_mode_t;
 export declare const AssetCacheMode: { readonly REVALIDATE: AssetCacheMode; readonly TRUST: AssetCacheMode; readonly OFF: AssetCacheMode; };
 export type AssetTaskStatus = raw.wgf_asset_task_status_t;
 export declare const AssetTaskStatus: { readonly NONE: AssetTaskStatus; readonly PENDING: AssetTaskStatus; readonly DONE: AssetTaskStatus; readonly FAILED: AssetTaskStatus; };
-export type BodyShape = raw.wgf_body_shape_t;
-export declare const BodyShape: { readonly BOX: BodyShape; readonly SPHERE: BodyShape; readonly CAPSULE: BodyShape; readonly CONVEX: BodyShape; readonly MESH: BodyShape; };
-export type BodyType = raw.wgf_body_type_t;
-export declare const BodyType: { readonly STATIC: BodyType; readonly DYNAMIC: BodyType; readonly KINEMATIC: BodyType; readonly SENSOR: BodyType; readonly CHARACTER: BodyType; };
+export type Body3dShape = raw.wgf_body3d_shape_t;
+export declare const Body3dShape: { readonly BOX: Body3dShape; readonly SPHERE: Body3dShape; readonly CAPSULE: Body3dShape; readonly CONVEX: Body3dShape; readonly MESH: Body3dShape; };
+export type Body3dType = raw.wgf_body3d_type_t;
+export declare const Body3dType: { readonly STATIC: Body3dType; readonly DYNAMIC: Body3dType; readonly KINEMATIC: Body3dType; readonly SENSOR: Body3dType; readonly CHARACTER: Body3dType; };
 export type BoundsMode = raw.wgf_bounds_mode_t;
 export declare const BoundsMode: { readonly WRAP: BoundsMode; readonly CLAMP: BoundsMode; readonly DESTROY: BoundsMode; };
 export type ColliderShape = raw.wgf_collider_shape_t;
@@ -12711,7 +12711,7 @@ export declare const ColliderShape: { readonly CIRCLE: ColliderShape; readonly R
 export type ColorStock = raw.wgf_color_stock_t;
 export declare const ColorStock: { readonly BLANK: ColorStock; readonly WHITE: ColorStock; readonly BLACK: ColorStock; readonly LIGHTGRAY: ColorStock; readonly GRAY: ColorStock; readonly DARKGRAY: ColorStock; readonly YELLOW: ColorStock; readonly GOLD: ColorStock; readonly ORANGE: ColorStock; readonly PINK: ColorStock; readonly RED: ColorStock; readonly MAROON: ColorStock; readonly GREEN: ColorStock; readonly LIME: ColorStock; readonly DARKGREEN: ColorStock; readonly SKYBLUE: ColorStock; readonly BLUE: ColorStock; readonly DARKBLUE: ColorStock; readonly PURPLE: ColorStock; readonly VIOLET: ColorStock; readonly DARKPURPLE: ColorStock; readonly BEIGE: ColorStock; readonly BROWN: ColorStock; readonly DARKBROWN: ColorStock; readonly MAGENTA: ColorStock; readonly RAYWHITE: ColorStock; };
 export type Component = raw.wgf_component_t;
-export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY: Component; readonly VEHICLE: Component; readonly BODY2D: Component; };
+export declare const Component: { readonly NONE: Component; readonly MOTION: Component; readonly BOUNDS: Component; readonly LIFETIME: Component; readonly COLLIDER: Component; readonly VOICE: Component; readonly BODY3D: Component; readonly VEHICLE: Component; readonly ARCADE2D: Component; };
 export type CubemapLayout = raw.wgf_cubemap_layout_t;
 export declare const CubemapLayout: { readonly AUTO: CubemapLayout; readonly LINE_VERTICAL: CubemapLayout; readonly LINE_HORIZONTAL: CubemapLayout; readonly CROSS_THREE_BY_FOUR: CubemapLayout; readonly CROSS_FOUR_BY_THREE: CubemapLayout; readonly FACES: CubemapLayout; };
 export type DocumentEvent = raw.wgf_document_event_t;

@@ -67,7 +67,7 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True, type
     release = variants.cache_variable(variant, 'CMAKE_BUILD_TYPE') == 'Release'
     # C++'s runtime, linked only for a host with physics in it (Jolt): em++ costs a host
     # without it 2 KB gzip of the runtime's own
-    physics = any(e.lstrip('_').startswith(('wgf_physics_', 'wgf_body_', 'wgf_vehicle_')) for e in exports)
+    physics = any(e.lstrip('_').startswith(('wgf_physics3d_', 'wgf_body3d_', 'wgf_vehicle_')) for e in exports)
     linker = Path(emcc()).with_name('em++' + Path(emcc()).suffix) if physics else Path(emcc())
     command = [str(linker), str(archive), '-o', str(out / 'wgf-host.js'), '--no-entry',
                '-sMODULARIZE=1', '-sEXPORT_ES6=1', '-sEXPORT_NAME=createWgfHost',

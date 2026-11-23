@@ -7,7 +7,7 @@
 #include "wgf_behavior.h"
 #include "wgf_bounds.h"
 #include "wgf_stage2d.h"
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 #include "wgf_collider.h"
 #include "wgf_color.h"
 #include "wgf_core_priv.h"
@@ -134,7 +134,7 @@ static const char *shapes_scene = "wgf-scene 2\n"
                                   "  collider segment=0,0,0,64\n"
                                   "end\n"
                                   "actor hero\n"
-                                  "  body2d size=12,20 gravity=900 max_fall=600 solid_mask=3\n"
+                                  "  arcade2d size=12,20 gravity=900 max_fall=600 solid_mask=3\n"
                                   "end\n";
 
 int main(void)
@@ -259,8 +259,8 @@ int main(void)
         expect(wgf_scene_instantiate(shapes, stage) == 4, "three shaped colliders and a body");
         {
             const wgf_actor_t hero = wgf_actor_find(stage, "hero");
-            expect(near(wgf_body2d_get_size(hero).y, 20) && near(wgf_body2d_get_gravity(hero), 900) &&
-                       near(wgf_body2d_get_max_fall_speed(hero), 600) && wgf_body2d_get_solid_mask(hero) == 3,
+            expect(near(wgf_arcade2d_get_size(hero).y, 20) && near(wgf_arcade2d_get_gravity(hero), 900) &&
+                       near(wgf_arcade2d_get_max_fall_speed(hero), 600) && wgf_arcade2d_get_solid_mask(hero) == 3,
                    "a 2D body");
         }
         {

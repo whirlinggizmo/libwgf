@@ -1,4 +1,4 @@
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -10,7 +10,7 @@
 #include "wgf_ecs_priv.h"
 #include "wgf_log.h"
 
-/* 2D bodies (wgf_body2d.h), helix-legacy's Body2D as a component: its calls, the grids of
+/* 2D bodies (wgf_arcade2d.h), helix-legacy's Body2D as a component: its calls, the grids of
  * solid cells by parent, and its system, run each tick after motion: every body's box moved
  * and slid (wgf_collide2d_move_rects) against the solid colliders' bounds and the grid's
  * solid cells near its way, gathered as rectangles. */
@@ -38,113 +38,113 @@ static struct {
     int rect_capacity;
 } bodies;
 
-static wgf_ecs_priv_body2d_t *body_of(wgf_actor_t actor)
+static wgf_ecs_priv_arcade2d_t *body_of(wgf_actor_t actor)
 {
-    return wgf_ecs_priv_started() ? (wgf_ecs_priv_body2d_t *)wgf_ecs_priv_get(actor, wgf_ecs_priv_ids()->body2d)
+    return wgf_ecs_priv_started() ? (wgf_ecs_priv_arcade2d_t *)wgf_ecs_priv_get(actor, wgf_ecs_priv_ids()->arcade2d)
                                   : NULL;
 }
 
 /* ---- the calls ---------------------------------------------------------------------- */
 
-bool wgf_body2d_set_size(wgf_actor_t actor, float width, float height)
+bool wgf_arcade2d_set_size(wgf_actor_t actor, float width, float height)
 {
-    wgf_ecs_priv_body2d_t *b = body_of(actor);
+    wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     if (b == NULL || !isfinite(width) || !isfinite(height) || width < 0.0f || height < 0.0f) return false;
     b->width = width;
     b->height = height;
     return true;
 }
 
-wgf_vec2_t wgf_body2d_get_size(wgf_actor_t actor)
+wgf_vec2_t wgf_arcade2d_get_size(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL ? wgf_vec2_make(b->width, b->height) : wgf_vec2_make(0.0f, 0.0f);
 }
 
-bool wgf_body2d_set_velocity(wgf_actor_t actor, float x, float y)
+bool wgf_arcade2d_set_velocity(wgf_actor_t actor, float x, float y)
 {
-    wgf_ecs_priv_body2d_t *b = body_of(actor);
+    wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     if (b == NULL || !isfinite(x) || !isfinite(y)) return false;
     b->vx = x;
     b->vy = y;
     return true;
 }
 
-wgf_vec2_t wgf_body2d_get_velocity(wgf_actor_t actor)
+wgf_vec2_t wgf_arcade2d_get_velocity(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL ? wgf_vec2_make(b->vx, b->vy) : wgf_vec2_make(0.0f, 0.0f);
 }
 
-bool wgf_body2d_set_gravity(wgf_actor_t actor, float gravity)
+bool wgf_arcade2d_set_gravity(wgf_actor_t actor, float gravity)
 {
-    wgf_ecs_priv_body2d_t *b = body_of(actor);
+    wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     if (b == NULL || !isfinite(gravity)) return false;
     b->gravity = gravity;
     return true;
 }
 
-float wgf_body2d_get_gravity(wgf_actor_t actor)
+float wgf_arcade2d_get_gravity(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL ? b->gravity : 0.0f;
 }
 
-bool wgf_body2d_set_max_fall_speed(wgf_actor_t actor, float speed)
+bool wgf_arcade2d_set_max_fall_speed(wgf_actor_t actor, float speed)
 {
-    wgf_ecs_priv_body2d_t *b = body_of(actor);
+    wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     if (b == NULL || !isfinite(speed)) return false;
     b->max_fall = speed > 0.0f ? speed : 0.0f;
     return true;
 }
 
-float wgf_body2d_get_max_fall_speed(wgf_actor_t actor)
+float wgf_arcade2d_get_max_fall_speed(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL ? b->max_fall : 0.0f;
 }
 
-bool wgf_body2d_set_solid_mask(wgf_actor_t actor, int mask)
+bool wgf_arcade2d_set_solid_mask(wgf_actor_t actor, int mask)
 {
-    wgf_ecs_priv_body2d_t *b = body_of(actor);
+    wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     if (b == NULL) return false;
     b->solid_mask = mask;
     return true;
 }
 
-int wgf_body2d_get_solid_mask(wgf_actor_t actor)
+int wgf_arcade2d_get_solid_mask(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL ? b->solid_mask : 0;
 }
 
-bool wgf_body2d_is_grounded(wgf_actor_t actor)
+bool wgf_arcade2d_is_grounded(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL && b->grounded;
 }
 
-bool wgf_body2d_is_blocked_left(wgf_actor_t actor)
+bool wgf_arcade2d_is_blocked_left(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL && b->left;
 }
 
-bool wgf_body2d_is_blocked_right(wgf_actor_t actor)
+bool wgf_arcade2d_is_blocked_right(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL && b->right;
 }
 
-bool wgf_body2d_is_blocked_above(wgf_actor_t actor)
+bool wgf_arcade2d_is_blocked_above(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL && b->above;
 }
 
-float wgf_body2d_get_air_time(wgf_actor_t actor)
+float wgf_arcade2d_get_air_time(wgf_actor_t actor)
 {
-    const wgf_ecs_priv_body2d_t *b = body_of(actor);
+    const wgf_ecs_priv_arcade2d_t *b = body_of(actor);
     return b != NULL ? b->air_time : 0.0f;
 }
 
@@ -159,7 +159,7 @@ static grid_t *grid_of(wgf_actor_t parent)
     return NULL;
 }
 
-bool wgf_body2d_set_grid(wgf_actor_t parent, const int *cells, int count, int columns, float size, float x, float y)
+bool wgf_arcade2d_set_grid(wgf_actor_t parent, const int *cells, int count, int columns, float size, float x, float y)
 {
     grid_t *grid;
     int *copy;
@@ -169,7 +169,7 @@ bool wgf_body2d_set_grid(wgf_actor_t parent, const int *cells, int count, int co
     }
     copy = (int *)malloc(sizeof(int) * (size_t)count);
     if (copy == NULL) {
-        wgf_log_error("wgf_body2d: out of memory for a grid");
+        wgf_log_error("wgf_arcade2d: out of memory for a grid");
         return false;
     }
     memcpy(copy, cells, sizeof(int) * (size_t)count);
@@ -180,7 +180,7 @@ bool wgf_body2d_set_grid(wgf_actor_t parent, const int *cells, int count, int co
             grid_t *grown = (grid_t *)realloc(bodies.grids, sizeof(grid_t) * (size_t)capacity);
             if (grown == NULL) {
                 free(copy);
-                wgf_log_error("wgf_body2d: out of memory for a grid");
+                wgf_log_error("wgf_arcade2d: out of memory for a grid");
                 return false;
             }
             bodies.grids = grown;
@@ -201,7 +201,7 @@ bool wgf_body2d_set_grid(wgf_actor_t parent, const int *cells, int count, int co
     return true;
 }
 
-bool wgf_body2d_clear_grid(wgf_actor_t parent)
+bool wgf_arcade2d_clear_grid(wgf_actor_t parent)
 {
     grid_t *grid = grid_of(parent);
     if (grid == NULL) return false;
@@ -210,7 +210,7 @@ bool wgf_body2d_clear_grid(wgf_actor_t parent)
     return true;
 }
 
-int wgf_body2d_get_grid_cell(wgf_actor_t parent, int column, int row)
+int wgf_arcade2d_get_grid_cell(wgf_actor_t parent, int column, int row)
 {
     const grid_t *grid = grid_of(parent);
     long at;
@@ -219,7 +219,7 @@ int wgf_body2d_get_grid_cell(wgf_actor_t parent, int column, int row)
     return at < grid->count ? grid->cells[at] : 0;
 }
 
-bool wgf_body2d_set_grid_cell(wgf_actor_t parent, int column, int row, int value)
+bool wgf_arcade2d_set_grid_cell(wgf_actor_t parent, int column, int row, int value)
 {
     grid_t *grid = grid_of(parent);
     long at;
@@ -262,7 +262,7 @@ static int gather_solids(wgf_ecs_priv_query_t *colliders)
         const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
         const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
         float box[4];
-        if (actor_ptr == NULL || !c->enabled || wgf_actor_has_component(ref->actor, WGF_COMPONENT_BODY2D)) continue;
+        if (actor_ptr == NULL || !c->enabled || wgf_actor_has_component(ref->actor, WGF_COMPONENT_ARCADE2D)) continue;
         if (count == bodies.solid_capacity) {
             const int capacity = bodies.solid_capacity > 0 ? bodies.solid_capacity * 2 : 64;
             solid_t *grown = (solid_t *)realloc(bodies.solids, sizeof(solid_t) * (size_t)capacity);
@@ -301,7 +301,7 @@ static void grid_rects(const grid_t *grid, float lo_x, float lo_y, float hi_x, f
     }
 }
 
-void wgf_ecs_priv_body2d_step(float dt, wgf_ecs_priv_query_t *query, wgf_ecs_priv_query_t *colliders)
+void wgf_ecs_priv_arcade2d_step(float dt, wgf_ecs_priv_query_t *query, wgf_ecs_priv_query_t *colliders)
 {
     void *fields[2];
     wgf_ecs_priv_id_t entity;
@@ -309,7 +309,7 @@ void wgf_ecs_priv_body2d_step(float dt, wgf_ecs_priv_query_t *query, wgf_ecs_pri
     if (!(dt > 0.0f)) return;
     wgf_ecs_priv_store_walk(query);
     while (wgf_ecs_priv_store_next(query, fields, &entity)) {
-        wgf_ecs_priv_body2d_t *b = (wgf_ecs_priv_body2d_t *)fields[0];
+        wgf_ecs_priv_arcade2d_t *b = (wgf_ecs_priv_arcade2d_t *)fields[0];
         const wgf_ecs_priv_ref_t *ref = (const wgf_ecs_priv_ref_t *)fields[1];
         wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(ref->actor);
         const grid_t *grid;
@@ -351,7 +351,7 @@ void wgf_ecs_priv_body2d_step(float dt, wgf_ecs_priv_query_t *query, wgf_ecs_pri
     }
 }
 
-void wgf_ecs_priv_body2d_stop(void)
+void wgf_ecs_priv_arcade2d_stop(void)
 {
     int i;
     for (i = 0; i < bodies.grid_count; i++) free(bodies.grids[i].cells);

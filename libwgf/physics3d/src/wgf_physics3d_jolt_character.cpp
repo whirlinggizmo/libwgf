@@ -1,7 +1,7 @@
 // Characters on Jolt (wgf_physics3d_jolt_priv.h): Jolt's CharacterVirtual, a file of its own so
 // a program that makes none links none of it (about 42 KB of code), reached only from
 // physics3d's characters (wgf_physics3d_character.c), which a program links on purpose
-// (wgf_physics_enable_characters). Its own storage; the world it lives in is the Jolt layer's
+// (wgf_physics3d_enable_characters). Its own storage; the world it lives in is the Jolt layer's
 // (wgf_physics3d_jolt_world_priv.h), which lets it go as the world stops.
 
 #include "wgf_physics3d_jolt_priv.h"

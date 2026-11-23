@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "e7b8108e4a76468e" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "82e3b69c0560a17e" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -1032,9 +1032,9 @@ export const WGF_COMPONENT_BOUNDS = 2;
 export const WGF_COMPONENT_LIFETIME = 3;
 export const WGF_COMPONENT_COLLIDER = 4;
 export const WGF_COMPONENT_VOICE = 5;
-export const WGF_COMPONENT_BODY = 6;
+export const WGF_COMPONENT_BODY3D = 6;
 export const WGF_COMPONENT_VEHICLE = 7;
-export const WGF_COMPONENT_BODY2D = 8;
+export const WGF_COMPONENT_ARCADE2D = 8;
 
 /**
  * Bounds (WGF_COMPONENT_BOUNDS): a rectangle in the actor's parent's space, x and y,
@@ -1052,7 +1052,7 @@ export const WGF_BOUNDS_MODE_DESTROY = 2;
  * that start to overlap raise TRIGGER_ENTER and two that stop raise TRIGGER_EXIT
  * (wgf_world.h), told to each. They overlap only where one's layer meets the other's mask:
  * (a's layer & b's mask) or (b's layer & a's mask). Nothing is pushed apart by it: how far
- * apart would part a pair is read (get_push), and a body (wgf_body2d.h) is stopped by solid
+ * apart would part a pair is read (get_push), and a body (wgf_arcade2d.h) is stopped by solid
  * ones. Only colliders under the same parent actor are compared, found by a sweep of their
  * bounds (a few thousand at once).
  *
@@ -1128,7 +1128,7 @@ export const WGF_TRANSITION_IRIS = 7;
  *   TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
  *                    and the other's collider layer as they met
  *   TRIGGER_EXIT     and ceasing to
- *   CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
+ *   CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body3d.h), told to each: the
  *                    actor, the other, and the other's body layer
  *   CONTACT_END      and ceasing to
  *   SCREEN_ENTER     a screen coming to the top of the stack (wgf_screen.h): the screen,
@@ -1152,8 +1152,8 @@ export const WGF_WORLD_EVENT_SCREEN_ENTER = 7;
 export const WGF_WORLD_EVENT_SCREEN_EXIT = 8;
 
 /**
- * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
- * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+ * A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
+ * (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
  * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
  * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
  * car's drag on grass, set as it goes); its other settings take effect at the next tick,
@@ -1169,23 +1169,23 @@ export const WGF_WORLD_EVENT_SCREEN_EXIT = 8;
  * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
  * body.
  */
-export const WGF_BODY_TYPE_STATIC = 0;
-export const WGF_BODY_TYPE_DYNAMIC = 1;
-export const WGF_BODY_TYPE_KINEMATIC = 2;
-export const WGF_BODY_TYPE_SENSOR = 3;
-export const WGF_BODY_TYPE_CHARACTER = 4;
+export const WGF_BODY3D_TYPE_STATIC = 0;
+export const WGF_BODY3D_TYPE_DYNAMIC = 1;
+export const WGF_BODY3D_TYPE_KINEMATIC = 2;
+export const WGF_BODY3D_TYPE_SENSOR = 3;
+export const WGF_BODY3D_TYPE_CHARACTER = 4;
 
-export const WGF_BODY_SHAPE_BOX = 0;
-export const WGF_BODY_SHAPE_SPHERE = 1;
-export const WGF_BODY_SHAPE_CAPSULE = 2;
-export const WGF_BODY_SHAPE_CONVEX = 3;
-export const WGF_BODY_SHAPE_MESH = 4;
+export const WGF_BODY3D_SHAPE_BOX = 0;
+export const WGF_BODY3D_SHAPE_SPHERE = 1;
+export const WGF_BODY3D_SHAPE_CAPSULE = 2;
+export const WGF_BODY3D_SHAPE_CONVEX = 3;
+export const WGF_BODY3D_SHAPE_MESH = 4;
 
 /**
  * A wheeled vehicle (WGF_COMPONENT_VEHICLE, wgf_component.h) on an actor with a dynamic
- * body (wgf_body.h): wheels on springs, an engine, an automatic gearbox, and differentials,
+ * body (wgf_body3d.h): wheels on springs, an engine, an automatic gearbox, and differentials,
  * driven by the program's intent (set_input), each tick, in the physics world
- * (wgf_physics.h). It faces its actor's +z, +y up.
+ * (wgf_physics3d.h). It faces its actor's +z, +y up.
  *
  * Its wheels are actors under it, given in left and right pairs, front first: where each
  * is as the vehicle is made is where it attaches (its spring at rest), and each tick it is
@@ -11156,7 +11156,7 @@ export function wgf_mesh_create_heightmap(heights, columns, width, height, lengt
  *              are (sRGB, stored linear); the built-in shadings multiply the material's
  *              color by them, and a custom shader reads them as wgf_color; 0: white
  *
- * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
  * was made with: make it again to collide with the new one.
  */
 export function wgf_mesh_set_positions(mesh, positions) {
@@ -11188,7 +11188,7 @@ export function wgf_mesh_set_positions(mesh, positions) {
  *              are (sRGB, stored linear); the built-in shadings multiply the material's
  *              color by them, and a custom shader reads them as wgf_color; 0: white
  *
- * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
  * was made with: make it again to collide with the new one.
  */
 export function wgf_mesh_set_normals(mesh, normals) {
@@ -11220,7 +11220,7 @@ export function wgf_mesh_set_normals(mesh, normals) {
  *              are (sRGB, stored linear); the built-in shadings multiply the material's
  *              color by them, and a custom shader reads them as wgf_color; 0: white
  *
- * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
  * was made with: make it again to collide with the new one.
  */
 export function wgf_mesh_set_uvs(mesh, uvs) {
@@ -11252,7 +11252,7 @@ export function wgf_mesh_set_uvs(mesh, uvs) {
  *              are (sRGB, stored linear); the built-in shadings multiply the material's
  *              color by them, and a custom shader reads them as wgf_color; 0: white
  *
- * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
  * was made with: make it again to collide with the new one.
  */
 export function wgf_mesh_set_colors(mesh, colors) {
@@ -16094,6 +16094,319 @@ export function wgf_voice_get_underruns(voice) {
     return value;
 }
 
+// wgf: call wgf_actor_add_component
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
+ */
+export function wgf_actor_add_component(actor, component) {
+    const value = host["_wgf_actor_add_component"](actor, component);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_remove_component
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
+ */
+export function wgf_actor_remove_component(actor, component) {
+    const value = host["_wgf_actor_remove_component"](actor, component);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_has_component
+/**
+ * add makes one with its defaults (each component's header says them); adding one it has
+ * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+ * that isn't an actor, or a component that isn't one; remove is false too for one it
+ * doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+ * before physics has started, it is refused, and logged once.
+ */
+export function wgf_actor_has_component(actor, component) {
+    const value = host["_wgf_actor_has_component"](actor, component);
+    return value !== 0;
+}
+
+// wgf: call wgf_actor_get_voice
+/**
+ * The voice component's voice; 0 for an actor without one. The actor's: play it, never
+ * destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
+ * thrust, looping): it stops when the actor goes, with nothing for the game to end. A
+ * sound played once is wgf_sound_play's.
+ */
+export function wgf_actor_get_voice(actor) {
+    const value = host["_wgf_actor_get_voice"](actor);
+    return value >>> 0;
+}
+
+// wgf: call wgf_actor_find_with_component
+/**
+ * The actors with a component, oldest first (by when their first component or behavior
+ * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+ * there are, to size `out`. Found by an index of each component, never by a look at every
+ * actor; NONE, or a value that isn't a component, finds none.
+ */
+export function wgf_actor_find_with_component(component, out) {
+    const outPointer = arrayOut(out, 0);
+    const value = host["_wgf_actor_find_with_component"](component, outPointer, lengthOf(out));
+    arrayBack(outPointer, out, "HEAPU32");
+    return value;
+}
+
+// wgf: call wgf_actor_count_with_component
+/**
+ * The actors with a component, oldest first (by when their first component or behavior
+ * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+ * there are, to size `out`. Found by an index of each component, never by a look at every
+ * actor; NONE, or a value that isn't a component, finds none.
+ */
+export function wgf_actor_count_with_component(component) {
+    const value = host["_wgf_actor_count_with_component"](component);
+    return value;
+}
+
+// wgf: call wgf_arcade2d_set_size
+/**
+ * False too for a size below 0, or not finite.
+ */
+export function wgf_arcade2d_set_size(actor, width, height) {
+    const value = host["_wgf_arcade2d_set_size"](actor, width, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_get_size
+/**
+ * False too for a size below 0, or not finite.
+ */
+export function wgf_arcade2d_get_size(actor, into) {
+    const ret = result(8);
+    host["_wgf_arcade2d_get_size"](ret, actor);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_arcade2d_set_velocity
+/**
+ * Units a second, + right and down. False too for numbers that aren't finite.
+ */
+export function wgf_arcade2d_set_velocity(actor, x, y) {
+    const value = host["_wgf_arcade2d_set_velocity"](actor, x, y);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_get_velocity
+/**
+ * Units a second, + right and down. False too for numbers that aren't finite.
+ */
+export function wgf_arcade2d_get_velocity(actor, into) {
+    const ret = result(8);
+    host["_wgf_arcade2d_get_velocity"](ret, actor);
+    return vector(ret, 2, into);
+}
+
+// wgf: call wgf_arcade2d_set_gravity
+/**
+ * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
+ * a number that isn't finite.
+ */
+export function wgf_arcade2d_set_gravity(actor, gravity) {
+    const value = host["_wgf_arcade2d_set_gravity"](actor, gravity);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_get_gravity
+/**
+ * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
+ * a number that isn't finite.
+ */
+export function wgf_arcade2d_get_gravity(actor) {
+    const value = host["_wgf_arcade2d_get_gravity"](actor);
+    return value;
+}
+
+// wgf: call wgf_arcade2d_set_max_fall_speed
+/**
+ * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
+ * isn't finite.
+ */
+export function wgf_arcade2d_set_max_fall_speed(actor, speed) {
+    const value = host["_wgf_arcade2d_set_max_fall_speed"](actor, speed);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_get_max_fall_speed
+/**
+ * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
+ * isn't finite.
+ */
+export function wgf_arcade2d_get_max_fall_speed(actor) {
+    const value = host["_wgf_arcade2d_get_max_fall_speed"](actor);
+    return value;
+}
+
+// wgf: call wgf_arcade2d_set_solid_mask
+/**
+ * The collider layers that are solid to it.
+ */
+export function wgf_arcade2d_set_solid_mask(actor, mask) {
+    const value = host["_wgf_arcade2d_set_solid_mask"](actor, mask);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_get_solid_mask
+/**
+ * The collider layers that are solid to it.
+ */
+export function wgf_arcade2d_get_solid_mask(actor) {
+    const value = host["_wgf_arcade2d_get_solid_mask"](actor);
+    return value;
+}
+
+// wgf: call wgf_arcade2d_is_grounded
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export function wgf_arcade2d_is_grounded(actor) {
+    const value = host["_wgf_arcade2d_is_grounded"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_is_blocked_left
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export function wgf_arcade2d_is_blocked_left(actor) {
+    const value = host["_wgf_arcade2d_is_blocked_left"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_is_blocked_right
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export function wgf_arcade2d_is_blocked_right(actor) {
+    const value = host["_wgf_arcade2d_is_blocked_right"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_is_blocked_above
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export function wgf_arcade2d_is_blocked_above(actor) {
+    const value = host["_wgf_arcade2d_is_blocked_above"](actor);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_get_air_time
+/**
+ * What it touched at its last tick, moving into it: standing on something (grounded: gravity
+ * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
+ * side reads blocked only while it moves that way: a body walking into a wall each tick, as
+ * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
+ * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
+ */
+export function wgf_arcade2d_get_air_time(actor) {
+    const value = host["_wgf_arcade2d_get_air_time"](actor);
+    return value;
+}
+
+// wgf: call wgf_arcade2d_set_grid
+/**
+ * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
+ * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
+ * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
+ * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
+ * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
+ * none) and set (false outside it): a door opened, a block broken.
+ */
+export function wgf_arcade2d_set_grid(parent, cells, columns, size, x, y) {
+    const cellsPointer = arrayIn(cells, 0, "HEAP32");
+    const value = host["_wgf_arcade2d_set_grid"](parent, cellsPointer, lengthOf(cells), columns, size, x, y);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_set_grid_from_layer
+/**
+ * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+ * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+ * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+ * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+ * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+ * whose tiles aren't square.
+ */
+export function wgf_arcade2d_set_grid_from_layer(parent, layer) {
+    const value = host["_wgf_arcade2d_set_grid_from_layer"](parent, layer);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_clear_grid
+/**
+ * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+ * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+ * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+ * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+ * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+ * whose tiles aren't square.
+ */
+export function wgf_arcade2d_clear_grid(parent) {
+    const value = host["_wgf_arcade2d_clear_grid"](parent);
+    return value !== 0;
+}
+
+// wgf: call wgf_arcade2d_get_grid_cell
+/**
+ * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+ * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+ * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+ * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+ * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+ * whose tiles aren't square.
+ */
+export function wgf_arcade2d_get_grid_cell(parent, column, row) {
+    const value = host["_wgf_arcade2d_get_grid_cell"](parent, column, row);
+    return value;
+}
+
+// wgf: call wgf_arcade2d_set_grid_cell
+/**
+ * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
+ * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
+ * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
+ * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
+ * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
+ * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
+ * whose tiles aren't square.
+ */
+export function wgf_arcade2d_set_grid_cell(parent, column, row, value_) {
+    const value = host["_wgf_arcade2d_set_grid_cell"](parent, column, row, value_);
+    return value !== 0;
+}
+
 // wgf: call wgf_actor_add_behavior
 /**
  * A behavior named `name` added to `actor`, after the ones it has: its id, or 0 when
@@ -16309,319 +16622,6 @@ export function wgf_actor_count_with_behavior(name) {
     const value = host["_wgf_actor_count_with_behavior"](cstr(name));
     host["stackRestore"](mark);
     return value;
-}
-
-// wgf: call wgf_actor_add_component
-/**
- * add makes one with its defaults (each component's header says them); adding one it has
- * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
- * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
- * before physics has started, it is refused, and logged once.
- */
-export function wgf_actor_add_component(actor, component) {
-    const value = host["_wgf_actor_add_component"](actor, component);
-    return value !== 0;
-}
-
-// wgf: call wgf_actor_remove_component
-/**
- * add makes one with its defaults (each component's header says them); adding one it has
- * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
- * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
- * before physics has started, it is refused, and logged once.
- */
-export function wgf_actor_remove_component(actor, component) {
-    const value = host["_wgf_actor_remove_component"](actor, component);
-    return value !== 0;
-}
-
-// wgf: call wgf_actor_has_component
-/**
- * add makes one with its defaults (each component's header says them); adding one it has
- * keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
- * that isn't an actor, or a component that isn't one; remove is false too for one it
- * doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
- * before physics has started, it is refused, and logged once.
- */
-export function wgf_actor_has_component(actor, component) {
-    const value = host["_wgf_actor_has_component"](actor, component);
-    return value !== 0;
-}
-
-// wgf: call wgf_actor_get_voice
-/**
- * The voice component's voice; 0 for an actor without one. The actor's: play it, never
- * destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
- * thrust, looping): it stops when the actor goes, with nothing for the game to end. A
- * sound played once is wgf_sound_play's.
- */
-export function wgf_actor_get_voice(actor) {
-    const value = host["_wgf_actor_get_voice"](actor);
-    return value >>> 0;
-}
-
-// wgf: call wgf_actor_find_with_component
-/**
- * The actors with a component, oldest first (by when their first component or behavior
- * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
- * there are, to size `out`. Found by an index of each component, never by a look at every
- * actor; NONE, or a value that isn't a component, finds none.
- */
-export function wgf_actor_find_with_component(component, out) {
-    const outPointer = arrayOut(out, 0);
-    const value = host["_wgf_actor_find_with_component"](component, outPointer, lengthOf(out));
-    arrayBack(outPointer, out, "HEAPU32");
-    return value;
-}
-
-// wgf: call wgf_actor_count_with_component
-/**
- * The actors with a component, oldest first (by when their first component or behavior
- * came), into `out`, as many as fit in `count`, returning how many it filled; and how many
- * there are, to size `out`. Found by an index of each component, never by a look at every
- * actor; NONE, or a value that isn't a component, finds none.
- */
-export function wgf_actor_count_with_component(component) {
-    const value = host["_wgf_actor_count_with_component"](component);
-    return value;
-}
-
-// wgf: call wgf_body2d_set_size
-/**
- * False too for a size below 0, or not finite.
- */
-export function wgf_body2d_set_size(actor, width, height) {
-    const value = host["_wgf_body2d_set_size"](actor, width, height);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_get_size
-/**
- * False too for a size below 0, or not finite.
- */
-export function wgf_body2d_get_size(actor, into) {
-    const ret = result(8);
-    host["_wgf_body2d_get_size"](ret, actor);
-    return vector(ret, 2, into);
-}
-
-// wgf: call wgf_body2d_set_velocity
-/**
- * Units a second, + right and down. False too for numbers that aren't finite.
- */
-export function wgf_body2d_set_velocity(actor, x, y) {
-    const value = host["_wgf_body2d_set_velocity"](actor, x, y);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_get_velocity
-/**
- * Units a second, + right and down. False too for numbers that aren't finite.
- */
-export function wgf_body2d_get_velocity(actor, into) {
-    const ret = result(8);
-    host["_wgf_body2d_get_velocity"](ret, actor);
-    return vector(ret, 2, into);
-}
-
-// wgf: call wgf_body2d_set_gravity
-/**
- * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
- * a number that isn't finite.
- */
-export function wgf_body2d_set_gravity(actor, gravity) {
-    const value = host["_wgf_body2d_set_gravity"](actor, gravity);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_get_gravity
-/**
- * Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
- * a number that isn't finite.
- */
-export function wgf_body2d_get_gravity(actor) {
-    const value = host["_wgf_body2d_get_gravity"](actor);
-    return value;
-}
-
-// wgf: call wgf_body2d_set_max_fall_speed
-/**
- * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
- * isn't finite.
- */
-export function wgf_body2d_set_max_fall_speed(actor, speed) {
-    const value = host["_wgf_body2d_set_max_fall_speed"](actor, speed);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_get_max_fall_speed
-/**
- * The fastest it falls, units a second; 0 or less for no limit. False too for a number that
- * isn't finite.
- */
-export function wgf_body2d_get_max_fall_speed(actor) {
-    const value = host["_wgf_body2d_get_max_fall_speed"](actor);
-    return value;
-}
-
-// wgf: call wgf_body2d_set_solid_mask
-/**
- * The collider layers that are solid to it.
- */
-export function wgf_body2d_set_solid_mask(actor, mask) {
-    const value = host["_wgf_body2d_set_solid_mask"](actor, mask);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_get_solid_mask
-/**
- * The collider layers that are solid to it.
- */
-export function wgf_body2d_get_solid_mask(actor) {
-    const value = host["_wgf_body2d_get_solid_mask"](actor);
-    return value;
-}
-
-// wgf: call wgf_body2d_is_grounded
-/**
- * What it touched at its last tick, moving into it: standing on something (grounded: gravity
- * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
- * side reads blocked only while it moves that way: a body walking into a wall each tick, as
- * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
- * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
- */
-export function wgf_body2d_is_grounded(actor) {
-    const value = host["_wgf_body2d_is_grounded"](actor);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_is_blocked_left
-/**
- * What it touched at its last tick, moving into it: standing on something (grounded: gravity
- * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
- * side reads blocked only while it moves that way: a body walking into a wall each tick, as
- * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
- * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
- */
-export function wgf_body2d_is_blocked_left(actor) {
-    const value = host["_wgf_body2d_is_blocked_left"](actor);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_is_blocked_right
-/**
- * What it touched at its last tick, moving into it: standing on something (grounded: gravity
- * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
- * side reads blocked only while it moves that way: a body walking into a wall each tick, as
- * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
- * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
- */
-export function wgf_body2d_is_blocked_right(actor) {
-    const value = host["_wgf_body2d_is_blocked_right"](actor);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_is_blocked_above
-/**
- * What it touched at its last tick, moving into it: standing on something (grounded: gravity
- * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
- * side reads blocked only while it moves that way: a body walking into a wall each tick, as
- * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
- * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
- */
-export function wgf_body2d_is_blocked_above(actor) {
-    const value = host["_wgf_body2d_is_blocked_above"](actor);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_get_air_time
-/**
- * What it touched at its last tick, moving into it: standing on something (grounded: gravity
- * presses it down each tick), stopped on its left, its right, its top (it hit its head). A
- * side reads blocked only while it moves that way: a body walking into a wall each tick, as
- * a key held does, reads blocked; one stopped there and left still doesn't. And seconds since it was last grounded, 0 while it is:
- * a jump a moment after walking off a ledge (coyote time) asks whether this is short.
- */
-export function wgf_body2d_get_air_time(actor) {
-    const value = host["_wgf_body2d_get_air_time"](actor);
-    return value;
-}
-
-// wgf: call wgf_body2d_set_grid
-/**
- * The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
- * the top, `columns` a row, `count` of them (copied), nonzero solid; cell 0's top-left at
- * x, y in the parent's space, each `size` square; outside it is open. One a parent, set
- * again replacing it. False for a parent that isn't an actor, no cells, columns of 0 or less,
- * or a size that isn't above 0. clear: none again. A cell read (0 outside the grid, or with
- * none) and set (false outside it): a door opened, a block broken.
- */
-export function wgf_body2d_set_grid(parent, cells, columns, size, x, y) {
-    const cellsPointer = arrayIn(cells, 0, "HEAP32");
-    const value = host["_wgf_body2d_set_grid"](parent, cellsPointer, lengthOf(cells), columns, size, x, y);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_set_grid_from_layer
-/**
- * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
- * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
- * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
- * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
- * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
- * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
- * whose tiles aren't square.
- */
-export function wgf_body2d_set_grid_from_layer(parent, layer) {
-    const value = host["_wgf_body2d_set_grid_from_layer"](parent, layer);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_clear_grid
-/**
- * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
- * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
- * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
- * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
- * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
- * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
- * whose tiles aren't square.
- */
-export function wgf_body2d_clear_grid(parent) {
-    const value = host["_wgf_body2d_clear_grid"](parent);
-    return value !== 0;
-}
-
-// wgf: call wgf_body2d_get_grid_cell
-/**
- * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
- * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
- * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
- * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
- * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
- * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
- * whose tiles aren't square.
- */
-export function wgf_body2d_get_grid_cell(parent, column, row) {
-    const value = host["_wgf_body2d_get_grid_cell"](parent, column, row);
-    return value;
-}
-
-// wgf: call wgf_body2d_set_grid_cell
-/**
- * The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
- * tile solid, the rest open, each the map's tile size, cell 0 where the layer's top-left cell
- * is in the parent's space (the layer's offset, for the map's root, and an infinite map's
- * origin; a layer scaled or turned under the parent is placed, not scaled or turned). Its
- * cells as they are now: a cell set on the layer later is set here too with set_grid_cell.
- * False too for a layer that isn't a placed tile layer, a map that isn't orthogonal, or one
- * whose tiles aren't square.
- */
-export function wgf_body2d_set_grid_cell(parent, column, row, value_) {
-    const value = host["_wgf_body2d_set_grid_cell"](parent, column, row, value_);
-    return value !== 0;
 }
 
 // wgf: call wgf_bounds_set_rect
@@ -17702,10 +17702,10 @@ export function wgf_world_dump() {
     return str(value);
 }
 
-// wgf: call wgf_body_set_type
+// wgf: call wgf_body3d_set_type
 /**
- * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
- * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+ * A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
+ * (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
  * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
  * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
  * car's drag on grass, set as it goes); its other settings take effect at the next tick,
@@ -17721,15 +17721,15 @@ export function wgf_world_dump() {
  * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
  * body.
  */
-export function wgf_body_set_type(actor, type) {
-    const value = host["_wgf_body_set_type"](actor, type);
+export function wgf_body3d_set_type(actor, type) {
+    const value = host["_wgf_body3d_set_type"](actor, type);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_type
+// wgf: call wgf_body3d_get_type
 /**
- * A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
- * (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+ * A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
+ * (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
  * its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
  * mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
  * car's drag on grass, set as it goes); its other settings take effect at the next tick,
@@ -17745,275 +17745,275 @@ export function wgf_body_set_type(actor, type) {
  * stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
  * body.
  */
-export function wgf_body_get_type(actor) {
-    const value = host["_wgf_body_get_type"](actor);
+export function wgf_body3d_get_type(actor) {
+    const value = host["_wgf_body3d_get_type"](actor);
     return value;
 }
 
-// wgf: call wgf_body_set_shape
+// wgf: call wgf_body3d_set_shape
 /**
- * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
  * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
  * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
  * mesh can only be static: on another type it is its convex hull.
  */
-export function wgf_body_set_shape(actor, shape, x, y, z) {
-    const value = host["_wgf_body_set_shape"](actor, shape, x, y, z);
+export function wgf_body3d_set_shape(actor, shape, x, y, z) {
+    const value = host["_wgf_body3d_set_shape"](actor, shape, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_shape
+// wgf: call wgf_body3d_get_shape
 /**
- * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
  * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
  * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
  * mesh can only be static: on another type it is its convex hull.
  */
-export function wgf_body_get_shape(actor) {
-    const value = host["_wgf_body_get_shape"](actor);
+export function wgf_body3d_get_shape(actor) {
+    const value = host["_wgf_body3d_get_shape"](actor);
     return value;
 }
 
-// wgf: call wgf_body_get_size
+// wgf: call wgf_body3d_get_size
 /**
- * Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+ * Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
  * at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
  * the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
  * mesh can only be static: on another type it is its convex hull.
  */
-export function wgf_body_get_size(actor, into) {
+export function wgf_body3d_get_size(actor, into) {
     const ret = result(12);
-    host["_wgf_body_get_size"](ret, actor);
+    host["_wgf_body3d_get_size"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_body_set_offset
+// wgf: call wgf_body3d_set_offset
 /**
  * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
  * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
  * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
  */
-export function wgf_body_set_offset(actor, x, y, z) {
-    const value = host["_wgf_body_set_offset"](actor, x, y, z);
+export function wgf_body3d_set_offset(actor, x, y, z) {
+    const value = host["_wgf_body3d_set_offset"](actor, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_offset
+// wgf: call wgf_body3d_get_offset
 /**
  * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
  * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
  * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
  */
-export function wgf_body_get_offset(actor, into) {
+export function wgf_body3d_get_offset(actor, into) {
     const ret = result(12);
-    host["_wgf_body_get_offset"](ret, actor);
+    host["_wgf_body3d_get_offset"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_body_set_mass_offset
+// wgf: call wgf_body3d_set_mass_offset
 /**
  * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
  * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
  * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
  */
-export function wgf_body_set_mass_offset(actor, x, y, z) {
-    const value = host["_wgf_body_set_mass_offset"](actor, x, y, z);
+export function wgf_body3d_set_mass_offset(actor, x, y, z) {
+    const value = host["_wgf_body3d_set_mass_offset"](actor, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_mass_offset
+// wgf: call wgf_body3d_get_mass_offset
 /**
  * Where its shape is centered from its actor (a gate's sensor on the road, its actor at
  * the gate's foot), and how far its center of mass is from its shape's own (a car's, low,
  * so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
  */
-export function wgf_body_get_mass_offset(actor, into) {
+export function wgf_body3d_get_mass_offset(actor, into) {
     const ret = result(12);
-    host["_wgf_body_get_mass_offset"](ret, actor);
+    host["_wgf_body3d_get_mass_offset"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_body_set_mass
+// wgf: call wgf_body3d_set_mass
 /**
  * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
  */
-export function wgf_body_set_mass(actor, kilograms) {
-    const value = host["_wgf_body_set_mass"](actor, kilograms);
+export function wgf_body3d_set_mass(actor, kilograms) {
+    const value = host["_wgf_body3d_set_mass"](actor, kilograms);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_mass
+// wgf: call wgf_body3d_get_mass
 /**
  * Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
  */
-export function wgf_body_get_mass(actor) {
-    const value = host["_wgf_body_get_mass"](actor);
+export function wgf_body3d_get_mass(actor) {
+    const value = host["_wgf_body3d_get_mass"](actor);
     return value;
 }
 
-// wgf: call wgf_body_set_friction
+// wgf: call wgf_body3d_set_friction
 /**
  * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
  * clamped to 0 to 1), each a pair's taken together.
  */
-export function wgf_body_set_friction(actor, friction) {
-    const value = host["_wgf_body_set_friction"](actor, friction);
+export function wgf_body3d_set_friction(actor, friction) {
+    const value = host["_wgf_body3d_set_friction"](actor, friction);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_friction
+// wgf: call wgf_body3d_get_friction
 /**
  * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
  * clamped to 0 to 1), each a pair's taken together.
  */
-export function wgf_body_get_friction(actor) {
-    const value = host["_wgf_body_get_friction"](actor);
+export function wgf_body3d_get_friction(actor) {
+    const value = host["_wgf_body3d_get_friction"](actor);
     return value;
 }
 
-// wgf: call wgf_body_set_bounce
+// wgf: call wgf_body3d_set_bounce
 /**
  * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
  * clamped to 0 to 1), each a pair's taken together.
  */
-export function wgf_body_set_bounce(actor, bounce) {
-    const value = host["_wgf_body_set_bounce"](actor, bounce);
+export function wgf_body3d_set_bounce(actor, bounce) {
+    const value = host["_wgf_body3d_set_bounce"](actor, bounce);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_bounce
+// wgf: call wgf_body3d_get_bounce
 /**
  * Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
  * clamped to 0 to 1), each a pair's taken together.
  */
-export function wgf_body_get_bounce(actor) {
-    const value = host["_wgf_body_get_bounce"](actor);
+export function wgf_body3d_get_bounce(actor) {
+    const value = host["_wgf_body3d_get_bounce"](actor);
     return value;
 }
 
-// wgf: call wgf_body_set_damping
+// wgf: call wgf_body3d_set_damping
 /**
  * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
  * (linear, angular).
  */
-export function wgf_body_set_damping(actor, linear, angular) {
-    const value = host["_wgf_body_set_damping"](actor, linear, angular);
+export function wgf_body3d_set_damping(actor, linear, angular) {
+    const value = host["_wgf_body3d_set_damping"](actor, linear, angular);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_damping
+// wgf: call wgf_body3d_get_damping
 /**
  * The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
  * (linear, angular).
  */
-export function wgf_body_get_damping(actor, into) {
+export function wgf_body3d_get_damping(actor, into) {
     const ret = result(8);
-    host["_wgf_body_get_damping"](ret, actor);
+    host["_wgf_body3d_get_damping"](ret, actor);
     return vector(ret, 2, into);
 }
 
-// wgf: call wgf_body_set_layer
+// wgf: call wgf_body3d_set_layer
 /**
  * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
  * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
  * body meets every moving one its mask lets, and every moving one meets the static world.
  */
-export function wgf_body_set_layer(actor, layer) {
-    const value = host["_wgf_body_set_layer"](actor, layer);
+export function wgf_body3d_set_layer(actor, layer) {
+    const value = host["_wgf_body3d_set_layer"](actor, layer);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_layer
+// wgf: call wgf_body3d_get_layer
 /**
  * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
  * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
  * body meets every moving one its mask lets, and every moving one meets the static world.
  */
-export function wgf_body_get_layer(actor) {
-    const value = host["_wgf_body_get_layer"](actor);
+export function wgf_body3d_get_layer(actor) {
+    const value = host["_wgf_body3d_get_layer"](actor);
     return value;
 }
 
-// wgf: call wgf_body_set_mask
+// wgf: call wgf_body3d_set_mask
 /**
  * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
  * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
  * body meets every moving one its mask lets, and every moving one meets the static world.
  */
-export function wgf_body_set_mask(actor, mask) {
-    const value = host["_wgf_body_set_mask"](actor, mask);
+export function wgf_body3d_set_mask(actor, mask) {
+    const value = host["_wgf_body3d_set_mask"](actor, mask);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_mask
+// wgf: call wgf_body3d_get_mask
 /**
  * What it meets: two bodies meet (collide, or a sensor tells of the other) when each
  * one's layer has a bit in the other's mask. 15 bits each (1 to 0x7FFF); a static
  * body meets every moving one its mask lets, and every moving one meets the static world.
  */
-export function wgf_body_get_mask(actor) {
-    const value = host["_wgf_body_get_mask"](actor);
+export function wgf_body3d_get_mask(actor) {
+    const value = host["_wgf_body3d_get_mask"](actor);
     return value;
 }
 
-// wgf: call wgf_body_set_velocity
+// wgf: call wgf_body3d_set_velocity
 /**
  * Its velocity (units a second) and spin (radians a second about each axis), in its
  * stage's space; and a push, an impulse (kg units a second) through its center. A body not
  * yet made in the world (before its first tick) reads 0 and takes them when it is.
  */
-export function wgf_body_set_velocity(actor, x, y, z) {
-    const value = host["_wgf_body_set_velocity"](actor, x, y, z);
+export function wgf_body3d_set_velocity(actor, x, y, z) {
+    const value = host["_wgf_body3d_set_velocity"](actor, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_velocity
+// wgf: call wgf_body3d_get_velocity
 /**
  * Its velocity (units a second) and spin (radians a second about each axis), in its
  * stage's space; and a push, an impulse (kg units a second) through its center. A body not
  * yet made in the world (before its first tick) reads 0 and takes them when it is.
  */
-export function wgf_body_get_velocity(actor, into) {
+export function wgf_body3d_get_velocity(actor, into) {
     const ret = result(12);
-    host["_wgf_body_get_velocity"](ret, actor);
+    host["_wgf_body3d_get_velocity"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_body_set_spin
+// wgf: call wgf_body3d_set_spin
 /**
  * Its velocity (units a second) and spin (radians a second about each axis), in its
  * stage's space; and a push, an impulse (kg units a second) through its center. A body not
  * yet made in the world (before its first tick) reads 0 and takes them when it is.
  */
-export function wgf_body_set_spin(actor, x, y, z) {
-    const value = host["_wgf_body_set_spin"](actor, x, y, z);
+export function wgf_body3d_set_spin(actor, x, y, z) {
+    const value = host["_wgf_body3d_set_spin"](actor, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_spin
+// wgf: call wgf_body3d_get_spin
 /**
  * Its velocity (units a second) and spin (radians a second about each axis), in its
  * stage's space; and a push, an impulse (kg units a second) through its center. A body not
  * yet made in the world (before its first tick) reads 0 and takes them when it is.
  */
-export function wgf_body_get_spin(actor, into) {
+export function wgf_body3d_get_spin(actor, into) {
     const ret = result(12);
-    host["_wgf_body_get_spin"](ret, actor);
+    host["_wgf_body3d_get_spin"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_body_add_impulse
+// wgf: call wgf_body3d_add_impulse
 /**
  * Its velocity (units a second) and spin (radians a second about each axis), in its
  * stage's space; and a push, an impulse (kg units a second) through its center. A body not
  * yet made in the world (before its first tick) reads 0 and takes them when it is.
  */
-export function wgf_body_add_impulse(actor, x, y, z) {
-    const value = host["_wgf_body_add_impulse"](actor, x, y, z);
+export function wgf_body3d_add_impulse(actor, x, y, z) {
+    const value = host["_wgf_body3d_add_impulse"](actor, x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_body_is_grounded
+// wgf: call wgf_body3d_is_grounded
 /**
  * A character (Jolt's CharacterVirtual) is moved by its velocity each tick, sliding along
  * walls and slopes, climbing steps up to its step height and kept on the floor going down
@@ -18024,142 +18024,142 @@ export function wgf_body_add_impulse(actor, x, y, z) {
  * program sets puts it there. Rays, sensors, and queries find it as a body of its shape.
  * A capsule is its usual shape, its center at the actor.
  */
-export function wgf_body_is_grounded(actor) {
-    const value = host["_wgf_body_is_grounded"](actor);
+export function wgf_body3d_is_grounded(actor) {
+    const value = host["_wgf_body3d_is_grounded"](actor);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_ground_normal
+// wgf: call wgf_body3d_get_ground_normal
 /**
  * The ground it stands on's normal; 0, 0, 0 when it isn't standing, or isn't a character.
  */
-export function wgf_body_get_ground_normal(actor, into) {
+export function wgf_body3d_get_ground_normal(actor, into) {
     const ret = result(12);
-    host["_wgf_body_get_ground_normal"](ret, actor);
+    host["_wgf_body3d_get_ground_normal"](ret, actor);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_body_set_step_height
+// wgf: call wgf_body3d_set_step_height
 /**
  * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
  */
-export function wgf_body_set_step_height(actor, height) {
-    const value = host["_wgf_body_set_step_height"](actor, height);
+export function wgf_body3d_set_step_height(actor, height) {
+    const value = host["_wgf_body3d_set_step_height"](actor, height);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_step_height
+// wgf: call wgf_body3d_get_step_height
 /**
  * The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
  */
-export function wgf_body_get_step_height(actor) {
-    const value = host["_wgf_body_get_step_height"](actor);
+export function wgf_body3d_get_step_height(actor) {
+    const value = host["_wgf_body3d_get_step_height"](actor);
     return value;
 }
 
-// wgf: call wgf_body_set_max_slope
+// wgf: call wgf_body3d_set_max_slope
 /**
  * The steepest ground it stands on, in radians from level (default 50 degrees), at the
  * next tick. Refuses one outside 0 to a right angle.
  */
-export function wgf_body_set_max_slope(actor, radians) {
-    const value = host["_wgf_body_set_max_slope"](actor, radians);
+export function wgf_body3d_set_max_slope(actor, radians) {
+    const value = host["_wgf_body3d_set_max_slope"](actor, radians);
     return value !== 0;
 }
 
-// wgf: call wgf_body_get_max_slope
+// wgf: call wgf_body3d_get_max_slope
 /**
  * The steepest ground it stands on, in radians from level (default 50 degrees), at the
  * next tick. Refuses one outside 0 to a right angle.
  */
-export function wgf_body_get_max_slope(actor) {
-    const value = host["_wgf_body_get_max_slope"](actor);
+export function wgf_body3d_get_max_slope(actor) {
+    const value = host["_wgf_body3d_get_max_slope"](actor);
     return value;
 }
 
-// wgf: call wgf_physics_enable_characters
+// wgf: call wgf_physics3d_enable_characters
 /**
- * Characters (WGF_BODY_TYPE_CHARACTER, wgf_body.h: Jolt's CharacterVirtual), linked on purpose:
+ * Characters (WGF_BODY3D_TYPE_CHARACTER, wgf_body3d.h: Jolt's CharacterVirtual), linked on purpose:
  * this call links them (a game: "characters" in wgf.json's features), so a program with none
  * carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
  * a scene's too. Any time before the first character.
  */
-export function wgf_physics_enable_characters() {
-    const value = host["_wgf_physics_enable_characters"]();
+export function wgf_physics3d_enable_characters() {
+    const value = host["_wgf_physics3d_enable_characters"]();
     return value !== 0;
 }
 
-// wgf: call wgf_physics_is_characters_enabled
+// wgf: call wgf_physics3d_is_characters_enabled
 /**
- * Characters (WGF_BODY_TYPE_CHARACTER, wgf_body.h: Jolt's CharacterVirtual), linked on purpose:
+ * Characters (WGF_BODY3D_TYPE_CHARACTER, wgf_body3d.h: Jolt's CharacterVirtual), linked on purpose:
  * this call links them (a game: "characters" in wgf.json's features), so a program with none
  * carries none of them (about 42 KB of code). Without it, a character type is refused, logged,
  * a scene's too. Any time before the first character.
  */
-export function wgf_physics_is_characters_enabled() {
-    const value = host["_wgf_physics_is_characters_enabled"]();
+export function wgf_physics3d_is_characters_enabled() {
+    const value = host["_wgf_physics3d_is_characters_enabled"]();
     return value !== 0;
 }
 
-// wgf: call wgf_physics_enable_vehicles
+// wgf: call wgf_physics3d_enable_vehicles
 /**
  * Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
  * (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
  * none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
  * scene's too. Any time before the first vehicle.
  */
-export function wgf_physics_enable_vehicles() {
-    const value = host["_wgf_physics_enable_vehicles"]();
+export function wgf_physics3d_enable_vehicles() {
+    const value = host["_wgf_physics3d_enable_vehicles"]();
     return value !== 0;
 }
 
-// wgf: call wgf_physics_is_vehicles_enabled
+// wgf: call wgf_physics3d_is_vehicles_enabled
 /**
  * Vehicles (wgf_vehicle.h: Jolt's VehicleConstraint), linked on purpose: this call links them
  * (a game: "vehicles" in wgf.json's features), so a program with physics and no car carries
  * none of them (about 46 KB of code). Without it, a vehicle component is refused, logged, a
  * scene's too. Any time before the first vehicle.
  */
-export function wgf_physics_is_vehicles_enabled() {
-    const value = host["_wgf_physics_is_vehicles_enabled"]();
+export function wgf_physics3d_is_vehicles_enabled() {
+    const value = host["_wgf_physics3d_is_vehicles_enabled"]();
     return value !== 0;
 }
 
-// wgf: call wgf_physics_set_gravity
+// wgf: call wgf_physics3d_set_gravity
 /**
  * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
  * starting physics. False only when physics couldn't start (logged).
  */
-export function wgf_physics_set_gravity(x, y, z) {
-    const value = host["_wgf_physics_set_gravity"](x, y, z);
+export function wgf_physics3d_set_gravity(x, y, z) {
+    const value = host["_wgf_physics3d_set_gravity"](x, y, z);
     return value !== 0;
 }
 
-// wgf: call wgf_physics_get_gravity
+// wgf: call wgf_physics3d_get_gravity
 /**
  * The world's gravity, in units a second squared (default 0, -9.81, 0: y up, in meters);
  * starting physics. False only when physics couldn't start (logged).
  */
-export function wgf_physics_get_gravity(into) {
+export function wgf_physics3d_get_gravity(into) {
     const ret = result(12);
-    host["_wgf_physics_get_gravity"](ret);
+    host["_wgf_physics3d_get_gravity"](ret);
     return vector(ret, 3, into);
 }
 
-// wgf: call wgf_physics_draw_bodies
+// wgf: call wgf_physics3d_draw_bodies
 /**
  * Every body's shape outlined in `color` (a sensor's in half its alpha), and each vehicle's
  * wheels: a debug view, drawn into the 3D drawing begun (wgf_draw_begin_3d, wgf_draw.h);
  * nothing outside one, or before physics starts. A mesh is drawn by its triangles' edges.
  */
-export function wgf_physics_draw_bodies(color) {
-    host["_wgf_physics_draw_bodies"](color);
+export function wgf_physics3d_draw_bodies(color) {
+    host["_wgf_physics3d_draw_bodies"](color);
 }
 
-// wgf: call wgf_physics_cast_ray
+// wgf: call wgf_physics3d_cast_ray
 /**
  * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
- * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+ * each meeting the bodies whose layer is in `mask` (wgf_body3d_set_layer) and never a sensor;
  * starting physics.
  *
  * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
@@ -18169,19 +18169,19 @@ export function wgf_physics_draw_bodies(color) {
  * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
  * direction of no length, a distance or radius not above 0, or no array.
  */
-export function wgf_physics_cast_ray(x, y, z, dx, dy, dz, distance, mask, actors, hits) {
+export function wgf_physics3d_cast_ray(x, y, z, dx, dy, dz, distance, mask, actors, hits) {
     const actorsPointer = arrayOut(actors, 0);
     const hitsPointer = arrayOut(hits, 1);
-    const value = host["_wgf_physics_cast_ray"](x, y, z, dx, dy, dz, distance, mask, actorsPointer, lengthOf(actors), hitsPointer, lengthOf(hits));
+    const value = host["_wgf_physics3d_cast_ray"](x, y, z, dx, dy, dz, distance, mask, actorsPointer, lengthOf(actors), hitsPointer, lengthOf(hits));
     arrayBack(actorsPointer, actors, "HEAPU32");
     arrayBack(hitsPointer, hits, "HEAPF32");
     return value;
 }
 
-// wgf: call wgf_physics_cast_sphere
+// wgf: call wgf_physics3d_cast_sphere
 /**
  * Queries of the world as its bodies are now (their last tick's), in its 3D stage's space,
- * each meeting the bodies whose layer is in `mask` (wgf_body_set_layer) and never a sensor;
+ * each meeting the bodies whose layer is in `mask` (wgf_body3d_set_layer) and never a sensor;
  * starting physics.
  *
  * A ray from x, y, z along dx, dy, dz (any length; it is normalized) for `distance`, and a
@@ -18191,37 +18191,37 @@ export function wgf_physics_cast_ray(x, y, z, dx, dy, dz, distance, mask, actors
  * there, and the distance along the ray), returning how many hits. 0 for nothing hit, a
  * direction of no length, a distance or radius not above 0, or no array.
  */
-export function wgf_physics_cast_sphere(x, y, z, radius, dx, dy, dz, distance, mask, actors, hits) {
+export function wgf_physics3d_cast_sphere(x, y, z, radius, dx, dy, dz, distance, mask, actors, hits) {
     const actorsPointer = arrayOut(actors, 0);
     const hitsPointer = arrayOut(hits, 1);
-    const value = host["_wgf_physics_cast_sphere"](x, y, z, radius, dx, dy, dz, distance, mask, actorsPointer, lengthOf(actors), hitsPointer, lengthOf(hits));
+    const value = host["_wgf_physics3d_cast_sphere"](x, y, z, radius, dx, dy, dz, distance, mask, actorsPointer, lengthOf(actors), hitsPointer, lengthOf(hits));
     arrayBack(actorsPointer, actors, "HEAPU32");
     arrayBack(hitsPointer, hits, "HEAPF32");
     return value;
 }
 
-// wgf: call wgf_physics_overlap_sphere
+// wgf: call wgf_physics3d_overlap_sphere
 /**
  * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
  * depth centered there (its axes the world's), in no order, as many as fit in `count`,
  * returning how many. 0 for none, a size not above 0, or no array.
  */
-export function wgf_physics_overlap_sphere(x, y, z, radius, mask, actors) {
+export function wgf_physics3d_overlap_sphere(x, y, z, radius, mask, actors) {
     const actorsPointer = arrayOut(actors, 0);
-    const value = host["_wgf_physics_overlap_sphere"](x, y, z, radius, mask, actorsPointer, lengthOf(actors));
+    const value = host["_wgf_physics3d_overlap_sphere"](x, y, z, radius, mask, actorsPointer, lengthOf(actors));
     arrayBack(actorsPointer, actors, "HEAPU32");
     return value;
 }
 
-// wgf: call wgf_physics_overlap_box
+// wgf: call wgf_physics3d_overlap_box
 /**
  * The bodies overlapping a sphere of `radius` at x, y, z, or a box of width, height, and
  * depth centered there (its axes the world's), in no order, as many as fit in `count`,
  * returning how many. 0 for none, a size not above 0, or no array.
  */
-export function wgf_physics_overlap_box(x, y, z, width, height, depth, mask, actors) {
+export function wgf_physics3d_overlap_box(x, y, z, width, height, depth, mask, actors) {
     const actorsPointer = arrayOut(actors, 0);
-    const value = host["_wgf_physics_overlap_box"](x, y, z, width, height, depth, mask, actorsPointer, lengthOf(actors));
+    const value = host["_wgf_physics3d_overlap_box"](x, y, z, width, height, depth, mask, actorsPointer, lengthOf(actors));
     arrayBack(actorsPointer, actors, "HEAPU32");
     return value;
 }

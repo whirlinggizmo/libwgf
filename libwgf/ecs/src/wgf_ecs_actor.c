@@ -19,12 +19,12 @@ static const wgf_ecs_priv_part_component_t *parts[WGF_COMPONENT_VEHICLE + 1];
 
 void wgf_ecs_priv_set_part_component(wgf_component_t component, const wgf_ecs_priv_part_component_t *part)
 {
-    if (component == WGF_COMPONENT_BODY || component == WGF_COMPONENT_VEHICLE) parts[component] = part;
+    if (component == WGF_COMPONENT_BODY3D || component == WGF_COMPONENT_VEHICLE) parts[component] = part;
 }
 
 const wgf_ecs_priv_part_component_t *wgf_ecs_priv_get_part_component(wgf_component_t component)
 {
-    return component == WGF_COMPONENT_BODY || component == WGF_COMPONENT_VEHICLE ? parts[component] : NULL;
+    return component == WGF_COMPONENT_BODY3D || component == WGF_COMPONENT_VEHICLE ? parts[component] : NULL;
 }
 
 static const wgf_ecs_priv_ids_t *ids(void)
@@ -39,7 +39,7 @@ static wgf_ecs_priv_id_t data_id(wgf_component_t component)
         case WGF_COMPONENT_BOUNDS: return ids()->bounds;
         case WGF_COMPONENT_LIFETIME: return ids()->lifetime;
         case WGF_COMPONENT_COLLIDER: return ids()->collider;
-        case WGF_COMPONENT_BODY2D: return ids()->body2d;
+        case WGF_COMPONENT_ARCADE2D: return ids()->arcade2d;
         default: return 0;
     }
 }
@@ -49,7 +49,7 @@ bool wgf_actor_has_component(wgf_actor_t actor, wgf_component_t component)
     const wgf_ecs_priv_record_t *record = wgf_ecs_priv_record_of(actor);
     if (record == NULL) return false;
     if (component == WGF_COMPONENT_VOICE) return record->voice != 0;
-    if (component == WGF_COMPONENT_BODY || component == WGF_COMPONENT_VEHICLE) {
+    if (component == WGF_COMPONENT_BODY3D || component == WGF_COMPONENT_VEHICLE) {
         return parts[component] != NULL && wgf_ecs_priv_store_has(record->id, parts[component]->id);
     }
     return data_id(component) != 0 && wgf_ecs_priv_store_has(record->id, data_id(component));
@@ -58,18 +58,18 @@ bool wgf_actor_has_component(wgf_actor_t actor, wgf_component_t component)
 bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
 {
     wgf_ecs_priv_record_t *record;
-    if ((int)component <= WGF_COMPONENT_NONE || component > WGF_COMPONENT_BODY2D) return false;
+    if ((int)component <= WGF_COMPONENT_NONE || component > WGF_COMPONENT_ARCADE2D) return false;
     if (wgf_actor_has_component(actor, component)) return true;
-    if (component == WGF_COMPONENT_BODY || component == WGF_COMPONENT_VEHICLE) {
+    if (component == WGF_COMPONENT_BODY3D || component == WGF_COMPONENT_VEHICLE) {
         static bool told;
-        if (parts[component] == NULL && component == WGF_COMPONENT_VEHICLE && parts[WGF_COMPONENT_BODY] != NULL) {
+        if (parts[component] == NULL && component == WGF_COMPONENT_VEHICLE && parts[WGF_COMPONENT_BODY3D] != NULL) {
             /* physics running, its vehicles not linked */
             wgf_log_error("wgf_ecs: a vehicle, but vehicles aren't linked in this program (a game: \"vehicles\" in "
-                          "wgf.json's features; C: wgf_physics_enable_vehicles); refused");
+                          "wgf.json's features; C: wgf_physics3d_enable_vehicles); refused");
             return false;
         }
         if (parts[component] == NULL) {
-            if (!told) wgf_log_warn("wgf_ecs: a body or a vehicle before physics has started (wgf_physics_set_gravity); refused");
+            if (!told) wgf_log_warn("wgf_ecs: a body or a vehicle before physics has started (wgf_physics3d_set_gravity); refused");
             told = true;
             return false;
         }
@@ -112,12 +112,12 @@ bool wgf_actor_add_component(wgf_actor_t actor, wgf_component_t component)
             wgf_ecs_priv_store_set(record->id, ids()->collider, &c);
             return true;
         }
-        case WGF_COMPONENT_BODY2D: {
-            wgf_ecs_priv_body2d_t b;
+        case WGF_COMPONENT_ARCADE2D: {
+            wgf_ecs_priv_arcade2d_t b;
             memset(&b, 0, sizeof(b));
             b.width = b.height = 1.0f;
             b.solid_mask = -1;
-            wgf_ecs_priv_store_set(record->id, ids()->body2d, &b);
+            wgf_ecs_priv_store_set(record->id, ids()->arcade2d, &b);
             return true;
         }
         default: /* the voice */
@@ -137,7 +137,7 @@ bool wgf_actor_remove_component(wgf_actor_t actor, wgf_component_t component)
         wgf_ecs_priv_store_remove(record->id, ids()->voice);
         return true;
     }
-    if (component == WGF_COMPONENT_BODY || component == WGF_COMPONENT_VEHICLE) {
+    if (component == WGF_COMPONENT_BODY3D || component == WGF_COMPONENT_VEHICLE) {
         parts[component]->remove(actor);
         record = wgf_ecs_priv_record_of(actor); /* the part's let go of: the records may have moved */
         wgf_ecs_priv_store_remove(record->id, parts[component]->id);

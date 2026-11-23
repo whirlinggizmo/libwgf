@@ -75,7 +75,7 @@ class Main {
 		Render.setClearColor(Color.make(150, 196, 236, 255)); // behind the sky until it has loaded
 		Loop.setTickRate(60); // the car's intent and the ecs, at a fixed rate
 
-		Physics.setGravity(0, -9.81, 0); // physics started: before the scene's bodies load
+		Physics3d.setGravity(0, -9.81, 0); // physics started: before the scene's bodies load
 		stage = Stage3d.create();
 		stage.setTonemap(Stage3dTonemap.NEUTRAL, EXPOSURE);
 		// the sun: aimed along the sky's own sun (25 degrees up, 40 from -z toward +x, the
@@ -258,7 +258,7 @@ class Main {
 		if (Action.isPressed("bodies"))
 			showBodies = !showBodies;
 		if (showBodies && Draw.begin3d(camera.camera)) {
-			Physics.drawBodies(Color.get(ColorStock.YELLOW));
+			Physics3d.drawBodies(Color.get(ColorStock.YELLOW));
 			Draw.end3d();
 		}
 		hud();

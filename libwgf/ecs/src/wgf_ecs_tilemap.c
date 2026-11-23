@@ -1,8 +1,8 @@
-/* A placed Tiled map in the ecs (wgf_scene_spawn_objects, wgf_body2d_set_grid_from_layer):
+/* A placed Tiled map in the ecs (wgf_scene_spawn_objects, wgf_arcade2d_set_grid_from_layer):
  * its objects spawned as a scene's prefabs by their class, and a tile layer's cells as a 2D
  * body's solid grid. Through the map's public calls (wgf_tilemap.h, wgf_tilemap_layer.h); in
  * a file of its own, so a program that places no map links no map through the ecs. */
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 #include "wgf_scene.h"
 
 #include <stdlib.h>
@@ -68,7 +68,7 @@ int wgf_scene_spawn_objects(wgf_scene_t scene, wgf_actor_t layer)
     return spawned;
 }
 
-bool wgf_body2d_set_grid_from_layer(wgf_actor_t parent, wgf_actor_t layer)
+bool wgf_arcade2d_set_grid_from_layer(wgf_actor_t parent, wgf_actor_t layer)
 {
     const wgf_tilemap_t map = wgf_tilemap_layer_get_map(layer);
     const int columns = wgf_tilemap_get_columns(map), rows = wgf_tilemap_get_rows(map);
@@ -89,7 +89,7 @@ bool wgf_body2d_set_grid_from_layer(wgf_actor_t parent, wgf_actor_t layer)
                                                    wgf_gfx_priv_actor_get_world_matrix(layer)),
                                       wgf_vec3_make((float)(wgf_tilemap_get_origin_column(map) * size),
                                                     (float)(wgf_tilemap_get_origin_row(map) * size), 0.0f));
-    set = count == columns * rows && wgf_body2d_set_grid(parent, cells, count, columns, (float)size, corner.x, corner.y);
+    set = count == columns * rows && wgf_arcade2d_set_grid(parent, cells, count, columns, (float)size, corner.x, corner.y);
     free(cells);
     return set;
 }

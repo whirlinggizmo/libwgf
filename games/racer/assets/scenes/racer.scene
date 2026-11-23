@@ -11,7 +11,7 @@ wgf-scene 2
 # The body's box is flat and its wheels attach near its middle, so its center of mass (the
 # box's center: there is no offset to set) sits low between them and it doesn't roll over.
 prefab car
-  body type=dynamic shape=box size=1.9,0.4,4.0 mass=1200 layer=1
+  body3d type=dynamic shape=box size=1.9,0.4,4.0 mass=1200 layer=1
   vehicle wheels=wheel_fl,wheel_fr,wheel_rl,wheel_rr radius=0.36 width=0.26 suspension=0.25 stiffness=1.8 damping=0.5 steering=0.5 grip=1.5 engine_torque=550 max_rpm=7200 gears=3.2,2.1,1.5,1.15,0.92 drive=rear
   behavior name=Car
 end

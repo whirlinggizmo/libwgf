@@ -9,7 +9,7 @@ import wgf.impl.Raw;
     that start to overlap raise TRIGGER_ENTER and two that stop raise TRIGGER_EXIT
     (wgf_world.h), told to each. They overlap only where one's layer meets the other's mask:
     (a's layer & b's mask) or (b's layer & a's mask). Nothing is pushed apart by it: how far
-    apart would part a pair is read (get_push), and a body (wgf_body2d.h) is stopped by solid
+    apart would part a pair is read (get_push), and a body (wgf_arcade2d.h) is stopped by solid
     ones. Only colliders under the same parent actor are compared, found by a sweep of their
     bounds (a few thousand at once).
 

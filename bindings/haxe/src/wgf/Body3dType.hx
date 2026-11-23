@@ -2,8 +2,8 @@
 package wgf;
 
 /**
-    A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
-    (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+    A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
+    (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
     its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
     mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
     car's drag on grass, set as it goes); its other settings take effect at the next tick,
@@ -19,7 +19,7 @@ package wgf;
     stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
     body.
 **/
-enum abstract BodyType(Int) from Int to Int {
+enum abstract Body3dType(Int) from Int to Int {
 	var STATIC = 0;
 	var DYNAMIC = 1;
 	var KINEMATIC = 2;

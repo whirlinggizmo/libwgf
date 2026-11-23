@@ -6,7 +6,7 @@
 #include "wgf_app.h"
 #include "wgf_asset.h"
 #include "wgf_behavior.h"
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 #include "wgf_camera2d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
@@ -99,7 +99,7 @@ static void place(void)
     g.speed = (float)wgf_behavior_get_param_number(g.hero, wgf_actor_find_behavior(g.hero, "Hero"), "speed");
     if (g.speed <= 0.0f) g.speed = 40.0f;
     /* The bodies under the object layer (the hero) slide against the props layer's rocks. */
-    wgf_body2d_set_grid_from_layer(g.things, wgf_actor_find(g.root, "props"));
+    wgf_arcade2d_set_grid_from_layer(g.things, wgf_actor_find(g.root, "props"));
     g.coin_count = wgf_actor_find_with_behavior("Coin", g.coins, MAX_COINS);
     for (i = 0; i < g.coin_count; i++) g.worth += (int)coin_value(g.coins[i]);
     if (wgf_tilemap_get_background_color(g.map) != 0) {
@@ -116,15 +116,15 @@ static void walk(void)
     if (wgf_keyboard_is_down(WGF_KEY_DOWN) || wgf_keyboard_is_down(WGF_KEY_S)) y += 1.0f;
     if (x != 0.0f || y != 0.0f) g.played = true;
     if (!g.played) { /* along the path, turning at the rocks */
-        if (wgf_body2d_is_blocked_right(g.hero)) g.walk = -1.0f;
-        if (wgf_body2d_is_blocked_left(g.hero)) g.walk = 1.0f;
+        if (wgf_arcade2d_is_blocked_right(g.hero)) g.walk = -1.0f;
+        if (wgf_arcade2d_is_blocked_left(g.hero)) g.walk = 1.0f;
         x = g.walk;
     }
     if (x != 0.0f && y != 0.0f) {
         x *= 0.7071f;
         y *= 0.7071f;
     }
-    wgf_body2d_set_velocity(g.hero, x * g.speed, y * g.speed);
+    wgf_arcade2d_set_velocity(g.hero, x * g.speed, y * g.speed);
 }
 
 /* A coin under the hero taken: its value scored, the cell under it sanded. */

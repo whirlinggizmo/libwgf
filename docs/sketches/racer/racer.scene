@@ -4,7 +4,7 @@ wgf-scene 2
 
 actor track
   model path=track/collision.glb visible=false
-  body type=static shape=mesh
+  body3d type=static shape=mesh
 end
 
 actor track_00
@@ -14,14 +14,14 @@ end
 
 prefab car
   model path=car/car.glb cast_shadows=true
-  body type=dynamic mass=1200 shape=convex
+  body3d type=dynamic mass=1200 shape=convex
   vehicle engine_torque=420 max_rpm=7000 gears=3.2,2.1,1.5,1.15,0.92 differential=rear
   vehicle wheels=wheel_fl,wheel_fr,wheel_rl,wheel_rr radius=0.34 width=0.22 suspension=0.28 stiffness=1.6 grip=1.2
   behavior name=Car
 end
 
 prefab checkpoint
-  body type=sensor shape=box size=14,4,1 layer=8 mask=1
+  body3d type=sensor shape=box size=14,4,1 layer=8 mask=1
   behavior name=Checkpoint
 end
 
@@ -34,5 +34,5 @@ end
 
 prefab cone
   model path=props/cone.glb cast_shadows=true
-  body type=dynamic mass=4 shape=convex
+  body3d type=dynamic mass=4 shape=convex
 end

@@ -57,17 +57,17 @@ typedef struct wgf_ecs_priv_collider_t {
     bool enabled; /* off: it meets nothing, its settings kept */
 } wgf_ecs_priv_collider_t;
 
-typedef struct wgf_ecs_priv_body2d_t {
+typedef struct wgf_ecs_priv_arcade2d_t {
     float width, height;
     float vx, vy, gravity, max_fall; /* max_fall 0: no limit */
     int32_t solid_mask;
     float air_time;
     bool grounded, left, right, above; /* what it touched at its last tick */
-} wgf_ecs_priv_body2d_t;
+} wgf_ecs_priv_arcade2d_t;
 
 /* The store's ids of the components, made as it starts. */
 typedef struct wgf_ecs_priv_ids_t {
-    wgf_ecs_priv_id_t ref, motion, bounds, lifetime, collider, body2d;
+    wgf_ecs_priv_id_t ref, motion, bounds, lifetime, collider, arcade2d;
     wgf_ecs_priv_id_t voice; /* a tag: the voice itself is in the record */
 } wgf_ecs_priv_ids_t;
 
@@ -170,9 +170,9 @@ void wgf_ecs_priv_quote(const char *text, char *out, size_t out_size);
 struct wgf_gfx_priv_actor_t;
 bool wgf_ecs_priv_collider_bounds(const wgf_ecs_priv_collider_t *c, const struct wgf_gfx_priv_actor_t *actor_ptr,
                                   float out[4]);
-/* The 2D bodies (wgf_ecs_body2d.c): each moved and slid by a tick of `dt` seconds against the
+/* The 2D bodies (wgf_ecs_arcade2d.c): each moved and slid by a tick of `dt` seconds against the
  * solid colliders of `colliders` and its parent's grid; and the grids let go of. */
-void wgf_ecs_priv_body2d_step(float dt, wgf_ecs_priv_query_t *bodies, wgf_ecs_priv_query_t *colliders);
-void wgf_ecs_priv_body2d_stop(void);
+void wgf_ecs_priv_arcade2d_step(float dt, wgf_ecs_priv_query_t *bodies, wgf_ecs_priv_query_t *colliders);
+void wgf_ecs_priv_arcade2d_stop(void);
 
 #endif

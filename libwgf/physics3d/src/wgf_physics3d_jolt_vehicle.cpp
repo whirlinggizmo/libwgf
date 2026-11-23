@@ -1,7 +1,7 @@
 // Wheeled vehicles on Jolt (wgf_physics3d_jolt_priv.h): Jolt's VehicleConstraint and its wheeled
 // controller, a file of its own so a program that makes none links none of it (about 44 KB of
 // code), reached only from physics3d's vehicles (wgf_physics3d_vehicle.c), which a program links
-// on purpose (wgf_physics_enable_vehicles). Its own storage; the world it lives in is the Jolt
+// on purpose (wgf_physics3d_enable_vehicles). Its own storage; the world it lives in is the Jolt
 // layer's (wgf_physics3d_jolt_world_priv.h), which wakes its bodies as each step begins and lets
 // it go as the world stops.
 

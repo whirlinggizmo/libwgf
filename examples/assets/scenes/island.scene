@@ -13,6 +13,6 @@ prefab coin
 end
 prefab hero
   shape2d circle=6 color=#FFD84A
-  body2d size=10,10
+  arcade2d size=10,10
   behavior name=Hero
 end

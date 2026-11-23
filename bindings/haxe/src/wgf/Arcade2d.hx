@@ -4,7 +4,7 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    A 2D body (WGF_COMPONENT_BODY2D), helix-legacy's Body2D: an arcade box that moves its
+    A 2D body (WGF_COMPONENT_ARCADE2D), helix-legacy's Body2D: an arcade box that moves its
     actor each tick by its velocity and gravity, sliding along what is solid and stopping its
     velocity against it, and what it touches kept: the ground under it, a wall either side, a
     ceiling. A platformer's player or enemy; a top-down character, with no gravity. On a 2D
@@ -24,72 +24,72 @@ import wgf.impl.Raw;
     Defaults: 1 by 1, still, no gravity, no fastest fall, a solid mask of every layer (-1).
     Every call is false (or 0) for an actor without a body.
 
-    Body2d's calls, on a Actor: `var x:Body2d = handle` gives it them, and a Body2d is still a Actor; it starts as 0, none, as a Actor does.
+    Arcade2d's calls, on a Actor: `var x:Arcade2d = handle` gives it them, and a Arcade2d is still a Actor; it starts as 0, none, as a Actor does.
 **/
-@:forward abstract Body2d(Actor) from Actor from Int to Actor {
+@:forward abstract Arcade2d(Actor) from Actor from Int to Actor {
 	/**
 	    False too for a size below 0, or not finite.
 	**/
 	public inline function setSize(width:Float, height:Float):Bool
-		return Raw.wgf_body2d_set_size(this, width, height);
+		return Raw.wgf_arcade2d_set_size(this, width, height);
 
 	/**
 	    False too for a size below 0, or not finite.
 	**/
 	public inline function getSize(?into:wgf.Vec2):wgf.Vec2
-		return Raw.wgf_body2d_get_size(this, into);
+		return Raw.wgf_arcade2d_get_size(this, into);
 
 	/**
 	    Units a second, + right and down. False too for numbers that aren't finite.
 	**/
 	public inline function setVelocity(x:Float, y:Float):Bool
-		return Raw.wgf_body2d_set_velocity(this, x, y);
+		return Raw.wgf_arcade2d_set_velocity(this, x, y);
 
 	/**
 	    Units a second, + right and down. False too for numbers that aren't finite.
 	**/
 	public inline function getVelocity(?into:wgf.Vec2):wgf.Vec2
-		return Raw.wgf_body2d_get_velocity(this, into);
+		return Raw.wgf_arcade2d_get_velocity(this, into);
 
 	/**
 	    Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
 	    a number that isn't finite.
 	**/
 	public inline function setGravity(gravity:Float):Bool
-		return Raw.wgf_body2d_set_gravity(this, gravity);
+		return Raw.wgf_arcade2d_set_gravity(this, gravity);
 
 	/**
 	    Its fall speeding up, units a second each second (+ down; 0, none: top-down). False too for
 	    a number that isn't finite.
 	**/
 	public inline function getGravity():Float
-		return Raw.wgf_body2d_get_gravity(this);
+		return Raw.wgf_arcade2d_get_gravity(this);
 
 	/**
 	    The fastest it falls, units a second; 0 or less for no limit. False too for a number that
 	    isn't finite.
 	**/
 	public inline function setMaxFallSpeed(speed:Float):Bool
-		return Raw.wgf_body2d_set_max_fall_speed(this, speed);
+		return Raw.wgf_arcade2d_set_max_fall_speed(this, speed);
 
 	/**
 	    The fastest it falls, units a second; 0 or less for no limit. False too for a number that
 	    isn't finite.
 	**/
 	public inline function getMaxFallSpeed():Float
-		return Raw.wgf_body2d_get_max_fall_speed(this);
+		return Raw.wgf_arcade2d_get_max_fall_speed(this);
 
 	/**
 	    The collider layers that are solid to it.
 	**/
 	public inline function setSolidMask(mask:Int):Bool
-		return Raw.wgf_body2d_set_solid_mask(this, mask);
+		return Raw.wgf_arcade2d_set_solid_mask(this, mask);
 
 	/**
 	    The collider layers that are solid to it.
 	**/
 	public inline function getSolidMask():Int
-		return Raw.wgf_body2d_get_solid_mask(this);
+		return Raw.wgf_arcade2d_get_solid_mask(this);
 
 	/**
 	    What it touched at its last tick, moving into it: standing on something (grounded: gravity
@@ -99,7 +99,7 @@ import wgf.impl.Raw;
 	    a jump a moment after walking off a ledge (coyote time) asks whether this is short.
 	**/
 	public inline function isGrounded():Bool
-		return Raw.wgf_body2d_is_grounded(this);
+		return Raw.wgf_arcade2d_is_grounded(this);
 
 	/**
 	    What it touched at its last tick, moving into it: standing on something (grounded: gravity
@@ -109,7 +109,7 @@ import wgf.impl.Raw;
 	    a jump a moment after walking off a ledge (coyote time) asks whether this is short.
 	**/
 	public inline function isBlockedLeft():Bool
-		return Raw.wgf_body2d_is_blocked_left(this);
+		return Raw.wgf_arcade2d_is_blocked_left(this);
 
 	/**
 	    What it touched at its last tick, moving into it: standing on something (grounded: gravity
@@ -119,7 +119,7 @@ import wgf.impl.Raw;
 	    a jump a moment after walking off a ledge (coyote time) asks whether this is short.
 	**/
 	public inline function isBlockedRight():Bool
-		return Raw.wgf_body2d_is_blocked_right(this);
+		return Raw.wgf_arcade2d_is_blocked_right(this);
 
 	/**
 	    What it touched at its last tick, moving into it: standing on something (grounded: gravity
@@ -129,7 +129,7 @@ import wgf.impl.Raw;
 	    a jump a moment after walking off a ledge (coyote time) asks whether this is short.
 	**/
 	public inline function isBlockedAbove():Bool
-		return Raw.wgf_body2d_is_blocked_above(this);
+		return Raw.wgf_arcade2d_is_blocked_above(this);
 
 	/**
 	    What it touched at its last tick, moving into it: standing on something (grounded: gravity
@@ -139,7 +139,7 @@ import wgf.impl.Raw;
 	    a jump a moment after walking off a ledge (coyote time) asks whether this is short.
 	**/
 	public inline function getAirTime():Float
-		return Raw.wgf_body2d_get_air_time(this);
+		return Raw.wgf_arcade2d_get_air_time(this);
 
 	/**
 	    The grid of solid cells the bodies under `parent` slide against: `cells` row by row from
@@ -150,7 +150,7 @@ import wgf.impl.Raw;
 	    none) and set (false outside it): a door opened, a block broken.
 	**/
 	public inline function setGrid(cells:Array<Int>, columns:Int, size:Float, x:Float, y:Float):Bool
-		return Raw.wgf_body2d_set_grid(this, cells, columns, size, x, y);
+		return Raw.wgf_arcade2d_set_grid(this, cells, columns, size, x, y);
 
 	/**
 	    The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
@@ -162,7 +162,7 @@ import wgf.impl.Raw;
 	    whose tiles aren't square.
 	**/
 	public inline function setGridFromLayer(layer:Actor):Bool
-		return Raw.wgf_body2d_set_grid_from_layer(this, layer);
+		return Raw.wgf_arcade2d_set_grid_from_layer(this, layer);
 
 	/**
 	    The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
@@ -174,7 +174,7 @@ import wgf.impl.Raw;
 	    whose tiles aren't square.
 	**/
 	public inline function clearGrid():Bool
-		return Raw.wgf_body2d_clear_grid(this);
+		return Raw.wgf_arcade2d_clear_grid(this);
 
 	/**
 	    The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
@@ -186,7 +186,7 @@ import wgf.impl.Raw;
 	    whose tiles aren't square.
 	**/
 	public inline function getGridCell(column:Int, row:Int):Int
-		return Raw.wgf_body2d_get_grid_cell(this, column, row);
+		return Raw.wgf_arcade2d_get_grid_cell(this, column, row);
 
 	/**
 	    The grid set from a placed Tiled map's tile layer (wgf_tilemap_layer.h): its cells with a
@@ -198,5 +198,5 @@ import wgf.impl.Raw;
 	    whose tiles aren't square.
 	**/
 	public inline function setGridCell(column:Int, row:Int, value:Int):Bool
-		return Raw.wgf_body2d_set_grid_cell(this, column, row, value);
+		return Raw.wgf_arcade2d_set_grid_cell(this, column, row, value);
 }

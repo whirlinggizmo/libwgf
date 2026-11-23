@@ -56,7 +56,7 @@ class Laps {
 			final car = Main.car.actor;
 			Probe.setValue("racer.y", car.getWorldPosition(probeAt).y);
 			Probe.setValue("racer.heading", Main.car.drive.heading);
-			Probe.setValue("racer.yaw_rate", (car : Body).getSpin(probeSpin).y);
+			Probe.setValue("racer.yaw_rate", (car : Body3d).getSpin(probeSpin).y);
 			Probe.setValue("racer.gear", (car : Vehicle).getGear());
 			Probe.setValue("racer.rpm", (car : Vehicle).getRpm());
 			for (w in 0...4)

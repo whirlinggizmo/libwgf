@@ -3,7 +3,7 @@
 
 #include "wgf_action.h"
 #include "wgf_app.h"
-#include "wgf_body.h"
+#include "wgf_body3d.h"
 #include "wgf_camera3d.h"
 #include "wgf_color.h"
 #include "wgf_component.h"
@@ -14,7 +14,7 @@
 #include "wgf_mesh.h"
 #include "wgf_model.h"
 #include "wgf_actor.h"
-#include "wgf_physics.h"
+#include "wgf_physics3d.h"
 #include "wgf_render.h"
 #include "wgf_resource.h"
 #include "wgf_stage3d.h"
@@ -39,7 +39,7 @@ static struct {
 
 /* A model of a generated box, `w` by `h` by `d`, on the stage at (x, y, z), tinted, with a
  * body of the same size. */
-static wgf_actor_t block(float w, float h, float d, float x, float y, float z, wgf_color_t tint, wgf_body_type_t type)
+static wgf_actor_t block(float w, float h, float d, float x, float y, float z, wgf_color_t tint, wgf_body3d_type_t type)
 {
     const wgf_mesh_t mesh = wgf_mesh_create_cube(w, h, d);
     const wgf_actor_t model = wgf_model_create(mesh);
@@ -47,9 +47,9 @@ static wgf_actor_t block(float w, float h, float d, float x, float y, float z, w
     wgf_model_set_tint(model, tint);
     wgf_actor_set_position(model, x, y, z);
     wgf_actor_set_parent(model, g.stage);
-    wgf_actor_add_component(model, WGF_COMPONENT_BODY);
-    wgf_body_set_type(model, type);
-    wgf_body_set_shape(model, WGF_BODY_SHAPE_BOX, w, h, d);
+    wgf_actor_add_component(model, WGF_COMPONENT_BODY3D);
+    wgf_body3d_set_type(model, type);
+    wgf_body3d_set_shape(model, WGF_BODY3D_SHAPE_BOX, w, h, d);
     return model;
 }
 
@@ -67,7 +67,7 @@ static void init(void *user)
     int i;
     (void)user;
     wgf_render_set_clear_color(wgf_color_make(150, 180, 210, 255));
-    wgf_physics_set_gravity(0, -9.81f, 0); /* physics starts here: the bodies below need it */
+    wgf_physics3d_set_gravity(0, -9.81f, 0); /* physics starts here: the bodies below need it */
     g.stage = wgf_stage3d_create();
     g.camera = wgf_camera3d_create();
     wgf_stage3d_set_camera(g.stage, g.camera);
@@ -77,9 +77,9 @@ static void init(void *user)
     wgf_light_set_intensity(sun, 1.2f);
     wgf_actor_set_parent(sun, g.stage);
 
-    block(60, 1, 60, 0, -0.5f, 0, wgf_color_make(90, 120, 80, 255), WGF_BODY_TYPE_STATIC); /* the floor */
+    block(60, 1, 60, 0, -0.5f, 0, wgf_color_make(90, 120, 80, 255), WGF_BODY3D_TYPE_STATIC); /* the floor */
     {
-        const wgf_actor_t ramp = block(6, 0.4f, 8, -8, 0.6f, 6, wgf_color_make(170, 150, 120, 255), WGF_BODY_TYPE_STATIC);
+        const wgf_actor_t ramp = block(6, 0.4f, 8, -8, 0.6f, 6, wgf_color_make(170, 150, 120, 255), WGF_BODY3D_TYPE_STATIC);
         wgf_actor_set_rotation(ramp, -0.25f, 0, 0);
     }
     for (i = 0; i < BOXES; i++) { /* a pyramid of crates */
@@ -87,16 +87,16 @@ static void init(void *user)
         const int first = row == 0 ? 0 : (row == 1 ? 4 : (row == 2 ? 7 : 9));
         const float x = 8.0f + (float)(i - first) * 1.05f + (float)row * 0.525f;
         const wgf_actor_t box = block(1, 1, 1, x, 0.5f + (float)row * 1.0f, 8, wgf_color_make(200, 140, 60, 255),
-                                      WGF_BODY_TYPE_DYNAMIC);
-        wgf_body_set_mass(box, 40);
+                                      WGF_BODY3D_TYPE_DYNAMIC);
+        wgf_body3d_set_mass(box, 40);
     }
     /* a gate: a sensor across the way, its frame a model with no body */
     g.gate = wgf_actor_create();
     wgf_actor_set_position(g.gate, 0, 1.5f, 10);
     wgf_actor_set_parent(g.gate, g.stage);
-    wgf_actor_add_component(g.gate, WGF_COMPONENT_BODY);
-    wgf_body_set_type(g.gate, WGF_BODY_TYPE_SENSOR);
-    wgf_body_set_shape(g.gate, WGF_BODY_SHAPE_BOX, 8, 3, 1);
+    wgf_actor_add_component(g.gate, WGF_COMPONENT_BODY3D);
+    wgf_body3d_set_type(g.gate, WGF_BODY3D_TYPE_SENSOR);
+    wgf_body3d_set_shape(g.gate, WGF_BODY3D_SHAPE_BOX, 8, 3, 1);
     {
         const wgf_mesh_t bar = wgf_mesh_create_cube(8.4f, 0.3f, 0.3f);
         g.gate_model = wgf_model_create(bar);
@@ -106,8 +106,8 @@ static void init(void *user)
     }
 
     /* the car: a body, a vehicle, and its wheels' models under it, front pair first */
-    g.car = block(1.8f, 0.6f, 4.0f, 0, 1.2f, -8, wgf_color_make(200, 40, 40, 255), WGF_BODY_TYPE_DYNAMIC);
-    wgf_body_set_mass(g.car, 1200);
+    g.car = block(1.8f, 0.6f, 4.0f, 0, 1.2f, -8, wgf_color_make(200, 40, 40, 255), WGF_BODY3D_TYPE_DYNAMIC);
+    wgf_body3d_set_mass(g.car, 1200);
     for (i = 0; i < 4; i++) {
         const wgf_actor_t axle = wgf_actor_create(); /* the vehicle turns this: the cylinder lies across it */
         const wgf_actor_t tire = wgf_model_create(wheel_mesh);
@@ -167,7 +167,7 @@ static void frame(void *user)
     }
     wgf_stage3d_draw(g.stage);
     if (g.show_bodies && wgf_draw_begin_3d(g.camera)) {
-        wgf_physics_draw_bodies(wgf_color_make(255, 255, 0, 255));
+        wgf_physics3d_draw_bodies(wgf_color_make(255, 255, 0, 255));
         wgf_draw_end_3d();
     }
     wgf_draw_text(0, "libwgf physics3d: arrows drive, space hand brake, R back, B bodies", 12, 12, 20, WGF_COLOR_RAYWHITE);
@@ -176,7 +176,7 @@ static void frame(void *user)
 
 int main(void)
 {
-    wgf_physics_enable_vehicles(); /* the car's: vehicles linked */
+    wgf_physics3d_enable_vehicles(); /* the car's: vehicles linked */
     wgf_window_set_title("libwgf physics3d");
     wgf_window_set_size(1000, 600);
     wgf_window_set_msaa(true);

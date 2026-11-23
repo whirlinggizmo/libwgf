@@ -8,8 +8,8 @@
 #include "wgf_mat4.h"
 #include "wgf_physics3d_jolt_priv.h"
 
-/* Characters (WGF_BODY_TYPE_CHARACTER), reached by physics3d through the hooks their file sets
- * (wgf_physics3d_character.c, linked by wgf_physics_enable_characters), so a program that
+/* Characters (WGF_BODY3D_TYPE_CHARACTER), reached by physics3d through the hooks their file sets
+ * (wgf_physics3d_character.c, linked by wgf_physics3d_enable_characters), so a program that
  * makes none links none of Jolt's CharacterVirtual: the Jolt layer's character calls
  * (wgf_physics3d_jolt_priv.h). NULL until set; a character type set without them is refused. */
 typedef struct wgf_physics3d_priv_characters_t {
@@ -23,7 +23,7 @@ typedef struct wgf_physics3d_priv_characters_t {
 void wgf_physics3d_priv_set_characters(const wgf_physics3d_priv_characters_t *characters);
 
 /* Vehicles (WGF_COMPONENT_VEHICLE), reached by physics3d through the hooks their file sets
- * (wgf_physics3d_vehicle.c, linked by wgf_physics_enable_vehicles), so a program that makes none
+ * (wgf_physics3d_vehicle.c, linked by wgf_physics3d_enable_vehicles), so a program that makes none
  * links none of Jolt's VehicleConstraint: their component made as physics starts (at once, when
  * linked after), let go of as it stops; before each step each made where it changed and given its
  * driver's input, after it its wheels set; a body made again (its vehicle with it); and the debug

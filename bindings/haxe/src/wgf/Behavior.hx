@@ -64,7 +64,7 @@ class Behavior {
 	/** Its actor stopped overlapping `other`, of `layer`. **/
 	public function onTriggerExit(other:Actor, layer:Int):Void {}
 
-	/** Its actor's body began to touch `other`'s, of body layer `layer` (wgf_body.h's contacts). **/
+	/** Its actor's body began to touch `other`'s, of body layer `layer` (wgf_body3d.h's contacts). **/
 	public function onContactBegin(other:Actor, layer:Int):Void {}
 
 	/** Its actor's body stopped touching `other`'s. **/

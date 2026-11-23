@@ -585,17 +585,17 @@ export function wgf_world_take_events(out) {
     arrayBack(outPointer, out, "HEAP32");
     return value;
 }
-export function wgf_body_get_spin(actor, into) {
+export function wgf_body3d_get_spin(actor, into) {
     const ret = result(12);
-    host["_wgf_body_get_spin"](ret, actor);
+    host["_wgf_body3d_get_spin"](ret, actor);
     return vector(ret, 3, into);
 }
-export function wgf_physics_set_gravity(x, y, z) {
-    const value = host["_wgf_physics_set_gravity"](x, y, z);
+export function wgf_physics3d_set_gravity(x, y, z) {
+    const value = host["_wgf_physics3d_set_gravity"](x, y, z);
     return value !== 0;
 }
-export function wgf_physics_draw_bodies(color) {
-    host["_wgf_physics_draw_bodies"](color);
+export function wgf_physics3d_draw_bodies(color) {
+    host["_wgf_physics3d_draw_bodies"](color);
 }
 export function wgf_vehicle_set_input(actor, throttle, brake, steer, hand_brake) {
     const value = host["_wgf_vehicle_set_input"](actor, throttle, brake, steer, (hand_brake ? 1 : 0));

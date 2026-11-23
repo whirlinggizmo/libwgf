@@ -268,7 +268,7 @@ bounds     rect=x,y,w,h  mode=wrap|clamp|destroy  margin=m  visible=true|false
 lifetime   seconds=s
 collider   radius=r | rectangle=w,h | polygon=x,y,x,y,... (3 to 16 points) | segment=x0,y0,x1,y1
            offset=x,y  layer=bits  mask=bits  enabled=true|false
-body2d     size=w,h  velocity=x,y  gravity=g  max_fall=s (0: no limit)  solid_mask=bits
+arcade2d     size=w,h  velocity=x,y  gravity=g  max_fall=s (0: no limit)  solid_mask=bits
 voice      sound="path"  streamed=true|false  volume=v  pitch=p  pan=p  loop=true|false
            play=true|false (played as it is made)
 body       type=static|dynamic|kinematic|sensor  shape=box|sphere|capsule|convex|mesh
@@ -289,14 +289,14 @@ actor track
   model path="track/track.glb"
 end
 actor track/road
-  body type=static shape=mesh friction=1
+  body3d type=static shape=mesh friction=1
 end
 actor track/ground
-  body type=static shape=mesh friction=0.7
+  body3d type=static shape=mesh friction=0.7
 end
 ```
 
-`body` and `vehicle` are physics' (`wgf_body.h`, `wgf_vehicle.h`): refused until the program has started physics (`wgf_physics_set_gravity`), so a game sets the gravity before it loads such a scene. A convex or mesh body is read from the models at and under its actor, each one's transform, scale included: a glTF file's nodes each their own triangles, and the body made once the files have loaded.
+`body3d` and `vehicle` are physics' (`wgf_body3d.h`, `wgf_vehicle.h`): refused until the program has started physics (`wgf_physics3d_set_gravity`), so a game sets the gravity before it loads such a scene. A convex or mesh body is read from the models at and under its actor, each one's transform, scale included: a glTF file's nodes each their own triangles, and the body made once the files have loaded.
 
 For example, a ship with its flame, a rock prefab and a smaller one from it, and a ship placed:
 

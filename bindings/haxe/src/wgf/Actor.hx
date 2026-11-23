@@ -568,6 +568,63 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_actor_is_pickable(this);
 
 	/**
+	    add makes one with its defaults (each component's header says them); adding one it has
+	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+	    that isn't an actor, or a component that isn't one; remove is false too for one it
+	    doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+	    before physics has started, it is refused, and logged once.
+	**/
+	public inline function addComponent(component:Component):Bool
+		return Raw.wgf_actor_add_component(this, component);
+
+	/**
+	    add makes one with its defaults (each component's header says them); adding one it has
+	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+	    that isn't an actor, or a component that isn't one; remove is false too for one it
+	    doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+	    before physics has started, it is refused, and logged once.
+	**/
+	public inline function removeComponent(component:Component):Bool
+		return Raw.wgf_actor_remove_component(this, component);
+
+	/**
+	    add makes one with its defaults (each component's header says them); adding one it has
+	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
+	    that isn't an actor, or a component that isn't one; remove is false too for one it
+	    doesn't have. A body or a vehicle is physics' (wgf_physics3d.h), an optional part: added
+	    before physics has started, it is refused, and logged once.
+	**/
+	public inline function hasComponent(component:Component):Bool
+		return Raw.wgf_actor_has_component(this, component);
+
+	/**
+	    The voice component's voice; 0 for an actor without one. The actor's: play it, never
+	    destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
+	    thrust, looping): it stops when the actor goes, with nothing for the game to end. A
+	    sound played once is wgf_sound_play's.
+	**/
+	public inline function getVoice():Voice
+		return Raw.wgf_actor_get_voice(this);
+
+	/**
+	    The actors with a component, oldest first (by when their first component or behavior
+	    came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+	    there are, to size `out`. Found by an index of each component, never by a look at every
+	    actor; NONE, or a value that isn't a component, finds none.
+	**/
+	public static inline function findWithComponent(component:Component, out:Array<Actor>):Int
+		return Raw.wgf_actor_find_with_component(component, cast out);
+
+	/**
+	    The actors with a component, oldest first (by when their first component or behavior
+	    came), into `out`, as many as fit in `count`, returning how many it filled; and how many
+	    there are, to size `out`. Found by an index of each component, never by a look at every
+	    actor; NONE, or a value that isn't a component, finds none.
+	**/
+	public static inline function countWithComponent(component:Component):Int
+		return Raw.wgf_actor_count_with_component(component);
+
+	/**
 	    A behavior named `name` added to `actor`, after the ones it has: its id, or 0 when
 	    `actor` isn't an actor, the name breaks the rule above, or it is out of memory.
 	**/
@@ -618,63 +675,6 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 	**/
 	public static inline function countWithBehavior(name:String):Int
 		return Raw.wgf_actor_count_with_behavior(name);
-
-	/**
-	    add makes one with its defaults (each component's header says them); adding one it has
-	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
-	    that isn't an actor, or a component that isn't one; remove is false too for one it
-	    doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
-	    before physics has started, it is refused, and logged once.
-	**/
-	public inline function addComponent(component:Component):Bool
-		return Raw.wgf_actor_add_component(this, component);
-
-	/**
-	    add makes one with its defaults (each component's header says them); adding one it has
-	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
-	    that isn't an actor, or a component that isn't one; remove is false too for one it
-	    doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
-	    before physics has started, it is refused, and logged once.
-	**/
-	public inline function removeComponent(component:Component):Bool
-		return Raw.wgf_actor_remove_component(this, component);
-
-	/**
-	    add makes one with its defaults (each component's header says them); adding one it has
-	    keeps it as it is. remove ends it (a voice stopped and destroyed). False for a handle
-	    that isn't an actor, or a component that isn't one; remove is false too for one it
-	    doesn't have. A body or a vehicle is physics' (wgf_physics.h), an optional part: added
-	    before physics has started, it is refused, and logged once.
-	**/
-	public inline function hasComponent(component:Component):Bool
-		return Raw.wgf_actor_has_component(this, component);
-
-	/**
-	    The voice component's voice; 0 for an actor without one. The actor's: play it, never
-	    destroy it. For a sound that lasts as long as the actor (a car's engine, a ship's
-	    thrust, looping): it stops when the actor goes, with nothing for the game to end. A
-	    sound played once is wgf_sound_play's.
-	**/
-	public inline function getVoice():Voice
-		return Raw.wgf_actor_get_voice(this);
-
-	/**
-	    The actors with a component, oldest first (by when their first component or behavior
-	    came), into `out`, as many as fit in `count`, returning how many it filled; and how many
-	    there are, to size `out`. Found by an index of each component, never by a look at every
-	    actor; NONE, or a value that isn't a component, finds none.
-	**/
-	public static inline function findWithComponent(component:Component, out:Array<Actor>):Int
-		return Raw.wgf_actor_find_with_component(component, cast out);
-
-	/**
-	    The actors with a component, oldest first (by when their first component or behavior
-	    came), into `out`, as many as fit in `count`, returning how many it filled; and how many
-	    there are, to size `out`. Found by an index of each component, never by a look at every
-	    actor; NONE, or a value that isn't a component, finds none.
-	**/
-	public static inline function countWithComponent(component:Component):Int
-		return Raw.wgf_actor_count_with_component(component);
 
 	/**
 	    How many actors have a component or a behavior: the simulated ones.

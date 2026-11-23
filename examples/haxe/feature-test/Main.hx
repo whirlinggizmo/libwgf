@@ -898,15 +898,15 @@ class Main {
 		expect(collider.getPush(ship).x == 0 && collider.setRadius(8), "no push from itself; a circle again");
 		{
 			final hero = Actor.create();
-			expect(hero.addComponent(Component.BODY2D), "a 2D body");
-			final body:Body2d = hero;
+			expect(hero.addComponent(Component.ARCADE2D), "a 2D body");
+			final body:Arcade2d = hero;
 			expect(body.setSize(12, 20) && near(body.getSize().y, 20) && body.setVelocity(3, 0) && near(body.getVelocity().x, 3),
 				"its size and velocity");
 			expect(body.setGravity(900) && near(body.getGravity(), 900) && body.setMaxFallSpeed(600)
 				&& near(body.getMaxFallSpeed(), 600) && body.setSolidMask(1) && body.getSolidMask() == 1, "its gravity, fall, mask");
 			expect(!body.isGrounded() && !body.isBlockedLeft() && !body.isBlockedRight() && !body.isBlockedAbove()
 				&& body.getAirTime() == 0, "touching nothing yet");
-			final ground:Body2d = Actor.create();
+			final ground:Arcade2d = Actor.create();
 			expect(ground.setGrid([0, 1, 1, 1], 2, 16, 0, 0) && ground.getGridCell(1, 0) == 1 && ground.setGridCell(0, 0, 1)
 				&& ground.clearGrid(), "a grid of solid cells");
 			(ground : Actor).destroy(ActorDestroy.DESTROY_CHILDREN);
@@ -939,13 +939,13 @@ class Main {
 	}
 
 	static function physics():Void {
-		expect(Physics.setGravity(0, -9.81, 0) && near(Physics.getGravity().y, -9.81), "physics started, its gravity");
+		expect(Physics3d.setGravity(0, -9.81, 0) && near(Physics3d.getGravity().y, -9.81), "physics started, its gravity");
 		final floor = Actor.create();
 		floor.setParent(stage3d);
-		expect(floor.addComponent(Component.BODY) && floor.hasComponent(Component.BODY), "a body");
-		final body:Body = floor;
-		expect(body.setType(BodyType.STATIC) && body.getType() == BodyType.STATIC, "static");
-		expect(body.setShape(BodyShape.BOX, 50, 1, 50) && body.getShape() == BodyShape.BOX && near(body.getSize().x, 50),
+		expect(floor.addComponent(Component.BODY3D) && floor.hasComponent(Component.BODY3D), "a body");
+		final body:Body3d = floor;
+		expect(body.setType(Body3dType.STATIC) && body.getType() == Body3dType.STATIC, "static");
+		expect(body.setShape(Body3dShape.BOX, 50, 1, 50) && body.getShape() == Body3dShape.BOX && near(body.getSize().x, 50),
 			"a box");
 		expect(body.setMass(0) && body.getMass() == 0 && body.setFriction(0.8) && near(body.getFriction(), 0.8), "mass, friction");
 		expect(body.setBounce(0.1) && near(body.getBounce(), 0.1) && body.setDamping(0.1, 0.2) && near(body.getDamping().y, 0.2),
@@ -956,8 +956,8 @@ class Main {
 		final car = Actor.create();
 		car.setParent(stage3d);
 		car.setPosition(0, 1, 0);
-		car.addComponent(Component.BODY);
-		final carBody:Body = car;
+		car.addComponent(Component.BODY3D);
+		final carBody:Body3d = car;
 		expect(carBody.setVelocity(0, 0, 1) && near(carBody.getVelocity().z, 1) && carBody.setSpin(0, 1, 0)
 			&& near(carBody.getSpin().y, 1) && carBody.addImpulse(0, 0, 10), "moving");
 		final wheels = [for (i in 0...4) Actor.create()];
@@ -965,7 +965,7 @@ class Main {
 			wheels[i].setParent(car);
 			wheels[i].setPosition(i % 2 == 0 ? -0.8 : 0.8, -0.2, i < 2 ? 1.4 : -1.4);
 		}
-		expect(Physics.enableVehicles() && Physics.isVehiclesEnabled(), "vehicles linked");
+		expect(Physics3d.enableVehicles() && Physics3d.isVehiclesEnabled(), "vehicles linked");
 		expect(car.addComponent(Component.VEHICLE), "a vehicle");
 		final vehicle:Vehicle = car;
 		expect(vehicle.setWheels(wheels) && vehicle.getWheelCount() == 4 && vehicle.getWheel(0) == wheels[0], "its wheels");
@@ -986,17 +986,17 @@ class Main {
 		expect(vehicle.reset(), "reset");
 		final found:Array<Actor> = [for (i in 0...4) cast 0];
 		final hits:Array<Float> = [for (i in 0...28) 0];
-		Physics.castRay(0, 10, 0, 0, -1, 0, 20, 0x7FFF, found, hits);
-		Physics.castSphere(0, 10, 0, 0.5, 0, -1, 0, 20, 0x7FFF, found, hits);
-		Physics.overlapSphere(0, 0, 0, 1, 0x7FFF, found);
-		Physics.overlapBox(0, 0, 0, 1, 1, 1, 0x7FFF, found);
+		Physics3d.castRay(0, 10, 0, 0, -1, 0, 20, 0x7FFF, found, hits);
+		Physics3d.castSphere(0, 10, 0, 0.5, 0, -1, 0, 20, 0x7FFF, found, hits);
+		Physics3d.overlapSphere(0, 0, 0, 1, 0x7FFF, found);
+		Physics3d.overlapBox(0, 0, 0, 1, 1, 1, 0x7FFF, found);
 		final walker = Actor.create();
 		walker.setParent(stage3d);
 		walker.setPosition(10, 3, 0);
-		walker.addComponent(Component.BODY);
-		final character:Body = walker;
-		expect(Physics.enableCharacters() && Physics.isCharactersEnabled(), "characters linked");
-		expect(character.setType(BodyType.CHARACTER) && character.setShape(BodyShape.CAPSULE, 0.4, 1.8, 0), "a character");
+		walker.addComponent(Component.BODY3D);
+		final character:Body3d = walker;
+		expect(Physics3d.enableCharacters() && Physics3d.isCharactersEnabled(), "characters linked");
+		expect(character.setType(Body3dType.CHARACTER) && character.setShape(Body3dShape.CAPSULE, 0.4, 1.8, 0), "a character");
 		expect(character.setStepHeight(0.25) && near(character.getStepHeight(), 0.25) && character.setMaxSlope(0.7)
 			&& near(character.getMaxSlope(), 0.7), "its step and slope");
 		expect(!character.isGrounded() && character.getGroundNormal().y == 0, "not yet standing");
@@ -1134,7 +1134,7 @@ class Main {
 
 	static function frame():Void {
 		frames++;
-		Physics.drawBodies(Color.get(ColorStock.YELLOW)); // outside a 3D drawing: nothing, but reached
+		Physics3d.drawBodies(Color.get(ColorStock.YELLOW)); // outside a 3D drawing: nothing, but reached
 		world.draw();
 		hud.draw();
 		Draw.rectangle(4, 4, 20, 10, Color.get(ColorStock.RED));
@@ -1581,7 +1581,7 @@ class Main {
 		final cells = [for (_ in 0...24 * 16) 0];
 		expect(ground.getCells(cells) == 24 * 16 && cells[0] == 2 && ground.setCells(cells), "every cell, in bulk");
 		expect(ground.getColumnAt(40, 0) == 2 && ground.getRowAt(0, 40) == 2, "a cell from a point");
-		final walls:Body2d = (things : Actor);
+		final walls:Arcade2d = (things : Actor);
 		expect(walls.setGridFromLayer(props) && walls.getGridCell(21, 9) == 1 && walls.getGridCell(4, 9) == 0,
 			"a layer's cells a 2D body's solid grid");
 		expect(scene.spawnObjects(things) == 0, "the field's scene has no prefab of the map's classes");

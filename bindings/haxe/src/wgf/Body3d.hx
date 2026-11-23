@@ -12,12 +12,12 @@ import wgf.impl.Raw;
     moving body it may meet begins to overlap it, and a TRIGGER_EXIT when it stops (or goes),
     each to both, with the other's layer; a behavior's onTriggerEnter.
 
-    Body's calls, on a Actor: `var x:Body = handle` gives it them, and a Body is still a Actor; it starts as 0, none, as a Actor does.
+    Body3d's calls, on a Actor: `var x:Body3d = handle` gives it them, and a Body3d is still a Actor; it starts as 0, none, as a Actor does.
 **/
-@:forward abstract Body(Actor) from Actor from Int to Actor {
+@:forward abstract Body3d(Actor) from Actor from Int to Actor {
 	/**
-	    A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
-	    (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+	    A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
+	    (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
 	    its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
 	    mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
 	    car's drag on grass, set as it goes); its other settings take effect at the next tick,
@@ -33,12 +33,12 @@ import wgf.impl.Raw;
 	    stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
 	    body.
 	**/
-	public inline function setType(type:BodyType):Bool
-		return Raw.wgf_body_set_type(this, type);
+	public inline function setType(type:Body3dType):Bool
+		return Raw.wgf_body3d_set_type(this, type);
 
 	/**
-	    A body (WGF_COMPONENT_BODY, wgf_component.h): an actor in the physics world
-	    (wgf_physics.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
+	    A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
+	    (wgf_physics3d.h), as a rigid shape. Defaults: dynamic, a box of 1 by 1 by 1, its mass from
 	    its size (1000 kg a cubic meter), friction 0.5, no bounce, damping of 0.05, layer 1,
 	    mask every layer. Friction, bounce, and damping take effect at once, its motion kept (a
 	    car's drag on grass, set as it goes); its other settings take effect at the next tick,
@@ -54,35 +54,35 @@ import wgf.impl.Raw;
 	    stage's space, the actor anywhere in the stage's tree. The calls are false (or 0) for an actor without a
 	    body.
 	**/
-	public inline function getType():BodyType
-		return Raw.wgf_body_get_type(this);
+	public inline function getType():Body3dType
+		return Raw.wgf_body3d_get_type(this);
 
 	/**
-	    Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+	    Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
 	    at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
 	    the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
 	    mesh can only be static: on another type it is its convex hull.
 	**/
-	public inline function setShape(shape:BodyShape, x:Float, y:Float, z:Float):Bool
-		return Raw.wgf_body_set_shape(this, shape, x, y, z);
+	public inline function setShape(shape:Body3dShape, x:Float, y:Float, z:Float):Bool
+		return Raw.wgf_body3d_set_shape(this, shape, x, y, z);
 
 	/**
-	    Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+	    Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
 	    at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
 	    the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
 	    mesh can only be static: on another type it is its convex hull.
 	**/
-	public inline function getShape():BodyShape
-		return Raw.wgf_body_get_shape(this);
+	public inline function getShape():Body3dShape
+		return Raw.wgf_body3d_get_shape(this);
 
 	/**
-	    Its shape, centered on the actor; x, y, z as the shape says (wgf_body_shape_t), each
+	    Its shape, centered on the actor; x, y, z as the shape says (wgf_body3d_shape_t), each
 	    at least 0.01, and nothing for CONVEX and MESH, whose models' meshes are read when
 	    the body is made (a model not yet loaded is left out). get_size is x, y, z as set. A
 	    mesh can only be static: on another type it is its convex hull.
 	**/
 	public inline function getSize(?into:wgf.Vec3):wgf.Vec3
-		return Raw.wgf_body_get_size(this, into);
+		return Raw.wgf_body3d_get_size(this, into);
 
 	/**
 	    Where its shape is centered from its actor (a gate's sensor on the road, its actor at
@@ -90,7 +90,7 @@ import wgf.impl.Raw;
 	    so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
 	**/
 	public inline function setOffset(x:Float, y:Float, z:Float):Bool
-		return Raw.wgf_body_set_offset(this, x, y, z);
+		return Raw.wgf_body3d_set_offset(this, x, y, z);
 
 	/**
 	    Where its shape is centered from its actor (a gate's sensor on the road, its actor at
@@ -98,7 +98,7 @@ import wgf.impl.Raw;
 	    so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
 	**/
 	public inline function getOffset(?into:wgf.Vec3):wgf.Vec3
-		return Raw.wgf_body_get_offset(this, into);
+		return Raw.wgf_body3d_get_offset(this, into);
 
 	/**
 	    Where its shape is centered from its actor (a gate's sensor on the road, its actor at
@@ -106,7 +106,7 @@ import wgf.impl.Raw;
 	    so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
 	**/
 	public inline function setMassOffset(x:Float, y:Float, z:Float):Bool
-		return Raw.wgf_body_set_mass_offset(this, x, y, z);
+		return Raw.wgf_body3d_set_mass_offset(this, x, y, z);
 
 	/**
 	    Where its shape is centered from its actor (a gate's sensor on the road, its actor at
@@ -114,61 +114,61 @@ import wgf.impl.Raw;
 	    so it doesn't roll): each 0, 0, 0 by default, in the actor's space.
 	**/
 	public inline function getMassOffset(?into:wgf.Vec3):wgf.Vec3
-		return Raw.wgf_body_get_mass_offset(this, into);
+		return Raw.wgf_body3d_get_mass_offset(this, into);
 
 	/**
 	    Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
 	**/
 	public inline function setMass(kilograms:Float):Bool
-		return Raw.wgf_body_set_mass(this, kilograms);
+		return Raw.wgf_body3d_set_mass(this, kilograms);
 
 	/**
 	    Kilograms, for a dynamic body; 0 (the default) for its shape's at 1000 a cubic meter.
 	**/
 	public inline function getMass():Float
-		return Raw.wgf_body_get_mass(this);
+		return Raw.wgf_body3d_get_mass(this);
 
 	/**
 	    Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
 	    clamped to 0 to 1), each a pair's taken together.
 	**/
 	public inline function setFriction(friction:Float):Bool
-		return Raw.wgf_body_set_friction(this, friction);
+		return Raw.wgf_body3d_set_friction(this, friction);
 
 	/**
 	    Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
 	    clamped to 0 to 1), each a pair's taken together.
 	**/
 	public inline function getFriction():Float
-		return Raw.wgf_body_get_friction(this);
+		return Raw.wgf_body3d_get_friction(this);
 
 	/**
 	    Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
 	    clamped to 0 to 1), each a pair's taken together.
 	**/
 	public inline function setBounce(bounce:Float):Bool
-		return Raw.wgf_body_set_bounce(this, bounce);
+		return Raw.wgf_body3d_set_bounce(this, bounce);
 
 	/**
 	    Friction (0 ice, 1 rubber; clamped to 0 or more) and bounce (0 none, 1 all of it;
 	    clamped to 0 to 1), each a pair's taken together.
 	**/
 	public inline function getBounce():Float
-		return Raw.wgf_body_get_bounce(this);
+		return Raw.wgf_body3d_get_bounce(this);
 
 	/**
 	    The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
 	    (linear, angular).
 	**/
 	public inline function setDamping(linear:Float, angular:Float):Bool
-		return Raw.wgf_body_set_damping(this, linear, angular);
+		return Raw.wgf_body3d_set_damping(this, linear, angular);
 
 	/**
 	    The share of its velocity and of its spin it loses each second, 0 to 1: get_damping is
 	    (linear, angular).
 	**/
 	public inline function getDamping(?into:wgf.Vec2):wgf.Vec2
-		return Raw.wgf_body_get_damping(this, into);
+		return Raw.wgf_body3d_get_damping(this, into);
 
 	/**
 	    What it meets: two bodies meet (collide, or a sensor tells of the other) when each
@@ -176,7 +176,7 @@ import wgf.impl.Raw;
 	    body meets every moving one its mask lets, and every moving one meets the static world.
 	**/
 	public inline function setLayer(layer:Int):Bool
-		return Raw.wgf_body_set_layer(this, layer);
+		return Raw.wgf_body3d_set_layer(this, layer);
 
 	/**
 	    What it meets: two bodies meet (collide, or a sensor tells of the other) when each
@@ -184,7 +184,7 @@ import wgf.impl.Raw;
 	    body meets every moving one its mask lets, and every moving one meets the static world.
 	**/
 	public inline function getLayer():Int
-		return Raw.wgf_body_get_layer(this);
+		return Raw.wgf_body3d_get_layer(this);
 
 	/**
 	    What it meets: two bodies meet (collide, or a sensor tells of the other) when each
@@ -192,7 +192,7 @@ import wgf.impl.Raw;
 	    body meets every moving one its mask lets, and every moving one meets the static world.
 	**/
 	public inline function setMask(mask:Int):Bool
-		return Raw.wgf_body_set_mask(this, mask);
+		return Raw.wgf_body3d_set_mask(this, mask);
 
 	/**
 	    What it meets: two bodies meet (collide, or a sensor tells of the other) when each
@@ -200,7 +200,7 @@ import wgf.impl.Raw;
 	    body meets every moving one its mask lets, and every moving one meets the static world.
 	**/
 	public inline function getMask():Int
-		return Raw.wgf_body_get_mask(this);
+		return Raw.wgf_body3d_get_mask(this);
 
 	/**
 	    Its velocity (units a second) and spin (radians a second about each axis), in its
@@ -208,7 +208,7 @@ import wgf.impl.Raw;
 	    yet made in the world (before its first tick) reads 0 and takes them when it is.
 	**/
 	public inline function setVelocity(x:Float, y:Float, z:Float):Bool
-		return Raw.wgf_body_set_velocity(this, x, y, z);
+		return Raw.wgf_body3d_set_velocity(this, x, y, z);
 
 	/**
 	    Its velocity (units a second) and spin (radians a second about each axis), in its
@@ -216,7 +216,7 @@ import wgf.impl.Raw;
 	    yet made in the world (before its first tick) reads 0 and takes them when it is.
 	**/
 	public inline function getVelocity(?into:wgf.Vec3):wgf.Vec3
-		return Raw.wgf_body_get_velocity(this, into);
+		return Raw.wgf_body3d_get_velocity(this, into);
 
 	/**
 	    Its velocity (units a second) and spin (radians a second about each axis), in its
@@ -224,7 +224,7 @@ import wgf.impl.Raw;
 	    yet made in the world (before its first tick) reads 0 and takes them when it is.
 	**/
 	public inline function setSpin(x:Float, y:Float, z:Float):Bool
-		return Raw.wgf_body_set_spin(this, x, y, z);
+		return Raw.wgf_body3d_set_spin(this, x, y, z);
 
 	/**
 	    Its velocity (units a second) and spin (radians a second about each axis), in its
@@ -232,7 +232,7 @@ import wgf.impl.Raw;
 	    yet made in the world (before its first tick) reads 0 and takes them when it is.
 	**/
 	public inline function getSpin(?into:wgf.Vec3):wgf.Vec3
-		return Raw.wgf_body_get_spin(this, into);
+		return Raw.wgf_body3d_get_spin(this, into);
 
 	/**
 	    Its velocity (units a second) and spin (radians a second about each axis), in its
@@ -240,7 +240,7 @@ import wgf.impl.Raw;
 	    yet made in the world (before its first tick) reads 0 and takes them when it is.
 	**/
 	public inline function addImpulse(x:Float, y:Float, z:Float):Bool
-		return Raw.wgf_body_add_impulse(this, x, y, z);
+		return Raw.wgf_body3d_add_impulse(this, x, y, z);
 
 	/**
 	    A character (Jolt's CharacterVirtual) is moved by its velocity each tick, sliding along
@@ -253,37 +253,37 @@ import wgf.impl.Raw;
 	    A capsule is its usual shape, its center at the actor.
 	**/
 	public inline function isGrounded():Bool
-		return Raw.wgf_body_is_grounded(this);
+		return Raw.wgf_body3d_is_grounded(this);
 
 	/**
 	    The ground it stands on's normal; 0, 0, 0 when it isn't standing, or isn't a character.
 	**/
 	public inline function getGroundNormal(?into:wgf.Vec3):wgf.Vec3
-		return Raw.wgf_body_get_ground_normal(this, into);
+		return Raw.wgf_body3d_get_ground_normal(this, into);
 
 	/**
 	    The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
 	**/
 	public inline function setStepHeight(height:Float):Bool
-		return Raw.wgf_body_set_step_height(this, height);
+		return Raw.wgf_body3d_set_step_height(this, height);
 
 	/**
 	    The steps it climbs (default 0.3), at once. Refuses a negative or non-finite one.
 	**/
 	public inline function getStepHeight():Float
-		return Raw.wgf_body_get_step_height(this);
+		return Raw.wgf_body3d_get_step_height(this);
 
 	/**
 	    The steepest ground it stands on, in radians from level (default 50 degrees), at the
 	    next tick. Refuses one outside 0 to a right angle.
 	**/
 	public inline function setMaxSlope(radians:Float):Bool
-		return Raw.wgf_body_set_max_slope(this, radians);
+		return Raw.wgf_body3d_set_max_slope(this, radians);
 
 	/**
 	    The steepest ground it stands on, in radians from level (default 50 degrees), at the
 	    next tick. Refuses one outside 0 to a right angle.
 	**/
 	public inline function getMaxSlope():Float
-		return Raw.wgf_body_get_max_slope(this);
+		return Raw.wgf_body3d_get_max_slope(this);
 }

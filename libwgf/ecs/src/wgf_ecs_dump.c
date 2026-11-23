@@ -6,7 +6,7 @@
 #include "wgf_actor.h"
 #include "wgf_behavior.h"
 #include "wgf_bounds.h"
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 #include "wgf_collider.h"
 #include "wgf_component.h"
 #include "wgf_core_handle_priv.h"
@@ -312,22 +312,22 @@ static void dump_lines(out_t *out, wgf_actor_t e, const char *pad)
         put(out, " layer=%d mask=%d%s\n", wgf_collider_get_layer(e), wgf_collider_get_mask(e),
             wgf_collider_is_enabled(e) ? "" : " enabled=false");
     }
-    if (wgf_actor_has_component(e, WGF_COMPONENT_BODY2D)) {
-        const wgf_vec2_t size = wgf_body2d_get_size(e), velocity = wgf_body2d_get_velocity(e);
-        put(out, "%s    body2d size=%.9g,%.9g velocity=%.9g,%.9g gravity=%.9g max_fall=%.9g solid_mask=%d\n", pad, size.x,
-            size.y, velocity.x, velocity.y, wgf_body2d_get_gravity(e), wgf_body2d_get_max_fall_speed(e),
-            wgf_body2d_get_solid_mask(e));
+    if (wgf_actor_has_component(e, WGF_COMPONENT_ARCADE2D)) {
+        const wgf_vec2_t size = wgf_arcade2d_get_size(e), velocity = wgf_arcade2d_get_velocity(e);
+        put(out, "%s    arcade2d size=%.9g,%.9g velocity=%.9g,%.9g gravity=%.9g max_fall=%.9g solid_mask=%d\n", pad, size.x,
+            size.y, velocity.x, velocity.y, wgf_arcade2d_get_gravity(e), wgf_arcade2d_get_max_fall_speed(e),
+            wgf_arcade2d_get_solid_mask(e));
     }
     if (wgf_actor_has_component(e, WGF_COMPONENT_VOICE)) {
         put(out, "%s", pad);
         dump_voice(out, wgf_actor_get_voice(e));
     }
-    for (i = WGF_COMPONENT_BODY; i <= WGF_COMPONENT_VEHICLE; i++) { /* a part's, as the part writes them */
+    for (i = WGF_COMPONENT_BODY3D; i <= WGF_COMPONENT_VEHICLE; i++) { /* a part's, as the part writes them */
         const wgf_ecs_priv_part_component_t *part = wgf_ecs_priv_get_part_component((wgf_component_t)i);
         if (part != NULL && wgf_actor_has_component(e, (wgf_component_t)i)) {
             char settings[1024] = "";
             part->describe(e, settings, sizeof(settings));
-            put(out, "%s    %s%s\n", pad, i == WGF_COMPONENT_BODY ? "body" : "vehicle", settings);
+            put(out, "%s    %s%s\n", pad, i == WGF_COMPONENT_BODY3D ? "body3d" : "vehicle", settings);
         }
     }
     for (b = 0; b < wgf_actor_get_behavior_count(e); b++) {

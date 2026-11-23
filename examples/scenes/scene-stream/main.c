@@ -6,7 +6,7 @@
 #include "wgf_actor.h"
 #include "wgf_app.h"
 #include "wgf_asset.h"
-#include "wgf_body.h"
+#include "wgf_body3d.h"
 #include "wgf_camera3d.h"
 #include "wgf_color.h"
 #include "wgf_component.h"
@@ -17,7 +17,7 @@
 #include "wgf_material.h"
 #include "wgf_mesh.h"
 #include "wgf_model.h"
-#include "wgf_physics.h"
+#include "wgf_physics3d.h"
 #include "wgf_probe.h"
 #include "wgf_random.h"
 #include "wgf_render.h"
@@ -103,9 +103,9 @@ static void ask(int i)
     wgf_actor_set_parent(g.pieces[i], g.stage);
     /* a static body of its triangles, made as asked for: physics makes it once the file's
        models are built (and again should the file load again) */
-    wgf_actor_add_component(g.pieces[i], WGF_COMPONENT_BODY);
-    wgf_body_set_type(g.pieces[i], WGF_BODY_TYPE_STATIC);
-    wgf_body_set_shape(g.pieces[i], WGF_BODY_SHAPE_MESH, 0, 0, 0);
+    wgf_actor_add_component(g.pieces[i], WGF_COMPONENT_BODY3D);
+    wgf_body3d_set_type(g.pieces[i], WGF_BODY3D_TYPE_STATIC);
+    wgf_body3d_set_shape(g.pieces[i], WGF_BODY3D_SHAPE_MESH, 0, 0, 0);
 }
 
 /* The pieces arrived: those whose file's models are built (a glTF file's models are actors
@@ -144,14 +144,14 @@ static void drop(void)
         wgf_model_set_material(d, -1, ball ? g.ball_material : g.crate_material);
         wgf_actor_set_position(d, wgf_random_get_range(-3.0f, 14.0f), 18.0f, wgf_random_get_range(-20.0f, 16.0f));
         wgf_actor_set_parent(d, g.stage);
-        wgf_actor_add_component(d, WGF_COMPONENT_BODY);
+        wgf_actor_add_component(d, WGF_COMPONENT_BODY3D);
         if (ball) {
-            wgf_body_set_shape(d, WGF_BODY_SHAPE_SPHERE, 0.45f, 0, 0);
-            wgf_body_set_bounce(d, 0.4f);
+            wgf_body3d_set_shape(d, WGF_BODY3D_SHAPE_SPHERE, 0.45f, 0, 0);
+            wgf_body3d_set_bounce(d, 0.4f);
         } else {
-            wgf_body_set_shape(d, WGF_BODY_SHAPE_BOX, 0.8f, 0.8f, 0.8f);
+            wgf_body3d_set_shape(d, WGF_BODY3D_SHAPE_BOX, 0.8f, 0.8f, 0.8f);
         }
-        wgf_body_set_spin(d, wgf_random_get_range(-2, 2), wgf_random_get_range(-2, 2), wgf_random_get_range(-2, 2));
+        wgf_body3d_set_spin(d, wgf_random_get_range(-2, 2), wgf_random_get_range(-2, 2), wgf_random_get_range(-2, 2));
         g.drops[free] = d;
     }
 }
@@ -172,7 +172,7 @@ static void init(void *user)
     wgf_render_set_clear_color(wgf_color_make(120, 160, 205, 255)); /* a sky */
     wgf_random_set_seed(7);
     make_layout();
-    wgf_physics_set_gravity(0, -9.81f, 0);
+    wgf_physics3d_set_gravity(0, -9.81f, 0);
 
     g.stage = wgf_stage3d_create();
     g.camera = wgf_camera3d_create();
@@ -242,7 +242,7 @@ static void frame(void *user)
     { /* the drops at rest on the yard, for an autopilot */
         int i, resting = 0;
         for (i = 0; i < DROPS_MAX; i++) {
-            const wgf_vec3_t v = g.drops[i] != 0 ? wgf_body_get_velocity(g.drops[i]) : (wgf_vec3_t){0, -99, 0};
+            const wgf_vec3_t v = g.drops[i] != 0 ? wgf_body3d_get_velocity(g.drops[i]) : (wgf_vec3_t){0, -99, 0};
             resting += g.drops[i] != 0 && fabsf(v.y) < 0.5f && wgf_actor_get_position(g.drops[i]).y > -1.0f;
         }
         wgf_probe_set_value("stream.resting", resting);

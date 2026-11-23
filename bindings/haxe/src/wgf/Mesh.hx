@@ -114,7 +114,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	                 are (sRGB, stored linear); the built-in shadings multiply the material's
 	                 color by them, and a custom shader reads them as wgf_color; 0: white
 
-	    Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+	    Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
 	    was made with: make it again to collide with the new one.
 	**/
 	public inline function setPositions(positions:Array<Float>):Bool
@@ -142,7 +142,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	                 are (sRGB, stored linear); the built-in shadings multiply the material's
 	                 color by them, and a custom shader reads them as wgf_color; 0: white
 
-	    Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+	    Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
 	    was made with: make it again to collide with the new one.
 	**/
 	public inline function setNormals(normals:Array<Float>):Bool
@@ -170,7 +170,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	                 are (sRGB, stored linear); the built-in shadings multiply the material's
 	                 color by them, and a custom shader reads them as wgf_color; 0: white
 
-	    Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+	    Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
 	    was made with: make it again to collide with the new one.
 	**/
 	public inline function setUvs(uvs:Array<Float>):Bool
@@ -198,7 +198,7 @@ abstract Mesh(Int) from Int to Int to wgf.Handle {
 	                 are (sRGB, stored linear); the built-in shadings multiply the material's
 	                 color by them, and a custom shader reads them as wgf_color; 0: white
 
-	    Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+	    Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
 	    was made with: make it again to collide with the new one.
 	**/
 	public inline function setColors(colors:Array<Float>):Bool

@@ -5,7 +5,7 @@
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_actor.h"
 #include "wgf_behavior.h"
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 #include "wgf_component.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_priv.h"
@@ -135,20 +135,20 @@ int main(void)
     hero = wgf_actor_create();
     wgf_actor_set_parent(hero, root);
     wgf_actor_set_position(hero, 20, 0, 0);
-    wgf_actor_add_component(hero, WGF_COMPONENT_BODY2D);
-    wgf_body2d_set_size(hero, 10, 10);
-    wgf_body2d_set_gravity(hero, 1000);
-    expect(wgf_body2d_set_grid_from_layer(root, walls) && wgf_body2d_get_grid_cell(root, 0, 2) == 1 &&
-               wgf_body2d_get_grid_cell(root, 3, 2) == 1 && wgf_body2d_get_grid_cell(root, 0, 1) == 0,
+    wgf_actor_add_component(hero, WGF_COMPONENT_ARCADE2D);
+    wgf_arcade2d_set_size(hero, 10, 10);
+    wgf_arcade2d_set_gravity(hero, 1000);
+    expect(wgf_arcade2d_set_grid_from_layer(root, walls) && wgf_arcade2d_get_grid_cell(root, 0, 2) == 1 &&
+               wgf_arcade2d_get_grid_cell(root, 3, 2) == 1 && wgf_arcade2d_get_grid_cell(root, 0, 1) == 0,
            "a tile layer's filled cells the solid grid");
     for (i = 0; i < 60; i++) step(1.0f / 60.0f);
-    expect(near(wgf_actor_get_position(hero).y, 27) && wgf_body2d_is_grounded(hero), "a body standing on the layer's cells");
-    expect(!wgf_body2d_set_grid_from_layer(root, things) && !wgf_body2d_set_grid_from_layer(root, root) &&
-               !wgf_body2d_set_grid_from_layer(0, walls),
+    expect(near(wgf_actor_get_position(hero).y, 27) && wgf_arcade2d_is_grounded(hero), "a body standing on the layer's cells");
+    expect(!wgf_arcade2d_set_grid_from_layer(root, things) && !wgf_arcade2d_set_grid_from_layer(root, root) &&
+               !wgf_arcade2d_set_grid_from_layer(0, walls),
            "a layer without cells, an actor that isn't a layer, no parent: refused");
 
     wgf_actor_set_position(walls, 0, 16, 0); /* the layer moved down a row */
-    expect(wgf_body2d_set_grid_from_layer(root, walls), "set again");
+    expect(wgf_arcade2d_set_grid_from_layer(root, walls), "set again");
     for (i = 0; i < 60; i++) step(1.0f / 60.0f);
     expect(near(wgf_actor_get_position(hero).y, 43), "the grid where the layer is in its parent");
 

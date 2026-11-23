@@ -42,7 +42,7 @@ typedef struct pair_t {
 static struct {
     bool started; /* the store started, the records' pool made */
     wgf_ecs_priv_ids_t ids;
-    wgf_ecs_priv_query_t *q_motion, *q_bounds, *q_lifetime, *q_collider, *q_body2d;
+    wgf_ecs_priv_query_t *q_motion, *q_bounds, *q_lifetime, *q_collider, *q_arcade2d;
     wgf_core_priv_handle_pool_t pool;
     wgf_ecs_priv_record_t *records;
     uint64_t next_order;
@@ -658,7 +658,7 @@ static void tick(float dt)
 {
     count_down(dt);
     move(dt);
-    wgf_ecs_priv_body2d_step(dt, ecs.q_body2d, ecs.q_collider);
+    wgf_ecs_priv_arcade2d_step(dt, ecs.q_arcade2d, ecs.q_collider);
     bound();
     collide();
     publish();
@@ -748,8 +748,8 @@ static void stop(void)
     wgf_ecs_priv_store_query_free(ecs.q_bounds);
     wgf_ecs_priv_store_query_free(ecs.q_lifetime);
     wgf_ecs_priv_store_query_free(ecs.q_collider);
-    wgf_ecs_priv_store_query_free(ecs.q_body2d);
-    wgf_ecs_priv_body2d_stop();
+    wgf_ecs_priv_store_query_free(ecs.q_arcade2d);
+    wgf_ecs_priv_arcade2d_stop();
     wgf_ecs_priv_store_stop();
     wgf_core_priv_handle_pool_destroy(&ecs.pool);
     free(ecs.events);
@@ -809,13 +809,13 @@ bool wgf_ecs_priv_start(void)
         wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_lifetime_t), _Alignof(wgf_ecs_priv_lifetime_t));
     ecs.ids.collider =
         wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_collider_t), _Alignof(wgf_ecs_priv_collider_t));
-    ecs.ids.body2d = wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_body2d_t), _Alignof(wgf_ecs_priv_body2d_t));
+    ecs.ids.arcade2d = wgf_ecs_priv_store_component(sizeof(wgf_ecs_priv_arcade2d_t), _Alignof(wgf_ecs_priv_arcade2d_t));
     ecs.ids.voice = wgf_ecs_priv_store_component(0, 1);
     ecs.q_motion = query_of(ecs.ids.motion, ecs.ids.ref);
     ecs.q_bounds = query_of(ecs.ids.bounds, ecs.ids.ref);
     ecs.q_lifetime = query_of(ecs.ids.lifetime, ecs.ids.ref);
     ecs.q_collider = query_of(ecs.ids.collider, ecs.ids.ref);
-    ecs.q_body2d = query_of(ecs.ids.body2d, ecs.ids.ref);
+    ecs.q_arcade2d = query_of(ecs.ids.arcade2d, ecs.ids.ref);
     wgf_gfx_priv_actor_set_components_hook(components_gone);
     wgf_core_priv_part_install(&part);
     return true;
@@ -862,7 +862,7 @@ void wgf_ecs_priv_record_free(wgf_actor_t actor)
     }
     wgf_ecs_priv_forget_pairs(actor);
     if (record->voice != 0) wgf_voice_destroy(record->voice);
-    for (b = WGF_COMPONENT_BODY; b <= WGF_COMPONENT_VEHICLE; b++) { /* a part's components let go of by the part */
+    for (b = WGF_COMPONENT_BODY3D; b <= WGF_COMPONENT_VEHICLE; b++) { /* a part's components let go of by the part */
         const wgf_ecs_priv_part_component_t *hooks = wgf_ecs_priv_get_part_component((wgf_component_t)b);
         if (hooks != NULL && wgf_actor_has_component(actor, (wgf_component_t)b)) hooks->remove(actor);
     }
@@ -951,9 +951,9 @@ static wgf_ecs_priv_id_t component_id(wgf_component_t component)
         case WGF_COMPONENT_BOUNDS: return ecs.ids.bounds;
         case WGF_COMPONENT_LIFETIME: return ecs.ids.lifetime;
         case WGF_COMPONENT_COLLIDER: return ecs.ids.collider;
-        case WGF_COMPONENT_BODY2D: return ecs.ids.body2d;
+        case WGF_COMPONENT_ARCADE2D: return ecs.ids.arcade2d;
         case WGF_COMPONENT_VOICE: return ecs.ids.voice;
-        case WGF_COMPONENT_BODY:
+        case WGF_COMPONENT_BODY3D:
         case WGF_COMPONENT_VEHICLE: {
             const wgf_ecs_priv_part_component_t *hooks = wgf_ecs_priv_get_part_component(component);
             return hooks != NULL ? hooks->id : 0;

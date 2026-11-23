@@ -46,11 +46,11 @@ class Defines {
 		},
 		{
 			define: "wgf_characters",
-			doc: "Links characters (a body of type character: Jolt's CharacterVirtual) into a native build that never calls Physics.enableCharacters: a game's \"characters\" feature (wgf.json), which the wgf tool turns into it."
+			doc: "Links characters (a body of type character: Jolt's CharacterVirtual) into a native build that never calls Physics3d.enableCharacters: a game's \"characters\" feature (wgf.json), which the wgf tool turns into it."
 		},
 		{
 			define: "wgf_vehicles",
-			doc: "Links vehicles (a vehicle component: Jolt's wheeled vehicle) into a native build that never calls Physics.enableVehicles: a game's \"vehicles\" feature (wgf.json), which the wgf tool turns into it."
+			doc: "Links vehicles (a vehicle component: Jolt's wheeled vehicle) into a native build that never calls Physics3d.enableVehicles: a game's \"vehicles\" feature (wgf.json), which the wgf tool turns into it."
 		},
 		{
 			define: "wgf_bitmap_fonts",

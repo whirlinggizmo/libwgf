@@ -877,14 +877,14 @@ def track_scene(xs, zs, hs, gates):
              '# static body of its own triangles at its own friction; the road and walls are for the',
              '# bodies alone (visible=false: the pieces draw the track), the ground is the field.',
              'actor track', '  model path="track/collision.glb"', 'end',
-             'actor track/ground', '  model cast_shadows=false', '  body type=static shape=mesh friction=0.7', 'end',
-             'actor track/road', '  model cast_shadows=false visible=false', '  body type=static shape=mesh friction=1', 'end',
-             'actor track/walls', '  model cast_shadows=false visible=false', '  body type=static shape=mesh friction=0.3', 'end',
+             'actor track/ground', '  model cast_shadows=false', '  body3d type=static shape=mesh friction=0.7', 'end',
+             'actor track/road', '  model cast_shadows=false visible=false', '  body3d type=static shape=mesh friction=1', 'end',
+             'actor track/walls', '  model cast_shadows=false visible=false', '  body3d type=static shape=mesh friction=0.3', 'end',
              '',
              '# A checkpoint: a sensor box across the track, barrier to barrier, its middle 2 m up,',
              "# meeting the car's layer.",
              'prefab checkpoint',
-             f'  body type=sensor shape=box size={num(2 * BARRIER_OFFSET - 1)},4,1 offset=0,2,0 layer=2 mask=1',
+             f'  body3d type=sensor shape=box size={num(2 * BARRIER_OFFSET - 1)},4,1 offset=0,2,0 layer=2 mask=1',
              '  behavior name=Checkpoint', 'end']
     for i, s in enumerate(gates):
         lines += [f'actor checkpoint_{i}', '  from checkpoint',

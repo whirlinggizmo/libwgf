@@ -20,7 +20,7 @@ package wgf.impl;
 }
 
 /** Each exported C call for hxcpp: the call written out, its arguments cast. **/
-@:cppFileCode("#include <wgf_collide2d.h>\n#include <wgf_collide3d.h>\n#include <wgf_ease.h>\n#include <wgf_mat4.h>\n#include <wgf_quat.h>\n#include <wgf_scalar.h>\n#include <wgf_spline.h>\n#include <wgf_trig.h>\n#include <wgf_vec2.h>\n#include <wgf_vec3.h>\n#include <wgf_vec4.h>\n#include <wgf.h>\n#include <wgf_fs.h>\n#include <wgf_handle.h>\n#include <wgf_identity.h>\n#include <wgf_log.h>\n#include <wgf_play_state.h>\n#include <wgf_probe.h>\n#include <wgf_random.h>\n#include <wgf_resource.h>\n#include <wgf_time.h>\n#include <wgf_action.h>\n#include <wgf_gamepad.h>\n#include <wgf_input.h>\n#include <wgf_keyboard.h>\n#include <wgf_mouse.h>\n#include <wgf_tilt.h>\n#include <wgf_touch.h>\n#include <wgf_window.h>\n#include <wgf_asset.h>\n#include <wgf_actor.h>\n#include <wgf_camera2d.h>\n#include <wgf_camera3d.h>\n#include <wgf_color.h>\n#include <wgf_cubemap.h>\n#include <wgf_draw.h>\n#include <wgf_emitter2d.h>\n#include <wgf_emitter3d.h>\n#include <wgf_environment.h>\n#include <wgf_fly.h>\n#include <wgf_follow.h>\n#include <wgf_font.h>\n#include <wgf_image.h>\n#include <wgf_light.h>\n#include <wgf_material.h>\n#include <wgf_mesh.h>\n#include <wgf_model.h>\n#include <wgf_pointer.h>\n#include <wgf_presentation.h>\n#include <wgf_render.h>\n#include <wgf_shader.h>\n#include <wgf_shape2d.h>\n#include <wgf_shape3d.h>\n#include <wgf_sheet.h>\n#include <wgf_sprite.h>\n#include <wgf_sprite_batch.h>\n#include <wgf_stage2d.h>\n#include <wgf_stage3d.h>\n#include <wgf_text.h>\n#include <wgf_texture.h>\n#include <wgf_tilemap.h>\n#include <wgf_tilemap_layer.h>\n#include <wgf_audio.h>\n#include <wgf_bus.h>\n#include <wgf_sound.h>\n#include <wgf_voice.h>\n#include <wgf_behavior.h>\n#include <wgf_body2d.h>\n#include <wgf_bounds.h>\n#include <wgf_collider.h>\n#include <wgf_component.h>\n#include <wgf_lifetime.h>\n#include <wgf_motion.h>\n#include <wgf_scene.h>\n#include <wgf_screen.h>\n#include <wgf_tween.h>\n#include <wgf_world.h>\n#include <wgf_body.h>\n#include <wgf_physics.h>\n#include <wgf_vehicle.h>\n#include <wgf_document.h>\n#include <wgf_ui.h>\n#include <wgf_app.h>\n#include <wgf_debug.h>\n#include <wgf_loop.h>\n#include <wgf_replay.h>\n#include <string.h>\n")
+@:cppFileCode("#include <wgf_collide2d.h>\n#include <wgf_collide3d.h>\n#include <wgf_ease.h>\n#include <wgf_mat4.h>\n#include <wgf_quat.h>\n#include <wgf_scalar.h>\n#include <wgf_spline.h>\n#include <wgf_trig.h>\n#include <wgf_vec2.h>\n#include <wgf_vec3.h>\n#include <wgf_vec4.h>\n#include <wgf.h>\n#include <wgf_fs.h>\n#include <wgf_handle.h>\n#include <wgf_identity.h>\n#include <wgf_log.h>\n#include <wgf_play_state.h>\n#include <wgf_probe.h>\n#include <wgf_random.h>\n#include <wgf_resource.h>\n#include <wgf_time.h>\n#include <wgf_action.h>\n#include <wgf_gamepad.h>\n#include <wgf_input.h>\n#include <wgf_keyboard.h>\n#include <wgf_mouse.h>\n#include <wgf_tilt.h>\n#include <wgf_touch.h>\n#include <wgf_window.h>\n#include <wgf_asset.h>\n#include <wgf_actor.h>\n#include <wgf_camera2d.h>\n#include <wgf_camera3d.h>\n#include <wgf_color.h>\n#include <wgf_cubemap.h>\n#include <wgf_draw.h>\n#include <wgf_emitter2d.h>\n#include <wgf_emitter3d.h>\n#include <wgf_environment.h>\n#include <wgf_fly.h>\n#include <wgf_follow.h>\n#include <wgf_font.h>\n#include <wgf_image.h>\n#include <wgf_light.h>\n#include <wgf_material.h>\n#include <wgf_mesh.h>\n#include <wgf_model.h>\n#include <wgf_pointer.h>\n#include <wgf_presentation.h>\n#include <wgf_render.h>\n#include <wgf_shader.h>\n#include <wgf_shape2d.h>\n#include <wgf_shape3d.h>\n#include <wgf_sheet.h>\n#include <wgf_sprite.h>\n#include <wgf_sprite_batch.h>\n#include <wgf_stage2d.h>\n#include <wgf_stage3d.h>\n#include <wgf_text.h>\n#include <wgf_texture.h>\n#include <wgf_tilemap.h>\n#include <wgf_tilemap_layer.h>\n#include <wgf_audio.h>\n#include <wgf_bus.h>\n#include <wgf_sound.h>\n#include <wgf_voice.h>\n#include <wgf_arcade2d.h>\n#include <wgf_behavior.h>\n#include <wgf_bounds.h>\n#include <wgf_collider.h>\n#include <wgf_component.h>\n#include <wgf_lifetime.h>\n#include <wgf_motion.h>\n#include <wgf_scene.h>\n#include <wgf_screen.h>\n#include <wgf_tween.h>\n#include <wgf_world.h>\n#include <wgf_body3d.h>\n#include <wgf_physics3d.h>\n#include <wgf_vehicle.h>\n#include <wgf_document.h>\n#include <wgf_ui.h>\n#include <wgf_app.h>\n#include <wgf_debug.h>\n#include <wgf_loop.h>\n#include <wgf_replay.h>\n#include <string.h>\n")
 @:buildXml("<include name='${wgf_binding}/project/Build.xml' if='wgf_binding'/><include name='${haxelib:wgf}/project/Build.xml' unless='wgf_binding'/>")
 class Raw {
 	public static function wgf_collide2d_rect_rect(ax:Float, ay:Float, aw:Float, ah:Float, bx:Float, by:Float, bw:Float, bh:Float, hit:Array<Float>):Bool {
@@ -1823,215 +1823,215 @@ class Raw {
 	}
 	public static function wgf_asset_set_host(host:String):Bool {
 		#if wgf_reach
-		Reach.hit(106);
+		Reach.hit(126);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_set_host(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", host);
 		return value;
 	}
 	public static function wgf_asset_get_host():String {
 		#if wgf_reach
-		Reach.hit(94);
+		Reach.hit(114);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_asset_get_host())");
 		return value;
 	}
 	public static function wgf_asset_set_cache_dir(dir:String):Bool {
 		#if wgf_reach
-		Reach.hit(102);
+		Reach.hit(122);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_set_cache_dir(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", dir);
 		return value;
 	}
 	public static function wgf_asset_get_cache_dir():String {
 		#if wgf_reach
-		Reach.hit(91);
+		Reach.hit(111);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_asset_get_cache_dir())");
 		return value;
 	}
 	public static function wgf_asset_set_fetching(enabled:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(105);
+		Reach.hit(125);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_set_fetching((bool){0})", enabled);
 		return value;
 	}
 	public static function wgf_asset_is_fetching():Bool {
 		#if wgf_reach
-		Reach.hit(98);
+		Reach.hit(118);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_is_fetching()");
 		return value;
 	}
 	public static function wgf_asset_fetch_next():Int {
 		#if wgf_reach
-		Reach.hit(90);
+		Reach.hit(110);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_asset_fetch_next()");
 		return value;
 	}
 	public static function wgf_asset_fetch_get_url(request:Int):String {
 		#if wgf_reach
-		Reach.hit(88);
+		Reach.hit(108);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_asset_fetch_get_url((wgf_asset_task_t){0}))", request);
 		return value;
 	}
 	public static function wgf_asset_fetch_get_dest(request:Int):String {
 		#if wgf_reach
-		Reach.hit(87);
+		Reach.hit(107);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_asset_fetch_get_dest((wgf_asset_task_t){0}))", request);
 		return value;
 	}
 	public static function wgf_asset_fetch_is_ping(request:Int):Bool {
 		#if wgf_reach
-		Reach.hit(89);
+		Reach.hit(109);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_fetch_is_ping((wgf_asset_task_t){0})", request);
 		return value;
 	}
 	public static function wgf_asset_fetch_done(request:Int, ok:Bool):Bool {
 		#if wgf_reach
-		Reach.hit(86);
+		Reach.hit(106);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_fetch_done((wgf_asset_task_t){0}, (bool){1})", request, ok);
 		return value;
 	}
 	public static function wgf_asset_set_fetch_timeout(seconds:Float):Bool {
 		#if wgf_reach
-		Reach.hit(104);
+		Reach.hit(124);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_set_fetch_timeout((float){0})", seconds);
 		return value;
 	}
 	public static function wgf_asset_get_fetch_timeout():Float {
 		#if wgf_reach
-		Reach.hit(93);
+		Reach.hit(113);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_asset_get_fetch_timeout()");
 		return value;
 	}
 	public static function wgf_asset_evict(path:String):Bool {
 		#if wgf_reach
-		Reach.hit(85);
+		Reach.hit(105);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_evict(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", path);
 		return value;
 	}
 	public static function wgf_asset_reload(path:String):Int {
 		#if wgf_reach
-		Reach.hit(101);
+		Reach.hit(121);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_asset_reload(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", path);
 		return value;
 	}
 	public static function wgf_asset_clear_cache():Void {
 		#if wgf_reach
-		Reach.hit(82);
+		Reach.hit(102);
 		#end
 		untyped __cpp__("::wgf_asset_clear_cache()");
 	}
 	public static function wgf_asset_set_cache_mode(mode:Int):Bool {
 		#if wgf_reach
-		Reach.hit(103);
+		Reach.hit(123);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_set_cache_mode((wgf_asset_cache_mode_t){0})", mode);
 		return value;
 	}
 	public static function wgf_asset_get_cache_mode():Int {
 		#if wgf_reach
-		Reach.hit(92);
+		Reach.hit(112);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_asset_get_cache_mode()");
 		return value;
 	}
 	public static function wgf_asset_set_manifest(path:String):Bool {
 		#if wgf_reach
-		Reach.hit(107);
+		Reach.hit(127);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_set_manifest(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", path);
 		return value;
 	}
 	public static function wgf_asset_get_manifest():String {
 		#if wgf_reach
-		Reach.hit(95);
+		Reach.hit(115);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_asset_get_manifest())");
 		return value;
 	}
 	public static function wgf_asset_ensure(path:String, fetch_url:String, flags:Int):Int {
 		#if wgf_reach
-		Reach.hit(84);
+		Reach.hit(104);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_asset_ensure(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0), (unsigned int){2})", path, fetch_url, flags);
 		return value;
 	}
 	public static function wgf_asset_task_get_status(task:Int):Int {
 		#if wgf_reach
-		Reach.hit(111);
+		Reach.hit(131);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_asset_task_get_status((wgf_asset_task_t){0})", task);
 		return value;
 	}
 	public static function wgf_asset_task_get_path(task:Int):String {
 		#if wgf_reach
-		Reach.hit(109);
+		Reach.hit(129);
 		#end
 		final value:String = untyped __cpp__("::String(::wgf_asset_task_get_path((wgf_asset_task_t){0}))", task);
 		return value;
 	}
 	public static function wgf_asset_task_get_progress(task:Int):Float {
 		#if wgf_reach
-		Reach.hit(110);
+		Reach.hit(130);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_asset_task_get_progress((wgf_asset_task_t){0})", task);
 		return value;
 	}
 	public static function wgf_asset_task_destroy(task:Int):Bool {
 		#if wgf_reach
-		Reach.hit(108);
+		Reach.hit(128);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_task_destroy((wgf_asset_task_t){0})", task);
 		return value;
 	}
 	public static function wgf_asset_group_create():Int {
 		#if wgf_reach
-		Reach.hit(97);
+		Reach.hit(117);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_asset_group_create()");
 		return value;
 	}
 	public static function wgf_asset_group_add(group:Int, task:Int):Bool {
 		#if wgf_reach
-		Reach.hit(96);
+		Reach.hit(116);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_group_add((wgf_asset_task_t){0}, (wgf_asset_task_t){1})", group, task);
 		return value;
 	}
 	public static function wgf_asset_add_redirect(prefix:String, target:String):Bool {
 		#if wgf_reach
-		Reach.hit(81);
+		Reach.hit(101);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_asset_add_redirect(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", prefix, target);
 		return value;
 	}
 	public static function wgf_asset_clear_redirects():Void {
 		#if wgf_reach
-		Reach.hit(83);
+		Reach.hit(103);
 		#end
 		untyped __cpp__("::wgf_asset_clear_redirects()");
 	}
 	public static function wgf_asset_ping_host(host:String, timeout_ms:Int):Int {
 		#if wgf_reach
-		Reach.hit(100);
+		Reach.hit(120);
 		#end
 		final value:Int = untyped __cpp__("(int)::wgf_asset_ping_host(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), (int){1})", host, timeout_ms);
 		return value;
 	}
 	public static function wgf_asset_ping_get_milliseconds(ping:Int):Float {
 		#if wgf_reach
-		Reach.hit(99);
+		Reach.hit(119);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_asset_ping_get_milliseconds((wgf_asset_task_t){0})", ping);
 		return value;
@@ -7528,41 +7528,41 @@ class Raw {
 	}
 	public static function wgf_audio_set_volume(volume:Float):Bool {
 		#if wgf_reach
-		Reach.hit(119);
+		Reach.hit(139);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_audio_set_volume((float){0})", volume);
 		return value;
 	}
 	public static function wgf_audio_get_volume():Float {
 		#if wgf_reach
-		Reach.hit(114);
+		Reach.hit(134);
 		#end
 		final value:Float = untyped __cpp__("(double)::wgf_audio_get_volume()");
 		return value;
 	}
 	public static function wgf_audio_set_paused(paused:Bool):Void {
 		#if wgf_reach
-		Reach.hit(118);
+		Reach.hit(138);
 		#end
 		untyped __cpp__("::wgf_audio_set_paused((bool){0})", paused);
 	}
 	public static function wgf_audio_is_paused():Bool {
 		#if wgf_reach
-		Reach.hit(115);
+		Reach.hit(135);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_audio_is_paused()");
 		return value;
 	}
 	public static function wgf_audio_set_listener_position(x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(117);
+		Reach.hit(137);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_audio_set_listener_position((float){0}, (float){1}, (float){2})", x, y, z);
 		return value;
 	}
 	public static function wgf_audio_get_listener_position(into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(113);
+		Reach.hit(133);
 		#end
 		final value:CVec3 = untyped __cpp__("::wgf_audio_get_listener_position()");
 		final out = into != null ? into : new wgf.Vec3();
@@ -7573,14 +7573,14 @@ class Raw {
 	}
 	public static function wgf_audio_set_listener_facing(x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(116);
+		Reach.hit(136);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_audio_set_listener_facing((float){0}, (float){1}, (float){2})", x, y, z);
 		return value;
 	}
 	public static function wgf_audio_get_listener_facing(into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(112);
+		Reach.hit(132);
 		#end
 		final value:CVec3 = untyped __cpp__("::wgf_audio_get_listener_facing()");
 		final out = into != null ? into : new wgf.Vec3();
@@ -8005,112 +8005,6 @@ class Raw {
 		final value:Int = untyped __cpp__("(int)::wgf_voice_get_underruns((wgf_voice_t){0})", voice);
 		return value;
 	}
-	public static function wgf_actor_add_behavior(actor:Int, name:String):Int {
-		#if wgf_reach
-		Reach.hit(21);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_actor_add_behavior((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", actor, name);
-		return value;
-	}
-	public static function wgf_actor_remove_behavior(actor:Int, behavior:Int):Bool {
-		#if wgf_reach
-		Reach.hit(56);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_actor_remove_behavior((wgf_actor_t){0}, (int){1})", actor, behavior);
-		return value;
-	}
-	public static function wgf_actor_get_behavior_count(actor:Int):Int {
-		#if wgf_reach
-		Reach.hit(32);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_actor_get_behavior_count((wgf_actor_t){0})", actor);
-		return value;
-	}
-	public static function wgf_actor_get_behavior(actor:Int, index:Int):Int {
-		#if wgf_reach
-		Reach.hit(31);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_actor_get_behavior((wgf_actor_t){0}, (int){1})", actor, index);
-		return value;
-	}
-	public static function wgf_actor_find_behavior(actor:Int, name:String):Int {
-		#if wgf_reach
-		Reach.hit(28);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_actor_find_behavior((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", actor, name);
-		return value;
-	}
-	public static function wgf_behavior_get_name(actor:Int, behavior:Int):String {
-		#if wgf_reach
-		Reach.hit(120);
-		#end
-		final value:String = untyped __cpp__("::String(::wgf_behavior_get_name((wgf_actor_t){0}, (int){1}))", actor, behavior);
-		return value;
-	}
-	public static function wgf_behavior_set_param(actor:Int, behavior:Int, key:String, value:String):Bool {
-		#if wgf_reach
-		Reach.hit(127);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_behavior_set_param((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0), ({3}.raw_ptr() ? {3}.utf8_str() : (const char *)0))", actor, behavior, key, value);
-		return value;
-	}
-	public static function wgf_behavior_get_param(actor:Int, behavior:Int, key:String):String {
-		#if wgf_reach
-		Reach.hit(121);
-		#end
-		final value:String = untyped __cpp__("::String(::wgf_behavior_get_param((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0)))", actor, behavior, key);
-		return value;
-	}
-	public static function wgf_behavior_get_param_number(actor:Int, behavior:Int, key:String):Float {
-		#if wgf_reach
-		Reach.hit(125);
-		#end
-		final value:Float = untyped __cpp__("(double)::wgf_behavior_get_param_number((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", actor, behavior, key);
-		return value;
-	}
-	public static function wgf_behavior_get_param_actor(actor:Int, behavior:Int, key:String):Int {
-		#if wgf_reach
-		Reach.hit(122);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_behavior_get_param_actor((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", actor, behavior, key);
-		return value;
-	}
-	public static function wgf_behavior_has_param(actor:Int, behavior:Int, key:String):Bool {
-		#if wgf_reach
-		Reach.hit(126);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_behavior_has_param((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", actor, behavior, key);
-		return value;
-	}
-	public static function wgf_behavior_get_param_count(actor:Int, behavior:Int):Int {
-		#if wgf_reach
-		Reach.hit(123);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_behavior_get_param_count((wgf_actor_t){0}, (int){1})", actor, behavior);
-		return value;
-	}
-	public static function wgf_behavior_get_param_key(actor:Int, behavior:Int, index:Int):String {
-		#if wgf_reach
-		Reach.hit(124);
-		#end
-		final value:String = untyped __cpp__("::String(::wgf_behavior_get_param_key((wgf_actor_t){0}, (int){1}, (int){2}))", actor, behavior, index);
-		return value;
-	}
-	public static function wgf_actor_find_with_behavior(name:String, out:Array<Int>):Int {
-		#if wgf_reach
-		Reach.hit(29);
-		#end
-		final arg2 = out == null ? 0 : out.length;
-		final value:Int = untyped __cpp__("(int)::wgf_actor_find_with_behavior(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), ({1}.mPtr ? (wgf_actor_t *){1}->getBase() : (wgf_actor_t *)0), (int){2})", name, out, arg2);
-		return value;
-	}
-	public static function wgf_actor_count_with_behavior(name:String):Int {
-		#if wgf_reach
-		Reach.hit(23);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_actor_count_with_behavior(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", name);
-		return value;
-	}
 	public static function wgf_actor_add_component(actor:Int, component:Int):Bool {
 		#if wgf_reach
 		Reach.hit(22);
@@ -8154,151 +8048,257 @@ class Raw {
 		final value:Int = untyped __cpp__("(int)::wgf_actor_count_with_component((wgf_component_t){0})", component);
 		return value;
 	}
-	public static function wgf_body2d_set_size(actor:Int, width:Float, height:Float):Bool {
+	public static function wgf_arcade2d_set_size(actor:Int, width:Float, height:Float):Bool {
 		#if wgf_reach
-		Reach.hit(145);
+		Reach.hit(98);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_set_size((wgf_actor_t){0}, (float){1}, (float){2})", actor, width, height);
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_set_size((wgf_actor_t){0}, (float){1}, (float){2})", actor, width, height);
 		return value;
 	}
-	public static function wgf_body2d_get_size(actor:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
+	public static function wgf_arcade2d_get_size(actor:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(133);
+		Reach.hit(86);
 		#end
-		final value:CVec2 = untyped __cpp__("::wgf_body2d_get_size((wgf_actor_t){0})", actor);
+		final value:CVec2 = untyped __cpp__("::wgf_arcade2d_get_size((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec2();
 		out.x = value.x;
 		out.y = value.y;
 		return out;
 	}
-	public static function wgf_body2d_set_velocity(actor:Int, x:Float, y:Float):Bool {
+	public static function wgf_arcade2d_set_velocity(actor:Int, x:Float, y:Float):Bool {
 		#if wgf_reach
-		Reach.hit(147);
+		Reach.hit(100);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_set_velocity((wgf_actor_t){0}, (float){1}, (float){2})", actor, x, y);
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_set_velocity((wgf_actor_t){0}, (float){1}, (float){2})", actor, x, y);
 		return value;
 	}
-	public static function wgf_body2d_get_velocity(actor:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
+	public static function wgf_arcade2d_get_velocity(actor:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
-		Reach.hit(135);
+		Reach.hit(88);
 		#end
-		final value:CVec2 = untyped __cpp__("::wgf_body2d_get_velocity((wgf_actor_t){0})", actor);
+		final value:CVec2 = untyped __cpp__("::wgf_arcade2d_get_velocity((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec2();
 		out.x = value.x;
 		out.y = value.y;
 		return out;
 	}
-	public static function wgf_body2d_set_gravity(actor:Int, gravity:Float):Bool {
+	public static function wgf_arcade2d_set_gravity(actor:Int, gravity:Float):Bool {
+		#if wgf_reach
+		Reach.hit(93);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_set_gravity((wgf_actor_t){0}, (float){1})", actor, gravity);
+		return value;
+	}
+	public static function wgf_arcade2d_get_gravity(actor:Int):Float {
+		#if wgf_reach
+		Reach.hit(83);
+		#end
+		final value:Float = untyped __cpp__("(double)::wgf_arcade2d_get_gravity((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_arcade2d_set_max_fall_speed(actor:Int, speed:Float):Bool {
+		#if wgf_reach
+		Reach.hit(97);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_set_max_fall_speed((wgf_actor_t){0}, (float){1})", actor, speed);
+		return value;
+	}
+	public static function wgf_arcade2d_get_max_fall_speed(actor:Int):Float {
+		#if wgf_reach
+		Reach.hit(85);
+		#end
+		final value:Float = untyped __cpp__("(double)::wgf_arcade2d_get_max_fall_speed((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_arcade2d_set_solid_mask(actor:Int, mask:Int):Bool {
+		#if wgf_reach
+		Reach.hit(99);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_set_solid_mask((wgf_actor_t){0}, (int){1})", actor, mask);
+		return value;
+	}
+	public static function wgf_arcade2d_get_solid_mask(actor:Int):Int {
+		#if wgf_reach
+		Reach.hit(87);
+		#end
+		final value:Int = untyped __cpp__("(int)::wgf_arcade2d_get_solid_mask((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_arcade2d_is_grounded(actor:Int):Bool {
+		#if wgf_reach
+		Reach.hit(92);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_is_grounded((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_arcade2d_is_blocked_left(actor:Int):Bool {
+		#if wgf_reach
+		Reach.hit(90);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_is_blocked_left((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_arcade2d_is_blocked_right(actor:Int):Bool {
+		#if wgf_reach
+		Reach.hit(91);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_is_blocked_right((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_arcade2d_is_blocked_above(actor:Int):Bool {
+		#if wgf_reach
+		Reach.hit(89);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_is_blocked_above((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_arcade2d_get_air_time(actor:Int):Float {
+		#if wgf_reach
+		Reach.hit(82);
+		#end
+		final value:Float = untyped __cpp__("(double)::wgf_arcade2d_get_air_time((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_arcade2d_set_grid(parent:Int, cells:Array<Int>, columns:Int, size:Float, x:Float, y:Float):Bool {
+		#if wgf_reach
+		Reach.hit(94);
+		#end
+		final arg2 = cells == null ? 0 : cells.length;
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_set_grid((wgf_actor_t){0}, ({1}.mPtr ? (const int *){1}->getBase() : (const int *)0), (int){2}, (int){3}, (float){4}, (float){5}, (float){6})", parent, cells, arg2, columns, size, x, y);
+		return value;
+	}
+	public static function wgf_arcade2d_set_grid_from_layer(parent:Int, layer:Int):Bool {
+		#if wgf_reach
+		Reach.hit(96);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_set_grid_from_layer((wgf_actor_t){0}, (wgf_actor_t){1})", parent, layer);
+		return value;
+	}
+	public static function wgf_arcade2d_clear_grid(parent:Int):Bool {
+		#if wgf_reach
+		Reach.hit(81);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_clear_grid((wgf_actor_t){0})", parent);
+		return value;
+	}
+	public static function wgf_arcade2d_get_grid_cell(parent:Int, column:Int, row:Int):Int {
+		#if wgf_reach
+		Reach.hit(84);
+		#end
+		final value:Int = untyped __cpp__("(int)::wgf_arcade2d_get_grid_cell((wgf_actor_t){0}, (int){1}, (int){2})", parent, column, row);
+		return value;
+	}
+	public static function wgf_arcade2d_set_grid_cell(parent:Int, column:Int, row:Int, value:Int):Bool {
+		#if wgf_reach
+		Reach.hit(95);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_arcade2d_set_grid_cell((wgf_actor_t){0}, (int){1}, (int){2}, (int){3})", parent, column, row, value);
+		return value;
+	}
+	public static function wgf_actor_add_behavior(actor:Int, name:String):Int {
+		#if wgf_reach
+		Reach.hit(21);
+		#end
+		final value:Int = untyped __cpp__("(int)::wgf_actor_add_behavior((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", actor, name);
+		return value;
+	}
+	public static function wgf_actor_remove_behavior(actor:Int, behavior:Int):Bool {
+		#if wgf_reach
+		Reach.hit(56);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_actor_remove_behavior((wgf_actor_t){0}, (int){1})", actor, behavior);
+		return value;
+	}
+	public static function wgf_actor_get_behavior_count(actor:Int):Int {
+		#if wgf_reach
+		Reach.hit(32);
+		#end
+		final value:Int = untyped __cpp__("(int)::wgf_actor_get_behavior_count((wgf_actor_t){0})", actor);
+		return value;
+	}
+	public static function wgf_actor_get_behavior(actor:Int, index:Int):Int {
+		#if wgf_reach
+		Reach.hit(31);
+		#end
+		final value:Int = untyped __cpp__("(int)::wgf_actor_get_behavior((wgf_actor_t){0}, (int){1})", actor, index);
+		return value;
+	}
+	public static function wgf_actor_find_behavior(actor:Int, name:String):Int {
+		#if wgf_reach
+		Reach.hit(28);
+		#end
+		final value:Int = untyped __cpp__("(int)::wgf_actor_find_behavior((wgf_actor_t){0}, ({1}.raw_ptr() ? {1}.utf8_str() : (const char *)0))", actor, name);
+		return value;
+	}
+	public static function wgf_behavior_get_name(actor:Int, behavior:Int):String {
 		#if wgf_reach
 		Reach.hit(140);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_set_gravity((wgf_actor_t){0}, (float){1})", actor, gravity);
+		final value:String = untyped __cpp__("::String(::wgf_behavior_get_name((wgf_actor_t){0}, (int){1}))", actor, behavior);
 		return value;
 	}
-	public static function wgf_body2d_get_gravity(actor:Int):Float {
+	public static function wgf_behavior_set_param(actor:Int, behavior:Int, key:String, value:String):Bool {
 		#if wgf_reach
-		Reach.hit(130);
+		Reach.hit(147);
 		#end
-		final value:Float = untyped __cpp__("(double)::wgf_body2d_get_gravity((wgf_actor_t){0})", actor);
+		final value:Bool = untyped __cpp__("(bool)::wgf_behavior_set_param((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0), ({3}.raw_ptr() ? {3}.utf8_str() : (const char *)0))", actor, behavior, key, value);
 		return value;
 	}
-	public static function wgf_body2d_set_max_fall_speed(actor:Int, speed:Float):Bool {
-		#if wgf_reach
-		Reach.hit(144);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_set_max_fall_speed((wgf_actor_t){0}, (float){1})", actor, speed);
-		return value;
-	}
-	public static function wgf_body2d_get_max_fall_speed(actor:Int):Float {
-		#if wgf_reach
-		Reach.hit(132);
-		#end
-		final value:Float = untyped __cpp__("(double)::wgf_body2d_get_max_fall_speed((wgf_actor_t){0})", actor);
-		return value;
-	}
-	public static function wgf_body2d_set_solid_mask(actor:Int, mask:Int):Bool {
-		#if wgf_reach
-		Reach.hit(146);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_set_solid_mask((wgf_actor_t){0}, (int){1})", actor, mask);
-		return value;
-	}
-	public static function wgf_body2d_get_solid_mask(actor:Int):Int {
-		#if wgf_reach
-		Reach.hit(134);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_body2d_get_solid_mask((wgf_actor_t){0})", actor);
-		return value;
-	}
-	public static function wgf_body2d_is_grounded(actor:Int):Bool {
-		#if wgf_reach
-		Reach.hit(139);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_is_grounded((wgf_actor_t){0})", actor);
-		return value;
-	}
-	public static function wgf_body2d_is_blocked_left(actor:Int):Bool {
-		#if wgf_reach
-		Reach.hit(137);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_is_blocked_left((wgf_actor_t){0})", actor);
-		return value;
-	}
-	public static function wgf_body2d_is_blocked_right(actor:Int):Bool {
-		#if wgf_reach
-		Reach.hit(138);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_is_blocked_right((wgf_actor_t){0})", actor);
-		return value;
-	}
-	public static function wgf_body2d_is_blocked_above(actor:Int):Bool {
-		#if wgf_reach
-		Reach.hit(136);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_is_blocked_above((wgf_actor_t){0})", actor);
-		return value;
-	}
-	public static function wgf_body2d_get_air_time(actor:Int):Float {
-		#if wgf_reach
-		Reach.hit(129);
-		#end
-		final value:Float = untyped __cpp__("(double)::wgf_body2d_get_air_time((wgf_actor_t){0})", actor);
-		return value;
-	}
-	public static function wgf_body2d_set_grid(parent:Int, cells:Array<Int>, columns:Int, size:Float, x:Float, y:Float):Bool {
+	public static function wgf_behavior_get_param(actor:Int, behavior:Int, key:String):String {
 		#if wgf_reach
 		Reach.hit(141);
 		#end
-		final arg2 = cells == null ? 0 : cells.length;
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_set_grid((wgf_actor_t){0}, ({1}.mPtr ? (const int *){1}->getBase() : (const int *)0), (int){2}, (int){3}, (float){4}, (float){5}, (float){6})", parent, cells, arg2, columns, size, x, y);
+		final value:String = untyped __cpp__("::String(::wgf_behavior_get_param((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0)))", actor, behavior, key);
 		return value;
 	}
-	public static function wgf_body2d_set_grid_from_layer(parent:Int, layer:Int):Bool {
+	public static function wgf_behavior_get_param_number(actor:Int, behavior:Int, key:String):Float {
 		#if wgf_reach
-		Reach.hit(143);
+		Reach.hit(145);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_set_grid_from_layer((wgf_actor_t){0}, (wgf_actor_t){1})", parent, layer);
+		final value:Float = untyped __cpp__("(double)::wgf_behavior_get_param_number((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", actor, behavior, key);
 		return value;
 	}
-	public static function wgf_body2d_clear_grid(parent:Int):Bool {
-		#if wgf_reach
-		Reach.hit(128);
-		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_clear_grid((wgf_actor_t){0})", parent);
-		return value;
-	}
-	public static function wgf_body2d_get_grid_cell(parent:Int, column:Int, row:Int):Int {
-		#if wgf_reach
-		Reach.hit(131);
-		#end
-		final value:Int = untyped __cpp__("(int)::wgf_body2d_get_grid_cell((wgf_actor_t){0}, (int){1}, (int){2})", parent, column, row);
-		return value;
-	}
-	public static function wgf_body2d_set_grid_cell(parent:Int, column:Int, row:Int, value:Int):Bool {
+	public static function wgf_behavior_get_param_actor(actor:Int, behavior:Int, key:String):Int {
 		#if wgf_reach
 		Reach.hit(142);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body2d_set_grid_cell((wgf_actor_t){0}, (int){1}, (int){2}, (int){3})", parent, column, row, value);
+		final value:Int = untyped __cpp__("(int)::wgf_behavior_get_param_actor((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", actor, behavior, key);
+		return value;
+	}
+	public static function wgf_behavior_has_param(actor:Int, behavior:Int, key:String):Bool {
+		#if wgf_reach
+		Reach.hit(146);
+		#end
+		final value:Bool = untyped __cpp__("(bool)::wgf_behavior_has_param((wgf_actor_t){0}, (int){1}, ({2}.raw_ptr() ? {2}.utf8_str() : (const char *)0))", actor, behavior, key);
+		return value;
+	}
+	public static function wgf_behavior_get_param_count(actor:Int, behavior:Int):Int {
+		#if wgf_reach
+		Reach.hit(143);
+		#end
+		final value:Int = untyped __cpp__("(int)::wgf_behavior_get_param_count((wgf_actor_t){0}, (int){1})", actor, behavior);
+		return value;
+	}
+	public static function wgf_behavior_get_param_key(actor:Int, behavior:Int, index:Int):String {
+		#if wgf_reach
+		Reach.hit(144);
+		#end
+		final value:String = untyped __cpp__("::String(::wgf_behavior_get_param_key((wgf_actor_t){0}, (int){1}, (int){2}))", actor, behavior, index);
+		return value;
+	}
+	public static function wgf_actor_find_with_behavior(name:String, out:Array<Int>):Int {
+		#if wgf_reach
+		Reach.hit(29);
+		#end
+		final arg2 = out == null ? 0 : out.length;
+		final value:Int = untyped __cpp__("(int)::wgf_actor_find_with_behavior(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0), ({1}.mPtr ? (wgf_actor_t *){1}->getBase() : (wgf_actor_t *)0), (int){2})", name, out, arg2);
+		return value;
+	}
+	public static function wgf_actor_count_with_behavior(name:String):Int {
+		#if wgf_reach
+		Reach.hit(23);
+		#end
+		final value:Int = untyped __cpp__("(int)::wgf_actor_count_with_behavior(({0}.raw_ptr() ? {0}.utf8_str() : (const char *)0))", name);
 		return value;
 	}
 	public static function wgf_bounds_set_rect(actor:Int, x:Float, y:Float, width:Float, height:Float):Bool {
@@ -9019,345 +9019,345 @@ class Raw {
 		final value:String = untyped __cpp__("::String(::wgf_world_dump())");
 		return value;
 	}
-	public static function wgf_body_set_type(actor:Int, type:Int):Bool {
+	public static function wgf_body3d_set_type(actor:Int, type:Int):Bool {
 		#if wgf_reach
 		Reach.hit(178);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_type((wgf_actor_t){0}, (wgf_body_type_t){1})", actor, type);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_type((wgf_actor_t){0}, (wgf_body3d_type_t){1})", actor, type);
 		return value;
 	}
-	public static function wgf_body_get_type(actor:Int):Int {
+	public static function wgf_body3d_get_type(actor:Int):Int {
 		#if wgf_reach
 		Reach.hit(163);
 		#end
-		final value:Int = untyped __cpp__("(int)::wgf_body_get_type((wgf_actor_t){0})", actor);
+		final value:Int = untyped __cpp__("(int)::wgf_body3d_get_type((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_set_shape(actor:Int, shape:Int, x:Float, y:Float, z:Float):Bool {
+	public static function wgf_body3d_set_shape(actor:Int, shape:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
 		Reach.hit(175);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_shape((wgf_actor_t){0}, (wgf_body_shape_t){1}, (float){2}, (float){3}, (float){4})", actor, shape, x, y, z);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_shape((wgf_actor_t){0}, (wgf_body3d_shape_t){1}, (float){2}, (float){3}, (float){4})", actor, shape, x, y, z);
 		return value;
 	}
-	public static function wgf_body_get_shape(actor:Int):Int {
+	public static function wgf_body3d_get_shape(actor:Int):Int {
 		#if wgf_reach
 		Reach.hit(159);
 		#end
-		final value:Int = untyped __cpp__("(int)::wgf_body_get_shape((wgf_actor_t){0})", actor);
+		final value:Int = untyped __cpp__("(int)::wgf_body3d_get_shape((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_get_size(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
+	public static function wgf_body3d_get_size(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
 		Reach.hit(160);
 		#end
-		final value:CVec3 = untyped __cpp__("::wgf_body_get_size((wgf_actor_t){0})", actor);
+		final value:CVec3 = untyped __cpp__("::wgf_body3d_get_size((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
 		out.x = value.x;
 		out.y = value.y;
 		out.z = value.z;
 		return out;
 	}
-	public static function wgf_body_set_offset(actor:Int, x:Float, y:Float, z:Float):Bool {
+	public static function wgf_body3d_set_offset(actor:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
 		Reach.hit(174);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_offset((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_offset((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
 		return value;
 	}
-	public static function wgf_body_get_offset(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
+	public static function wgf_body3d_get_offset(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
 		Reach.hit(158);
 		#end
-		final value:CVec3 = untyped __cpp__("::wgf_body_get_offset((wgf_actor_t){0})", actor);
+		final value:CVec3 = untyped __cpp__("::wgf_body3d_get_offset((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
 		out.x = value.x;
 		out.y = value.y;
 		out.z = value.z;
 		return out;
 	}
-	public static function wgf_body_set_mass_offset(actor:Int, x:Float, y:Float, z:Float):Bool {
+	public static function wgf_body3d_set_mass_offset(actor:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
 		Reach.hit(172);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_mass_offset((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_mass_offset((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
 		return value;
 	}
-	public static function wgf_body_get_mass_offset(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
+	public static function wgf_body3d_get_mass_offset(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
 		Reach.hit(156);
 		#end
-		final value:CVec3 = untyped __cpp__("::wgf_body_get_mass_offset((wgf_actor_t){0})", actor);
+		final value:CVec3 = untyped __cpp__("::wgf_body3d_get_mass_offset((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
 		out.x = value.x;
 		out.y = value.y;
 		out.z = value.z;
 		return out;
 	}
-	public static function wgf_body_set_mass(actor:Int, kilograms:Float):Bool {
+	public static function wgf_body3d_set_mass(actor:Int, kilograms:Float):Bool {
 		#if wgf_reach
 		Reach.hit(171);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_mass((wgf_actor_t){0}, (float){1})", actor, kilograms);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_mass((wgf_actor_t){0}, (float){1})", actor, kilograms);
 		return value;
 	}
-	public static function wgf_body_get_mass(actor:Int):Float {
+	public static function wgf_body3d_get_mass(actor:Int):Float {
 		#if wgf_reach
 		Reach.hit(155);
 		#end
-		final value:Float = untyped __cpp__("(double)::wgf_body_get_mass((wgf_actor_t){0})", actor);
+		final value:Float = untyped __cpp__("(double)::wgf_body3d_get_mass((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_set_friction(actor:Int, friction:Float):Bool {
+	public static function wgf_body3d_set_friction(actor:Int, friction:Float):Bool {
 		#if wgf_reach
 		Reach.hit(168);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_friction((wgf_actor_t){0}, (float){1})", actor, friction);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_friction((wgf_actor_t){0}, (float){1})", actor, friction);
 		return value;
 	}
-	public static function wgf_body_get_friction(actor:Int):Float {
+	public static function wgf_body3d_get_friction(actor:Int):Float {
 		#if wgf_reach
 		Reach.hit(151);
 		#end
-		final value:Float = untyped __cpp__("(double)::wgf_body_get_friction((wgf_actor_t){0})", actor);
+		final value:Float = untyped __cpp__("(double)::wgf_body3d_get_friction((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_set_bounce(actor:Int, bounce:Float):Bool {
+	public static function wgf_body3d_set_bounce(actor:Int, bounce:Float):Bool {
 		#if wgf_reach
 		Reach.hit(166);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_bounce((wgf_actor_t){0}, (float){1})", actor, bounce);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_bounce((wgf_actor_t){0}, (float){1})", actor, bounce);
 		return value;
 	}
-	public static function wgf_body_get_bounce(actor:Int):Float {
+	public static function wgf_body3d_get_bounce(actor:Int):Float {
 		#if wgf_reach
 		Reach.hit(149);
 		#end
-		final value:Float = untyped __cpp__("(double)::wgf_body_get_bounce((wgf_actor_t){0})", actor);
+		final value:Float = untyped __cpp__("(double)::wgf_body3d_get_bounce((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_set_damping(actor:Int, linear:Float, angular:Float):Bool {
+	public static function wgf_body3d_set_damping(actor:Int, linear:Float, angular:Float):Bool {
 		#if wgf_reach
 		Reach.hit(167);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_damping((wgf_actor_t){0}, (float){1}, (float){2})", actor, linear, angular);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_damping((wgf_actor_t){0}, (float){1}, (float){2})", actor, linear, angular);
 		return value;
 	}
-	public static function wgf_body_get_damping(actor:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
+	public static function wgf_body3d_get_damping(actor:Int, into:Null<wgf.Vec2>):wgf.Vec2 {
 		#if wgf_reach
 		Reach.hit(150);
 		#end
-		final value:CVec2 = untyped __cpp__("::wgf_body_get_damping((wgf_actor_t){0})", actor);
+		final value:CVec2 = untyped __cpp__("::wgf_body3d_get_damping((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec2();
 		out.x = value.x;
 		out.y = value.y;
 		return out;
 	}
-	public static function wgf_body_set_layer(actor:Int, layer:Int):Bool {
+	public static function wgf_body3d_set_layer(actor:Int, layer:Int):Bool {
 		#if wgf_reach
 		Reach.hit(169);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_layer((wgf_actor_t){0}, (int){1})", actor, layer);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_layer((wgf_actor_t){0}, (int){1})", actor, layer);
 		return value;
 	}
-	public static function wgf_body_get_layer(actor:Int):Int {
+	public static function wgf_body3d_get_layer(actor:Int):Int {
 		#if wgf_reach
 		Reach.hit(153);
 		#end
-		final value:Int = untyped __cpp__("(int)::wgf_body_get_layer((wgf_actor_t){0})", actor);
+		final value:Int = untyped __cpp__("(int)::wgf_body3d_get_layer((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_set_mask(actor:Int, mask:Int):Bool {
+	public static function wgf_body3d_set_mask(actor:Int, mask:Int):Bool {
 		#if wgf_reach
 		Reach.hit(170);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_mask((wgf_actor_t){0}, (int){1})", actor, mask);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_mask((wgf_actor_t){0}, (int){1})", actor, mask);
 		return value;
 	}
-	public static function wgf_body_get_mask(actor:Int):Int {
+	public static function wgf_body3d_get_mask(actor:Int):Int {
 		#if wgf_reach
 		Reach.hit(154);
 		#end
-		final value:Int = untyped __cpp__("(int)::wgf_body_get_mask((wgf_actor_t){0})", actor);
+		final value:Int = untyped __cpp__("(int)::wgf_body3d_get_mask((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_set_velocity(actor:Int, x:Float, y:Float, z:Float):Bool {
+	public static function wgf_body3d_set_velocity(actor:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
 		Reach.hit(179);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_velocity((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_velocity((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
 		return value;
 	}
-	public static function wgf_body_get_velocity(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
+	public static function wgf_body3d_get_velocity(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
 		Reach.hit(164);
 		#end
-		final value:CVec3 = untyped __cpp__("::wgf_body_get_velocity((wgf_actor_t){0})", actor);
+		final value:CVec3 = untyped __cpp__("::wgf_body3d_get_velocity((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
 		out.x = value.x;
 		out.y = value.y;
 		out.z = value.z;
 		return out;
 	}
-	public static function wgf_body_set_spin(actor:Int, x:Float, y:Float, z:Float):Bool {
+	public static function wgf_body3d_set_spin(actor:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
 		Reach.hit(176);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_spin((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_spin((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
 		return value;
 	}
-	public static function wgf_body_get_spin(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
+	public static function wgf_body3d_get_spin(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
 		Reach.hit(161);
 		#end
-		final value:CVec3 = untyped __cpp__("::wgf_body_get_spin((wgf_actor_t){0})", actor);
+		final value:CVec3 = untyped __cpp__("::wgf_body3d_get_spin((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
 		out.x = value.x;
 		out.y = value.y;
 		out.z = value.z;
 		return out;
 	}
-	public static function wgf_body_add_impulse(actor:Int, x:Float, y:Float, z:Float):Bool {
+	public static function wgf_body3d_add_impulse(actor:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
 		Reach.hit(148);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_add_impulse((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_add_impulse((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
 		return value;
 	}
-	public static function wgf_body_is_grounded(actor:Int):Bool {
+	public static function wgf_body3d_is_grounded(actor:Int):Bool {
 		#if wgf_reach
 		Reach.hit(165);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_is_grounded((wgf_actor_t){0})", actor);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_is_grounded((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_get_ground_normal(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
+	public static function wgf_body3d_get_ground_normal(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
 		Reach.hit(152);
 		#end
-		final value:CVec3 = untyped __cpp__("::wgf_body_get_ground_normal((wgf_actor_t){0})", actor);
+		final value:CVec3 = untyped __cpp__("::wgf_body3d_get_ground_normal((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
 		out.x = value.x;
 		out.y = value.y;
 		out.z = value.z;
 		return out;
 	}
-	public static function wgf_body_set_step_height(actor:Int, height:Float):Bool {
+	public static function wgf_body3d_set_step_height(actor:Int, height:Float):Bool {
 		#if wgf_reach
 		Reach.hit(177);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_step_height((wgf_actor_t){0}, (float){1})", actor, height);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_step_height((wgf_actor_t){0}, (float){1})", actor, height);
 		return value;
 	}
-	public static function wgf_body_get_step_height(actor:Int):Float {
+	public static function wgf_body3d_get_step_height(actor:Int):Float {
 		#if wgf_reach
 		Reach.hit(162);
 		#end
-		final value:Float = untyped __cpp__("(double)::wgf_body_get_step_height((wgf_actor_t){0})", actor);
+		final value:Float = untyped __cpp__("(double)::wgf_body3d_get_step_height((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_body_set_max_slope(actor:Int, radians:Float):Bool {
+	public static function wgf_body3d_set_max_slope(actor:Int, radians:Float):Bool {
 		#if wgf_reach
 		Reach.hit(173);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_body_set_max_slope((wgf_actor_t){0}, (float){1})", actor, radians);
+		final value:Bool = untyped __cpp__("(bool)::wgf_body3d_set_max_slope((wgf_actor_t){0}, (float){1})", actor, radians);
 		return value;
 	}
-	public static function wgf_body_get_max_slope(actor:Int):Float {
+	public static function wgf_body3d_get_max_slope(actor:Int):Float {
 		#if wgf_reach
 		Reach.hit(157);
 		#end
-		final value:Float = untyped __cpp__("(double)::wgf_body_get_max_slope((wgf_actor_t){0})", actor);
+		final value:Float = untyped __cpp__("(double)::wgf_body3d_get_max_slope((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_physics_enable_characters():Bool {
+	public static function wgf_physics3d_enable_characters():Bool {
 		#if wgf_reach
 		Reach.hit(811);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_physics_enable_characters()");
+		final value:Bool = untyped __cpp__("(bool)::wgf_physics3d_enable_characters()");
 		return value;
 	}
-	public static function wgf_physics_is_characters_enabled():Bool {
+	public static function wgf_physics3d_is_characters_enabled():Bool {
 		#if wgf_reach
 		Reach.hit(814);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_physics_is_characters_enabled()");
+		final value:Bool = untyped __cpp__("(bool)::wgf_physics3d_is_characters_enabled()");
 		return value;
 	}
-	public static function wgf_physics_enable_vehicles():Bool {
+	public static function wgf_physics3d_enable_vehicles():Bool {
 		#if wgf_reach
 		Reach.hit(812);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_physics_enable_vehicles()");
+		final value:Bool = untyped __cpp__("(bool)::wgf_physics3d_enable_vehicles()");
 		return value;
 	}
-	public static function wgf_physics_is_vehicles_enabled():Bool {
+	public static function wgf_physics3d_is_vehicles_enabled():Bool {
 		#if wgf_reach
 		Reach.hit(815);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_physics_is_vehicles_enabled()");
+		final value:Bool = untyped __cpp__("(bool)::wgf_physics3d_is_vehicles_enabled()");
 		return value;
 	}
-	public static function wgf_physics_set_gravity(x:Float, y:Float, z:Float):Bool {
+	public static function wgf_physics3d_set_gravity(x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
 		Reach.hit(818);
 		#end
-		final value:Bool = untyped __cpp__("(bool)::wgf_physics_set_gravity((float){0}, (float){1}, (float){2})", x, y, z);
+		final value:Bool = untyped __cpp__("(bool)::wgf_physics3d_set_gravity((float){0}, (float){1}, (float){2})", x, y, z);
 		return value;
 	}
-	public static function wgf_physics_get_gravity(into:Null<wgf.Vec3>):wgf.Vec3 {
+	public static function wgf_physics3d_get_gravity(into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
 		Reach.hit(813);
 		#end
-		final value:CVec3 = untyped __cpp__("::wgf_physics_get_gravity()");
+		final value:CVec3 = untyped __cpp__("::wgf_physics3d_get_gravity()");
 		final out = into != null ? into : new wgf.Vec3();
 		out.x = value.x;
 		out.y = value.y;
 		out.z = value.z;
 		return out;
 	}
-	public static function wgf_physics_draw_bodies(color:Int):Void {
+	public static function wgf_physics3d_draw_bodies(color:Int):Void {
 		#if wgf_reach
 		Reach.hit(810);
 		#end
-		untyped __cpp__("::wgf_physics_draw_bodies((wgf_color_t){0})", color);
+		untyped __cpp__("::wgf_physics3d_draw_bodies((wgf_color_t){0})", color);
 	}
-	public static function wgf_physics_cast_ray(x:Float, y:Float, z:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Int>, hits:Array<Float>):Int {
+	public static function wgf_physics3d_cast_ray(x:Float, y:Float, z:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Int>, hits:Array<Float>):Int {
 		#if wgf_reach
 		Reach.hit(808);
 		#end
 		final hitsFloats = Host.floats(hits, false);
 		final arg9 = actors == null ? 0 : actors.length;
 		final arg11 = hits == null ? 0 : hits.length;
-		final value:Int = untyped __cpp__("(int)::wgf_physics_cast_ray((float){0}, (float){1}, (float){2}, (float){3}, (float){4}, (float){5}, (float){6}, (int){7}, ({8}.mPtr ? (wgf_actor_t *){8}->getBase() : (wgf_actor_t *)0), (int){9}, ({10}.mPtr ? (float *){10}->getBase() : (float *)0), (int){11})", x, y, z, dx, dy, dz, distance, mask, actors, arg9, hitsFloats, arg11);
+		final value:Int = untyped __cpp__("(int)::wgf_physics3d_cast_ray((float){0}, (float){1}, (float){2}, (float){3}, (float){4}, (float){5}, (float){6}, (int){7}, ({8}.mPtr ? (wgf_actor_t *){8}->getBase() : (wgf_actor_t *)0), (int){9}, ({10}.mPtr ? (float *){10}->getBase() : (float *)0), (int){11})", x, y, z, dx, dy, dz, distance, mask, actors, arg9, hitsFloats, arg11);
 		Host.floatsBack(hitsFloats, hits);
 		return value;
 	}
-	public static function wgf_physics_cast_sphere(x:Float, y:Float, z:Float, radius:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Int>, hits:Array<Float>):Int {
+	public static function wgf_physics3d_cast_sphere(x:Float, y:Float, z:Float, radius:Float, dx:Float, dy:Float, dz:Float, distance:Float, mask:Int, actors:Array<Int>, hits:Array<Float>):Int {
 		#if wgf_reach
 		Reach.hit(809);
 		#end
 		final hitsFloats = Host.floats(hits, false);
 		final arg10 = actors == null ? 0 : actors.length;
 		final arg12 = hits == null ? 0 : hits.length;
-		final value:Int = untyped __cpp__("(int)::wgf_physics_cast_sphere((float){0}, (float){1}, (float){2}, (float){3}, (float){4}, (float){5}, (float){6}, (float){7}, (int){8}, ({9}.mPtr ? (wgf_actor_t *){9}->getBase() : (wgf_actor_t *)0), (int){10}, ({11}.mPtr ? (float *){11}->getBase() : (float *)0), (int){12})", x, y, z, radius, dx, dy, dz, distance, mask, actors, arg10, hitsFloats, arg12);
+		final value:Int = untyped __cpp__("(int)::wgf_physics3d_cast_sphere((float){0}, (float){1}, (float){2}, (float){3}, (float){4}, (float){5}, (float){6}, (float){7}, (int){8}, ({9}.mPtr ? (wgf_actor_t *){9}->getBase() : (wgf_actor_t *)0), (int){10}, ({11}.mPtr ? (float *){11}->getBase() : (float *)0), (int){12})", x, y, z, radius, dx, dy, dz, distance, mask, actors, arg10, hitsFloats, arg12);
 		Host.floatsBack(hitsFloats, hits);
 		return value;
 	}
-	public static function wgf_physics_overlap_sphere(x:Float, y:Float, z:Float, radius:Float, mask:Int, actors:Array<Int>):Int {
+	public static function wgf_physics3d_overlap_sphere(x:Float, y:Float, z:Float, radius:Float, mask:Int, actors:Array<Int>):Int {
 		#if wgf_reach
 		Reach.hit(817);
 		#end
 		final arg6 = actors == null ? 0 : actors.length;
-		final value:Int = untyped __cpp__("(int)::wgf_physics_overlap_sphere((float){0}, (float){1}, (float){2}, (float){3}, (int){4}, ({5}.mPtr ? (wgf_actor_t *){5}->getBase() : (wgf_actor_t *)0), (int){6})", x, y, z, radius, mask, actors, arg6);
+		final value:Int = untyped __cpp__("(int)::wgf_physics3d_overlap_sphere((float){0}, (float){1}, (float){2}, (float){3}, (int){4}, ({5}.mPtr ? (wgf_actor_t *){5}->getBase() : (wgf_actor_t *)0), (int){6})", x, y, z, radius, mask, actors, arg6);
 		return value;
 	}
-	public static function wgf_physics_overlap_box(x:Float, y:Float, z:Float, width:Float, height:Float, depth:Float, mask:Int, actors:Array<Int>):Int {
+	public static function wgf_physics3d_overlap_box(x:Float, y:Float, z:Float, width:Float, height:Float, depth:Float, mask:Int, actors:Array<Int>):Int {
 		#if wgf_reach
 		Reach.hit(816);
 		#end
 		final arg8 = actors == null ? 0 : actors.length;
-		final value:Int = untyped __cpp__("(int)::wgf_physics_overlap_box((float){0}, (float){1}, (float){2}, (float){3}, (float){4}, (float){5}, (int){6}, ({7}.mPtr ? (wgf_actor_t *){7}->getBase() : (wgf_actor_t *)0), (int){8})", x, y, z, width, height, depth, mask, actors, arg8);
+		final value:Int = untyped __cpp__("(int)::wgf_physics3d_overlap_box((float){0}, (float){1}, (float){2}, (float){3}, (float){4}, (float){5}, (int){6}, ({7}.mPtr ? (wgf_actor_t *){7}->getBase() : (wgf_actor_t *)0), (int){8})", x, y, z, width, height, depth, mask, actors, arg8);
 		return value;
 	}
 	public static function wgf_vehicle_set_wheels(actor:Int, wheels:Array<Int>):Bool {

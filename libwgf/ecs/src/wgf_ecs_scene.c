@@ -12,7 +12,7 @@
 #include "wgf_behavior.h"
 #include "wgf_component.h"
 #include "wgf_bounds.h"
-#include "wgf_body2d.h"
+#include "wgf_arcade2d.h"
 #include "wgf_collider.h"
 #include "wgf_core_fs_priv.h"
 #include "wgf_core_handle_priv.h"
@@ -119,15 +119,15 @@ static const kind_t kinds[] = {
       {"mask", V_INT},
       {"enabled", V_BOOL}},
      false},
-    {"body2d",
+    {"arcade2d",
      ROLE_COMPONENT,
-     WGF_COMPONENT_BODY2D,
+     WGF_COMPONENT_ARCADE2D,
      {{"size", V_NUM2}, {"velocity", V_NUM2}, {"gravity", V_NUM}, {"max_fall", V_NUM}, {"solid_mask", V_INT}},
      false},
     {"behavior", ROLE_BEHAVIOR, 0, {{"name", V_TEXT}}, true},
-    /* physics3d's (wgf_body.h, wgf_vehicle.h): any key, its text handed to physics, which
+    /* physics3d's (wgf_body3d.h, wgf_vehicle.h): any key, its text handed to physics, which
        reads it, so a program without physics carries none of its keys */
-    {"body", ROLE_COMPONENT, WGF_COMPONENT_BODY, {{NULL, 0}}, true},
+    {"body3d", ROLE_COMPONENT, WGF_COMPONENT_BODY3D, {{NULL, 0}}, true},
     {"vehicle", ROLE_COMPONENT, WGF_COMPONENT_VEHICLE, {{NULL, 0}}, true},
     {"shape2d",
      ROLE_KIND,
@@ -839,14 +839,14 @@ static void apply_setting(wgf_actor_t actor, int kind, const setting_t *s, value
             else if (strcmp(key, "enabled") == 0) wgf_collider_set_enabled(e, v->truth);
             else wgf_collider_set_mask(e, (int)v->n[0]);
             break;
-        case WGF_COMPONENT_BODY2D:
-            if (strcmp(key, "size") == 0) wgf_body2d_set_size(e, f(v, 0), f(v, 1));
-            else if (strcmp(key, "velocity") == 0) wgf_body2d_set_velocity(e, f(v, 0), f(v, 1));
-            else if (strcmp(key, "gravity") == 0) wgf_body2d_set_gravity(e, f(v, 0));
-            else if (strcmp(key, "max_fall") == 0) wgf_body2d_set_max_fall_speed(e, f(v, 0));
-            else wgf_body2d_set_solid_mask(e, (int)v->n[0]);
+        case WGF_COMPONENT_ARCADE2D:
+            if (strcmp(key, "size") == 0) wgf_arcade2d_set_size(e, f(v, 0), f(v, 1));
+            else if (strcmp(key, "velocity") == 0) wgf_arcade2d_set_velocity(e, f(v, 0), f(v, 1));
+            else if (strcmp(key, "gravity") == 0) wgf_arcade2d_set_gravity(e, f(v, 0));
+            else if (strcmp(key, "max_fall") == 0) wgf_arcade2d_set_max_fall_speed(e, f(v, 0));
+            else wgf_arcade2d_set_solid_mask(e, (int)v->n[0]);
             break;
-        case WGF_COMPONENT_BODY:
+        case WGF_COMPONENT_BODY3D:
         case WGF_COMPONENT_VEHICLE: { /* through physics' hooks: none was added without them */
             const wgf_ecs_priv_part_component_t *part = wgf_ecs_priv_get_part_component((wgf_component_t)what_of(kind));
             if (part != NULL && wgf_actor_has_component(e, (wgf_component_t)what_of(kind))) {

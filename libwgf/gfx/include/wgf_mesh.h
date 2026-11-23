@@ -94,7 +94,7 @@ WGF_API wgf_mesh_t wgf_mesh_create_heightmap(const float *heights, int height_co
  *              are (sRGB, stored linear); the built-in shadings multiply the material's
  *              color by them, and a custom shader reads them as wgf_color; 0: white
  *
- * Its tangents follow. A physics body made from the mesh (wgf_body.h) keeps the shape it
+ * Its tangents follow. A physics body made from the mesh (wgf_body3d.h) keeps the shape it
  * was made with: make it again to collide with the new one. */
 WGF_API bool wgf_mesh_set_positions(wgf_mesh_t mesh, const float *positions, int position_count);
 WGF_API bool wgf_mesh_set_normals(wgf_mesh_t mesh, const float *normals, int normal_count);

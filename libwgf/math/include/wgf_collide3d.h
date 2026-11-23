@@ -11,7 +11,7 @@ extern "C" {
 
 /* 3D collision as plain math, raylib's shapes (its CheckCollision* and GetRayCollision*):
  * boxes, spheres, and rays against them and triangles, with no actor or body
- * (wgf_physics.h casts against a physics world). A box is axis-aligned, its least corner and
+ * (wgf_physics3d.h casts against a physics world). A box is axis-aligned, its least corner and
  * its greatest (x0, y0, z0, x1, y1, z1); a ray its origin and its direction, which needn't be
  * a unit vector.
  *

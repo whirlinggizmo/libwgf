@@ -450,7 +450,7 @@ class Laps {
 			let car = Main.car.actor;
 			wgf_impl_Raw.wgf_probe_set_value("racer.y",wgf_impl_Raw.wgf_actor_get_world_position(car,Laps.probeAt).y);
 			wgf_impl_Raw.wgf_probe_set_value("racer.heading",Main.car.drive.heading);
-			wgf_impl_Raw.wgf_probe_set_value("racer.yaw_rate",wgf_impl_Raw.wgf_body_get_spin(car,Laps.probeSpin).y);
+			wgf_impl_Raw.wgf_probe_set_value("racer.yaw_rate",wgf_impl_Raw.wgf_body3d_get_spin(car,Laps.probeSpin).y);
 			wgf_impl_Raw.wgf_probe_set_value("racer.gear",wgf_impl_Raw.wgf_vehicle_get_gear(car));
 			wgf_impl_Raw.wgf_probe_set_value("racer.rpm",wgf_impl_Raw.wgf_vehicle_get_rpm(car));
 			wgf_impl_Raw.wgf_probe_set_value("racer.slip" + 0,wgf_impl_Raw.wgf_vehicle_get_wheel_slip(car,0));
@@ -608,7 +608,7 @@ class Main {
 		Main.storage = wgf_impl_Raw.wgf_fs_exists("manifest.json");
 		wgf_impl_Raw.wgf_render_set_clear_color(wgf_impl_Raw.wgf_color_make(150,196,236,255));
 		wgf_impl_Raw.wgf_loop_set_tick_rate(60);
-		wgf_impl_Raw.wgf_physics_set_gravity(0,-9.81,0);
+		wgf_impl_Raw.wgf_physics3d_set_gravity(0,-9.81,0);
 		Main.stage = wgf_impl_Raw.wgf_stage3d_create();
 		wgf_impl_Raw.wgf_stage3d_set_tonemap(Main.stage,1,0.0);
 		let sun = wgf_impl_Raw.wgf_light_create(0);
@@ -754,7 +754,7 @@ class Main {
 			Main.showBodies = !Main.showBodies;
 		}
 		if(Main.showBodies && wgf_impl_Raw.wgf_draw_begin_3d(Main.camera.camera)) {
-			wgf_impl_Raw.wgf_physics_draw_bodies(wgf_impl_Raw.wgf_color_get(6));
+			wgf_impl_Raw.wgf_physics3d_draw_bodies(wgf_impl_Raw.wgf_color_get(6));
 			wgf_impl_Raw.wgf_draw_end_3d();
 		}
 		Main.hud();
@@ -1790,19 +1790,19 @@ class wgf_impl_Raw {
 	static wgf_world_take_events(out) {
 		return wgf_impl_Raw.binding["wgf_world_take_events"](out);
 	}
-	static wgf_body_get_spin(actor,into) {
-		wgf_impl_Raw.binding["wgf_body_get_spin"](actor,wgf_impl_Host.vector);
+	static wgf_body3d_get_spin(actor,into) {
+		wgf_impl_Raw.binding["wgf_body3d_get_spin"](actor,wgf_impl_Host.vector);
 		let out = into != null ? into : new wgf_Vec3();
 		out.x = wgf_impl_Host.vector[0];
 		out.y = wgf_impl_Host.vector[1];
 		out.z = wgf_impl_Host.vector[2];
 		return out;
 	}
-	static wgf_physics_set_gravity(x,y,z) {
-		return wgf_impl_Raw.binding["wgf_physics_set_gravity"](x,y,z);
+	static wgf_physics3d_set_gravity(x,y,z) {
+		return wgf_impl_Raw.binding["wgf_physics3d_set_gravity"](x,y,z);
 	}
-	static wgf_physics_draw_bodies(color) {
-		wgf_impl_Raw.binding["wgf_physics_draw_bodies"](color);
+	static wgf_physics3d_draw_bodies(color) {
+		wgf_impl_Raw.binding["wgf_physics3d_draw_bodies"](color);
 	}
 	static wgf_vehicle_set_input(actor,throttle,brake,steer,hand_brake) {
 		return wgf_impl_Raw.binding["wgf_vehicle_set_input"](actor,throttle,brake,steer,hand_brake);

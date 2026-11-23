@@ -123,6 +123,18 @@ export const Actor = Object.freeze({
     setPickable: raw.wgf_actor_set_pickable,
     // wgf: call wgf_actor_is_pickable
     isPickable: raw.wgf_actor_is_pickable,
+    // wgf: call wgf_actor_add_component
+    addComponent: raw.wgf_actor_add_component,
+    // wgf: call wgf_actor_remove_component
+    removeComponent: raw.wgf_actor_remove_component,
+    // wgf: call wgf_actor_has_component
+    hasComponent: raw.wgf_actor_has_component,
+    // wgf: call wgf_actor_get_voice
+    getVoice: raw.wgf_actor_get_voice,
+    // wgf: call wgf_actor_find_with_component
+    findWithComponent: raw.wgf_actor_find_with_component,
+    // wgf: call wgf_actor_count_with_component
+    countWithComponent: raw.wgf_actor_count_with_component,
     // wgf: call wgf_actor_add_behavior
     addBehavior: raw.wgf_actor_add_behavior,
     // wgf: call wgf_actor_remove_behavior
@@ -137,18 +149,6 @@ export const Actor = Object.freeze({
     findWithBehavior: raw.wgf_actor_find_with_behavior,
     // wgf: call wgf_actor_count_with_behavior
     countWithBehavior: raw.wgf_actor_count_with_behavior,
-    // wgf: call wgf_actor_add_component
-    addComponent: raw.wgf_actor_add_component,
-    // wgf: call wgf_actor_remove_component
-    removeComponent: raw.wgf_actor_remove_component,
-    // wgf: call wgf_actor_has_component
-    hasComponent: raw.wgf_actor_has_component,
-    // wgf: call wgf_actor_get_voice
-    getVoice: raw.wgf_actor_get_voice,
-    // wgf: call wgf_actor_find_with_component
-    findWithComponent: raw.wgf_actor_find_with_component,
-    // wgf: call wgf_actor_count_with_component
-    countWithComponent: raw.wgf_actor_count_with_component,
     // wgf: call wgf_actor_get_count
     getCount: raw.wgf_actor_get_count,
     // wgf: call wgf_handle_is_alive
@@ -176,6 +176,51 @@ export const App = Object.freeze({
     getOptionInt: raw.wgf_app_get_option_int,
     // wgf: call wgf_app_get_option_float
     getOptionFloat: raw.wgf_app_get_option_float,
+});
+// wgf: typed Arcade2d
+export const Arcade2d = Object.freeze({
+    // wgf: call wgf_arcade2d_set_size
+    setSize: raw.wgf_arcade2d_set_size,
+    // wgf: call wgf_arcade2d_get_size
+    getSize: raw.wgf_arcade2d_get_size,
+    // wgf: call wgf_arcade2d_set_velocity
+    setVelocity: raw.wgf_arcade2d_set_velocity,
+    // wgf: call wgf_arcade2d_get_velocity
+    getVelocity: raw.wgf_arcade2d_get_velocity,
+    // wgf: call wgf_arcade2d_set_gravity
+    setGravity: raw.wgf_arcade2d_set_gravity,
+    // wgf: call wgf_arcade2d_get_gravity
+    getGravity: raw.wgf_arcade2d_get_gravity,
+    // wgf: call wgf_arcade2d_set_max_fall_speed
+    setMaxFallSpeed: raw.wgf_arcade2d_set_max_fall_speed,
+    // wgf: call wgf_arcade2d_get_max_fall_speed
+    getMaxFallSpeed: raw.wgf_arcade2d_get_max_fall_speed,
+    // wgf: call wgf_arcade2d_set_solid_mask
+    setSolidMask: raw.wgf_arcade2d_set_solid_mask,
+    // wgf: call wgf_arcade2d_get_solid_mask
+    getSolidMask: raw.wgf_arcade2d_get_solid_mask,
+    // wgf: call wgf_arcade2d_is_grounded
+    isGrounded: raw.wgf_arcade2d_is_grounded,
+    // wgf: call wgf_arcade2d_is_blocked_left
+    isBlockedLeft: raw.wgf_arcade2d_is_blocked_left,
+    // wgf: call wgf_arcade2d_is_blocked_right
+    isBlockedRight: raw.wgf_arcade2d_is_blocked_right,
+    // wgf: call wgf_arcade2d_is_blocked_above
+    isBlockedAbove: raw.wgf_arcade2d_is_blocked_above,
+    // wgf: call wgf_arcade2d_get_air_time
+    getAirTime: raw.wgf_arcade2d_get_air_time,
+    // wgf: call wgf_arcade2d_set_grid
+    setGrid: raw.wgf_arcade2d_set_grid,
+    // wgf: call wgf_arcade2d_set_grid_from_layer
+    setGridFromLayer: raw.wgf_arcade2d_set_grid_from_layer,
+    // wgf: call wgf_arcade2d_clear_grid
+    clearGrid: raw.wgf_arcade2d_clear_grid,
+    // wgf: call wgf_arcade2d_get_grid_cell
+    getGridCell: raw.wgf_arcade2d_get_grid_cell,
+    // wgf: call wgf_arcade2d_set_grid_cell
+    setGridCell: raw.wgf_arcade2d_set_grid_cell,
+    // wgf: call wgf_handle_is_alive
+    isAlive: raw.wgf_handle_is_alive,
 });
 // wgf: typed Asset
 export const Asset = Object.freeze({
@@ -287,117 +332,72 @@ export const BehaviorComponent = Object.freeze({
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
-// wgf: typed Body
-export const Body = Object.freeze({
-    // wgf: call wgf_body_set_type
-    setType: raw.wgf_body_set_type,
-    // wgf: call wgf_body_get_type
-    getType: raw.wgf_body_get_type,
-    // wgf: call wgf_body_set_shape
-    setShape: raw.wgf_body_set_shape,
-    // wgf: call wgf_body_get_shape
-    getShape: raw.wgf_body_get_shape,
-    // wgf: call wgf_body_get_size
-    getSize: raw.wgf_body_get_size,
-    // wgf: call wgf_body_set_offset
-    setOffset: raw.wgf_body_set_offset,
-    // wgf: call wgf_body_get_offset
-    getOffset: raw.wgf_body_get_offset,
-    // wgf: call wgf_body_set_mass_offset
-    setMassOffset: raw.wgf_body_set_mass_offset,
-    // wgf: call wgf_body_get_mass_offset
-    getMassOffset: raw.wgf_body_get_mass_offset,
-    // wgf: call wgf_body_set_mass
-    setMass: raw.wgf_body_set_mass,
-    // wgf: call wgf_body_get_mass
-    getMass: raw.wgf_body_get_mass,
-    // wgf: call wgf_body_set_friction
-    setFriction: raw.wgf_body_set_friction,
-    // wgf: call wgf_body_get_friction
-    getFriction: raw.wgf_body_get_friction,
-    // wgf: call wgf_body_set_bounce
-    setBounce: raw.wgf_body_set_bounce,
-    // wgf: call wgf_body_get_bounce
-    getBounce: raw.wgf_body_get_bounce,
-    // wgf: call wgf_body_set_damping
-    setDamping: raw.wgf_body_set_damping,
-    // wgf: call wgf_body_get_damping
-    getDamping: raw.wgf_body_get_damping,
-    // wgf: call wgf_body_set_layer
-    setLayer: raw.wgf_body_set_layer,
-    // wgf: call wgf_body_get_layer
-    getLayer: raw.wgf_body_get_layer,
-    // wgf: call wgf_body_set_mask
-    setMask: raw.wgf_body_set_mask,
-    // wgf: call wgf_body_get_mask
-    getMask: raw.wgf_body_get_mask,
-    // wgf: call wgf_body_set_velocity
-    setVelocity: raw.wgf_body_set_velocity,
-    // wgf: call wgf_body_get_velocity
-    getVelocity: raw.wgf_body_get_velocity,
-    // wgf: call wgf_body_set_spin
-    setSpin: raw.wgf_body_set_spin,
-    // wgf: call wgf_body_get_spin
-    getSpin: raw.wgf_body_get_spin,
-    // wgf: call wgf_body_add_impulse
-    addImpulse: raw.wgf_body_add_impulse,
-    // wgf: call wgf_body_is_grounded
-    isGrounded: raw.wgf_body_is_grounded,
-    // wgf: call wgf_body_get_ground_normal
-    getGroundNormal: raw.wgf_body_get_ground_normal,
-    // wgf: call wgf_body_set_step_height
-    setStepHeight: raw.wgf_body_set_step_height,
-    // wgf: call wgf_body_get_step_height
-    getStepHeight: raw.wgf_body_get_step_height,
-    // wgf: call wgf_body_set_max_slope
-    setMaxSlope: raw.wgf_body_set_max_slope,
-    // wgf: call wgf_body_get_max_slope
-    getMaxSlope: raw.wgf_body_get_max_slope,
-    // wgf: call wgf_handle_is_alive
-    isAlive: raw.wgf_handle_is_alive,
-});
-// wgf: typed Body2d
-export const Body2d = Object.freeze({
-    // wgf: call wgf_body2d_set_size
-    setSize: raw.wgf_body2d_set_size,
-    // wgf: call wgf_body2d_get_size
-    getSize: raw.wgf_body2d_get_size,
-    // wgf: call wgf_body2d_set_velocity
-    setVelocity: raw.wgf_body2d_set_velocity,
-    // wgf: call wgf_body2d_get_velocity
-    getVelocity: raw.wgf_body2d_get_velocity,
-    // wgf: call wgf_body2d_set_gravity
-    setGravity: raw.wgf_body2d_set_gravity,
-    // wgf: call wgf_body2d_get_gravity
-    getGravity: raw.wgf_body2d_get_gravity,
-    // wgf: call wgf_body2d_set_max_fall_speed
-    setMaxFallSpeed: raw.wgf_body2d_set_max_fall_speed,
-    // wgf: call wgf_body2d_get_max_fall_speed
-    getMaxFallSpeed: raw.wgf_body2d_get_max_fall_speed,
-    // wgf: call wgf_body2d_set_solid_mask
-    setSolidMask: raw.wgf_body2d_set_solid_mask,
-    // wgf: call wgf_body2d_get_solid_mask
-    getSolidMask: raw.wgf_body2d_get_solid_mask,
-    // wgf: call wgf_body2d_is_grounded
-    isGrounded: raw.wgf_body2d_is_grounded,
-    // wgf: call wgf_body2d_is_blocked_left
-    isBlockedLeft: raw.wgf_body2d_is_blocked_left,
-    // wgf: call wgf_body2d_is_blocked_right
-    isBlockedRight: raw.wgf_body2d_is_blocked_right,
-    // wgf: call wgf_body2d_is_blocked_above
-    isBlockedAbove: raw.wgf_body2d_is_blocked_above,
-    // wgf: call wgf_body2d_get_air_time
-    getAirTime: raw.wgf_body2d_get_air_time,
-    // wgf: call wgf_body2d_set_grid
-    setGrid: raw.wgf_body2d_set_grid,
-    // wgf: call wgf_body2d_set_grid_from_layer
-    setGridFromLayer: raw.wgf_body2d_set_grid_from_layer,
-    // wgf: call wgf_body2d_clear_grid
-    clearGrid: raw.wgf_body2d_clear_grid,
-    // wgf: call wgf_body2d_get_grid_cell
-    getGridCell: raw.wgf_body2d_get_grid_cell,
-    // wgf: call wgf_body2d_set_grid_cell
-    setGridCell: raw.wgf_body2d_set_grid_cell,
+// wgf: typed Body3d
+export const Body3d = Object.freeze({
+    // wgf: call wgf_body3d_set_type
+    setType: raw.wgf_body3d_set_type,
+    // wgf: call wgf_body3d_get_type
+    getType: raw.wgf_body3d_get_type,
+    // wgf: call wgf_body3d_set_shape
+    setShape: raw.wgf_body3d_set_shape,
+    // wgf: call wgf_body3d_get_shape
+    getShape: raw.wgf_body3d_get_shape,
+    // wgf: call wgf_body3d_get_size
+    getSize: raw.wgf_body3d_get_size,
+    // wgf: call wgf_body3d_set_offset
+    setOffset: raw.wgf_body3d_set_offset,
+    // wgf: call wgf_body3d_get_offset
+    getOffset: raw.wgf_body3d_get_offset,
+    // wgf: call wgf_body3d_set_mass_offset
+    setMassOffset: raw.wgf_body3d_set_mass_offset,
+    // wgf: call wgf_body3d_get_mass_offset
+    getMassOffset: raw.wgf_body3d_get_mass_offset,
+    // wgf: call wgf_body3d_set_mass
+    setMass: raw.wgf_body3d_set_mass,
+    // wgf: call wgf_body3d_get_mass
+    getMass: raw.wgf_body3d_get_mass,
+    // wgf: call wgf_body3d_set_friction
+    setFriction: raw.wgf_body3d_set_friction,
+    // wgf: call wgf_body3d_get_friction
+    getFriction: raw.wgf_body3d_get_friction,
+    // wgf: call wgf_body3d_set_bounce
+    setBounce: raw.wgf_body3d_set_bounce,
+    // wgf: call wgf_body3d_get_bounce
+    getBounce: raw.wgf_body3d_get_bounce,
+    // wgf: call wgf_body3d_set_damping
+    setDamping: raw.wgf_body3d_set_damping,
+    // wgf: call wgf_body3d_get_damping
+    getDamping: raw.wgf_body3d_get_damping,
+    // wgf: call wgf_body3d_set_layer
+    setLayer: raw.wgf_body3d_set_layer,
+    // wgf: call wgf_body3d_get_layer
+    getLayer: raw.wgf_body3d_get_layer,
+    // wgf: call wgf_body3d_set_mask
+    setMask: raw.wgf_body3d_set_mask,
+    // wgf: call wgf_body3d_get_mask
+    getMask: raw.wgf_body3d_get_mask,
+    // wgf: call wgf_body3d_set_velocity
+    setVelocity: raw.wgf_body3d_set_velocity,
+    // wgf: call wgf_body3d_get_velocity
+    getVelocity: raw.wgf_body3d_get_velocity,
+    // wgf: call wgf_body3d_set_spin
+    setSpin: raw.wgf_body3d_set_spin,
+    // wgf: call wgf_body3d_get_spin
+    getSpin: raw.wgf_body3d_get_spin,
+    // wgf: call wgf_body3d_add_impulse
+    addImpulse: raw.wgf_body3d_add_impulse,
+    // wgf: call wgf_body3d_is_grounded
+    isGrounded: raw.wgf_body3d_is_grounded,
+    // wgf: call wgf_body3d_get_ground_normal
+    getGroundNormal: raw.wgf_body3d_get_ground_normal,
+    // wgf: call wgf_body3d_set_step_height
+    setStepHeight: raw.wgf_body3d_set_step_height,
+    // wgf: call wgf_body3d_get_step_height
+    getStepHeight: raw.wgf_body3d_get_step_height,
+    // wgf: call wgf_body3d_set_max_slope
+    setMaxSlope: raw.wgf_body3d_set_max_slope,
+    // wgf: call wgf_body3d_get_max_slope
+    getMaxSlope: raw.wgf_body3d_get_max_slope,
     // wgf: call wgf_handle_is_alive
     isAlive: raw.wgf_handle_is_alive,
 });
@@ -1817,30 +1817,30 @@ export const Mouse = Object.freeze({
     // wgf: call wgf_mouse_get_cursor
     getCursor: raw.wgf_mouse_get_cursor,
 });
-// wgf: typed Physics
-export const Physics = Object.freeze({
-    // wgf: call wgf_physics_enable_characters
-    enableCharacters: raw.wgf_physics_enable_characters,
-    // wgf: call wgf_physics_is_characters_enabled
-    isCharactersEnabled: raw.wgf_physics_is_characters_enabled,
-    // wgf: call wgf_physics_enable_vehicles
-    enableVehicles: raw.wgf_physics_enable_vehicles,
-    // wgf: call wgf_physics_is_vehicles_enabled
-    isVehiclesEnabled: raw.wgf_physics_is_vehicles_enabled,
-    // wgf: call wgf_physics_set_gravity
-    setGravity: raw.wgf_physics_set_gravity,
-    // wgf: call wgf_physics_get_gravity
-    getGravity: raw.wgf_physics_get_gravity,
-    // wgf: call wgf_physics_draw_bodies
-    drawBodies: raw.wgf_physics_draw_bodies,
-    // wgf: call wgf_physics_cast_ray
-    castRay: raw.wgf_physics_cast_ray,
-    // wgf: call wgf_physics_cast_sphere
-    castSphere: raw.wgf_physics_cast_sphere,
-    // wgf: call wgf_physics_overlap_sphere
-    overlapSphere: raw.wgf_physics_overlap_sphere,
-    // wgf: call wgf_physics_overlap_box
-    overlapBox: raw.wgf_physics_overlap_box,
+// wgf: typed Physics3d
+export const Physics3d = Object.freeze({
+    // wgf: call wgf_physics3d_enable_characters
+    enableCharacters: raw.wgf_physics3d_enable_characters,
+    // wgf: call wgf_physics3d_is_characters_enabled
+    isCharactersEnabled: raw.wgf_physics3d_is_characters_enabled,
+    // wgf: call wgf_physics3d_enable_vehicles
+    enableVehicles: raw.wgf_physics3d_enable_vehicles,
+    // wgf: call wgf_physics3d_is_vehicles_enabled
+    isVehiclesEnabled: raw.wgf_physics3d_is_vehicles_enabled,
+    // wgf: call wgf_physics3d_set_gravity
+    setGravity: raw.wgf_physics3d_set_gravity,
+    // wgf: call wgf_physics3d_get_gravity
+    getGravity: raw.wgf_physics3d_get_gravity,
+    // wgf: call wgf_physics3d_draw_bodies
+    drawBodies: raw.wgf_physics3d_draw_bodies,
+    // wgf: call wgf_physics3d_cast_ray
+    castRay: raw.wgf_physics3d_cast_ray,
+    // wgf: call wgf_physics3d_cast_sphere
+    castSphere: raw.wgf_physics3d_cast_sphere,
+    // wgf: call wgf_physics3d_overlap_sphere
+    overlapSphere: raw.wgf_physics3d_overlap_sphere,
+    // wgf: call wgf_physics3d_overlap_box
+    overlapBox: raw.wgf_physics3d_overlap_box,
 });
 // wgf: typed Pointer
 export const Pointer = Object.freeze({
@@ -3280,10 +3280,10 @@ export const AlphaMode = Object.freeze({ OPAQUE: 0, MASK: 1, BLEND: 2, ADD: 3, M
 export const AssetCacheMode = Object.freeze({ REVALIDATE: 0, TRUST: 1, OFF: 2 });
 // wgf: enum AssetTaskStatus
 export const AssetTaskStatus = Object.freeze({ NONE: 0, PENDING: 1, DONE: 2, FAILED: 3 });
-// wgf: enum BodyShape
-export const BodyShape = Object.freeze({ BOX: 0, SPHERE: 1, CAPSULE: 2, CONVEX: 3, MESH: 4 });
-// wgf: enum BodyType
-export const BodyType = Object.freeze({ STATIC: 0, DYNAMIC: 1, KINEMATIC: 2, SENSOR: 3, CHARACTER: 4 });
+// wgf: enum Body3dShape
+export const Body3dShape = Object.freeze({ BOX: 0, SPHERE: 1, CAPSULE: 2, CONVEX: 3, MESH: 4 });
+// wgf: enum Body3dType
+export const Body3dType = Object.freeze({ STATIC: 0, DYNAMIC: 1, KINEMATIC: 2, SENSOR: 3, CHARACTER: 4 });
 // wgf: enum BoundsMode
 export const BoundsMode = Object.freeze({ WRAP: 0, CLAMP: 1, DESTROY: 2 });
 // wgf: enum ColliderShape
@@ -3291,7 +3291,7 @@ export const ColliderShape = Object.freeze({ CIRCLE: 0, RECTANGLE: 1, POLYGON: 2
 // wgf: enum ColorStock
 export const ColorStock = Object.freeze({ BLANK: 0, WHITE: 1, BLACK: 2, LIGHTGRAY: 3, GRAY: 4, DARKGRAY: 5, YELLOW: 6, GOLD: 7, ORANGE: 8, PINK: 9, RED: 10, MAROON: 11, GREEN: 12, LIME: 13, DARKGREEN: 14, SKYBLUE: 15, BLUE: 16, DARKBLUE: 17, PURPLE: 18, VIOLET: 19, DARKPURPLE: 20, BEIGE: 21, BROWN: 22, DARKBROWN: 23, MAGENTA: 24, RAYWHITE: 25 });
 // wgf: enum Component
-export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY: 6, VEHICLE: 7, BODY2D: 8 });
+export const Component = Object.freeze({ NONE: 0, MOTION: 1, BOUNDS: 2, LIFETIME: 3, COLLIDER: 4, VOICE: 5, BODY3D: 6, VEHICLE: 7, ARCADE2D: 8 });
 // wgf: enum CubemapLayout
 export const CubemapLayout = Object.freeze({ AUTO: 0, LINE_VERTICAL: 1, LINE_HORIZONTAL: 2, CROSS_THREE_BY_FOUR: 3, CROSS_FOUR_BY_THREE: 4, FACES: 5 });
 // wgf: enum DocumentEvent

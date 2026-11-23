@@ -23,7 +23,7 @@ package wgf;
       TRIGGER_ENTER    two colliders starting to overlap, told to each: the actor, the other,
                        and the other's collider layer as they met
       TRIGGER_EXIT     and ceasing to
-      CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body.h), told to each: the
+      CONTACT_BEGIN    two solid bodies beginning to touch (wgf_body3d.h), told to each: the
                        actor, the other, and the other's body layer
       CONTACT_END      and ceasing to
       SCREEN_ENTER     a screen coming to the top of the stack (wgf_screen.h): the screen,
