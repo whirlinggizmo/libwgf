@@ -4,9 +4,13 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Bounds's calls, on a Actor: `var x:Bounds = handle` gives it them, and a Bounds is still a Actor; it starts as 0, none, as a Actor does.
+    Bounds's calls, on a Actor: `var x:Bounds = handle` gives it them, and a Bounds is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Bounds(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Bounds. **/
+	@:from static inline function ofView<T:Actor>(view:T):Bounds
+		return cast view;
+
 	/**
 	    Sets or gets the rectangle. get_rect returns it as x, y, width, height. The setter also
 	    returns false for a width or height below 0.

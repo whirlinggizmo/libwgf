@@ -22,9 +22,13 @@ import wgf.impl.Raw;
     - a staggered or hexagonal map's are counted as Tiled counts them;
     - an infinite map's count from its origin.
 
-    TilemapLayer's calls, on a Actor: `var x:TilemapLayer = handle` gives it them, and a TilemapLayer is still a Actor; it starts as 0, none, as a Actor does.
+    TilemapLayer's calls, on a Actor: `var x:TilemapLayer = handle` gives it them, and a TilemapLayer is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract TilemapLayer(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a TilemapLayer. **/
+	@:from static inline function ofView<T:Actor>(view:T):TilemapLayer
+		return cast view;
+
 	/**
 	    Returns the map the layer belongs to, and the layer's index in that map.
 	**/

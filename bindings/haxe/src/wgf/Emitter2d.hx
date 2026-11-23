@@ -36,9 +36,13 @@ import wgf.impl.Raw;
     An emitter holds a reference to its texture. Emitters are actors (wgf_actor.h): place, parent,
     and destroy them with the actor calls.
 
-    Emitter2d's calls, on a Actor: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Actor; it starts as 0, none, as a Actor does.
+    Emitter2d's calls, on a Actor: `var x:Emitter2d = handle` gives it them, and a Emitter2d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Emitter2d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Emitter2d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Emitter2d
+		return cast view;
+
 	/**
 	    Creates an emitter that doesn't emit yet: its rate is 0. Its particles are white 8-unit squares
 	    that live a second, drawn added (ADD).

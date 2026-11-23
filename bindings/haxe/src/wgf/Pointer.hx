@@ -30,9 +30,13 @@ import wgf.impl.Raw;
     Read the states inside a tick or a frame. Their edges are since the previous tick, or the
     previous frame, as keys' are.
 
-    Pointer's calls, on a Actor: `var x:Pointer = handle` gives it them, and a Pointer is still a Actor; it starts as 0, none, as a Actor does.
+    Pointer's calls, on a Actor: `var x:Pointer = handle` gives it them, and a Pointer is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Pointer(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Pointer. **/
+	@:from static inline function ofView<T:Actor>(view:T):Pointer
+		return cast view;
+
 	/**
 	    Sets or gets whether the pointer picks a stage (default: not picked).
 

@@ -125,6 +125,9 @@ class Main {
 			(d : Collider).setRadius(5);
 		}
 		(a : Motion).getVelocity(); // a component it hasn't: still answers
+		final collider:Collider = a;
+		final motion:Motion = collider; // one view to another, in one step
+		expect(motion == (a : Motion) && (motion : Actor) == a, "a view converts to another view");
 	}
 
 	/**

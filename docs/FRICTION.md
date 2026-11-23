@@ -902,7 +902,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** Keep the handle typed `Actor` and cast to each view at each use.
 - **Cost:** The first compile error anyone building actors in code will meet. Reported by two agents.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:**
+- **Triage:** fine: HISTORY.md, "A Haxe view converts to another view".
 
 ### examples: the UI's grid doesn't align columns
 

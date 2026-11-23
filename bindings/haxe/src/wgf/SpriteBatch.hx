@@ -23,9 +23,13 @@ import wgf.impl.Raw;
     - with size 0 (the region's size) and region 0 (the whole texture);
     - unturned, and white.
 
-    SpriteBatch's calls, on a Actor: `var x:SpriteBatch = handle` gives it them, and a SpriteBatch is still a Actor; it starts as 0, none, as a Actor does.
+    SpriteBatch's calls, on a Actor: `var x:SpriteBatch = handle` gives it them, and a SpriteBatch is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract SpriteBatch(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a SpriteBatch. **/
+	@:from static inline function ofView<T:Actor>(view:T):SpriteBatch
+		return cast view;
+
 	/**
 	    Creates a batch of `texture` with no quads. With 0 for no texture, it draws nothing.
 

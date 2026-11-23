@@ -30,9 +30,13 @@ import wgf.impl.Raw;
     - Every flown camera moves by the same input, so fly one at a time.
     - A camera that also follows (wgf_follow.h) is placed by both.
 
-    Fly's calls, on a Actor: `var x:Fly = handle` gives it them, and a Fly is still a Actor; it starts as 0, none, as a Actor does.
+    Fly's calls, on a Actor: `var x:Fly = handle` gives it them, and a Fly is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Fly(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Fly. **/
+	@:from static inline function ofView<T:Actor>(view:T):Fly
+		return cast view;
+
 	/**
 	    Sets or gets the mode the camera is flown in (default: NONE).
 

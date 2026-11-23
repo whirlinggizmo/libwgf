@@ -11,9 +11,13 @@ import wgf.impl.Raw;
     - Its world position is what counts, so a camera parented to the player follows the player.
     - It draws nothing itself.
 
-    Camera2d's calls, on a Actor: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Actor; it starts as 0, none, as a Actor does.
+    Camera2d's calls, on a Actor: `var x:Camera2d = handle` gives it them, and a Camera2d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Camera2d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Camera2d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Camera2d
+		return cast view;
+
 	/**
 	    Creates a 2D camera, at zoom 1.
 

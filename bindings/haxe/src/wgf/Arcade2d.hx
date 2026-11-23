@@ -36,9 +36,13 @@ import wgf.impl.Raw;
 
     Every call returns false (or 0) for an actor without an arcade body.
 
-    Arcade2d's calls, on a Actor: `var x:Arcade2d = handle` gives it them, and a Arcade2d is still a Actor; it starts as 0, none, as a Actor does.
+    Arcade2d's calls, on a Actor: `var x:Arcade2d = handle` gives it them, and a Arcade2d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Arcade2d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Arcade2d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Arcade2d
+		return cast view;
+
 	/**
 	    Sets or gets the box's width and height (default: 1 by 1). The setter also returns false
 	    for a size below 0, or one that isn't finite.

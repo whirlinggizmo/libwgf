@@ -1040,6 +1040,15 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## A Haxe view converts to another view (2026-11-23)
+
+A Haxe view (`Shape2d`, `Motion`, `Model`, `Body3d`, ...) converted to and from `Actor` only, and Haxe chains no two conversions, so `var m:Motion = shape` didn't compile for a `Shape2d`. Code kept handles as `Actor` and cast at each use. From the examples' friction list.
+
+- **Every view now converts from any other view of the same kind**, in one step: a generic `@:from` on each, `ofView<T:Actor>`, which the generator writes.
+- **A handle of another kind is still refused** (a `Texture` isn't a `Motion`).
+- **Nothing is added at run time:** the conversion is inline, and a view is the handle's number on every target.
+- The binding's test converts a `Collider` to a `Motion`. The physics example's `body` returns a `Body3d` made from a `Model`.
+
 ## The page sizes the web canvas (2026-11-23)
 
 `wgf_window_set_size` on the web set the canvas's own style, which fixed the canvas at that size at the page's top left. Code written for the desktop calls it for the window's opening size, so on the web a game sat unscaled in a corner, cut off on a smaller page. Every curated example did this at first. From the examples' friction list.

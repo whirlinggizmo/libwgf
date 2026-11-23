@@ -26,9 +26,13 @@ import wgf.impl.Raw;
     Either kind of camera shakes. wgf_follow_shake adds trauma (0 to 1), which is lost over
     time. The view is thrown by the trauma's square, so small shakes are gentle.
 
-    Follow's calls, on a Actor: `var x:Follow = handle` gives it them, and a Follow is still a Actor; it starts as 0, none, as a Actor does.
+    Follow's calls, on a Actor: `var x:Follow = handle` gives it them, and a Follow is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Follow(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Follow. **/
+	@:from static inline function ofView<T:Actor>(view:T):Follow
+		return cast view;
+
 	/**
 	    Sets or gets the actor the camera follows.
 

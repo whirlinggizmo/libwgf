@@ -16,9 +16,13 @@ import wgf.impl.Raw;
     - Space is right-handed, with y up.
     - It draws nothing itself.
 
-    Camera3d's calls, on a Actor: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Actor; it starts as 0, none, as a Actor does.
+    Camera3d's calls, on a Actor: `var x:Camera3d = handle` gives it them, and a Camera3d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Camera3d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Camera3d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Camera3d
+		return cast view;
+
 	/**
 	    Creates a 3D camera with a 60 degree vertical field of view, seeing from 0.1 to 1000 units
 	    in front of it.

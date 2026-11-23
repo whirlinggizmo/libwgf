@@ -4,9 +4,13 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    BehaviorComponent's calls, on a Actor: `var x:BehaviorComponent = handle` gives it them, and a BehaviorComponent is still a Actor; it starts as 0, none, as a Actor does.
+    BehaviorComponent's calls, on a Actor: `var x:BehaviorComponent = handle` gives it them, and a BehaviorComponent is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract BehaviorComponent(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a BehaviorComponent. **/
+	@:from static inline function ofView<T:Actor>(view:T):BehaviorComponent
+		return cast view;
+
 	/**
 	    Returns the behavior's name. The actor owns the string, valid while the behavior is.
 	**/

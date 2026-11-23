@@ -114,7 +114,7 @@ class Main {
 	}
 
 	/** A model of `mesh` on the stage at (x, y, z), tinted, with a body (a dynamic box until set). **/
-	static function body(mesh:Mesh, tint:Int, x:Float, y:Float, z:Float):Actor {
+	static function body(mesh:Mesh, tint:Int, x:Float, y:Float, z:Float):Body3d {
 		final model = Model.create(mesh);
 		model.setTint(tint);
 		model.setPosition(x, y, z);

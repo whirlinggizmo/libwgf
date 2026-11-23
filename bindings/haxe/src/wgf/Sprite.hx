@@ -25,9 +25,13 @@ import wgf.impl.Raw;
 
     A sprite on a 3D stage casts no shadow, and is unlit.
 
-    Sprite's calls, on a Actor: `var x:Sprite = handle` gives it them, and a Sprite is still a Actor; it starts as 0, none, as a Actor does.
+    Sprite's calls, on a Actor: `var x:Sprite = handle` gives it them, and a Sprite is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Sprite(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Sprite. **/
+	@:from static inline function ofView<T:Actor>(view:T):Sprite
+		return cast view;
+
 	/**
 	    Creates a sprite showing `texture`. With 0 for no texture, it draws nothing.
 

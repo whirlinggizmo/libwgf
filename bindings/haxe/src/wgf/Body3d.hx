@@ -18,9 +18,13 @@ import wgf.impl.Raw;
     - Each is told to both, with the other's layer.
     - A behavior hears it as onTriggerEnter.
 
-    Body3d's calls, on a Actor: `var x:Body3d = handle` gives it them, and a Body3d is still a Actor; it starts as 0, none, as a Actor does.
+    Body3d's calls, on a Actor: `var x:Body3d = handle` gives it them, and a Body3d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Body3d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Body3d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Body3d
+		return cast view;
+
 	/**
 	    A body (WGF_COMPONENT_BODY3D, wgf_component.h): an actor in the physics world
 	    (wgf_physics3d.h), as a rigid shape.

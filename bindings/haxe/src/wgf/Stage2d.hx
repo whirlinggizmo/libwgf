@@ -13,9 +13,13 @@ import wgf.impl.Raw;
     A stage is an actor (wgf_actor.h). Its own transform moves every actor on it, and
     wgf_actor_destroy ends it.
 
-    Stage2d's calls, on a Actor: `var x:Stage2d = handle` gives it them, and a Stage2d is still a Actor; it starts as 0, none, as a Actor does.
+    Stage2d's calls, on a Actor: `var x:Stage2d = handle` gives it them, and a Stage2d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Stage2d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Stage2d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Stage2d
+		return cast view;
+
 	/**
 	    Creates a 2D stage, with no camera.
 

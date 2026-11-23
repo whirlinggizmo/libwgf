@@ -4,9 +4,13 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Vehicle's calls, on a Actor: `var x:Vehicle = handle` gives it them, and a Vehicle is still a Actor; it starts as 0, none, as a Actor does.
+    Vehicle's calls, on a Actor: `var x:Vehicle = handle` gives it them, and a Vehicle is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Vehicle(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Vehicle. **/
+	@:from static inline function ofView<T:Actor>(view:T):Vehicle
+		return cast view;
+
 	/**
 	    Sets or gets the vehicle's wheels: 2 to 8 actors under it, in left and right pairs, front
 	    first. The setter returns false for an odd count, more than 8, or a wheel that isn't an

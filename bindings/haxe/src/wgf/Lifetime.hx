@@ -7,9 +7,13 @@ import wgf.impl.Raw;
     A lifetime (WGF_COMPONENT_LIFETIME): seconds left, counted down each tick. At 0 the
     actor is destroyed. Default: 1 second.
 
-    Lifetime's calls, on a Actor: `var x:Lifetime = handle` gives it them, and a Lifetime is still a Actor; it starts as 0, none, as a Actor does.
+    Lifetime's calls, on a Actor: `var x:Lifetime = handle` gives it them, and a Lifetime is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Lifetime(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Lifetime. **/
+	@:from static inline function ofView<T:Actor>(view:T):Lifetime
+		return cast view;
+
 	/**
 	    Sets the seconds left, from now. Returns false for an actor without a lifetime, or a time
 	    below 0 or not finite.

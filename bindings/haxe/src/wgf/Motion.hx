@@ -13,9 +13,13 @@ import wgf.impl.Raw;
 
     Every call returns false (or 0) for an actor without motion.
 
-    Motion's calls, on a Actor: `var x:Motion = handle` gives it them, and a Motion is still a Actor; it starts as 0, none, as a Actor does.
+    Motion's calls, on a Actor: `var x:Motion = handle` gives it them, and a Motion is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Motion(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Motion. **/
+	@:from static inline function ofView<T:Actor>(view:T):Motion
+		return cast view;
+
 	/**
 	    Sets or gets the velocity, in units a second, in the actor's parent's space.
 	**/

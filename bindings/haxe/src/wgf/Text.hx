@@ -15,9 +15,13 @@ import wgf.impl.Raw;
 
     Text is an actor (wgf_actor.h): place, parent, and destroy it with the actor calls.
 
-    Text's calls, on a Actor: `var x:Text = handle` gives it them, and a Text is still a Actor; it starts as 0, none, as a Actor does.
+    Text's calls, on a Actor: `var x:Text = handle` gives it them, and a Text is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Text(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Text. **/
+	@:from static inline function ofView<T:Actor>(view:T):Text
+		return cast view;
+
 	/**
 	    Creates a text actor in `font` (0: the default font), with no string yet.
 

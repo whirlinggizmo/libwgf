@@ -4,9 +4,13 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Shape3d's calls, on a Actor: `var x:Shape3d = handle` gives it them, and a Shape3d is still a Actor; it starts as 0, none, as a Actor does.
+    Shape3d's calls, on a Actor: `var x:Shape3d = handle` gives it them, and a Shape3d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Shape3d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Shape3d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Shape3d
+		return cast view;
+
 	/**
 	    Creates a shape with nothing to draw yet, white. Returns 0 if there is no room for another
 	    actor.

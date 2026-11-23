@@ -10,9 +10,13 @@ import wgf.impl.Raw;
     scale, parent, and destroy them with the actor calls. The shape turns and scales with its
     actor, but an outline's thickness stays in the frame's logical pixels.
 
-    Shape2d's calls, on a Actor: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Actor; it starts as 0, none, as a Actor does.
+    Shape2d's calls, on a Actor: `var x:Shape2d = handle` gives it them, and a Shape2d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Shape2d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Shape2d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Shape2d
+		return cast view;
+
 	/**
 	    Creates a shape with nothing to draw yet, white and filled.
 

@@ -12,9 +12,13 @@ import wgf.impl.Raw;
     - Place it with the actor calls.
     - On a 2D stage it draws nothing.
 
-    Model's calls, on a Actor: `var x:Model = handle` gives it them, and a Model is still a Actor; it starts as 0, none, as a Actor does.
+    Model's calls, on a Actor: `var x:Model = handle` gives it them, and a Model is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Model(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Model. **/
+	@:from static inline function ofView<T:Actor>(view:T):Model
+		return cast view;
+
 	/**
 	    Creates a model of `mesh`. A `mesh` of 0 means none yet.
 

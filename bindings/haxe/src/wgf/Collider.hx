@@ -38,9 +38,13 @@ import wgf.impl.Raw;
 
     Every call returns false (or 0) for an actor without a collider.
 
-    Collider's calls, on a Actor: `var x:Collider = handle` gives it them, and a Collider is still a Actor; it starts as 0, none, as a Actor does.
+    Collider's calls, on a Actor: `var x:Collider = handle` gives it them, and a Collider is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Collider(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Collider. **/
+	@:from static inline function ofView<T:Actor>(view:T):Collider
+		return cast view;
+
 	/**
 	    Sets the shape to a circle of `radius`, or gets a circle's radius. The setter also returns
 	    false for a radius below 0. get_radius returns 0 for another shape.

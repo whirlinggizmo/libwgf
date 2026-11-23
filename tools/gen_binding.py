@@ -274,8 +274,13 @@ def typed_modules(binding):
     for haxe, kind in over.items():
         own = class_docs.get(haxe, '')
         text = header + (doc_block((own + '\n\n' if own else '') + f'{haxe}\'s calls, on a {kind}: `var x:{haxe} = handle` '
-                                   f'gives it them, and a {haxe} is still a {kind}; it starts as 0, none, as a {kind} does.', '') +
-                         f'@:forward abstract {haxe}({kind}) from {kind} from Int to {kind} {{\n' +
+                                   f'gives it them, and a {haxe} is still a {kind}; it starts as 0, none, as a {kind} does. '
+                                   f'Another view of a {kind} converts to it too.', '') +
+                         f'@:forward abstract {haxe}({kind}) from {kind} from Int to {kind} {{\n'
+                         # Haxe chains no two conversions, so a view to the kind to this one is made one
+                         f'\t/** Any other view of a {kind}, as a {haxe}. **/\n'
+                         f'\t@:from static inline function ofView<T:{kind}>(view:T):{haxe}\n'
+                         f'\t\treturn cast view;\n\n' +
                          '\n'.join(members.pop(haxe, [])) + '}\n')
         modules[haxe] = text
     for haxe, items in members.items():

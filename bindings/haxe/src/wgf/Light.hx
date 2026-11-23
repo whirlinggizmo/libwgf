@@ -4,9 +4,13 @@ package wgf;
 import wgf.impl.Raw;
 
 /**
-    Light's calls, on a Actor: `var x:Light = handle` gives it them, and a Light is still a Actor; it starts as 0, none, as a Actor does.
+    Light's calls, on a Actor: `var x:Light = handle` gives it them, and a Light is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Light(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Light. **/
+	@:from static inline function ofView<T:Actor>(view:T):Light
+		return cast view;
+
 	/**
 	    Creates a white light of intensity 1, with no range limit, and a spot cone of pi/6 to pi/4.
 

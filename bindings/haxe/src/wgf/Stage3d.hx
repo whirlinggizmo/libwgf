@@ -20,9 +20,13 @@ import wgf.impl.Raw;
     models are black until it has some. Lighting happens in linear space, and is tone mapped
     to the screen.
 
-    Stage3d's calls, on a Actor: `var x:Stage3d = handle` gives it them, and a Stage3d is still a Actor; it starts as 0, none, as a Actor does.
+    Stage3d's calls, on a Actor: `var x:Stage3d = handle` gives it them, and a Stage3d is still a Actor; it starts as 0, none, as a Actor does. Another view of a Actor converts to it too.
 **/
 @:forward abstract Stage3d(Actor) from Actor from Int to Actor {
+	/** Any other view of a Actor, as a Stage3d. **/
+	@:from static inline function ofView<T:Actor>(view:T):Stage3d
+		return cast view;
+
 	/**
 	    Creates a 3D stage, with no camera, no ambient light, and NEUTRAL tone mapping at an
 	    exposure of 0.
