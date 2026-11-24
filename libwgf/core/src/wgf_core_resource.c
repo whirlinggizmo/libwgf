@@ -214,6 +214,21 @@ bool wgf_core_priv_resource_is_reloading(wgf_handle_t resource)
 
 bool wgf_core_priv_resource_reloads;
 
+void wgf_core_priv_resource_each_file(void (*each)(const char *path, const char *found, void *user), void *user)
+{
+    for (unsigned kind = 0; kind < KINDS; kind++) {
+        wgf_core_priv_handle_pool_t *pool = kinds[kind].pool;
+        for (uint16_t i = 1; pool != NULL && i < pool->capacity; i++) {
+            const wgf_core_priv_resource_t *record = header(pool, i);
+            if (wgf_core_priv_handle_pool_handle_from_index(pool, i) == 0 || record->permanent ||
+                record->path[0] == '\0') {
+                continue;
+            }
+            each(record->path, record->found[0] != '\0' ? record->found : record->path, user);
+        }
+    }
+}
+
 int wgf_core_priv_resource_reload(const char *path)
 {
     char key[WGF_CORE_PRIV_FS_PATH_MAX];

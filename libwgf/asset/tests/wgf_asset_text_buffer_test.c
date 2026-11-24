@@ -11,6 +11,7 @@
 #include "wgf_log.h"
 #include "wgf_resource.h"
 #include "wgf_text_buffer.h"
+#include "wgf_time.h"
 
 /* Text buffers natively: made in code, set, added to, and read; loaded from files under
  * text_buffer_test_root/, loaded again in place, and failing. */
@@ -132,6 +133,20 @@ static void test_loaded(void)
     CHECK(wgf_resource_get_status(credits) == WGF_RESOURCE_STATUS_READY &&
           strcmp(wgf_text_buffer_get_text(credits), "Made by Rob, again.") == 0 &&
           wgf_text_buffer_get_version(credits) != version);
+
+    /* natively the files loaded are watched: a file saved loads again by itself, its save
+       settled, with no call of the program's */
+    {
+        const double start = wgf_time_get_seconds();
+        for (int i = 0; i < 40; i++) wgf_core_priv_update(); /* a look, the file as it is seen */
+        while (wgf_time_get_seconds() - start < 0.6) wgf_core_priv_update();
+        write_text("text/credits.txt", "Saved in an editor, and watched.");
+        while (strcmp(wgf_text_buffer_get_text(credits), "Saved in an editor, and watched.") != 0 &&
+               wgf_time_get_seconds() - start < 10.0) {
+            wgf_core_priv_update();
+        }
+        CHECK(strcmp(wgf_text_buffer_get_text(credits), "Saved in an editor, and watched.") == 0);
+    }
 
     wgf_resource_release(again);
     CHECK(wgf_handle_is_alive(credits)); /* one reference left */

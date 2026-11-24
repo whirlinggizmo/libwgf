@@ -1133,6 +1133,14 @@ Rob's: the last kind that didn't, and his choice of three, over a scene's prefab
 - **Prefabs' handles follow their prefabs by their names**; one gone from the file is let go of, and spawning it returns 0. Blocks waiting for a glTF file still loading follow theirs by path, or are dropped.
 - Test: `wgf_ecs_scene_test` loads a level again under a game's change (the ship moved): a color, a velocity, and a behavior's parameter changed, the position kept, a child gone and one new, an actor gone, one made a sprite, one new at the top, a spawned bullet's lifetime changed, a prefab gone; then a file with a bad line, kept.
 
+## The files loaded are watched natively (2026-11-24)
+
+Rob's: `wgf serve` tells a page of a saved file, but a desktop build, `wgf run` or a C program (a Zen-C one), had nothing to tell it. Where reload is enabled, the asset part now looks at every file loaded, and every file a loaded file names, four times a second, natively from a local host: a file's modification time and size (`wgf_core_priv_os_file_stamp`, `stat` or `GetFileAttributesEx`; `wgf_core_priv_fs_stamp`, false on the web, whose files are the server's). A change is loaded again (`wgf_asset_reload`) once it has held for a look, as an editor writes a file in more than one step; a file no resource is made from any more is forgotten. The watch is reached through a pointer `wgf_asset_enable_reload` sets, so a program that never enables reload links none of it. Test: `wgf_asset_text_buffer_test` saves a file and waits for its buffer to hold the new text, with no call of the program's. A cubemap of six files is watched by its first face's file alone (its record's path); the others' saves aren't seen natively.
+
+## A model taking another file's clips follows them when that file loads again (2026-11-24)
+
+From the list of what was left: a model with clips from another glTF (`wgf_model_set_animations`) wasn't told when that file loaded again, only models made from it were. The file part now tells each other root as a file loads (`wgf_gfx_priv_model_clips_loaded`, a hook the animation part sets), and a model whose clips come from it goes on in them by name, as for its own file. Test: `wgf_gfx_skin_test` saves the clips' file with a clip before the one playing.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

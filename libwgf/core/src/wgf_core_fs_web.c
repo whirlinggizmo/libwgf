@@ -467,6 +467,14 @@ void wgf_core_priv_fs_set_persistent(bool persistent)
     fs_transient = !persistent;
 }
 
+bool wgf_core_priv_fs_stamp(const char *path, long long *modified, long long *size)
+{
+    (void)path;
+    (void)modified;
+    (void)size;
+    return false;
+}
+
 bool wgf_core_priv_fs_is_cached(const char *path)
 {
     char full[1100];

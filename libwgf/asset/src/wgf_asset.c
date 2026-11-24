@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "wgf_core_fs_priv.h"
 #include "wgf_core_load_priv.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
+#include "wgf_time.h"
 
 /* The asset part: installed by the first resource made from a path or the first
  * wgf_asset_* call, it sets core's load hooks, so every load's file is made local here
@@ -126,10 +128,15 @@ static bool refetch(const char *path)
     return wgf_asset_priv_platform_refetch(path);
 }
 
+/* Set by wgf_asset_enable_reload: the files loaded, watched (natively, from a local host), so
+ * a program that never enables reload links none of it. */
+static void (*watching)(void);
+
 static void update(void)
 {
     wgf_asset_priv_platform_update(); /* natively, the program's answers */
     wgf_asset_priv_tasks_step(0);
+    if (watching != NULL) watching();
 }
 
 /* ------------------------------------------------------------- reloading ---- */
@@ -162,9 +169,106 @@ void wgf_asset_priv_note_named(const char *file, const char *named)
     name_count++;
 }
 
+/* ---- the files loaded, watched ------------------------------------------------------------ */
+
+#define WATCH_SECONDS 0.25 /* between looks at the files */
+#define WATCH_LOADS_MAX 64 /* files loaded again a look, at the most: the rest at the next */
+
+/* A file watched: what it was when last seen, and what it changed to, waiting a look to be
+ * sure its save is done (an editor writes a file in more than one step). */
+typedef struct watched_t {
+    char path[WGF_ASSET_PRIV_PATH_MAX];  /* the file read */
+    char load[WGF_ASSET_PRIV_PATH_MAX];  /* what loads again for it: its resource's path */
+    long long modified, size;
+    long long next_modified, next_size; /* changed to this, and not since: loaded again at the next look */
+    bool changed, seen;
+} watched_t;
+
+static struct {
+    watched_t *at;
+    int count, capacity;
+    double next; /* the next look, in wgf_time_get_seconds */
+    char loads[WATCH_LOADS_MAX][WGF_ASSET_PRIV_PATH_MAX];
+    int load_count;
+} watch;
+
+/* One file loaded, looked at: seen for the first time, the same, changed (waiting a look), or
+ * changed and settled (to load again). */
+static void look(const char *load, const char *path, void *user)
+{
+    long long modified, size;
+    watched_t *w = NULL;
+    int i;
+    (void)user;
+    if (!wgf_core_priv_fs_stamp(path, &modified, &size)) return; /* gone, or not on a disk */
+    for (i = 0; i < watch.count && w == NULL; i++) {
+        if (strcmp(watch.at[i].path, path) == 0) w = &watch.at[i];
+    }
+    if (w == NULL) {
+        if (watch.count == watch.capacity) {
+            const int capacity = watch.capacity > 0 ? watch.capacity * 2 : 64;
+            watched_t *grown = (watched_t *)realloc(watch.at, sizeof(watched_t) * (size_t)capacity);
+            if (grown == NULL) return; /* not watched: nothing else lost */
+            watch.at = grown;
+            watch.capacity = capacity;
+        }
+        w = &watch.at[watch.count++];
+        memset(w, 0, sizeof(*w));
+        snprintf(w->path, sizeof(w->path), "%s", path);
+        snprintf(w->load, sizeof(w->load), "%s", load);
+        w->modified = modified;
+        w->size = size;
+        w->seen = true;
+        return;
+    }
+    w->seen = true;
+    if (modified == w->modified && size == w->size) {
+        w->changed = false;
+        return;
+    }
+    if (!w->changed || modified != w->next_modified || size != w->next_size) { /* changing: a look more */
+        w->changed = true;
+        w->next_modified = modified;
+        w->next_size = size;
+        return;
+    }
+    w->changed = false;
+    w->modified = modified;
+    w->size = size;
+    if (watch.load_count < WATCH_LOADS_MAX) {
+        snprintf(watch.loads[watch.load_count++], WGF_ASSET_PRIV_PATH_MAX, "%s", load);
+    }
+}
+
+static void look_at_resource(const char *path, const char *found, void *user)
+{
+    look(path, found, user);
+}
+
+/* The watch, each update: a look at every file loaded, and every file a loaded file names,
+ * four times a second; each saved and settled loaded again. Natively from a local host only:
+ * a page's files and a URL host's downloads aren't on a disk being edited. */
+static void watch_files(void)
+{
+    const double now = wgf_time_get_seconds();
+    int i, kept = 0;
+    if (now < watch.next || wgf_asset_priv_platform_host_kind() != WGF_ASSET_PRIV_HOST_LOCAL) return;
+    watch.next = now + WATCH_SECONDS;
+    for (i = 0; i < watch.count; i++) watch.at[i].seen = false;
+    watch.load_count = 0;
+    wgf_core_priv_resource_each_file(look_at_resource, NULL);
+    for (i = 0; i < name_count; i++) look(names[i].named, names[i].named, NULL);
+    for (i = 0; i < watch.count; i++) { /* a file no resource is made from any more: forgotten */
+        if (watch.at[i].seen) watch.at[kept++] = watch.at[i];
+    }
+    watch.count = kept;
+    for (i = 0; i < watch.load_count; i++) wgf_asset_reload(watch.loads[i]);
+}
+
 bool wgf_asset_enable_reload(void)
 {
     wgf_core_priv_resource_reloads = true;
+    watching = watch_files;
     return true;
 }
 
@@ -218,6 +322,8 @@ bool wgf_asset_can_reload(const char *path)
 
 static void stop(void)
 {
+    free(watch.at);
+    memset(&watch, 0, sizeof(watch));
     free(names);
     names = NULL;
     name_count = name_capacity = 0;

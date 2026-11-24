@@ -56,6 +56,19 @@ bool wgf_core_priv_os_is_real_dir(const char *path)
     return lstat(path, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
+bool wgf_core_priv_os_file_stamp(const char *path, long long *modified, long long *size)
+{
+    struct stat st;
+    if (stat(path, &st) != 0 || !S_ISREG(st.st_mode)) return false;
+#if defined(__APPLE__)
+    *modified = (long long)st.st_mtimespec.tv_sec * 1000000000LL + (long long)st.st_mtimespec.tv_nsec;
+#else
+    *modified = (long long)st.st_mtim.tv_sec * 1000000000LL + (long long)st.st_mtim.tv_nsec;
+#endif
+    *size = (long long)st.st_size;
+    return true;
+}
+
 bool wgf_core_priv_os_remove_tree(const char *path)
 {
     DIR *dir = opendir(path);

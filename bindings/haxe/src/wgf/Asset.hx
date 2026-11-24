@@ -254,6 +254,9 @@ class Asset {
 	      doesn't. On the web the host decides: it is enabled when the host exports this call.
 	    - Call it before the assets are made. What a reload keeps is kept from then on: the
 	      changes a program makes to a document's elements, the name of a model's clip playing.
+	    - Natively, with a local host, the files loaded are watched: a file saved, or one a loaded
+	      file names, loads again by itself (wgf_asset_reload) once its save has settled, within
+	      half a second. On the web `wgf serve` tells the page instead.
 	    - Without it, nothing is kept for a reload, and a program pays nothing for one.
 
 	    Returns true.

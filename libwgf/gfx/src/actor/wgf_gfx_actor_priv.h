@@ -9,6 +9,7 @@
 #include "wgf_mat4.h"
 #include "wgf_material.h"
 #include "wgf_actor.h"
+#include "wgf_mesh.h"
 #include "wgf_quat.h"
 #include "wgf_text.h"
 #include "wgf_texture.h"
@@ -347,6 +348,11 @@ void wgf_gfx_priv_model_install(void);
  * when there is no room for another. */
 bool wgf_gfx_priv_add_model_built_hook(void (*built)(wgf_actor_t root));
 void wgf_gfx_priv_model_built(wgf_actor_t root);
+/* A file's mesh done loading, or loaded again, told to each of the other files' roots: the
+ * animation part's hook, for a root that takes its clips from that file
+ * (wgf_model_set_animations). Set as the part installs; nothing before. */
+void wgf_gfx_priv_set_model_clips_hook(void (*loaded)(wgf_actor_t root, wgf_mesh_t clips));
+void wgf_gfx_priv_model_clips_loaded(wgf_actor_t root, wgf_mesh_t clips);
 
 /* An actor made simulated, or not: from here it is drawn between its last two ticks'
  * transforms (both its own as it is now, until a tick moves it). And the ecs's hook for an

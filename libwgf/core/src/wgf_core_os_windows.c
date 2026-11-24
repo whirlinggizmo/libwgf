@@ -39,6 +39,20 @@ bool wgf_core_priv_os_is_dir(const char *path)
     return _stat(path, &st) == 0 && (st.st_mode & _S_IFDIR) != 0;
 }
 
+bool wgf_core_priv_os_file_stamp(const char *path, long long *modified, long long *size)
+{
+    WIN32_FILE_ATTRIBUTE_DATA data;
+    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &data) ||
+        (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+        return false;
+    }
+    /* 100-nanosecond intervals */
+    *modified = (long long)((((unsigned long long)data.ftLastWriteTime.dwHighDateTime << 32) |
+                             data.ftLastWriteTime.dwLowDateTime) * 100ULL);
+    *size = (long long)(((unsigned long long)data.nFileSizeHigh << 32) | data.nFileSizeLow);
+    return true;
+}
+
 bool wgf_core_priv_os_is_real_dir(const char *path)
 {
     const DWORD attributes = GetFileAttributesA(path);

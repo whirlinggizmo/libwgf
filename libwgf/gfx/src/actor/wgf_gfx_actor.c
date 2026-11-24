@@ -368,6 +368,18 @@ void wgf_gfx_priv_model_built(wgf_actor_t root)
     for (i = 0; i < BUILT_HOOKS && model_built[i] != NULL; i++) model_built[i](root);
 }
 
+static void (*model_clips_loaded)(wgf_actor_t root, wgf_mesh_t clips); /* the animation part's */
+
+void wgf_gfx_priv_set_model_clips_hook(void (*loaded)(wgf_actor_t root, wgf_mesh_t clips))
+{
+    model_clips_loaded = loaded;
+}
+
+void wgf_gfx_priv_model_clips_loaded(wgf_actor_t root, wgf_mesh_t clips)
+{
+    if (model_clips_loaded != NULL) model_clips_loaded(root, clips);
+}
+
 void wgf_gfx_priv_actor_set_kind(wgf_actor_kind_t type, const wgf_gfx_priv_actor_kind_t *kind)
 {
     if ((int)type >= 0 && type < NODE_TYPES) kinds[type] = kind;

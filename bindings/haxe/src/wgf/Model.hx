@@ -49,6 +49,8 @@ import wgf.impl.Raw;
 	    - An animation playing goes on at its time, in the clip of the same name, whatever its
 	      number in the file is now. It stops if the file no longer has a clip of that name
 	      (logged). A layer does the same, and stops too if the file no longer has its bone.
+	    - The same when the file a model takes its clips from (wgf_model_set_animations) loads
+	      again: the model goes on in the clips of their names.
 
 	    set_mesh returns false if:
 	    - `mesh` isn't a mesh.

@@ -105,6 +105,10 @@ void wgf_core_priv_resource_loaded(wgf_handle_t resource, const char *found);
  * then. False in a game's export. Set once, and kept across core's shutdown. */
 extern bool wgf_core_priv_resource_reloads;
 
+/* Each resource made from a file: `each` with its path and the file read for it (its path
+ * mapped: a texture's GPU's variant). What a watch of the files loaded walks. */
+void wgf_core_priv_resource_each_file(void (*each)(const char *path, const char *found, void *user), void *user);
+
 int wgf_core_priv_resource_reload(const char *path);
 /* Whether every resource made from `path` is of a kind that loads again in place: false at
  * the first that isn't. Each one that is adds 1 to `*made`, one still loading included. */

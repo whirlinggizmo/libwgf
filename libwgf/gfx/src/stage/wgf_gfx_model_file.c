@@ -240,6 +240,12 @@ void wgf_gfx_priv_model_mesh_done(wgf_mesh_t mesh)
         if (wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_READY) build(root, mesh);
         wgf_gfx_priv_model_built(root); /* what a scene put under it, made now (the list may grow) */
     }
+    for (i = 0; i < root_count; i++) { /* the other files' roots: one may take its clips from this file */
+        const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(roots[i]);
+        if (actor_ptr != NULL && actor_ptr->type == WGF_ACTOR_KIND_MODEL && actor_ptr->as.model.mesh != mesh) {
+            wgf_gfx_priv_model_clips_loaded(roots[i], mesh);
+        }
+    }
 }
 
 /* What a failed model draws: a unit cube of the placeholder checker, unlit, made the first

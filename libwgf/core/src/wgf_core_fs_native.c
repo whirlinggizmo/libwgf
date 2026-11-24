@@ -174,6 +174,13 @@ bool wgf_core_priv_fs_is_cached(const char *path)
     return false;
 }
 
+bool wgf_core_priv_fs_stamp(const char *path, long long *modified, long long *size)
+{
+    char full[1100];
+    wgf_core_priv_fs_resolve(path, full, sizeof(full));
+    return full[0] != '\0' && wgf_core_priv_os_file_stamp(full, modified, size);
+}
+
 int wgf_core_priv_fs_cache_read_begin(const char *path)
 {
     (void)path;

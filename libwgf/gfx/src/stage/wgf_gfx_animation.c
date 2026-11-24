@@ -573,6 +573,8 @@ static void built(wgf_actor_t model)
     pose(model);
 }
 
+static void clips_loaded(wgf_actor_t model, wgf_mesh_t clips);
+
 /* The model's player, made (at rest: no clip, a speed of 1, looping) and the part installed
  * with the first; NULL for a model that isn't a file's root, or out of memory. */
 static animation_t *player_of(wgf_actor_t model)
@@ -585,6 +587,7 @@ static animation_t *player_of(wgf_actor_t model)
     if (!installed) {
         wgf_core_priv_part_install(&part);
         wgf_gfx_priv_add_model_built_hook(built);
+        wgf_gfx_priv_set_model_clips_hook(clips_loaded);
         wgf_gfx_priv_model_set_animation_free(free_animation);
         installed = true;
     }
@@ -627,6 +630,15 @@ static animation_t *existing(wgf_actor_t model)
 {
     const wgf_gfx_priv_actor_t *root_ptr = root_of(model);
     return root_ptr != NULL ? root_ptr->as.model.animation : NULL;
+}
+
+/* Another file's mesh done loading, or loaded again: a model that takes its clips from it
+ * (wgf_model_set_animations) goes on in its clips by their names, its nodes matched to the
+ * file's again, as when its own file loads again. */
+static void clips_loaded(wgf_actor_t model, wgf_mesh_t clips)
+{
+    const animation_t *anim = existing(model);
+    if (anim != NULL && anim->source == clips) built(model);
 }
 
 /* ------------------------------------------------------- the public API ---- */

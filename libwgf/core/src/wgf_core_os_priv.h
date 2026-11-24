@@ -20,6 +20,9 @@ char *wgf_core_priv_os_getcwd(void);
 /* Is `path` a directory? is_dir follows a symbolic link (or, on Windows, a
  * junction); is_real_dir doesn't, so a link to a directory isn't one. */
 bool wgf_core_priv_os_is_dir(const char *path);
+/* When the file at `path` was last written (nanoseconds, from the platform's epoch), and its
+ * size: what tells a file saved again; false for no such file. */
+bool wgf_core_priv_os_file_stamp(const char *path, long long *modified, long long *size);
 bool wgf_core_priv_os_is_real_dir(const char *path);
 
 /* Remove the real directory `path` and everything in it. A link inside it is

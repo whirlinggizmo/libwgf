@@ -150,6 +150,11 @@ void wgf_core_priv_fs_set_persistent(bool persistent);
 /* Web: is `path` in the cache, readable into the local store? Native: never. */
 bool wgf_core_priv_fs_is_cached(const char *path);
 
+/* Native: when the file at `path` under the root was last written, and its size
+ * (wgf_core_priv_os_file_stamp); false for no such file. Web: false, a page's files being
+ * the server's. */
+bool wgf_core_priv_fs_stamp(const char *path, long long *modified, long long *size);
+
 /* Read a cached file into the local store, asynchronously: begin returns an id (0
  * when it isn't cached); poll it each frame: 0 = still reading, 1 = now local,
  * -1 = failed (the file is dropped from the cache; fetch it instead). */

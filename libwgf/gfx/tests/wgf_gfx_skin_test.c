@@ -165,6 +165,18 @@ static const char json_spline[] =
     "\"samplers\":[{\"input\":8,\"output\":9,\"interpolation\":\"CUBICSPLINE\"}]}],"
     ACCESSORS;
 
+/* The same, saved again with "wave" before "raise". */
+static const char clips_two_json[] =
+    "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[1]}],"
+    "\"nodes\":[{\"name\":\"arm\",\"translation\":[0,1,0]},{\"name\":\"hip\",\"children\":[0]}],"
+    "\"animations\":["
+    "{\"name\":\"wave\",\"channels\":[{\"sampler\":0,\"target\":{\"node\":0,\"path\":\"translation\"}}],"
+    "\"samplers\":[{\"input\":4,\"output\":5}]},"
+    "{\"name\":\"raise\",\"channels\":[{\"sampler\":0,\"target\":{\"node\":0,\"path\":\"translation\"}},"
+    "{\"sampler\":1,\"target\":{\"node\":1,\"path\":\"rotation\"}}],"
+    "\"samplers\":[{\"input\":4,\"output\":5},{\"input\":6,\"output\":7,\"interpolation\":\"STEP\"}]}],"
+    ACCESSORS;
+
 /* A file of animations alone, its skeleton's nodes in another order (the arm first): "raise"
  * by the nodes' names, as Wardens' Animations.glb is for its part models. */
 static const char clips_json[] =
@@ -447,6 +459,12 @@ int main(void)
                    wgf_model_set_animation_time(other, 1.0f) && near(arm_y(other), 2.0f),
                "played: the arm moved by name, halfway up");
         expect(near(wgf_actor_get_rotation(wgf_actor_find(other, "hip")).z, 1.5707963f), "the hip turned by name");
+        write_glb("models/clips.glb", clips_two_json);
+        expect(wgf_asset_reload("models/clips.glb") == 1, "the clips' file saved with a clip before raise");
+        settle_reload(clips); /* the model's reference keeps the handle */
+        expect(wgf_model_get_animation_count(other) == 2 && wgf_model_get_animation(other) == 1 &&
+                   near(wgf_model_get_animation_time(other), 1.0f) && near(arm_y(other), 2.0f),
+               "the model taking them goes on in raise, its number another now, at its time");
         expect(wgf_model_set_animations(other, 0) && wgf_model_get_animations(other) == 0 &&
                    wgf_model_get_animation_state(other) == WGF_PLAY_STATE_STOPPED &&
                    !wgf_model_set_animations(other, 12345),
