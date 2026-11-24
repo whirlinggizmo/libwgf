@@ -125,10 +125,10 @@ static bool in_polygon(const float *points, int floats, float x, float y)
 static bool shape_hit(const wgf_gfx_priv_shape2d_t *shape, float x, float y)
 {
     float dx = 0.0f, dy = 0.0f;
-    if (shape->has_pivot && shape->kind == WGF_SHAPE2D_KIND_RECTANGLE) {
+    if (shape->kind == WGF_SHAPE2D_KIND_RECTANGLE) {
         dx = -shape->pivot[0] * shape->dim[0];
         dy = -shape->pivot[1] * shape->dim[1];
-    } else if (shape->has_pivot && shape->kind == WGF_SHAPE2D_KIND_CIRCLE) {
+    } else if (shape->kind == WGF_SHAPE2D_KIND_CIRCLE) {
         dx = (0.5f - shape->pivot[0]) * 2.0f * shape->dim[0];
         dy = (0.5f - shape->pivot[1]) * 2.0f * shape->dim[0];
     }

@@ -9275,19 +9275,17 @@ export declare function wgf_shape2d_create(): wgf_actor_t;
 export declare function wgf_shape2d_get_kind(shape: wgf_actor_t | 0): wgf_shape2d_kind_t;
 
 /**
- * Makes the shape a rectangle `width` by `height` from its own origin. The origin is its
- * top-left corner, unless a pivot is set.
- *
- * A rectangle collider (wgf_collider.h) and an arcade body are centered on their actor. To
- * line a rectangle up with one, set its pivot to 0.5, 0.5 (`pivot=0.5,0.5` in a scene file).
+ * Makes the shape a rectangle `width` by `height`, centered on its actor's position unless
+ * its pivot is set. So are a sprite, a rectangle collider (wgf_collider.h), and an arcade
+ * body, so each lines up with the others as it is made.
  *
  * Returns false for a handle that isn't a 2D shape, or a size below 0.
  */
 export declare function wgf_shape2d_set_rectangle(shape: wgf_actor_t | 0, width: number, height: number): boolean;
 
 /**
- * Makes the shape a circle of `radius` about its own origin. The origin is its center,
- * unless a pivot is set.
+ * Makes the shape a circle of `radius`, centered on its actor's position unless its pivot is
+ * set.
  *
  * Returns false for a handle that isn't a 2D shape, or a `radius` below 0.
  */
@@ -9373,9 +9371,10 @@ export declare function wgf_shape2d_get_points(shape: wgf_actor_t | 0, out: numb
  * it turns and scales about.
  *
  * - The pivot is a fraction of the shape: 0, 0 is its top-left, and 1, 1 its bottom-right.
- * - Unset (the default), each shape keeps its own origin: a rectangle's top-left corner, or
- *   a circle's center.
- * - The getter reads an unset pivot back as that fraction: 0, 0 or 0.5, 0.5.
+ * - The default is 0.5, 0.5: the shape's center.
+ * - Set 0, 0 for a rectangle placed by its top-left corner, or 0, 0.5 for a bar that grows
+ *   from its left edge.
+ * - A line and a polygon have their own points, which the pivot doesn't move.
  *
  * The setter returns false for a handle that isn't a 2D shape.
  */

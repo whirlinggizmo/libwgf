@@ -1040,6 +1040,14 @@ libwgt's render targets (wgrender-c's `wgr_render_begin_texture`), carried: `wgf
 - **Found on the way:** a release program carries each library source's full path (`__FILE__`, the log's), about 20 of them, a home directory among them, which also makes a build's size depend on where it is checked out. Mapping them to the repository's root (`-fmacro-prefix-map`) takes about 700 bytes off each program, and only 0 to 80 of gzip (the shared prefix compresses); a build change of its own, after this.
 - **Tests:** `wgf_gfx_target_test` (headless: what makes and refuses a target, a pass's size, scale, and clips, the passes a frame allows), and `wgf_gfx_target_window_test` and `_web_test` (pixels on GL and WebGL2: a square at a target's top-left shows at its top-left, a one-sided plane in a target is seen, a target begun twice keeps its first pass, a clip in a target clips there and the screen's doesn't reach it, a target drawn into itself draws nothing, and `draw_with` a camera looking away shows none of the plane).
 
+## A rectangle shape is centered (2026-11-23)
+
+A rectangle shape drew from its top-left corner, while a sprite, a circle, a rectangle collider, and an arcade body were all centered on their actor. Every rectangle in the repository's scene files set `pivot=0.5,0.5` to undo it, and a rectangle given a spin swung round its corner. Rob's call: center it.
+
+- **A shape's pivot is 0.5, 0.5 as it is made**, for a rectangle and a circle alike. There is no "unset" pivot any more, and the getter returns what is set.
+- **A rectangle placed by its corner sets `pivot=0,0`** (`wgf_shape2d_set_pivot(shape, 0, 0)`): a backdrop, a HUD's button, a meter that grows from its left edge. `wgf_draw_rectangle`, the immediate call, still takes its top-left corner.
+- **What changed with it:** the scenes' `pivot=0.5,0.5` are gone; ecs-platformer, ecs-screens, gfx-picking, and the screens examples set `pivot=0,0` where they place by a corner. The behaviors examples' spinning bars and spawner set no pivot, so they now turn about their middles, on their colliders, where they swung about a corner before.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
@@ -1051,12 +1059,11 @@ The last entries of the examples' friction list.
 - **Said in the headers now:**
   - A number's tween runs on under a pause, since it has no actor (`wgf_tween.h`, `wgf_screen.h`).
   - A behavior on a paused actor gets no tick or frame (`wgf_behavior.h`).
-  - A rectangle shape needs `pivot=0.5,0.5` to line up with a collider (`wgf_shape2d.h`).
   - `wgf_scene_get_actor_count` and `wgf_actor_get_count` count different things (`wgf_scene.h`, `wgf_world.h`).
   - Don't release what `wgf_voice_get_sound` returns (`wgf_voice.h`).
   - A stick's y runs down where an action is bound to it (`wgf_action.h`).
 - **Left as they are:** `Ui.number` works in floats; play on a paused animation plays it from its start, as `wgf_model.h` says of any state.
-- **Not done:** a rectangle shape still draws from its top-left by default (Rob's to decide); a typed lookup of a behavior's object in Haxe; and why a 1.6 MB glTF file took about 470 frames to load headless.
+- **Not done:** a typed lookup of a behavior's object in Haxe; and why a 1.6 MB glTF file took about 470 frames to load headless.
 
 ## The racer is libwgf's own (2026-11-23)
 

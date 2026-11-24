@@ -112,6 +112,7 @@ static void init(void *user)
     for (i = 0; i < 2; i++) {
         g.buttons[i] = wgf_shape2d_create();
         wgf_shape2d_set_rectangle(g.buttons[i], 150, 40);
+        wgf_shape2d_set_pivot(g.buttons[i], 0, 0); /* placed by its top-left corner */
         wgf_shape2d_set_corner_radius(g.buttons[i], 14);
         wgf_actor_set_parent(g.buttons[i], g.hud);
     }

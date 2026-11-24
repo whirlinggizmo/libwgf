@@ -22,6 +22,7 @@ class ScreenBehavior extends Behavior {
     rect(x, y, width, height, color) {
         const shape = Shape2d.create();
         Shape2d.setRectangle(shape, width, height);
+        Shape2d.setPivot(shape, 0, 0); // placed by its top-left corner
         return this.place(shape, x, y, color);
     }
 

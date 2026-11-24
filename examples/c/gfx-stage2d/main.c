@@ -57,7 +57,6 @@ static void init(void *user)
 
     box = wgf_shape2d_create();
     wgf_shape2d_set_rectangle(box, 50, 30);
-    wgf_shape2d_set_pivot(box, 0.5f, 0.5f);
     wgf_shape2d_set_color(box, WGF_COLOR_MAROON);
     wgf_actor_set_position(box, 120, 0, 0);
     wgf_actor_set_parent(box, world);

@@ -58,7 +58,8 @@ int main(void)
     expect(wgf_shape2d_set_rectangle(shape, 40, 20) && wgf_shape2d_get_kind(shape) == WGF_SHAPE2D_KIND_RECTANGLE &&
                wgf_shape2d_get_size(shape).x == 40 && wgf_shape2d_get_size(shape).y == 20,
            "a rectangle");
-    expect(wgf_shape2d_get_pivot(shape).x == 0.0f, "its own origin: its top-left");
+    expect(wgf_shape2d_get_pivot(shape).x == 0.5f && wgf_shape2d_get_pivot(shape).y == 0.5f,
+           "centered on its actor as made");
     expect(drawn(stage) == 6, "filled: two triangles");
     expect(wgf_shape2d_set_outline(shape, 2) && wgf_shape2d_get_outline(shape) == 2 && drawn(stage) == 24,
            "outlined: four sides of two triangles");

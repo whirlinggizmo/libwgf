@@ -719,7 +719,8 @@ class Main {
 		expect(shape.setPolygon([0.0, 0, 10, 0, 5, 8]) && shape.getPointCount() == 3, "a polygon");
 		final points = [for (_ in 0...6) 0.0];
 		expect(shape.getPoints(points) == 6 && near(points[2], 10), "its points");
-		expect(shape.setPivot(0.5, 0.5) && near(shape.getPivot().y, 0.5), "a pivot");
+		expect(near(shape.getPivot().x, 0.5) && shape.setPivot(0, 1) && near(shape.getPivot().y, 1) && shape.setPivot(0.5, 0.5),
+			"centered as made, and a pivot");
 		expect(shape.setOutline(2) && near(shape.getOutline(), 2), "an outline");
 		expect(shape.setCornerRadius(3) && near(shape.getCornerRadius(), 3) && shape.setCornerRadius(0), "a corner radius");
 		expect(shape.setColor(white) && shape.getColor() == white, "its color");

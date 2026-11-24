@@ -36,11 +36,13 @@ static wgf_actor_t screen(const char *text, wgf_color_t color, bool backdrop)
     if (backdrop) {
         const wgf_actor_t back = wgf_shape2d_create();
         wgf_shape2d_set_rectangle(back, W, H);
+        wgf_shape2d_set_pivot(back, 0, 0); /* from the screen's top-left */
         wgf_shape2d_set_color(back, color);
         wgf_actor_set_parent(back, stage);
     } else {
         const wgf_actor_t band = wgf_shape2d_create();
         wgf_shape2d_set_rectangle(band, W, 80);
+        wgf_shape2d_set_pivot(band, 0, 0);
         wgf_shape2d_set_color(band, wgf_color_make(0, 0, 0, 160));
         wgf_actor_set_position(band, 0, H / 2 - 40, 0);
         wgf_actor_set_parent(band, stage);
@@ -66,7 +68,6 @@ static void init(void *user)
 
     spinner = wgf_shape2d_create(); /* on play's stage: it turns while play runs */
     wgf_shape2d_set_rectangle(spinner, 80, 80);
-    wgf_shape2d_set_pivot(spinner, 0.5f, 0.5f);
     wgf_shape2d_set_color(spinner, WGF_COLOR_GOLD);
     wgf_actor_set_position(spinner, W - 120, H / 2, 0);
     wgf_actor_set_parent(spinner, wgf_screen_get_stage(play, 0));

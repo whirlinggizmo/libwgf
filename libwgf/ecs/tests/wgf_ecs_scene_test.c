@@ -394,7 +394,8 @@ int main(void)
             expect(!wgf_actor_is_pickable(panel) && near(wgf_shape2d_get_corner_radius(panel), 6) &&
                        near(wgf_sprite_get_pick_alpha(coin), 0.5f) && wgf_actor_is_pickable(coin),
                    "pickable=false, a corner radius, and a sprite's pick alpha");
-            expect(strstr(wgf_world_dump(), "outline=0 corner=6 color=#FFFFFFFF pivot=0,0 pickable=false\n") != NULL &&
+            expect(strstr(wgf_world_dump(), "outline=0 corner=6 color=#FFFFFFFF pivot=0.5,0.5 pickable=false\n") !=
+                           NULL &&
                        strstr(wgf_world_dump(), " pick_alpha=0.5\n") != NULL,
                    "dumped as written");
         }

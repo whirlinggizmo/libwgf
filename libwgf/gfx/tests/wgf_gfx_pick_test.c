@@ -347,6 +347,7 @@ static void picking_2d(void)
     /* a rounded rectangle's corner */
     round = wgf_shape2d_create();
     wgf_shape2d_set_rectangle(round, 100, 60);
+    wgf_shape2d_set_pivot(round, 0, 0);
     wgf_shape2d_set_corner_radius(round, 20);
     wgf_actor_set_position(round, 300, 300, 0);
     wgf_actor_set_parent(round, stage);
@@ -355,6 +356,10 @@ static void picking_2d(void)
            "a rounded rectangle: its corner's outside missed, inside hit");
     wgf_shape2d_set_corner_radius(round, 0);
     expect(wgf_stage2d_pick(stage, 301, 301, NULL, 0) == round, "square: its corner hit");
+    wgf_shape2d_set_pivot(round, 0.5f, 0.5f); /* as a rectangle is made: 250 to 350 across, 270 to 330 down */
+    expect(wgf_stage2d_pick(stage, 255, 275, NULL, 0) == round && wgf_stage2d_pick(stage, 345, 325, NULL, 0) == round &&
+               wgf_stage2d_pick(stage, 355, 300, NULL, 0) == 0 && wgf_stage2d_pick(stage, 300, 335, NULL, 0) == 0,
+           "centered: hit about its actor's position");
     expect(wgf_stage2d_pick(back, 100, 100, NULL, 0) == 0, "not a stage: nothing");
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
     wgf_resource_release(texture);
@@ -428,10 +433,12 @@ static void pointer(void)
     hud = wgf_stage2d_create();
     button = wgf_shape2d_create();
     wgf_shape2d_set_rectangle(button, 100, 50);
+    wgf_shape2d_set_pivot(button, 0, 0);
     wgf_actor_set_position(button, 50, 50, 0);
     wgf_actor_set_parent(button, hud);
     cover = wgf_shape2d_create(); /* the HUD over the middle of the world */
     wgf_shape2d_set_rectangle(cover, 40, 40);
+    wgf_shape2d_set_pivot(cover, 0, 0);
     wgf_actor_set_position(cover, 380, 280, 0);
     wgf_actor_set_parent(cover, hud);
 

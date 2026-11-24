@@ -947,7 +947,7 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** `pivot=0.5,0.5` on every rectangle in the scene.
 - **Cost:** Easy to miss, and a shape that visibly doesn't match its collider.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:** the header says how to line them up (HISTORY.md, "The rest of the examples' list"); whether a rectangle should be centered by default is open, Rob's to decide
+- **Triage:** fine: HISTORY.md, "A rectangle shape is centered"
 
 ### examples: findWithBehavior needs an array already sized (JS)
 

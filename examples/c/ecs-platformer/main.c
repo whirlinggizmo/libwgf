@@ -58,6 +58,7 @@ static wgf_actor_t block(float x, float y, float w, float h, wgf_color_t color)
 {
     const wgf_actor_t shape = wgf_shape2d_create();
     wgf_shape2d_set_rectangle(shape, w, h);
+    wgf_shape2d_set_pivot(shape, 0, 0); /* placed by its top-left corner */
     wgf_shape2d_set_color(shape, color);
     wgf_actor_set_position(shape, x, y, 0);
     wgf_actor_set_parent(shape, world);

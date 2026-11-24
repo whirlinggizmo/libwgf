@@ -223,7 +223,7 @@ A value is a number, a list of numbers (`1,2,3`), a color (`#RRGGBB` or `#RRGGBB
 
 ```
 shape2d    rectangle=w,h | circle=r | line=x0,y0,x1,y1 | polygon=x,y,x,y,...
-           outline=t  corner=r (a rectangle's corners' radius)  color=#..  pivot=x,y
+           outline=t  corner=r (a rectangle's corners' radius)  color=#..  pivot=x,y (default 0.5,0.5: centered)
 sprite     texture="path"  source=x,y,w,h  size=w,h  pivot=x,y  tint=#..
            alpha=opaque|mask|blend|add  cutoff=c  facing=camera|camera-y|up|free
            pick_alpha=a (picked only where its texels' alpha reaches a, wgf_sprite.h)

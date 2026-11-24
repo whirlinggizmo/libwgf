@@ -58,8 +58,7 @@ typedef struct wgf_gfx_priv_shape2d_t {
     float dim[5];  /* rectangle: width, height; circle: radius; line: x0, y0, x1, y1 */
     float *points; /* a polygon's, x and y in turn, malloc'd */
     int point_floats;
-    float pivot[2];
-    bool has_pivot; /* false: the kind's own origin */
+    float pivot[2]; /* a fraction of a rectangle or circle; 0.5, 0.5 (its center) as made */
     float outline;  /* the line's thickness for outlines and lines; 0 fills (a line: a hairline) */
     float corner;   /* a rectangle's corners' radius, in its own units; 0 square */
     wgf_color_t color;

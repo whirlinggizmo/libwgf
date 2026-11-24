@@ -5,33 +5,33 @@ wgf-scene 2
 
 # A cloud drifts and wraps around the screen.
 prefab cloud
-  shape2d rectangle=120,36 corner=18 pivot=0.5,0.5 color=#FFFFFF
+  shape2d rectangle=120,36 corner=18 color=#FFFFFF
   motion velocity=18,0,0
   bounds rect=0,0,800,450 mode=wrap margin=70
 end
 
 # A crate falls, lands on the ground, and is gone after 8 seconds.
 prefab crate
-  shape2d rectangle=26,26 corner=3 pivot=0.5,0.5 outline=0 color=#D9A441
+  shape2d rectangle=26,26 corner=3 outline=0 color=#D9A441
   arcade2d size=26,26 gravity=900 max_fall=700 solid_mask=1
   lifetime seconds=8
 end
 
 actor floor
   transform position=400,430,0
-  shape2d rectangle=800,40 pivot=0.5,0.5 color=#3C6E47
+  shape2d rectangle=800,40 color=#3C6E47
   collider rectangle=800,40 layer=1 mask=0
 end
 
 actor ledge_left
   transform position=200,300,0
-  shape2d rectangle=220,16 corner=4 pivot=0.5,0.5 color=#7A5A40
+  shape2d rectangle=220,16 corner=4 color=#7A5A40
   collider rectangle=220,16 layer=1 mask=0
 end
 
 actor ledge_right
   transform position=610,240,0
-  shape2d rectangle=180,16 corner=4 pivot=0.5,0.5 color=#7A5A40
+  shape2d rectangle=180,16 corner=4 color=#7A5A40
   collider rectangle=180,16 layer=1 mask=0
 end
 

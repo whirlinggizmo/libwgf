@@ -31,7 +31,6 @@ static void free_shape(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
 static void pivot_offset(const wgf_gfx_priv_shape2d_t *shape, float *dx, float *dy)
 {
     *dx = *dy = 0.0f;
-    if (!shape->has_pivot) return;
     if (shape->kind == WGF_SHAPE2D_KIND_RECTANGLE) {
         *dx = -shape->pivot[0] * shape->dim[0];
         *dy = -shape->pivot[1] * shape->dim[1];
@@ -120,6 +119,7 @@ wgf_actor_t wgf_shape2d_create(void)
     wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL) return 0;
     shape_ptr->color = 0xFFFFFFFFu;
+    shape_ptr->pivot[0] = shape_ptr->pivot[1] = 0.5f; /* its center */
     wgf_gfx_priv_actor_set_kind(WGF_ACTOR_KIND_SHAPE2D, &kind);
     return shape;
 }
@@ -241,7 +241,6 @@ bool wgf_shape2d_set_pivot(wgf_actor_t shape, float x, float y)
     if (shape_ptr == NULL) return false;
     shape_ptr->pivot[0] = x;
     shape_ptr->pivot[1] = y;
-    shape_ptr->has_pivot = true;
     return true;
 }
 
@@ -249,8 +248,7 @@ wgf_vec2_t wgf_shape2d_get_pivot(wgf_actor_t shape)
 {
     const wgf_gfx_priv_shape2d_t *shape_ptr = shape_of(shape);
     if (shape_ptr == NULL) return wgf_vec2_make(0.0f, 0.0f);
-    if (shape_ptr->has_pivot) return wgf_vec2_make(shape_ptr->pivot[0], shape_ptr->pivot[1]);
-    return shape_ptr->kind == WGF_SHAPE2D_KIND_CIRCLE ? wgf_vec2_make(0.5f, 0.5f) : wgf_vec2_make(0.0f, 0.0f);
+    return wgf_vec2_make(shape_ptr->pivot[0], shape_ptr->pivot[1]);
 }
 
 bool wgf_shape2d_set_outline(wgf_actor_t shape, float thickness)

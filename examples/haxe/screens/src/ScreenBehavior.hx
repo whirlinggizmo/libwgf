@@ -18,6 +18,7 @@ class ScreenBehavior extends Behavior {
 	function rect(x:Float, y:Float, width:Float, height:Float, color:Int):Shape2d {
 		final shape = Shape2d.create();
 		shape.setRectangle(width, height);
+		shape.setPivot(0, 0); // placed by its top-left corner
 		return place(shape, x, y, color);
 	}
 

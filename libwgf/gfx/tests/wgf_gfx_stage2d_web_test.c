@@ -170,12 +170,14 @@ static void check_shapes(void)
     const wgf_handle_t stage = wgf_stage2d_create(), box = wgf_shape2d_create(), ring = wgf_shape2d_create();
     const wgf_handle_t dot = wgf_shape2d_create(), wedge = wgf_shape2d_create();
     const float triangle[6] = {0, 0, 10, 0, 0, 10}; /* a right angle at its origin */
-    wgf_shape2d_set_rectangle(box, 20, 20); /* from its top-left corner */
+    wgf_shape2d_set_rectangle(box, 20, 20);
+    wgf_shape2d_set_pivot(box, 0, 0); /* from its top-left corner */
     wgf_shape2d_set_color(box, WGF_COLOR_RED);
     wgf_actor_set_position(box, 4, 4, 0);
     wgf_actor_set_parent(box, stage);
     texel_sprite(stage, 0, 1, 8, 8, 8); /* blue, drawn after the box: over it */
     wgf_shape2d_set_rectangle(ring, 20, 20);
+    wgf_shape2d_set_pivot(ring, 0, 0);
     wgf_shape2d_set_outline(ring, 3);
     wgf_shape2d_set_color(ring, WGF_COLOR_GREEN);
     wgf_actor_set_position(ring, 36, 4, 0);
