@@ -500,6 +500,14 @@ wgf_core_priv_load_step_t wgf_audio_priv_sound_finish(void *data, wgf_handle_t s
 {
     prepared_t *prepared = (prepared_t *)data;
     wgf_audio_priv_lock();
+    if (record->pcm != NULL || record->reader.bytes != NULL || record->reader.blocks != NULL ||
+        record->arriving != NULL) { /* loaded again: what it held let go of, once no mixer reads it */
+        if (!wgf_audio_priv_mix_let_go(sound)) {
+            wgf_audio_priv_unlock();
+            return WGF_CORE_PRIV_LOAD_MORE;
+        }
+        wgf_audio_priv_sound_free(sound, record);
+    }
     record->format = prepared->format;
     record->channels = prepared->channels;
     record->sample_rate = prepared->sample_rate;

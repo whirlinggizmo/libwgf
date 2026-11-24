@@ -1,7 +1,8 @@
 /* Sprite sheets and 2D animation (wgf_sheet.h): helix-legacy's SpriteSheet2D and
  * SpriteAnimator2D. Sheets are resources: a grid made from numbers (READY at once), an atlas
  * loaded from its JSON file (read and parsed on a worker, its image made a texture as it
- * finishes). What each sprite plays is a record in a table of its own (the sprite's record
+ * finishes; loaded again in place, what the program added kept and its players going on).
+ * What each sprite plays is a record in a table of its own (the sprite's record
  * keeps nothing of it but a trim, wgf_gfx_priv_sprite_set_trim), stepped once a frame by a
  * part installed by the first sheet, which sets the sprite's region (wgf_sprite_set_source) as
  * its frames go by. */
@@ -45,6 +46,7 @@ typedef struct clip_t {
     float seconds; /* each frame's; 0: the frames' own */
     int direction;
     int *events; /* by place: raised as it shows, 0 none; NULL for none at all */
+    bool added;  /* the program's (wgf_sheet_add_clip), not its file's: kept when the file loads again */
 } clip_t;
 
 typedef struct sheet_t {
@@ -54,6 +56,7 @@ typedef struct sheet_t {
     int frame_width, frame_height, count, margin, spacing; /* a grid's */
     frame_t *frames; /* a grid's cut once its texture is READY (a count of 0 waits for its size) */
     int frame_count;
+    int cut_width, cut_height; /* the texture's size a grid's were cut from: cut again when it changes */
     clip_t clips[CLIPS_MAX];
     int clip_count;
 } sheet_t;
@@ -95,12 +98,21 @@ static void free_clip(clip_t *c)
     c->frames = c->events = NULL;
 }
 
-/* A grid's frames cut from its texture's size, once it is READY. */
+/* A grid's frames cut from its texture's size, once it is READY; and again when its texture
+ * has loaded again at another size. */
 static void cut(sheet_t *s)
 {
     const int tw = wgf_texture_get_width(s->texture), th = wgf_texture_get_height(s->texture);
     int columns, rows, n, i;
-    if (!s->grid || s->frames != NULL || tw <= 0 || th <= 0) return;
+    if (!s->grid || tw <= 0 || th <= 0) return;
+    if (s->frames != NULL) {
+        if (tw == s->cut_width && th == s->cut_height) return;
+        free(s->frames);
+        s->frames = NULL;
+        s->frame_count = 0;
+    }
+    s->cut_width = tw;
+    s->cut_height = th;
     columns = (tw - 2 * s->margin + s->spacing) / (s->frame_width + s->spacing);
     rows = (th - 2 * s->margin + s->spacing) / (s->frame_height + s->spacing);
     if (columns <= 0 || rows <= 0) return;
@@ -423,18 +435,86 @@ static void *prepare(const char *path)
     return a;
 }
 
+static int resolve(sheet_t *s, const player_t *p, const char *name);
+static bool start(player_t *p, sheet_t *s, int i, int step, float elapsed);
+
+/* What the program set on the sheet carried into the atlas read again: a clip it added (in
+ * place of the file's of that name, while there is room), and the events it put on the
+ * file's clips, by place. */
+static void keep(sheet_t *s, atlas_t *a)
+{
+    int i, j;
+    for (i = 0; i < s->clip_count; i++) {
+        clip_t *old = &s->clips[i], *now = NULL;
+        for (j = 0; j < a->clip_count && now == NULL; j++) {
+            if (strcmp(a->clips[j].name, old->name) == 0) now = &a->clips[j];
+        }
+        if (old->added) {
+            if (now != NULL) {
+                free_clip(now);
+            } else if (a->clip_count < CLIPS_MAX) {
+                now = &a->clips[a->clip_count++];
+            } else {
+                continue;
+            }
+            *now = *old; /* the atlas's now */
+            old->frames = old->events = NULL;
+        } else if (now != NULL && old->events != NULL && now->events == NULL) {
+            now->events = (int *)calloc((size_t)now->count, sizeof(int));
+            if (now->events != NULL) {
+                const int count = old->count < now->count ? old->count : now->count;
+                memcpy(now->events, old->events, sizeof(int) * (size_t)count);
+            }
+        }
+    }
+}
+
+/* The sprites playing a sheet that has loaded again: each on its new texture, and going on in
+ * the clip of the name it played, from the same place; stopped where the sheet has it no
+ * more. */
+static void replay(wgf_sheet_t sheet, sheet_t *s)
+{
+    int k;
+    for (k = 0; k < sh.player_count; k++) {
+        player_t *p = &sh.players[k];
+        int i;
+        if (p->sheet != sheet) continue;
+        wgf_sprite_set_texture(p->sprite, s->texture);
+        if (p->clip < 0) continue;
+        i = resolve(s, p, p->asked);
+        if (i >= 0 && start(p, s, i, p->step, p->elapsed)) {
+            show(p, false);
+        } else {
+            p->state = WGF_PLAY_STATE_STOPPED;
+            p->clip = -1;
+            p->steps = 0;
+            p->asked[0] = '\0';
+        }
+    }
+}
+
+/* The atlas made the sheet's, READY: in place of what it held, when it loads again. */
 static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 {
     atlas_t *a = (atlas_t *)prepared;
     sheet_t *s = sheet_of(resource);
+    wgf_texture_t texture, old;
     int i;
     if (s == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    /* its image, beside it: loading, drawn once READY. Made before the old one is let go of,
+     * so the same image stays loaded */
+    texture = wgf_texture_create(a->image);
+    s = sheet_of(resource); /* a texture made: sheets don't move, but be sure */
+    if (s == NULL) {
+        wgf_resource_release(texture);
+        return WGF_CORE_PRIV_LOAD_FAILED;
+    }
+    keep(s, a);
     for (i = 0; i < s->clip_count; i++) free_clip(&s->clips[i]);
     free(s->frames);
-    if (s->texture != 0) wgf_resource_release(s->texture);
-    s->texture = wgf_texture_create(a->image); /* its image, beside it: loading, drawn once READY */
-    s = sheet_of(resource);                     /* a texture made: sheets don't move, but be sure */
-    if (s == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
+    old = s->texture;
+    s->texture = texture;
+    if (old != 0) wgf_resource_release(old);
     s->frames = a->frames;
     s->frame_count = a->frame_count;
     memcpy(s->clips, a->clips, sizeof(a->clips));
@@ -442,6 +522,7 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
     a->frames = NULL; /* the sheet's now */
     a->clip_count = 0;
     wgf_core_priv_resource_loaded(resource, NULL);
+    replay(resource, s);
     return WGF_CORE_PRIV_LOAD_DONE;
 }
 
@@ -455,7 +536,7 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"sheet", prepare, finish, discard, fail, NULL, false, NULL};
+static const wgf_core_priv_loader_t loader = {"sheet", prepare, finish, discard, fail, NULL, true, NULL};
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {
@@ -604,6 +685,7 @@ bool wgf_sheet_add_clip(wgf_sheet_t sheet, const char *name, const int *frames, 
     c->count = count;
     c->seconds = seconds;
     c->direction = (int)direction;
+    c->added = true;
     return true;
 }
 

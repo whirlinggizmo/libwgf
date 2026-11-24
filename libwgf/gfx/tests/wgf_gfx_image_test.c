@@ -6,8 +6,10 @@
 
 #include "render/wgf_gfx_render_priv.h"
 #include "stb_image.h"
+#include "wgf_asset.h"
 #include "wgf_color.h"
 #include "wgf_core_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_fs.h"
 #include "wgf_handle.h"
 #include "wgf_image.h"
@@ -22,7 +24,8 @@
  * and square gradients' middle and edges, checks -- and noise the same for a seed (to a
  * hash every platform must give), different for another, in range, and tiling by its
  * offset; a pixel read and written, and its bytes; loaded from a file, PENDING then READY
- * with the file's pixels, the same path the same image, FAILED for junk or nothing;
+ * with the file's pixels, the same path the same image, FAILED for junk or nothing, loaded
+ * again in place with a new file's and kept when the new file is broken;
  * saved as a PNG that stb_image reads back to the same pixels; made a texture and written
  * to one; and every misuse refused. Pixels on the GPU: wgf_gfx_texture_read_window_test. */
 
@@ -71,6 +74,13 @@ static void settle(const wgf_image_t *images, int count)
         if (pending == 0 || wgf_time_get_seconds() - start > 30.0) return;
         wgf_core_priv_update();
     }
+}
+
+/* Update until `image` has loaded again (wgf_asset_reload). */
+static void settle_reload(wgf_image_t image)
+{
+    const double start = wgf_time_get_seconds();
+    while (wgf_core_priv_resource_is_reloading(image) && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
 }
 
 /* FNV-1a over an image's bytes. */
@@ -349,6 +359,23 @@ static void files(void)
     expect(wgf_image_get_size(saved) == 5 * 3 * 4 &&
                memcmp(wgf_image_get_data(saved), wgf_image_get_data(made), 60) == 0,
            "and an image loaded from it the same");
+
+    /* loaded again in place: the file's new pixels and size; a broken file keeps them */
+    task = wgf_image_save(made, "image-test/rock.png");
+    expect(task != 0 && wait_task(task) == WGF_FS_TASK_STATUS_DONE, "another picture saved over the file");
+    wgf_fs_task_destroy(task);
+    expect(wgf_asset_can_reload("image-test/rock.png") && wgf_asset_reload("image-test/rock.png") == 1,
+           "an image loads again");
+    settle_reload(rock);
+    expect(wgf_resource_get_status(rock) == WGF_RESOURCE_STATUS_READY && wgf_image_get_width(rock) == 5 &&
+               wgf_image_get_height(rock) == 3 &&
+               memcmp(wgf_image_get_data(rock), wgf_image_get_data(made), 60) == 0,
+           "in place: the same handle, the new file's size and pixels");
+    write_file("image-test/rock.png", junk, (int)sizeof(junk));
+    expect(wgf_asset_reload("image-test/rock.png") == 1, "a broken file, loading again");
+    settle_reload(rock);
+    expect(wgf_resource_get_status(rock) == WGF_RESOURCE_STATUS_READY && wgf_image_get_width(rock) == 5,
+           "what it had is kept");
 
     wgf_resource_release(saved);
     wgf_resource_release(made);

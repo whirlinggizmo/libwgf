@@ -56,11 +56,13 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t sound)
     wgf_audio_priv_sound_t *sound_ptr = wgf_audio_priv_sound_of(sound);
     if (sound_ptr == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
     wgf_core_priv_load_step_t step;
+    const bool again = wgf_core_priv_resource_is_reloading(sound); /* loaded again, in place */
     sound_ptr->streamed = WGF_CORE_PRIV_HANDLE_KIND(sound) == WGF_CORE_PRIV_HANDLE_KIND_AUDIO_SOUND_STREAMED;
     step = wgf_audio_priv_sound_finish(prepared, sound, sound_ptr);
     if (step == WGF_CORE_PRIV_LOAD_DONE) {
         wgf_audio_priv_lock();
         check_segments(wgf_audio_priv_sound_of(sound));
+        if (again) wgf_audio_priv_voice_restart(sound); /* its voices: from the start of the new one */
         wgf_audio_priv_unlock();
     }
     return step;
@@ -84,8 +86,8 @@ static void arrive(wgf_handle_t sound, const char *path, wgf_handle_t arrival)
 }
 
 static const wgf_core_priv_loader_t loaders[2] = {
-    {"sound", prepare_decoded, finish, wgf_audio_priv_sound_discard, fail, NULL, false, NULL},
-    {"streamed sound", prepare_streamed, finish, wgf_audio_priv_sound_discard, fail, arrive, false, NULL},
+    {"sound", prepare_decoded, finish, wgf_audio_priv_sound_discard, fail, NULL, true, NULL},
+    {"streamed sound", prepare_streamed, finish, wgf_audio_priv_sound_discard, fail, arrive, true, NULL},
 };
 
 static const wgf_core_priv_loader_t *decoded_loader(const char *path)

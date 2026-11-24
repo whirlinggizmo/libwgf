@@ -5,8 +5,10 @@
 #include "render/wgf_gfx_render_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
 #include "wgf_actor.h"
+#include "wgf_asset.h"
 #include "wgf_camera3d.h"
 #include "wgf_core_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_fs.h"
 #include "wgf_log.h"
 #include "wgf_material.h"
@@ -101,6 +103,15 @@ static void settle(wgf_handle_t resource)
 {
     const double start = wgf_time_get_seconds();
     while (wgf_resource_get_status(resource) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 10.0) {
+        wgf_core_priv_update();
+    }
+}
+
+/* Update until `resource` has loaded again (wgf_asset_reload). */
+static void settle_reload(wgf_handle_t resource)
+{
+    const double start = wgf_time_get_seconds();
+    while (wgf_core_priv_resource_is_reloading(resource) && wgf_time_get_seconds() - start < 10.0) {
         wgf_core_priv_update();
     }
 }
@@ -223,6 +234,37 @@ static void test_material(void)
         wgf_stage3d_draw(stage);
         wgf_gfx_priv_end_frame();
         CHECK(wgf_gfx_priv_stage3d_get_draw_calls() == 1);
+
+        /* its shader loaded again in place, a parameter gone and one new: the material's
+           values checked against it again, and drawn by the new program */
+        {
+            static char text[4096], changed[4096];
+            const char *const gone = "param count int fs 20\n";
+            const char *at;
+            int size = surface_file(text, sizeof(text), 2, "glsl410");
+            at = strstr(text, gone);
+            CHECK(at != NULL);
+            size = snprintf(changed, sizeof(changed), "%.*sparam glow float fs 20\n%s", (int)(at - text), text,
+                            at + strlen(gone));
+            write_file("good.wgfshader", changed, size);
+            CHECK(wgf_asset_can_reload("good.wgfshader") && wgf_asset_reload("good.wgfshader") == 1);
+            settle_reload(shader);
+            CHECK(wgf_resource_get_status(shader) == WGF_RESOURCE_STATUS_READY &&
+                  wgf_material_get_shader(material) == shader);
+            CHECK(wgf_material_get_float(material, "speed") == 3.0f); /* kept, by its name */
+            /* gone from it: dropped, and refused now */
+            CHECK(wgf_material_get_int(material, "count") == 0 && !wgf_material_set_int(material, "count", 1));
+            CHECK(wgf_material_set_float(material, "glow", 2.0f)); /* the new one's */
+            wgf_gfx_priv_begin_frame();
+            wgf_stage3d_draw(stage);
+            wgf_gfx_priv_end_frame();
+            CHECK(wgf_gfx_priv_stage3d_get_draw_calls() == 1);
+            write_file("good.wgfshader", "not a shader\n", 13);
+            CHECK(wgf_asset_reload("good.wgfshader") == 1);
+            settle_reload(shader);
+            CHECK(wgf_resource_get_status(shader) == WGF_RESOURCE_STATUS_READY &&
+                  wgf_material_get_float(material, "glow") == 2.0f); /* a broken file: what it had is kept */
+        }
         wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
         wgf_actor_destroy(camera, WGF_ACTOR_DESTROY_CHILDREN);
     }

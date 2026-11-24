@@ -22,6 +22,11 @@ import wgf.impl.Raw;
     - A shader is a resource (wgf_resource.h): shared by its path, reference counted, and
       loaded on create. It is PENDING at once, and READY or FAILED in a later update.
     - Materials hold their own references to it.
+    - A shader loads again in place (wgf_asset_reload) when its .wgfshader file is saved. Each
+      material drawn by it keeps the values and textures the new shader still has, by name
+      and type. One it no longer has is dropped (logged). A file that can't be loaded, or one
+      of the other kind (a surface shader, a screen effect), keeps the shader as it was, with
+      one error logged.
 
     A handle of kind wgf_shader_t (libwgf/gfx/include/wgf_shader.h): 0 is none.
 **/

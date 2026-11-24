@@ -114,7 +114,8 @@ static void *prepare(const char *path)
     return decoded;
 }
 
-/* The decoded pixels moved into the image, READY: in a page once the browser's decode is done. */
+/* The decoded pixels moved into the image, READY: in a page once the browser's decode is
+ * done. In place of what it held, when it loads again. */
 static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 {
     decoded_t *decoded = (decoded_t *)prepared;
@@ -124,6 +125,7 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
         if (wgf_gfx_priv_decode_poll(decoded->pending) == WGF_GFX_PRIV_DECODE_PENDING) return WGF_CORE_PRIV_LOAD_WAIT;
         if (!complete(decoded, image_ptr->resource.path)) return WGF_CORE_PRIV_LOAD_FAILED;
     }
+    free(image_ptr->pixels);
     image_ptr->width = decoded->width;
     image_ptr->height = decoded->height;
     image_ptr->pixels = decoded->pixels;
@@ -137,7 +139,7 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"image", prepare, finish, discard, fail, NULL, false, NULL};
+static const wgf_core_priv_loader_t loader = {"image", prepare, finish, discard, fail, NULL, true, NULL};
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {

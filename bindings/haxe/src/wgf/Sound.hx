@@ -22,6 +22,13 @@ import wgf.impl.Raw;
     at 48 kHz is about 23 MB. So create effects with wgf_sound_create, and music with
     wgf_sound_create_streamed.
 
+    A sound from a file loads again in place (wgf_asset_reload) when the file is saved:
+    - The sound keeps its handle, its segments, its polyphony, and its bus. A segment that
+      starts past the new file's end is dropped (logged).
+    - It plays as it was until the new file is decoded. Then a voice PLAYING or PAUSED on it
+      is at its start again, in the new sound. A voice that is STOPPED or COMPLETE stays so.
+    - A file that won't decode keeps the sound as it was, with one error logged.
+
     A handle of kind wgf_sound_t (libwgf/audio/include/wgf_sound.h): 0 is none.
 **/
 abstract Sound(Int) from Int to Int to wgf.Handle {

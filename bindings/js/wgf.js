@@ -5243,10 +5243,10 @@ export function wgf_asset_evict(path) {
  *   a new actor.
  * - A file that doesn't load keeps what was loaded, with one error logged.
  * - A FAILED resource that now loads becomes READY.
- * - These load again: a texture (compressed ones too), a glTF mesh with its images, a
- *   Tiled map, an environment, and a text buffer.
- * - These don't: a scene, a sound, a shader, a font, a sprite sheet, an image, and a UI
- *   document. Each is left as it is, with a warning.
+ * - These load again: a texture (compressed ones too), an image, a glTF mesh with its
+ *   images, a sprite sheet, a Tiled map, an environment, a shader, a sound, and a text
+ *   buffer. Each kind's header says what is kept across it.
+ * - These don't: a scene, a font, and a UI document. Each is left as it is, with a warning.
  * - A resource still loading is left as it is.
  *
  * Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
@@ -11327,8 +11327,9 @@ export function wgf_follow_snap(camera) {
 /**
  * Creates an image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame).
  *
- * The file is decoded on a worker. It isn't loaded again in place:
- * wgf_asset_reload leaves it as it is.
+ * The file is decoded on a worker. wgf_asset_reload loads it again in place: the image
+ * has the file's pixels and size, and a pixel set on it is gone. A texture or a mesh
+ * already made from the image keeps what it was made with.
  *
  * Returns 0 only if there is no room for another image. A path or file that can't be loaded
  * gives an image that FAILED (logged once, naming the file).
@@ -11494,7 +11495,7 @@ export function wgf_image_set_pixel(image, x, y, color) {
  * Returns the image's pixels, and their size in bytes.
  *
  * Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first. They are
- * valid until the image is released.
+ * valid until the image is released, or loaded again (wgf_asset_reload).
  *
  * Returns NULL and 0 for an image that isn't READY.
  */

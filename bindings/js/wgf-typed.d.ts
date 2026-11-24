@@ -1176,10 +1176,10 @@ export declare const Asset: {
      *   a new actor.
      * - A file that doesn't load keeps what was loaded, with one error logged.
      * - A FAILED resource that now loads becomes READY.
-     * - These load again: a texture (compressed ones too), a glTF mesh with its images, a
-     *   Tiled map, an environment, and a text buffer.
-     * - These don't: a scene, a sound, a shader, a font, a sprite sheet, an image, and a UI
-     *   document. Each is left as it is, with a warning.
+     * - These load again: a texture (compressed ones too), an image, a glTF mesh with its
+     *   images, a sprite sheet, a Tiled map, an environment, a shader, a sound, and a text
+     *   buffer. Each kind's header says what is kept across it.
+     * - These don't: a scene, a font, and a UI document. Each is left as it is, with a warning.
      * - A resource still loading is left as it is.
      *
      * Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
@@ -5626,8 +5626,9 @@ export declare const Image: {
     /**
      * Creates an image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame).
      *
-     * The file is decoded on a worker. It isn't loaded again in place:
-     * wgf_asset_reload leaves it as it is.
+     * The file is decoded on a worker. wgf_asset_reload loads it again in place: the image
+     * has the file's pixels and size, and a pixel set on it is gone. A texture or a mesh
+     * already made from the image keeps what it was made with.
      *
      * Returns 0 only if there is no room for another image. A path or file that can't be loaded
      * gives an image that FAILED (logged once, naming the file).
@@ -5721,7 +5722,7 @@ export declare const Image: {
      * Returns the image's pixels, and their size in bytes.
      *
      * Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first. They are
-     * valid until the image is released.
+     * valid until the image is released, or loaded again (wgf_asset_reload).
      *
      * Returns NULL and 0 for an image that isn't READY.
      */
@@ -8622,6 +8623,11 @@ export type Shader = raw.wgf_shader_t;
  * - A shader is a resource (wgf_resource.h): shared by its path, reference counted, and
  *   loaded on create. It is PENDING at once, and READY or FAILED in a later update.
  * - Materials hold their own references to it.
+ * - A shader loads again in place (wgf_asset_reload) when its .wgfshader file is saved. Each
+ *   material drawn by it keeps the values and textures the new shader still has, by name
+ *   and type. One it no longer has is dropped (logged). A file that can't be loaded, or one
+ *   of the other kind (a surface shader, a screen effect), keeps the shader as it was, with
+ *   one error logged.
  */
 export declare const Shader: {
     /**
@@ -8946,6 +8952,15 @@ export type Sheet = raw.wgf_sheet_t;
  *
  * A frame packed turned (TexturePacker's rotation) isn't read (logged). Pack without
  * rotation.
+ *
+ * An atlas loads again in place (wgf_asset_reload) when its file is saved:
+ * - The sheet has the new file's frames and clips, and its image.
+ * - A clip added in code (wgf_sheet_add_clip) is kept, also over the file's clip of that
+ *   name. An event set on a file's clip is kept on the clip of that name, by place.
+ * - A sprite playing a clip goes on in the clip of that name, from the same place. It stops
+ *   if the sheet no longer has the clip.
+ * - A sprite showing a frame without playing keeps the region it had.
+ * A grid is cut again when its texture loads again at another size.
  */
 export declare const Sheet: {
     /**
@@ -9080,6 +9095,13 @@ export type Sound = raw.wgf_sound_t;
  * A decoded sound is held as float samples, natively and on the web alike. A minute of stereo
  * at 48 kHz is about 23 MB. So create effects with wgf_sound_create, and music with
  * wgf_sound_create_streamed.
+ *
+ * A sound from a file loads again in place (wgf_asset_reload) when the file is saved:
+ * - The sound keeps its handle, its segments, its polyphony, and its bus. A segment that
+ *   starts past the new file's end is dropped (logged).
+ * - It plays as it was until the new file is decoded. Then a voice PLAYING or PAUSED on it
+ *   is at its start again, in the new sound. A voice that is STOPPED or COMPLETE stays so.
+ * - A file that won't decode keeps the sound as it was, with one error logged.
  */
 export declare const Sound: {
     /**

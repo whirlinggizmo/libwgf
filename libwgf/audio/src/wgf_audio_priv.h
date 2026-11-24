@@ -108,6 +108,12 @@ wgf_core_priv_load_step_t wgf_audio_priv_sound_finish(void *prepared, wgf_handle
                                                       wgf_audio_priv_sound_t *record);
 void wgf_audio_priv_sound_discard(void *prepared);
 void wgf_audio_priv_sound_free(wgf_handle_t sound, wgf_audio_priv_sound_t *record);
+/* A sound loads again in place (wgf_asset_reload): finish, called for one that is READY,
+ * lets go of what the record held as it takes the new. Natively it returns
+ * WGF_CORE_PRIV_LOAD_MORE while the mixer is working on a voice, which may be reading the
+ * old samples; on the web the new sound is decoded apart, and takes the old one's place
+ * only once it is ready. A voice playing it then starts again
+ * (wgf_audio_priv_voice_restart). */
 /* A sound made from samples (wgf_sound_create_from_samples), checked: `frames` frames of
  * `channels`, interleaved, copied into `record` (natively its pcm, on the web an AudioBuffer)
  * with its rate, channels, and length. False without the memory. On the main thread. */
@@ -221,6 +227,13 @@ void wgf_audio_priv_voice_sweep(void);
 int wgf_audio_priv_play_count(wgf_handle_t sound);
 /* audio's stop: every voice freed. */
 void wgf_audio_priv_voice_stop_all(void);
+/* `sound` has loaded again: each voice PLAYING or PAUSED on it is at its start again, in
+ * the new sound. Under the lock. */
+void wgf_audio_priv_voice_restart(wgf_handle_t sound);
+/* Natively, before a sound's samples or file are freed to be loaded again: false while the
+ * mixer is working on a voice (its copy may point at them); else every voice's decoder
+ * over `sound` closed, to open on the new file. Under the lock. */
+bool wgf_audio_priv_mix_let_go(wgf_handle_t sound);
 
 /* Natively: mix `frames` frames of every playing voice into `out`, interleaved stereo,
  * at `rate` frames a second (the device's callback, or a test pulling the mixer). */

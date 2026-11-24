@@ -20,12 +20,15 @@
 
 /* The browser's side: one AudioContext, made by the first sound (it waits, suspended,
  * for the page's first input), and the sounds by handle: {state: 0 decoding, 1 ready,
- * 2 failed; buffer, the decoded AudioBuffer; url and element, a streamed sound's}. */
+ * 2 failed; buffer, the decoded AudioBuffer; url and element, a streamed sound's}. A
+ * file's sound is made in `loading`, and takes its place in `sounds` once it is ready
+ * (wgf_audio_js_sound_commit): one loaded again plays as it was until then, and stays as
+ * it was if the new file fails. */
 EM_JS(void, wgf_audio_js_sound_start, (int handle, int streamed, const unsigned char *bytes, int size, int type), {
     var audio = Module.wgf_audio || (Module.wgf_audio = {context: null, sounds: new Map()});
     var entry = {state: 0, buffer: null, url: null, element: null, duration: 0};
     var data = HEAPU8.slice(bytes, bytes + size); /* a copy: decodeAudioData takes it over */
-    audio.sounds.set(handle, entry);
+    (audio.loading || (audio.loading = new Map())).set(handle, entry);
     if (!audio.context) audio.context = new (window.AudioContext || window.webkitAudioContext)();
     if (streamed) {
         var mime = ["", "audio/wav", "audio/mpeg", "audio/ogg"][type] || "";
@@ -92,28 +95,44 @@ EM_JS(int, wgf_audio_js_sound_from_samples, (int handle, const float *samples, i
     return 1;
 })
 
+/* The sound loading for `handle`, else the one it has. */
 EM_JS(int, wgf_audio_js_sound_state, (int handle), {
-    var entry = Module.wgf_audio && Module.wgf_audio.sounds.get(handle);
+    var audio = Module.wgf_audio;
+    var entry = audio && ((audio.loading && audio.loading.get(handle)) || audio.sounds.get(handle));
     return entry ? entry.state : 2;
 })
 
 EM_JS(double, wgf_audio_js_sound_duration, (int handle), {
-    var entry = Module.wgf_audio && Module.wgf_audio.sounds.get(handle);
+    var audio = Module.wgf_audio;
+    var entry = audio && ((audio.loading && audio.loading.get(handle)) || audio.sounds.get(handle));
     return entry ? entry.duration : 0;
 })
 
 EM_JS(int, wgf_audio_js_sound_channels, (int handle), {
-    var entry = Module.wgf_audio && Module.wgf_audio.sounds.get(handle);
+    var audio = Module.wgf_audio;
+    var entry = audio && ((audio.loading && audio.loading.get(handle)) || audio.sounds.get(handle));
     return entry && entry.buffer ? entry.buffer.numberOfChannels : 2;
 })
 
-EM_JS(void, wgf_audio_js_sound_free, (int handle), {
+/* `which` 0: the sound `handle` has, let go of. 1: the one loading for it, let go of (its
+ * load failed, or was dropped). 2: the one loading takes the place of the one it has, which
+ * is let go of. */
+EM_JS(void, wgf_audio_js_sound_end, (int handle, int which), {
     var audio = Module.wgf_audio;
-    var entry = audio && audio.sounds.get(handle);
-    if (!entry) return;
-    if (entry.element) entry.element.removeAttribute("src");
-    if (entry.url) URL.revokeObjectURL(entry.url);
-    audio.sounds.delete(handle);
+    var loading = audio && audio.loading && audio.loading.get(handle);
+    var entry = which === 1 ? loading : audio && audio.sounds.get(handle);
+    if (!audio || (which === 2 && !loading)) return;
+    if (entry) {
+        if (entry.source) entry.source.disconnect();
+        if (entry.element) {
+            entry.element.pause();
+            entry.element.removeAttribute("src");
+        }
+        if (entry.url) URL.revokeObjectURL(entry.url);
+    }
+    if (which !== 1) audio.sounds.delete(handle);
+    if (which !== 0 && audio.loading) audio.loading.delete(handle);
+    if (which === 2) audio.sounds.set(handle, loading);
 })
 
 EM_JS(void, wgf_audio_js_stop, (void), {
@@ -121,6 +140,10 @@ EM_JS(void, wgf_audio_js_stop, (void), {
     if (!audio) return;
     audio.sounds.forEach(function(entry) { if (entry.url) URL.revokeObjectURL(entry.url); });
     audio.sounds.clear();
+    if (audio.loading) {
+        audio.loading.forEach(function(entry) { if (entry.url) URL.revokeObjectURL(entry.url); });
+        audio.loading.clear();
+    }
     if (audio.context) audio.context.close();
     Module.wgf_audio = null;
 })
@@ -130,6 +153,7 @@ typedef struct prepared_t {
     int size;
     wgf_audio_priv_format_t type; /* by the name, for a streamed sound's blob */
     bool started;
+    wgf_handle_t loading; /* the sound the browser is making this for, until it takes its place; 0 none */
     char path[WGF_CORE_PRIV_FS_PATH_MAX];
 } prepared_t;
 
@@ -169,6 +193,7 @@ wgf_core_priv_load_step_t wgf_audio_priv_sound_finish(void *data, wgf_handle_t s
     if (!prepared->started) {
         wgf_audio_js_sound_start((int)sound, record->streamed, prepared->bytes, prepared->size, (int)prepared->type);
         prepared->started = true;
+        prepared->loading = sound;
         wgf_core_priv_fs_read_free(prepared->bytes); /* the browser has its copy */
         prepared->bytes = NULL;
         return WGF_CORE_PRIV_LOAD_WAIT;
@@ -177,8 +202,10 @@ wgf_core_priv_load_step_t wgf_audio_priv_sound_finish(void *data, wgf_handle_t s
     if (state == 0) return WGF_CORE_PRIV_LOAD_WAIT;
     if (state != 1) {
         wgf_log_warn("wgf_sound: %s: this browser can't play it", prepared->path);
-        return WGF_CORE_PRIV_LOAD_FAILED;
+        return WGF_CORE_PRIV_LOAD_FAILED; /* discard lets go of what was loading */
     }
+    wgf_audio_js_sound_end((int)sound, 2); /* in place of what it had, if it had one */
+    prepared->loading = 0;
     wgf_audio_priv_lock();
     record->format = prepared->type;
     record->channels = wgf_audio_js_sound_channels((int)sound);
@@ -268,6 +295,7 @@ void wgf_audio_priv_sound_discard(void *data)
 {
     prepared_t *prepared = (prepared_t *)data;
     if (prepared == NULL) return;
+    if (prepared->loading != 0) wgf_audio_js_sound_end((int)prepared->loading, 1);
     if (prepared->bytes != NULL) wgf_core_priv_fs_read_free(prepared->bytes);
     free(prepared);
 }
@@ -289,7 +317,7 @@ bool wgf_audio_priv_sound_from_samples(wgf_handle_t sound, wgf_audio_priv_sound_
 void wgf_audio_priv_sound_free(wgf_handle_t sound, wgf_audio_priv_sound_t *record)
 {
     (void)record;
-    wgf_audio_js_sound_free((int)sound);
+    wgf_audio_js_sound_end((int)sound, 0);
 }
 
 void wgf_audio_priv_sound_stop(void)

@@ -40,7 +40,16 @@ typedef wgf_handle_t wgf_sheet_t;
  *   example, "run_01.png" and "run_02.png" make the clip "run".
  *
  * A frame packed turned (TexturePacker's rotation) isn't read (logged). Pack without
- * rotation. */
+ * rotation.
+ *
+ * An atlas loads again in place (wgf_asset_reload) when its file is saved:
+ * - The sheet has the new file's frames and clips, and its image.
+ * - A clip added in code (wgf_sheet_add_clip) is kept, also over the file's clip of that
+ *   name. An event set on a file's clip is kept on the clip of that name, by place.
+ * - A sprite playing a clip goes on in the clip of that name, from the same place. It stops
+ *   if the sheet no longer has the clip.
+ * - A sprite showing a frame without playing keeps the region it had.
+ * A grid is cut again when its texture loads again at another size. */
 
 /* Creates a sheet over `texture`, cut into a grid of cells `frame_width` by `frame_height`
  * texels.

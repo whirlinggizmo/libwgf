@@ -1063,6 +1063,17 @@ Rob's. `wgf serve --hot` chose by a file's extension, from a list in the server:
 - **A file nothing was made from loads the page again.** A scene's actors are already made, and a file not loaded yet may be read by the next line of code; neither can be known from the page, so the safe answer is a new page. An image not loaded yet used to do nothing.
 - `tools/check_cli.py`'s serve step saves such a file last, and the page must count from the start again.
 
+## Images, sprite sheets, sounds, and shaders load again in place (2026-11-24)
+
+Rob's: the kinds `wgf_asset_reload` left alone, but for scenes. Fonts and UI documents are still left. Each loader's `finish` learned to fill a resource that is READY, making the new before letting go of the old, and says `reloads`; the reload call, the hot page, and `wgf_asset_can_reload` read that alone.
+
+- **An image** has the new file's pixels and size. What was already made from it (a texture, a mesh) keeps what it was made with.
+- **A sprite sheet** has the new file's frames and clips. A clip added in code is kept, also over the file's of that name, and an event set on a file's clip is kept by place (a clip is marked `added`). A sprite playing goes on in the clip of that name from the same place, and stops when the sheet no longer has it. A grid is cut again when its texture loads again at another size.
+- **A sound** plays as it was until the new file is decoded; then a voice PLAYING or PAUSED on it is at its start again, in the new sound. Its segments, polyphony, and bus are kept; a segment past the new end is dropped. Natively the mixer reads a decoded sound's samples outside the lock, so the swap waits (finish returns MORE) while any voice is busy, then closes the streamed decoders over it. On the web the new sound is decoded in a table of its own (`loading`) and takes the old one's place only when ready; before, the first step of a load replaced the entry at once.
+- **A file loaded again is never taken as it arrives.** A streamed sound's loader takes a file still arriving, which for a sound that is READY would have written over what it plays (found by the browser test: the old element was replaced, then the fetch failed). Core offers no arrival to a reload's request.
+- **A shader**'s new program is made first, then the old one and its pipelines are destroyed. Its record counts its loads, and a custom material checks its values against the shader again when that number moves: kept by name and type, dropped (warned) where the new one has no such parameter. A file of the other kind (a surface shader, a screen effect) is refused, and the shader kept.
+- Tests: each kind natively (the new data in the same handle, then a broken file kept), the sound under asan with voices playing through the swap, and in a browser from a file its page's server has, since a reload fetches anew and a page can't change what its server holds.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

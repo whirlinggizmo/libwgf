@@ -380,8 +380,10 @@ static void locate(void)
             wgf_handle_t arrival = 0;
             memcpy(path, request_ptr->path, sizeof(path));
             request_ptr->asked = true;
-            located = wgf_core_priv_load_hooks.locate(handle, path, sizeof(path),
-                                                      request_ptr->loader->arrive != NULL ? &arrival : NULL);
+            /* a file loaded again is taken whole: its resource plays what it has meanwhile */
+            located = wgf_core_priv_load_hooks.locate(
+                handle, path, sizeof(path),
+                request_ptr->loader->arrive != NULL && !request_ptr->reload ? &arrival : NULL);
             request_ptr = &requests[i]; /* it may have requested loads, and grown the table */
             if (located == WGF_CORE_PRIV_LOCATE_PENDING) continue;
             if (located == WGF_CORE_PRIV_LOCATE_ARRIVING) { /* the loader's from here */

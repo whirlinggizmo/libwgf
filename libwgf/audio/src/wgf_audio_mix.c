@@ -688,6 +688,35 @@ void wgf_audio_priv_platform_update(void)
 {
 }
 
+typedef struct letting_go_t {
+    wgf_handle_t sound;
+    bool busy;
+} letting_go_t;
+
+static void find_busy(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, void *user)
+{
+    (void)voice;
+    if (voice_ptr->busy) ((letting_go_t *)user)->busy = true;
+}
+
+static void close_over(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, void *user)
+{
+    (void)voice;
+    if (voice_ptr->sound != ((const letting_go_t *)user)->sound) return;
+    decoder_close(voice_ptr->decoder); /* the main thread's: no voice is busy */
+    voice_ptr->decoder = NULL;
+}
+
+bool wgf_audio_priv_mix_let_go(wgf_handle_t sound)
+{
+    letting_go_t letting_go = {sound, false};
+    /* any voice: one whose sound was changed while busy still mixes its old one */
+    wgf_audio_priv_voice_each(find_busy, &letting_go);
+    if (letting_go.busy) return false;
+    wgf_audio_priv_voice_each(close_over, &letting_go);
+    return true;
+}
+
 void wgf_audio_priv_platform_master(float volume, bool paused)
 {
     (void)volume;

@@ -3,8 +3,10 @@
 
 #include "render/wgf_gfx_render_priv.h"
 #include "wgf_actor.h"
+#include "wgf_asset.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_fs.h"
 #include "wgf_handle.h"
 #include "wgf_log.h"
@@ -15,7 +17,8 @@
 
 /* Sprite sheets and 2D animation, headless: a 2 by 2 image cut into four 1 by 1 frames once
  * READY, clips forward, backward, and ping-pong, looping and once (COMPLETE, holding its last
- * frame), paused and sped up, the sprite's region following, and what is refused. */
+ * frame), paused and sped up, the sprite's region following, and what is refused; and an
+ * atlas loaded again in place, its players going on and what the program added kept. */
 
 static int failures;
 
@@ -43,6 +46,30 @@ static const char packer[] = "{\"frames\": {"
                              " \"sourceSize\": {\"w\": 2, \"h\": 2}},"
                              "\"idle.png\": {\"frame\": {\"x\": 0, \"y\": 1, \"w\": 1, \"h\": 1}}},"
                              " \"meta\": {\"image\": \"four.png\"}}";
+
+/* The hash saved changed: its run moved and a frame longer, with a frame between it and idle. */
+static const char packer_changed[] = "{\"frames\": {"
+                                     "\"run_02.png\": {\"frame\": {\"x\": 0, \"y\": 1, \"w\": 1, \"h\": 1}},"
+                                     "\"run_01.png\": {\"frame\": {\"x\": 1, \"y\": 1, \"w\": 1, \"h\": 1}},"
+                                     "\"run_03.png\": {\"frame\": {\"x\": 0, \"y\": 0, \"w\": 1, \"h\": 1}},"
+                                     "\"idle.png\": {\"frame\": {\"x\": 1, \"y\": 0, \"w\": 1, \"h\": 1}}},"
+                                     " \"meta\": {\"image\": \"four.png\"}}";
+/* And with no run at all. */
+static const char packer_idle[] = "{\"frames\": {"
+                                  "\"idle.png\": {\"frame\": {\"x\": 1, \"y\": 0, \"w\": 1, \"h\": 1}}},"
+                                  " \"meta\": {\"image\": \"four.png\"}}";
+
+/* `text` written over the sheet's file, and the sheet loaded again from it. */
+static void save_and_reload(wgf_sheet_t sheet, const char *path, const char *text)
+{
+    const wgf_fs_task_t write = wgf_fs_write(path, (const unsigned char *)text, (int)strlen(text));
+    const double start = wgf_time_get_seconds();
+    int i;
+    for (i = 0; i < 1000 && wgf_fs_task_get_status(write) == WGF_FS_TASK_STATUS_PENDING; i++) wgf_core_priv_update();
+    wgf_fs_task_destroy(write);
+    expect(wgf_asset_can_reload(path) && wgf_asset_reload(path) == 1, "a sheet loads again");
+    while (wgf_core_priv_resource_is_reloading(sheet) && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
+}
 
 /* Aseprite's array: durations, and tags (a ping-pong, a reverse). */
 static const char aseprite[] = "{\"frames\": ["
@@ -214,6 +241,32 @@ int main(void)
                "facing up, with no walk_up: walk");
         expect(wgf_sprite_play_clip(sprite, "back", false) && wgf_sprite_get_source(sprite).y == 1.0f,
                "a reverse tag: from its last");
+        { /* loaded again in place */
+            const int third[1] = {2};
+            wgf_sprite_set_sheet(sprite, hash);
+            wgf_sprite_play_clip(sprite, "run", true);
+            expect(wgf_sheet_add_clip(hash, "wait", third, 1, 0.5f, WGF_SHEET_DIRECTION_FORWARD) &&
+                       wgf_sheet_set_clip_event(hash, "run", 1, 9),
+                   "a clip added in code, and an event on the file's");
+            save_and_reload(hash, "sheet_test/packer.json", packer_changed);
+            expect(wgf_resource_get_status(hash) == WGF_RESOURCE_STATUS_READY && wgf_sheet_get_frame_count(hash) == 4 &&
+                       wgf_sheet_get_texture(hash) == texture,
+                   "in place: the same handle, the new file's frames, its image kept");
+            expect(wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_PLAYING &&
+                       strcmp(wgf_sprite_get_clip(sprite), "run") == 0 && wgf_sprite_get_source(sprite).x == 1.0f &&
+                       wgf_sprite_get_source(sprite).y == 1.0f,
+                   "a sprite playing goes on in the clip of that name, at the frame's new region");
+            expect(wgf_sheet_find_clip(hash, "wait") >= 0 && wgf_sheet_get_clip_event(hash, "run", 1) == 9,
+                   "the added clip and the event kept");
+            save_and_reload(hash, "sheet_test/packer.json", packer_idle);
+            expect(wgf_sheet_get_frame_count(hash) == 1 && wgf_sheet_find_clip(hash, "run") < 0 &&
+                       wgf_sprite_get_clip_state(sprite) == WGF_PLAY_STATE_STOPPED &&
+                       strcmp(wgf_sprite_get_clip(sprite), "") == 0,
+                   "its clip gone from the file: stopped");
+            save_and_reload(hash, "sheet_test/packer.json", "{\"frames\": 3}");
+            expect(wgf_resource_get_status(hash) == WGF_RESOURCE_STATUS_READY && wgf_sheet_get_frame_count(hash) == 1,
+                   "a broken file: what it had is kept");
+        }
         wgf_actor_destroy(sprite, WGF_ACTOR_DESTROY_CHILDREN);
         wgf_resource_release(hash);
         wgf_resource_release(array);

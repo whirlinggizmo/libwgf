@@ -17,7 +17,9 @@
 /* Custom shaders, libwgt's wgt_gfx_shader.c (wgrender's wgr_shader): .wgfshader files from
  * tools/pack_shader.py (the format is written there), through core's load pipeline.
  * Preparing reads the file on a worker; finishing picks the running backend's sources and
- * makes its program: a surface shader's model one, or a screen effect's. A part, installed
+ * makes its program: a surface shader's model one, or a screen effect's. Loaded again in
+ * place, the new program is made first, and the old one and its pipelines destroyed only
+ * then; the materials drawn by it check their values against it again (its `loads`). A part, installed
  * by the first shader made; its stop, after the materials that hold shaders, frees them. */
 
 #define FORMAT_VERSION 2 /* 2: a surface's skinned program beside its static one */
@@ -438,11 +440,17 @@ static wgf_core_priv_load_step_t finish(void *data, wgf_handle_t resource)
         free(programs[i].sources[1]);
     }
     free(programs);
+    if (ok && shader_ptr->resource.status == WGF_RESOURCE_STATUS_READY && shader.screen != shader_ptr->shader.screen) {
+        error = "loaded again as the other kind (a surface shader, a screen effect): what it was is kept";
+        ok = false;
+    }
     if (!ok) {
         wgf_log_warn("wgf_gfx_shader: %s: %s", shader_ptr->resource.path, error != NULL ? error : "out of memory");
         destroy_gpu(&shader);
         return WGF_CORE_PRIV_LOAD_FAILED;
     }
+    shader.loads = shader_ptr->shader.loads + 1;
+    if (shader_ptr->resource.status == WGF_RESOURCE_STATUS_READY) destroy_gpu(&shader_ptr->shader); /* loaded again */
     shader_ptr->shader = shader;
     wgf_core_priv_resource_loaded(resource, NULL);
     return WGF_CORE_PRIV_LOAD_DONE;
@@ -453,7 +461,7 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"shader", prepare, finish, discard, fail, NULL, false, NULL};
+static const wgf_core_priv_loader_t loader = {"shader", prepare, finish, discard, fail, NULL, true, NULL};
 
 /* ----------------------------------------------------------- the part ---- */
 

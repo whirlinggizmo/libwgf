@@ -14,7 +14,8 @@
 /* Custom materials, libwgt's (wgrender's): a material drawn by a shader of its own
  * (wgf_shader.h), its values and textures kept by the shader's names. Set before the
  * shader is READY, they are checked against it once it is (a name it doesn't have, or a
- * value of another type, is warned about and dropped); after, each as it is set. A part of
+ * value of another type, is warned about and dropped); after, each as it is set; and all
+ * again when the shader has loaded again. A part of
  * its own, reached through the hooks wgf_material_create_custom sets on the material it
  * makes (material.c's setters, and the stage's draw), so a program without one links none
  * of it. */
@@ -25,6 +26,7 @@
 
 typedef struct wgf_gfx_priv_material_custom_t {
     bool bound; /* checked against its READY shader */
+    unsigned bound_loads; /* the shader's `loads` then: checked again when it has loaded again */
     bool told;  /* its shader FAILED, or its blocks don't fit: warned once */
     int value_count;
     struct {
@@ -100,7 +102,8 @@ static const wgf_gfx_priv_shader_t *bind(wgf_gfx_priv_material_t *material_ptr)
         }
         return NULL;
     }
-    if (custom->bound) return shader;
+    if (custom->bound && custom->bound_loads == shader->loads) return shader;
+    if (custom->bound) custom->told = false; /* its shader loaded again: what the new one lacks is said again */
     if (shader->block_size[WGF_GFX_PRIV_SHADER_BLOCK_FS_PARAMS] +
             shader->block_size[WGF_GFX_PRIV_SHADER_BLOCK_VS_PARAMS] >
         BLOCK_MAX) {
@@ -140,6 +143,7 @@ static const wgf_gfx_priv_shader_t *bind(wgf_gfx_priv_material_t *material_ptr)
     }
     custom->texture_count = kept;
     custom->bound = true;
+    custom->bound_loads = shader->loads;
     custom->block_stale = true;
     return shader;
 }

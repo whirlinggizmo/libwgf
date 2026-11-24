@@ -80,6 +80,7 @@ typedef struct wgf_gfx_priv_shader_t {
     char textures[WGF_GFX_PRIV_SHADER_MAX_TEXTURES][WGF_GFX_PRIV_SHADER_NAME_MAX];
     bool texture_cube[WGF_GFX_PRIV_SHADER_MAX_TEXTURES]; /* a textureCube (a cubemap's), not a texture2D */
     int texture_count;
+    unsigned loads; /* 1 as first loaded, one more each time it loads again: a material checks its values again */
 } wgf_gfx_priv_shader_t;
 
 /* The shader when it is READY; NULL otherwise. The pointer moves when a shader is created:

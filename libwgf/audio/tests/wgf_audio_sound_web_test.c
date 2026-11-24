@@ -6,6 +6,7 @@
 #include <emscripten.h>
 
 #include "wgf_app.h"
+#include "wgf_asset.h"
 #include "wgf_play_state.h"
 #include "wgf_sound.h"
 #include "wgf_voice.h"
@@ -19,13 +20,16 @@
  * wgf_audio_sound_test's, natively: READY with the length the file has, a streamed
  * sound's length a decoded one's (within what the browser's MP3 decoder trims), a path
  * made both ways two sounds, a missing or undecodable file FAILED, a released sound gone;
- * and a sound made from samples, an AudioBuffer holding them a channel apart, played.
+ * a sound made from samples, an AudioBuffer holding them a channel apart, played; and a
+ * sound loaded again in place, from the page's server, under a voice playing it.
  * A frame loop, since the browser decodes between frames. */
 
 static int failures, frames, step;
 static wgf_handle_t task_wav, task_garbage;
 static wgf_handle_t sounds[3][2]; /* [wav, mp3, ogg][streamed] */
 static wgf_handle_t missing, garbage[2];
+static wgf_handle_t again[2], playing[2]; /* [streamed]: loaded again in place, and the voice playing each */
+static float length;
 static const char *const paths[3] = {"sounds/ramp.wav", "music/a_hero_is_born.mp3", "sounds/click_004.ogg"};
 
 static void expect(int ok, const char *what)
@@ -39,12 +43,12 @@ static void expect(int ok, const char *what)
 static void put16(unsigned char *p, unsigned v) { p[0] = (unsigned char)v; p[1] = (unsigned char)(v >> 8); }
 static void put32(unsigned char *p, uint32_t v) { put16(p, v & 0xFFFFu); put16(p + 2, v >> 16); }
 
-/* A 16-bit stereo WAV of 2000 frames at 44.1 kHz. */
-static unsigned char wav[44 + 2000 * 4];
-static void make_wav(void)
+/* A 16-bit stereo WAV of `count` frames (4000 at most) at 44.1 kHz: its size in bytes. */
+static unsigned char wav[44 + 4000 * 4];
+static int make_wav(unsigned count)
 {
     memcpy(wav, "RIFF", 4);
-    put32(wav + 4, 36u + 2000u * 4u);
+    put32(wav + 4, 36u + count * 4u);
     memcpy(wav + 8, "WAVEfmt ", 8);
     put32(wav + 16, 16);
     put16(wav + 20, 1);
@@ -54,8 +58,9 @@ static void make_wav(void)
     put16(wav + 32, 4);
     put16(wav + 34, 16);
     memcpy(wav + 36, "data", 4);
-    put32(wav + 40, 2000u * 4u);
-    for (int i = 0; i < 2000 * 2; i++) put16(wav + 44 + i * 2, (unsigned)(i * 37) & 0xFFFFu);
+    put32(wav + 40, count * 4u);
+    for (unsigned i = 0; i < count * 2; i++) put16(wav + 44 + i * 2, (i * 37u) & 0xFFFFu);
+    return (int)(44 + count * 4);
 }
 
 static bool any_pending(void)
@@ -74,6 +79,18 @@ static bool any_pending(void)
 EM_JS(double, buffer_sample, (int handle, int channel, int frame), {
     var entry = Module.wgf_audio && Module.wgf_audio.sounds.get(handle);
     return entry && entry.buffer ? entry.buffer.getChannelData(channel)[frame] : -9;
+})
+
+/* A sound's entry in the browser marked, and whether it still is: one loaded again is a
+ * new entry, with no mark. */
+EM_JS(void, mark, (int handle), {
+    var entry = Module.wgf_audio && Module.wgf_audio.sounds.get(handle);
+    if (entry) entry.marked = true;
+})
+
+EM_JS(int, is_marked, (int handle), {
+    var entry = Module.wgf_audio && Module.wgf_audio.sounds.get(handle);
+    return entry && entry.marked ? 1 : 0;
 })
 
 static void check_from_samples(void)
@@ -142,8 +159,7 @@ static void on_frame(void *user)
         return;
     }
     if (step == 0) {
-        make_wav();
-        task_wav = wgf_fs_write("sounds/ramp.wav", wav, (int)sizeof(wav));
+        task_wav = wgf_fs_write("sounds/ramp.wav", wav, make_wav(2000));
         task_garbage = wgf_fs_write("sounds/garbage.ogg", (const unsigned char *)"not a sound", 11);
         step++;
     } else if (step == 1 && wgf_fs_task_get_status(task_wav) != WGF_FS_TASK_STATUS_PENDING &&
@@ -161,6 +177,37 @@ static void on_frame(void *user)
         step++;
     } else if (step == 2 && !any_pending()) {
         check();
+        /* loaded again in place, under a voice playing each: a file the page's server has,
+           since a reload fetches anew */
+        again[0] = wgf_sound_create("served/click.ogg");
+        again[1] = wgf_sound_create_streamed("served/click.ogg");
+        step++;
+    } else if (step == 3 && wgf_resource_get_status(again[0]) != WGF_RESOURCE_STATUS_PENDING &&
+               wgf_resource_get_status(again[1]) != WGF_RESOURCE_STATUS_PENDING) {
+        expect(wgf_resource_get_status(again[0]) == WGF_RESOURCE_STATUS_READY &&
+                   wgf_resource_get_status(again[1]) == WGF_RESOURCE_STATUS_READY,
+               "a served file: READY, decoded and streamed");
+        length = wgf_sound_get_duration(again[0]);
+        for (int s = 0; s < 2; s++) {
+            playing[s] = wgf_voice_create(again[s]);
+            wgf_voice_set_loop(playing[s], true);
+            wgf_voice_play(playing[s]);
+            mark((int)again[s]);
+        }
+        expect(wgf_asset_can_reload("served/click.ogg") && wgf_asset_reload("served/click.ogg") == 2,
+               "a path made both ways: both load again");
+        expect(is_marked((int)again[0]) && is_marked((int)again[1]) &&
+                   wgf_voice_get_state(playing[0]) == WGF_PLAY_STATE_PLAYING,
+               "as they were, and playing, until the new file is decoded");
+        step++;
+    } else if (step == 4 && !is_marked((int)again[0]) && !is_marked((int)again[1])) {
+        expect(wgf_resource_get_status(again[0]) == WGF_RESOURCE_STATUS_READY &&
+                   wgf_resource_get_status(again[1]) == WGF_RESOURCE_STATUS_READY &&
+                   fabsf(wgf_sound_get_duration(again[0]) - length) < 1e-4f,
+               "in place: the same handles, a new buffer and element, the file's length");
+        expect(wgf_voice_get_state(playing[0]) == WGF_PLAY_STATE_PLAYING &&
+                   wgf_voice_get_state(playing[1]) == WGF_PLAY_STATE_PLAYING,
+               "a voice playing it: still playing, in the new one");
         emscripten_force_exit(failures == 0 ? 0 : 1);
     }
 }

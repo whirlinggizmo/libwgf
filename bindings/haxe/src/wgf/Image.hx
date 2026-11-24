@@ -50,8 +50,9 @@ abstract Image(Int) from Int to Int to wgf.Handle {
 	/**
 	    Creates an image from a file: PNG, JPEG, BMP, TGA, or GIF (its first frame).
 
-	    The file is decoded on a worker. It isn't loaded again in place:
-	    wgf_asset_reload leaves it as it is.
+	    The file is decoded on a worker. wgf_asset_reload loads it again in place: the image
+	    has the file's pixels and size, and a pixel set on it is gone. A texture or a mesh
+	    already made from the image keeps what it was made with.
 
 	    Returns 0 only if there is no room for another image. A path or file that can't be loaded
 	    gives an image that FAILED (logged once, naming the file).
@@ -173,7 +174,7 @@ abstract Image(Int) from Int to Int to wgf.Handle {
 	    Returns the image's pixels, and their size in bytes.
 
 	    Pixels are RGBA, 8 bits a channel, width * 4 bytes a row, with the top row first. They are
-	    valid until the image is released.
+	    valid until the image is released, or loaded again (wgf_asset_reload).
 
 	    Returns NULL and 0 for an image that isn't READY.
 	**/

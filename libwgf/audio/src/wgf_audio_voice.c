@@ -820,6 +820,23 @@ bool wgf_sound_play(wgf_handle_t sound, float volume, float pitch, float pan)
     return true;
 }
 
+static void restart_one(wgf_handle_t voice, wgf_audio_priv_voice_t *voice_ptr, void *user)
+{
+    if (voice_ptr->sound != *(const wgf_handle_t *)user || voice_ptr->dying ||
+        (voice_ptr->state != WGF_PLAY_STATE_PLAYING && voice_ptr->state != WGF_PLAY_STATE_PAUSED)) {
+        return;
+    }
+    voice_ptr->fresh = !is_ready(voice_ptr);
+    voice_ptr->position = start_of(voice_ptr);
+    voice_ptr->generation++;
+    wgf_audio_priv_platform_apply(voice, voice_ptr);
+}
+
+void wgf_audio_priv_voice_restart(wgf_handle_t sound)
+{
+    wgf_audio_priv_voice_each(restart_one, &sound);
+}
+
 void wgf_audio_priv_voice_stop_all(void)
 {
     if (!vp.ready) return;

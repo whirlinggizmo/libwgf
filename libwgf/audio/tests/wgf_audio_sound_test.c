@@ -5,19 +5,24 @@
 #include <string.h>
 
 #include "wgf_sound.h"
+#include "wgf_asset.h"
 #include "wgf_audio.h"
 #include "wgf_audio_priv.h"
 #include "wgf_core_fs_priv.h"
 #include "wgf_core_load_priv.h"
 #include "wgf_core_priv.h"
+#include "wgf_core_resource_priv.h"
+#include "wgf_play_state.h"
 #include "wgf_resource.h"
 #include "wgf_time.h"
+#include "wgf_voice.h"
 
 /* Sounds natively (wgf_sound.h): WAV, MP3, and Ogg, each decoded and streamed, the
  * examples' music and click and a WAV made here, in a root of the test's own. A streamed
  * sound's length is a decoded one's; a path made both ways is two sounds; a missing or
- * undecodable file fails; a released sound is gone; and audio stops with core and comes
- * back with the next sound. The browser's half is wgf_audio_sound_web_test. */
+ * undecodable file fails; a released sound is gone; audio stops with core and comes
+ * back with the next sound; and a sound loads again in place under the voices playing it.
+ * The browser's half is wgf_audio_sound_web_test. */
 
 static int failures;
 
@@ -63,11 +68,12 @@ static void copy_asset(const char *name)
 static void put16(unsigned char *p, unsigned v) { p[0] = (unsigned char)v; p[1] = (unsigned char)(v >> 8); }
 static void put32(unsigned char *p, uint32_t v) { put16(p, v & 0xFFFFu); put16(p + 2, v >> 16); }
 
-/* A 16-bit stereo WAV of 2000 frames at 44.1 kHz. */
-static void write_wav(const char *path)
+/* A 16-bit stereo WAV of `frames` frames (4000 at most) at 44.1 kHz. */
+static void write_wav(const char *path, unsigned frames)
 {
-    enum { FRAMES = 2000 };
-    static unsigned char wav[44 + FRAMES * 4];
+    enum { MOST = 4000 };
+    const unsigned FRAMES = frames < MOST ? frames : MOST;
+    static unsigned char wav[44 + MOST * 4];
     memcpy(wav, "RIFF", 4);
     put32(wav + 4, 36u + FRAMES * 4u);
     memcpy(wav + 8, "WAVEfmt ", 8);
@@ -80,8 +86,8 @@ static void write_wav(const char *path)
     put16(wav + 34, 16);
     memcpy(wav + 36, "data", 4);
     put32(wav + 40, FRAMES * 4u);
-    for (int i = 0; i < FRAMES * 2; i++) put16(wav + 44 + i * 2, (unsigned)(i * 37) & 0xFFFFu);
-    expect(wgf_core_priv_fs_write(path, wav, (int)sizeof(wav)), "the WAV written");
+    for (unsigned i = 0; i < FRAMES * 2; i++) put16(wav + 44 + i * 2, (i * 37u) & 0xFFFFu);
+    expect(wgf_core_priv_fs_write(path, wav, (int)(44 + FRAMES * 4)), "the WAV written");
 }
 
 static void test_pair(const char *path, float least, float most)
@@ -115,6 +121,80 @@ static void test_pair(const char *path, float least, float most)
            "released: gone");
 }
 
+/* Update until neither sound is loading again (wgf_asset_reload). */
+static void settle_reload(wgf_handle_t a, wgf_handle_t b)
+{
+    const double start = wgf_time_get_seconds();
+    while ((wgf_core_priv_resource_is_reloading(a) || wgf_core_priv_resource_is_reloading(b)) &&
+           wgf_time_get_seconds() - start < 30.0) {
+        wgf_core_priv_update();
+    }
+}
+
+/* A sound loaded again in place, decoded and streamed, while a voice plays each: the new
+ * file's length, the voices at its start again and still playing; a paused voice held at
+ * the start; a segment past the new end dropped; and a broken file keeps what it had. */
+static void test_reload(void)
+{
+    static float out[512 * 2];
+    const wgf_handle_t decoded = wgf_sound_create("sounds/ramp.wav");
+    const wgf_handle_t streamed = wgf_sound_create_streamed("sounds/ramp.wav");
+    wgf_handle_t one, two, held;
+    settle();
+    expect(wgf_sound_add_segment(decoded, "late", 0.03f, 0.04f), "a segment near the end of 2000 frames");
+    one = wgf_voice_create(decoded);
+    two = wgf_voice_create(streamed);
+    held = wgf_voice_create(decoded);
+    wgf_voice_set_loop(one, true);
+    wgf_voice_set_loop(two, true);
+    wgf_voice_play(one);
+    wgf_voice_play(two);
+    wgf_voice_play(held);
+    wgf_audio_priv_mix(out, 512, 44100);
+    wgf_voice_pause(held);
+    expect(wgf_voice_get_position(one) > 0.0f && wgf_voice_get_position(two) > 0.0f, "both playing on");
+
+    write_wav("sounds/ramp.wav", 4000);
+    expect(wgf_asset_can_reload("sounds/ramp.wav") && wgf_asset_reload("sounds/ramp.wav") == 2,
+           "a path made both ways: both load again");
+    settle_reload(decoded, streamed);
+    expect(wgf_resource_get_status(decoded) == WGF_RESOURCE_STATUS_READY &&
+               wgf_resource_get_status(streamed) == WGF_RESOURCE_STATUS_READY &&
+               fabsf(wgf_sound_get_duration(decoded) - 4000.0f / 44100.0f) < 1e-6f &&
+               fabsf(wgf_sound_get_duration(streamed) - 4000.0f / 44100.0f) < 1e-6f,
+           "in place: the same handles, the new file's length");
+    expect(wgf_voice_get_state(one) == WGF_PLAY_STATE_PLAYING && wgf_voice_get_position(one) == 0.0f &&
+               wgf_voice_get_state(two) == WGF_PLAY_STATE_PLAYING && wgf_voice_get_position(two) == 0.0f,
+           "a voice playing it: at its start again, still playing");
+    expect(wgf_voice_get_state(held) == WGF_PLAY_STATE_PAUSED && wgf_voice_get_position(held) == 0.0f,
+           "a paused one: held at the start");
+    wgf_audio_priv_mix(out, 512, 44100);
+    expect(wgf_voice_get_position(one) > 0.0f && wgf_voice_get_position(two) > 0.0f, "and they play the new one");
+    expect(wgf_voice_set_segment(one, "late"), "its segment kept");
+
+    write_wav("sounds/ramp.wav", 1000); /* shorter than the segment's start */
+    expect(wgf_asset_reload("sounds/ramp.wav") == 2, "saved shorter");
+    settle_reload(decoded, streamed);
+    expect(fabsf(wgf_sound_get_duration(decoded) - 1000.0f / 44100.0f) < 1e-6f &&
+               !wgf_voice_set_segment(held, "late"),
+           "the segment past the new end dropped");
+    wgf_audio_priv_mix(out, 512, 44100);
+
+    expect(wgf_core_priv_fs_write("sounds/ramp.wav", (const unsigned char *)"not a sound", 11), "saved broken");
+    expect(wgf_asset_reload("sounds/ramp.wav") == 2, "a broken file, loading again");
+    settle_reload(decoded, streamed);
+    expect(wgf_resource_get_status(decoded) == WGF_RESOURCE_STATUS_READY &&
+               wgf_resource_get_status(streamed) == WGF_RESOURCE_STATUS_READY &&
+               fabsf(wgf_sound_get_duration(streamed) - 1000.0f / 44100.0f) < 1e-6f,
+           "what they had is kept");
+    wgf_audio_priv_mix(out, 512, 44100);
+    wgf_voice_destroy(one);
+    wgf_voice_destroy(two);
+    wgf_voice_destroy(held);
+    wgf_resource_release(decoded);
+    wgf_resource_release(streamed);
+}
+
 int main(void)
 {
     wgf_handle_t missing, garbage, garbage_streamed;
@@ -122,7 +202,7 @@ int main(void)
     wgf_core_priv_fs_set_root("audio_sound_test_root");
     copy_asset("music/a_hero_is_born.mp3");
     copy_asset("sounds/click_004.ogg");
-    write_wav("sounds/ramp.wav");
+    write_wav("sounds/ramp.wav", 2000);
     expect(wgf_core_priv_fs_write("sounds/garbage.ogg", (const unsigned char *)"not a sound", 11), "garbage written");
 
     test_pair("sounds/ramp.wav", 2000.0f / 44100.0f - 1e-6f, 2000.0f / 44100.0f + 1e-6f);
@@ -152,6 +232,7 @@ int main(void)
         settle();
         expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_READY, "a second run's sound loads");
     }
+    test_reload();
     wgf_core_priv_fs_rmdir("sounds");
     wgf_core_priv_fs_rmdir("music");
     wgf_core_priv_shutdown();

@@ -142,5 +142,8 @@ if(WGF_TESTS AND EMSCRIPTEN)
         target_link_options(wgf_audio_sound_web_test PRIVATE
             "SHELL:--preload-file ${PROJECT_SOURCE_DIR}/examples/assets/music/a_hero_is_born.mp3@/wgf/music/a_hero_is_born.mp3"
             "SHELL:--preload-file ${PROJECT_SOURCE_DIR}/examples/assets/sounds/click_004.ogg@/wgf/sounds/click_004.ogg")
+        # a file its page's server has, to load again from it (a reload fetches anew)
+        configure_file(${PROJECT_SOURCE_DIR}/examples/assets/sounds/click_004.ogg
+                       ${CMAKE_CURRENT_BINARY_DIR}/served/click.ogg COPYONLY)
     endif()
 endif()
