@@ -96,6 +96,10 @@ bool wgf_platform_priv_gpu_is_lost(void);
 /* How many times the context has come back since the program started: a loss and its
  * return between two frames show here alone. */
 unsigned wgf_platform_priv_gpu_get_restores(void);
+/* Emscripten's side of a context given back: its tables' objects let go of, and its
+ * extensions enabled again. Called by wgf_platform_sokol_impl.c, which declares it itself;
+ * defined on the web alone. */
+void wgf_platform_priv_gpu_reset(void);
 /* sokol_gfx's objects on a context lost, then given back (WebGL2 only; elsewhere these do
  * nothing, and restore returns true): `lost` reads the context's one lost error, so no
  * sokol check trips on it (nothing on the GPU is called after it until restore); `restore`

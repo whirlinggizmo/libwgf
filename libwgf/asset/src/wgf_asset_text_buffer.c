@@ -68,7 +68,7 @@ static bool reserve(buffer_t *buffer_ptr, size_t length, const char *caller)
     char *grown;
     size_t capacity;
     if (length > TEXT_MAX) {
-        wgf_log_warn("%s: %zu bytes, over the most a text buffer holds (%d)", caller, length, TEXT_MAX);
+        wgf_log_warn("%s: %lu bytes, over the most a text buffer holds (%d)", caller, (unsigned long)length, TEXT_MAX);
         return false;
     }
     if (buffer_ptr->text != NULL && length < (size_t)buffer_ptr->capacity) return true;
@@ -77,7 +77,7 @@ static bool reserve(buffer_t *buffer_ptr, size_t length, const char *caller)
     if (capacity > (size_t)TEXT_MAX + 1) capacity = (size_t)TEXT_MAX + 1;
     grown = (char *)realloc(buffer_ptr->text, capacity);
     if (grown == NULL) {
-        wgf_log_error("%s: no memory for %zu bytes of text", caller, length);
+        wgf_log_error("%s: no memory for %lu bytes of text", caller, (unsigned long)length);
         return false;
     }
     if (buffer_ptr->text == NULL) grown[0] = '\0';
@@ -212,8 +212,8 @@ wgf_text_buffer_t wgf_text_buffer_create_text(const char *text)
     const size_t length = text != NULL ? strlen(text) : 0;
     if (!ensure_started()) return 0;
     if (length > TEXT_MAX) {
-        wgf_log_warn("wgf_text_buffer_create_text: %zu bytes, over the most a text buffer holds (%d)", length,
-                     TEXT_MAX);
+        wgf_log_warn("wgf_text_buffer_create_text: %lu bytes, over the most a text buffer holds (%d)",
+                     (unsigned long)length, TEXT_MAX);
         return 0;
     }
     buffer = wgf_core_priv_resource_add(WGF_CORE_PRIV_HANDLE_KIND_TEXT_BUFFER);

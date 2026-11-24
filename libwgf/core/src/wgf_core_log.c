@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "wgf_core_os_priv.h"
+#include "wgf_core_priv.h"
 #include "wgf_core_thread_priv.h"
 
 static wgf_log_level_t log_level = WGF_LOG_LEVEL_INFO;

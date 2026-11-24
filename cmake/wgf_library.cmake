@@ -90,6 +90,8 @@ function(wgf_target_defaults target)
         target_compile_definitions(${target} PRIVATE _CRT_SECURE_NO_WARNINGS)
     else()
         target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic)
+        # a function defined without its declaration in sight is built hidden, WGF_API or not
+        target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wmissing-prototypes>)
     endif()
     if(WGF_WERROR)
         target_compile_options(${target} PRIVATE $<IF:$<C_COMPILER_ID:MSVC>,/WX,-Werror>)

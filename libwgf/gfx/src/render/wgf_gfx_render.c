@@ -7,9 +7,11 @@
 #include "texture/wgf_gfx_texture_priv.h"
 #include "util/sokol_gl.h"
 #include "wgf_core_part_priv.h"
+#include "wgf_draw.h"
 #include "wgf_log.h"
 #include "wgf_material.h"
 #include "wgf_platform_priv.h"
+#include "wgf_presentation.h"
 
 /* gfx's start and stop, and the frame, as libwgt's: sokol_gfx set up on the window's
  * device, and each frame one pass into the window, both as the platform gives them
