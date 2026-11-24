@@ -124,8 +124,14 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_environment_test)
         wgf_test(gfx wgf_gfx_shape3d_test)
         wgf_test(gfx wgf_gfx_text_test)
-        # the examples' other typeface, to load a font again as
+        # the examples' other typeface, to load a font again as; under node, which has no disk
+        # of the host's, packed into the program's own files at the same path
+        set(other_font "${PROJECT_SOURCE_DIR}/examples/assets/fonts/Komika/KOMIKAH_.ttf")
         target_compile_definitions(wgf_gfx_text_test PRIVATE WGF_TEST_ASSETS="${PROJECT_SOURCE_DIR}/examples/assets")
+        if(EMSCRIPTEN)
+            target_link_options(wgf_gfx_text_test PRIVATE "SHELL:--preload-file ${other_font}@${other_font}")
+            set_property(TARGET wgf_gfx_text_test APPEND PROPERTY LINK_DEPENDS "${other_font}")
+        endif()
         wgf_test(gfx wgf_gfx_font_bitmap_test)
         wgf_test(gfx wgf_gfx_font_no_bitmaps_test)
         wgf_test(gfx wgf_gfx_texture_test)
