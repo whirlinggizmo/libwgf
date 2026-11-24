@@ -165,11 +165,13 @@ expect <probe> <op> <number>    after the frame: ==, !=, <, <=, >, or >= against
                                 a probe not set fails
 expect <probe> == "<text>"      the same against a text probe (wgf_probe_set_text; the UI's
                                 focus is `ui.focus`), == or != alone, \" and \\ escaped
-wait <probe> <op> <number>      after the frame, until the probe holds: the autopilot stays at this
+wait <probe> <op> <number> [within <s>]
+                                after the frame, until the probe holds: the autopilot stays at this
                                 frame while the program's frames go on, so every later line keeps its
                                 distance from the wait (a load's end, which takes real time, comes at
-                                the same point on every machine); past 30 real seconds, a failure,
-                                and the autopilot goes on
+                                the same point on every machine); past 30 real seconds (or <s>, for
+                                a wait that can take longer on a slow machine), a failure, and the
+                                autopilot goes on
 log <text>                      the text, logged, to mark a point in the run
 screenshot <name>               "wgf_autopilot: SCREENSHOT <name>" logged, for a tool watching the
                                 run to save the frame: `wgf autopilot --web` saves each as

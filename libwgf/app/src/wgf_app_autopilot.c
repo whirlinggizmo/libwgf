@@ -67,6 +67,7 @@ typedef struct command_t {
     double value;
     char *text; /* text, a probe's name, a log's or a screenshot's */
     char *want; /* an expect's or a wait's text, for a text probe; NULL for a number */
+    double within; /* a wait's longest, in real seconds (`within`); 0: WAIT_SECONDS */
     bool done;  /* played */
 } command_t;
 
@@ -452,7 +453,7 @@ static void parse_command(parser_t *parser, long frame, char *at)
     } else if (strcmp(word, "expect") == 0 || strcmp(word, "wait") == 0) {
         const bool wait = word[0] == 'w';
         char *probe = next_word(&at), *op = next_word(&at), *want = NULL;
-        double value = 0.0;
+        double value = 0.0, within = 0.0;
         int i;
         while (*at == ' ' || *at == '\t') at++;
         if (*at == '"') {
@@ -475,10 +476,22 @@ static void parse_command(parser_t *parser, long frame, char *at)
             parse_error(parser, "text takes == or !=", op);
             return;
         }
+        { /* a wait's own longest: `within <seconds>` */
+            char *before = at, *more = next_word(&at);
+            if (more != NULL && strcmp(more, "within") == 0) {
+                if (!wait || !parse_number(next_word(&at), &within) || !(within > 0.0)) {
+                    parse_error(parser, "within takes a wait's longest, in seconds above 0", more);
+                    return;
+                }
+            } else {
+                at = before; /* not one: what follows is refused below */
+            }
+        }
         command = add(parser, frame, wait ? CMD_WAIT : CMD_EXPECT);
         if (command != NULL) {
             command->op = (op_t)i;
             command->value = value;
+            command->within = within;
             command->text = copy_of(parser, probe);
             command->want = want != NULL ? copy_of(parser, want) : NULL;
         }
@@ -909,13 +922,15 @@ static void dump(long frame)
 
 /* A wait at the autopilot's frame: true once its probe holds, so the autopilot goes on;
  * false while it doesn't, so the autopilot stays at this frame for the program's next
- * one; past WAIT_SECONDS of real time, it fails and the autopilot goes on. */
+ * one; past WAIT_SECONDS of real time (or its own, `within`), it fails and the autopilot
+ * goes on. */
 static bool waited(const command_t *command)
 {
     const double now = wgf_time_get_seconds();
+    const double longest = command->within > 0.0 ? command->within : WAIT_SECONDS;
     const bool met = probe_holds(command);
     if (!met && autopilot.waiting < 0.0) autopilot.waiting = now;
-    if (!met && now - autopilot.waiting <= WAIT_SECONDS) {
+    if (!met && now - autopilot.waiting <= longest) {
         autopilot.shift++; /* this autopilot frame again, for the program's next */
         return false;
     }

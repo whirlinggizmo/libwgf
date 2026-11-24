@@ -191,6 +191,12 @@ int main(void)
     expect(wgf_app_priv_autopilot_has_passed() && wgf_app_priv_autopilot_get_failures() == 0,
            "a wait holds until its probe does, and what follows it at its frame runs then");
     expect(run.frames == 12, "the program's frames went on through the wait, the end its distance after");
+    run_autopilot("wgf-autopilot 1\n"
+               "at 2 wait ticks >= 10 within 90 # its own longest\n"
+               "at 2 expect ticks == 10\n"
+               "at 4 end\n",
+               &run);
+    expect(wgf_app_priv_autopilot_has_passed() && run.frames == 12, "a wait with its own longest, read and held");
 
     wgf_core_priv_part_install(&dumping);
     run_autopilot("wgf-autopilot 1\nat 2 dump\nat 3 dump\nat 4 end\n", &run);
@@ -252,6 +258,9 @@ int main(void)
             "wgf-autopilot 1\nwait 3\n",                 /* not a line the format has */
             "wgf-autopilot 1\nat 1 wait score ~ 3\n",    /* no such operator */
             "wgf-autopilot 1\nat 1 wait score == 1 2\n", /* more than the command takes */
+            "wgf-autopilot 1\nat 1 wait score == 1 within\n",    /* within no time */
+            "wgf-autopilot 1\nat 1 wait score == 1 within 0\n",  /* within 0 seconds */
+            "wgf-autopilot 1\nat 1 expect score == 1 within 5\n", /* an expect has no longest */
             "wgf-autopilot 1\nat 1 text\n",              /* nothing to type */
             "wgf-autopilot 1\nat 1 log \x01\n",          /* a control character */
             "wgf-autopilot 1\nat 1 expect screen < \"a\"\n",     /* text compared with < */

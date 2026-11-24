@@ -363,14 +363,19 @@ def save_shot(session, folder, name):
 def autopilot_seconds(text):
     """How long a run of the autopilot `text` may take in a browser: two minutes, and
     its last frame's at 3 frames a second (a headless browser's software drawing
-    can be that slow), with each wait's longest (30 s) on top."""
-    last, waits = 0, 0
+    can be that slow), with each wait's longest on top (30 s, or its own `within`)."""
+    last, waits = 0, 0.0
     for line in text.splitlines():
         words = line.split('#', 1)[0].split()
         if len(words) >= 3 and words[0] == 'at' and words[1].isdigit():
             last = max(last, int(words[1]))
-            waits += words[2] == 'wait'
-    return 120 + last / 3 + 30 * waits
+            if words[2] == 'wait':
+                within = words.index('within') if 'within' in words else -1
+                try:
+                    waits += float(words[within + 1]) if 0 <= within < len(words) - 1 else 30
+                except ValueError:
+                    waits += 30
+    return 120 + last / 3 + waits
 
 
 def why_failed(output):

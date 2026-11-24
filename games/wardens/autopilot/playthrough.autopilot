@@ -4,7 +4,7 @@ wgf-autopilot 1
 # other, around the four directions) as her sword works through them, to the first level's
 # cards (the second picked), and the run going on.
 seed 1
-at 1 wait wardens.ready == 1
+at 1 wait wardens.ready == 1 within 120
 at 10 expect wardens.state == 1
 at 20 key tap enter
 at 22 expect wardens.state == 2

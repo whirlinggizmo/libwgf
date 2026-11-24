@@ -1153,6 +1153,10 @@ The examples' friction (e): reaching a behavior's object in Haxe was `cast Behav
 
 From the list: `wgf_audio_is_blocked` true had never been seen. The browser that runs the tests lets sound start untapped, so `wgf_audio_autoplay_web_test` stands in for the audio context's state and the page's user activation (suspended, none) until its first tap, as it stands in for a media element's `play()`: held back before audio starts and after, not after the tap.
 
+## A wait's own longest (2026-11-24)
+
+The pages job failed when Wardens took more than the autopilot's 30 seconds to load on a slow runner. `wait <probe> <op> <number> within <s>` gives one wait its own longest, so a load that can take long says so where it is, and every other wait still fails at 30 seconds; Wardens' first wait in each of its autopilots is `within 120`. `tools/wgf/game.py`'s time for a run counts each wait's own.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

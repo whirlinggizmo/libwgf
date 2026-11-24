@@ -2,7 +2,7 @@ wgf-autopilot 1
 # Wardens' smoke run, short enough for a browser on a software renderer (check_games' browser
 # step): the title once its files have loaded, Play, a run to the right, a pause and back.
 seed 1
-at 1 wait wardens.ready == 1
+at 1 wait wardens.ready == 1 within 120
 at 10 expect wardens.state == 1
 at 20 key tap enter
 at 22 expect wardens.state == 2
