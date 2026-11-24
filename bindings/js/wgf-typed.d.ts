@@ -1176,9 +1176,9 @@ export declare const Asset: {
      *   a new actor.
      * - A file that doesn't load keeps what was loaded, with one error logged.
      * - A FAILED resource that now loads becomes READY.
-     * - These load again: a texture (compressed ones too), an image, a glTF mesh with its
-     *   images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a font, and a
-     *   text buffer. Each kind's header says what is kept across it.
+     * - These load again: a texture (compressed ones too), an image, a cubemap, a glTF mesh
+     *   with its images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a
+     *   font, and a text buffer. Each kind's header says what is kept across it.
      * - These don't: a scene and a UI document. Each is left as it is, with a warning.
      * - A resource still loading is left as it is.
      *
@@ -2657,6 +2657,12 @@ export type Cubemap = raw.wgf_cubemap_t;
  *
  * Pixels are RGBA, 8 bits a channel, as stored. A picture's pixels are sRGB, so convert them
  * with wgf_srgb_to_linear in the shader.
+ *
+ * A cubemap loads again in place (wgf_asset_reload) when its file is saved, or any of its six:
+ * - It keeps its handle, and is shown as it was until the new file is in.
+ * - One image's layout is read again from its shape, as AUTO reads it.
+ * - Six files are all read again, and made a cube once they are all in.
+ * - A file that doesn't load, or faces of two sizes, keep what it had, with one error logged.
  */
 export declare const Cubemap: {
     /**

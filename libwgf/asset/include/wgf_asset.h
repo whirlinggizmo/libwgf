@@ -220,9 +220,9 @@ WGF_API bool wgf_asset_evict(const char *path);
  *   a new actor.
  * - A file that doesn't load keeps what was loaded, with one error logged.
  * - A FAILED resource that now loads becomes READY.
- * - These load again: a texture (compressed ones too), an image, a glTF mesh with its
- *   images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a font, and a
- *   text buffer. Each kind's header says what is kept across it.
+ * - These load again: a texture (compressed ones too), an image, a cubemap, a glTF mesh
+ *   with its images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a
+ *   font, and a text buffer. Each kind's header says what is kept across it.
  * - These don't: a scene and a UI document. Each is left as it is, with a warning.
  * - A resource still loading is left as it is.
  *

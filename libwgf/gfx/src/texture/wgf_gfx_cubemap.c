@@ -20,11 +20,14 @@
 /* Cubemaps, raylib's LoadTextureCubemap: six square faces on the GPU, an RGBA8 cube image
  * with its mipmaps, which a custom shader samples as samplerCube. From one image in a layout
  * (a loader a layout, so the worker knows how to cut it: decoded with the texture loader's
- * stb_image, cut into faces, and its mipmaps built there), or from six files, each a request
+ * stb_image, cut into faces, and its mipmaps built there; in a page the browser decodes it,
+ * and it is cut in finish once it has), or from six files, each a request
  * of the same resource (decoded, checked square, and its mipmaps built on a worker; kept by
  * the record as each finishes, and the cube made by the last). A part, installed by the first
  * cubemap made, which sets the custom materials' hook for binding one, so a program with none
- * links none of it. */
+ * links none of it. Loaded again in place (wgf_asset_reload): one image through the kind's
+ * loader, its layout read again from its shape; six files by the kind's reload hook, a request
+ * a face again, the cube made again once all six are in and none failed. */
 
 #define MAX_SIZE 8192 /* a face's side, at most: the GPUs libwgf runs on take this */
 #define CHECKER 8     /* the FAILED placeholder's face, in texels */
@@ -53,6 +56,8 @@ typedef struct cubemap_t {
     wgf_cubemap_layout_t layout; /* asked, then, READY, what it was read as */
     bool made;                   /* its first create has said its layout */
     faces_t *faces;              /* six files: their paths, and their pixels while they load */
+    int again;                   /* six files loading again: the requests not yet in */
+    bool again_failed;           /* and one of them didn't load: what it had is kept */
 } cubemap_t;
 
 static bool pool_ready;
@@ -173,33 +178,24 @@ static bool build_mipmaps(pixels_t *pixels)
     return true;
 }
 
-/* The image at `path` decoded to RGBA, on any thread: its pixels, freed with free_decoded,
- * and size; NULL (warned) when it can't be read or isn't an image. */
-static void *decode(const char *path, const unsigned char **rgba, int *width, int *height)
-{
-    unsigned char *bytes;
-    int size;
+/* A file's prepared data: its image while it decodes (the browser's, in a page, waited for in
+ * finish), then its pixels, cut into six faces (a whole cube's) or one (a face's file), with
+ * their mipmaps, until its finish takes them. */
+typedef struct prepared_t {
     void *decoded;
-    if (!wgf_core_priv_fs_read(path, &bytes, &size)) {
-        wgf_log_warn("wgf_gfx_cubemap: %s: couldn't be read", path);
-        return NULL;
-    }
-    decoded = wgf_gfx_priv_texture_decode_base(bytes, size, path);
-    wgf_core_priv_fs_read_free(bytes);
-    if (decoded != NULL) *rgba = wgf_gfx_priv_texture_decoded_pixels(decoded, width, height);
-    return decoded;
-}
+    pixels_t *pixels;
+    wgf_cubemap_layout_t layout; /* a whole cube's, as asked; FACES for a face's file */
+    char path[WGF_CORE_PRIV_FS_PATH_MAX];
+} prepared_t;
 
-/* An image in one of the layouts, cut into faces with their mipmaps, on a worker; NULL
- * (warned) when it can't be read, or its shape isn't the layout's. */
-static void *prepare_image(const char *path, wgf_cubemap_layout_t layout)
+/* An image in one of the layouts, decoded (`rgba`, `width` by `height`), cut into faces with
+ * their mipmaps; NULL (warned) when its shape isn't the layout's. */
+static pixels_t *cut_image(const unsigned char *rgba, int width, int height, const char *path,
+                           wgf_cubemap_layout_t layout)
 {
-    const unsigned char *rgba = NULL;
-    int width = 0, height = 0, size = 0;
-    void *decoded = decode(path, &rgba, &width, &height);
+    int size = 0;
     pixels_t *pixels;
     wgf_cubemap_layout_t found;
-    if (decoded == NULL) return NULL;
     found = wgf_gfx_priv_cubemap_layout_of(width, height, layout, &size);
     if (found == WGF_CUBEMAP_LAYOUT_AUTO || size > MAX_SIZE) {
         wgf_log_warn("wgf_gfx_cubemap: %s: a %d by %d image isn't %s", path, width, height,
@@ -207,7 +203,6 @@ static void *prepare_image(const char *path, wgf_cubemap_layout_t layout)
                      : layout == WGF_CUBEMAP_LAYOUT_AUTO
                          ? "a cubemap's layout (6 by 1, 1 by 6, 4 by 3, or 3 by 4 faces)"
                          : "the layout's shape");
-        wgf_gfx_priv_texture_decoded_free(decoded);
         return NULL;
     }
     pixels = (pixels_t *)calloc(1, sizeof(pixels_t));
@@ -224,22 +219,16 @@ static void *prepare_image(const char *path, wgf_cubemap_layout_t layout)
             pixels = NULL;
         }
     }
-    wgf_gfx_priv_texture_decoded_free(decoded);
     return pixels;
 }
 
-/* One face's file, square, with its mipmaps, on a worker; NULL (warned) otherwise. */
-static void *prepare_face(const char *path)
+/* One face's file, decoded, square, with its mipmaps; NULL (warned) otherwise. */
+static pixels_t *cut_face(const unsigned char *rgba, int width, int height, const char *path)
 {
-    const unsigned char *rgba = NULL;
-    int width = 0, height = 0;
-    void *decoded = decode(path, &rgba, &width, &height);
     pixels_t *pixels;
-    if (decoded == NULL) return NULL;
     if (width != height || width > MAX_SIZE) {
         wgf_log_warn("wgf_gfx_cubemap: %s: a face is square, 8192 pixels or smaller: this is %d by %d", path, width,
                      height);
-        wgf_gfx_priv_texture_decoded_free(decoded);
         return NULL;
     }
     pixels = (pixels_t *)calloc(1, sizeof(pixels_t));
@@ -256,8 +245,66 @@ static void *prepare_face(const char *path)
             pixels = NULL;
         }
     }
-    wgf_gfx_priv_texture_decoded_free(decoded);
     return pixels;
+}
+
+static void discard(void *data)
+{
+    prepared_t *prepared = (prepared_t *)data;
+    if (prepared == NULL) return;
+    wgf_gfx_priv_texture_decoded_free(prepared->decoded);
+    pixels_free(prepared->pixels);
+    free(prepared);
+}
+
+/* Its decode done: its pixels cut from it, the image let go of. FAILED (warned) when the
+ * decode did, or the image isn't what it should be; PENDING while the browser decodes it. */
+static wgf_core_priv_load_step_t cut(prepared_t *prepared)
+{
+    const unsigned char *rgba;
+    int width = 0, height = 0;
+    wgf_gfx_priv_decode_state_t state;
+    if (prepared->pixels != NULL) return WGF_CORE_PRIV_LOAD_DONE;
+    state = wgf_gfx_priv_texture_decoded_wait(prepared->decoded, prepared->path);
+    if (state == WGF_GFX_PRIV_DECODE_PENDING) return WGF_CORE_PRIV_LOAD_WAIT;
+    rgba = state == WGF_GFX_PRIV_DECODE_DONE ? wgf_gfx_priv_texture_decoded_pixels(prepared->decoded, &width, &height)
+                                              : NULL;
+    if (rgba != NULL) {
+        prepared->pixels = prepared->layout == WGF_CUBEMAP_LAYOUT_FACES
+                               ? cut_face(rgba, width, height, prepared->path)
+                               : cut_image(rgba, width, height, prepared->path, prepared->layout);
+    }
+    wgf_gfx_priv_texture_decoded_free(prepared->decoded);
+    prepared->decoded = NULL;
+    return prepared->pixels != NULL ? WGF_CORE_PRIV_LOAD_DONE : WGF_CORE_PRIV_LOAD_FAILED;
+}
+
+/* The file at `path` read and its decode started, on a worker: natively decoded at once and
+ * cut there; in a page the browser's decode, waited for and cut in finish. NULL (warned)
+ * when it can't be read, decoded, or cut. */
+static void *prepare(const char *path, wgf_cubemap_layout_t layout)
+{
+    unsigned char *bytes;
+    int size;
+    prepared_t *prepared;
+    if (!wgf_core_priv_fs_read(path, &bytes, &size)) {
+        wgf_log_warn("wgf_gfx_cubemap: %s: couldn't be read", path);
+        return NULL;
+    }
+    prepared = (prepared_t *)calloc(1, sizeof(prepared_t));
+    if (prepared != NULL) {
+        prepared->layout = layout;
+        snprintf(prepared->path, sizeof(prepared->path), "%s", path);
+        prepared->decoded = wgf_gfx_priv_texture_decode_base(bytes, size, path);
+    } else {
+        wgf_log_warn("wgf_gfx_cubemap: %s: out of memory", path);
+    }
+    wgf_core_priv_fs_read_free(bytes);
+    if (prepared == NULL || prepared->decoded == NULL || cut(prepared) == WGF_CORE_PRIV_LOAD_FAILED) {
+        discard(prepared);
+        return NULL;
+    }
+    return prepared;
 }
 
 /* ------------------------------------------------------------ the GPU ---- */
@@ -342,16 +389,14 @@ static wgf_core_priv_load_step_t finish_with(const pixels_t *pixels, wgf_handle_
     return WGF_CORE_PRIV_LOAD_DONE;
 }
 
-static wgf_core_priv_load_step_t finish_image(void *prepared, wgf_handle_t resource)
+static wgf_core_priv_load_step_t finish_image(void *data, wgf_handle_t resource)
 {
+    prepared_t *prepared = (prepared_t *)data;
+    const wgf_core_priv_load_step_t step = cut(prepared); /* in a page, once the browser has decoded it */
+    if (step != WGF_CORE_PRIV_LOAD_DONE) return step;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
     if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
-    return finish_with((const pixels_t *)prepared, resource, NULL);
-}
-
-static void discard(void *prepared)
-{
-    pixels_free((pixels_t *)prepared);
+    return finish_with(prepared->pixels, resource, NULL);
 }
 
 static void fail(wgf_handle_t resource)
@@ -361,64 +406,43 @@ static void fail(wgf_handle_t resource)
 
 static void *prepare_auto(const char *path)
 {
-    return prepare_image(path, WGF_CUBEMAP_LAYOUT_AUTO);
+    return prepare(path, WGF_CUBEMAP_LAYOUT_AUTO);
 }
 
 static void *prepare_vertical(const char *path)
 {
-    return prepare_image(path, WGF_CUBEMAP_LAYOUT_LINE_VERTICAL);
+    return prepare(path, WGF_CUBEMAP_LAYOUT_LINE_VERTICAL);
 }
 
 static void *prepare_horizontal(const char *path)
 {
-    return prepare_image(path, WGF_CUBEMAP_LAYOUT_LINE_HORIZONTAL);
+    return prepare(path, WGF_CUBEMAP_LAYOUT_LINE_HORIZONTAL);
 }
 
 static void *prepare_three_by_four(const char *path)
 {
-    return prepare_image(path, WGF_CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR);
+    return prepare(path, WGF_CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR);
 }
 
 static void *prepare_four_by_three(const char *path)
 {
-    return prepare_image(path, WGF_CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE);
+    return prepare(path, WGF_CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE);
 }
 
-/* A layout's loader, by the layout (AUTO to CROSS_FOUR_BY_THREE). They don't load again:
- * the kind's loader, which wgf_asset_reload asks for, wouldn't know the layout. */
+/* A layout's loader, by the layout (AUTO to CROSS_FOUR_BY_THREE). Loading again in place
+ * (wgf_asset_reload) goes through the kind's loader, AUTO's, which reads the layout from the
+ * image's shape: the one asked isn't known by the file's path alone. */
 static const wgf_core_priv_loader_t image_loaders[5] = {
-    {"cubemap", prepare_auto, finish_image, discard, fail, NULL, false, NULL},
-    {"cubemap", prepare_vertical, finish_image, discard, fail, NULL, false, NULL},
-    {"cubemap", prepare_horizontal, finish_image, discard, fail, NULL, false, NULL},
-    {"cubemap", prepare_three_by_four, finish_image, discard, fail, NULL, false, NULL},
-    {"cubemap", prepare_four_by_three, finish_image, discard, fail, NULL, false, NULL},
+    {"cubemap", prepare_auto, finish_image, discard, fail, NULL, true, NULL},
+    {"cubemap", prepare_vertical, finish_image, discard, fail, NULL, true, NULL},
+    {"cubemap", prepare_horizontal, finish_image, discard, fail, NULL, true, NULL},
+    {"cubemap", prepare_three_by_four, finish_image, discard, fail, NULL, true, NULL},
+    {"cubemap", prepare_four_by_three, finish_image, discard, fail, NULL, true, NULL},
 };
-
-/* A face's prepared data: its pixels, until its finish takes them for the record. */
-typedef struct face_prepared_t {
-    pixels_t *pixels;
-} face_prepared_t;
 
 static void *prepare_face_file(const char *path)
 {
-    face_prepared_t *prepared;
-    pixels_t *pixels = (pixels_t *)prepare_face(path);
-    if (pixels == NULL) return NULL;
-    prepared = (face_prepared_t *)calloc(1, sizeof(face_prepared_t));
-    if (prepared == NULL) {
-        wgf_log_warn("wgf_gfx_cubemap: %s: out of memory", path);
-        pixels_free(pixels);
-        return NULL;
-    }
-    prepared->pixels = pixels;
-    return prepared;
-}
-
-static void discard_face(void *prepared)
-{
-    face_prepared_t *face_ptr = (face_prepared_t *)prepared;
-    pixels_free(face_ptr->pixels);
-    free(face_ptr);
+    return prepare(path, WGF_CUBEMAP_LAYOUT_FACES);
 }
 
 /* The six faces of `faces`, all in, as one cube's pixels (the faces' levels side by side);
@@ -469,28 +493,62 @@ static void free_faces(cubemap_t *cubemap_ptr)
     cubemap_ptr->faces = NULL;
 }
 
-/* Face `face` of six files in: kept by the record, and the cube made once all six are,
- * FAILED (warned) when their sizes differ. A face of a cubemap that has FAILED is dropped. */
-static wgf_core_priv_load_step_t finish_face(void *prepared, wgf_handle_t resource, int face)
+/* Six files' loading again over, one of them not loaded: what it had kept (said once). */
+static void again_failed(wgf_handle_t resource, cubemap_t *cubemap_ptr)
 {
-    face_prepared_t *face_ptr = (face_prepared_t *)prepared;
+    free_face_pixels(cubemap_ptr);
+    cubemap_ptr->again_failed = false;
+    wgf_core_priv_resource_failed(resource); /* loading again: what was loaded is kept */
+}
+
+/* A face's file didn't load: FAILED, or, loading again, what it had kept once the other
+ * faces' requests are in. */
+static void fail_face(wgf_handle_t resource)
+{
+    cubemap_t *cubemap_ptr = cubemap_of(resource);
+    if (cubemap_ptr == NULL || cubemap_ptr->again == 0) {
+        wgf_core_priv_resource_failed(resource);
+        return;
+    }
+    cubemap_ptr->again_failed = true;
+    if (--cubemap_ptr->again == 0) again_failed(resource, cubemap_ptr);
+}
+
+/* Face `face` of six files in: kept by the record, and the cube made once all six are,
+ * FAILED (warned) when their sizes differ. A face of a cubemap that has FAILED is dropped,
+ * but while it loads again. Loading again, the cube is made once the six requests are in,
+ * none failed; what it had is kept when one did, or when their sizes differ. */
+static wgf_core_priv_load_step_t finish_face(void *data, wgf_handle_t resource, int face)
+{
+    prepared_t *face_ptr = (prepared_t *)data;
     cubemap_t *cubemap_ptr = cubemap_of(resource);
     pixels_t cube;
     wgf_core_priv_load_step_t step;
     char found[WGF_CORE_PRIV_FS_PATH_MAX];
     int f, m, arrived = 0;
     if (cubemap_ptr == NULL || cubemap_ptr->faces == NULL) return WGF_CORE_PRIV_LOAD_FAILED;
-    if (cubemap_ptr->resource.status == WGF_RESOURCE_STATUS_FAILED) return WGF_CORE_PRIV_LOAD_DONE; /* another face's */
+    if (cubemap_ptr->resource.status == WGF_RESOURCE_STATUS_FAILED && cubemap_ptr->again == 0) {
+        return WGF_CORE_PRIV_LOAD_DONE; /* another face's */
+    }
+    step = cut(face_ptr); /* in a page, once the browser has decoded it */
+    if (step != WGF_CORE_PRIV_LOAD_DONE) return step;
     if (!wgf_gfx_priv_render_is_running()) return WGF_CORE_PRIV_LOAD_MORE; /* no GPU yet: wait for one */
     if (wgf_gfx_priv_render_is_lost()) return WGF_CORE_PRIV_LOAD_WAIT; /* the GPU's context lost: until it is back */
     pixels_free(cubemap_ptr->faces->face[face]);
     cubemap_ptr->faces->face[face] = face_ptr->pixels; /* the record's now */
     face_ptr->pixels = NULL;
+    if (cubemap_ptr->again > 0) { /* loading again: the cube made once the six are in */
+        if (--cubemap_ptr->again > 0) return WGF_CORE_PRIV_LOAD_DONE;
+        if (cubemap_ptr->again_failed) {
+            again_failed(resource, cubemap_ptr);
+            return WGF_CORE_PRIV_LOAD_DONE;
+        }
+    }
     for (f = 0; f < 6; f++) arrived += cubemap_ptr->faces->face[f] != NULL ? 1 : 0;
     if (arrived < 6) return WGF_CORE_PRIV_LOAD_DONE;
     if (!join_faces(cubemap_ptr->faces, &cube)) {
-        free_faces(cubemap_ptr);
-        wgf_core_priv_resource_failed(resource);
+        free_face_pixels(cubemap_ptr); /* its paths kept: to load again */
+        wgf_core_priv_resource_failed(resource); /* loading again, what was loaded is kept */
         return WGF_CORE_PRIV_LOAD_DONE;
     }
     memcpy(found, cubemap_ptr->faces->paths[0], sizeof(found));
@@ -532,12 +590,12 @@ static wgf_core_priv_load_step_t finish_nz(void *prepared, wgf_handle_t resource
 
 /* A face's loader, by the face: its request's finish says which it is. */
 static const wgf_core_priv_loader_t face_loaders[6] = {
-    {"cubemap face", prepare_face_file, finish_px, discard_face, fail, NULL, false, NULL},
-    {"cubemap face", prepare_face_file, finish_nx, discard_face, fail, NULL, false, NULL},
-    {"cubemap face", prepare_face_file, finish_py, discard_face, fail, NULL, false, NULL},
-    {"cubemap face", prepare_face_file, finish_ny, discard_face, fail, NULL, false, NULL},
-    {"cubemap face", prepare_face_file, finish_pz, discard_face, fail, NULL, false, NULL},
-    {"cubemap face", prepare_face_file, finish_nz, discard_face, fail, NULL, false, NULL},
+    {"cubemap face", prepare_face_file, finish_px, discard, fail_face, NULL, false, NULL},
+    {"cubemap face", prepare_face_file, finish_nx, discard, fail_face, NULL, false, NULL},
+    {"cubemap face", prepare_face_file, finish_py, discard, fail_face, NULL, false, NULL},
+    {"cubemap face", prepare_face_file, finish_ny, discard, fail_face, NULL, false, NULL},
+    {"cubemap face", prepare_face_file, finish_pz, discard, fail_face, NULL, false, NULL},
+    {"cubemap face", prepare_face_file, finish_nz, discard, fail_face, NULL, false, NULL},
 };
 
 /* ----------------------------------------------------------- the part ---- */
@@ -557,9 +615,43 @@ static void free_cubemap(wgf_handle_t cubemap, void *record)
     free_faces(cubemap_ptr);
 }
 
+/* The kind's reload hook (wgf_core_resource_priv.h): a cubemap of six files loaded again when
+ * `key` is one of them, a request a face, fetched anew, the last making the cube; what it had
+ * shown until then, and kept when a face doesn't load. One of one image: the usual, 0. */
+static int reload(wgf_handle_t cubemap, void *record, const char *key, bool go)
+{
+    cubemap_t *cubemap_ptr = (cubemap_t *)record;
+    char path[WGF_CORE_PRIV_FS_PATH_MAX];
+    int f;
+    bool named = false;
+    for (f = 0; cubemap_ptr->faces != NULL && f < 6 && !named; f++) {
+        named = wgf_core_priv_fs_normalize_path(cubemap_ptr->faces->paths[f], path, sizeof(path)) &&
+                strcmp(path, key) == 0;
+    }
+    if (!named || !go) return named ? 1 : 0;
+    free_face_pixels(cubemap_ptr);
+    cubemap_ptr->again = 6;
+    cubemap_ptr->again_failed = false;
+    cubemap_ptr->resource.reloading = true;
+    for (f = 0; f < 6; f++) {
+        char face[WGF_CORE_PRIV_FS_PATH_MAX];
+        snprintf(face, sizeof(face), "%s", cubemap_of(cubemap)->faces->paths[f]);
+        if (!wgf_core_priv_load_request_reload(&face_loaders[f], face, cubemap)) {
+            wgf_log_warn("wgf_asset_reload: %s: nothing to load it with", face);
+            cubemap_ptr = cubemap_of(cubemap); /* the requests made may have moved nothing, but ask again */
+            cubemap_ptr->again -= 6 - f;
+            cubemap_ptr->again_failed = true;
+            if (cubemap_ptr->again == 0) again_failed(cubemap, cubemap_ptr);
+            break;
+        }
+    }
+    return 1;
+}
+
 static const wgf_core_priv_resource_kind_t resource_kind = {.create = "wgf_cubemap_create",
                                                             .loader = loader_of,
-                                                            .free = free_cubemap};
+                                                            .free = free_cubemap,
+                                                            .reload = reload};
 
 static void stop(void)
 {

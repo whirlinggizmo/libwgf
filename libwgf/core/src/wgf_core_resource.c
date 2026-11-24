@@ -224,10 +224,15 @@ int wgf_core_priv_resource_reload(const char *path)
             wgf_core_priv_resource_t *record = header(pool, i);
             const wgf_core_priv_loader_t *loader;
             const wgf_handle_t handle = wgf_core_priv_handle_pool_handle_from_index(pool, i);
-            if (handle == 0 || strcmp(record->path, key) != 0 || record->permanent || record->reloading ||
-                record->status == WGF_RESOURCE_STATUS_PENDING || desc->loader == NULL) {
+            if (handle == 0 || record->permanent || record->reloading ||
+                record->status == WGF_RESOURCE_STATUS_PENDING) {
                 continue;
             }
+            if (desc->reload != NULL && desc->reload(handle, record, key, true)) { /* the kind's own way */
+                count++;
+                continue;
+            }
+            if (strcmp(record->path, key) != 0 || desc->loader == NULL) continue;
             loader = desc->loader(record->found);
             if (loader == NULL || !loader->reloads) {
                 wgf_log_warn("wgf_asset_reload: %s: a %s doesn't load again", key,
@@ -254,12 +259,15 @@ bool wgf_core_priv_resource_can_reload(const char *path, int *made)
         wgf_core_priv_handle_pool_t *pool = kinds[kind].pool;
         const wgf_core_priv_resource_kind_t *desc = kinds[kind].kind;
         for (uint16_t i = 1; pool != NULL && i < pool->capacity; i++) {
-            const wgf_core_priv_resource_t *record = header(pool, i);
+            wgf_core_priv_resource_t *record = header(pool, i);
+            const wgf_handle_t handle = wgf_core_priv_handle_pool_handle_from_index(pool, i);
             const wgf_core_priv_loader_t *loader;
-            if (wgf_core_priv_handle_pool_handle_from_index(pool, i) == 0 || strcmp(record->path, key) != 0 ||
-                record->permanent || desc->loader == NULL) {
+            if (handle == 0 || record->permanent) continue;
+            if (desc->reload != NULL && desc->reload(handle, record, key, false)) { /* the kind's own way */
+                (*made)++;
                 continue;
             }
+            if (strcmp(record->path, key) != 0 || desc->loader == NULL) continue;
             loader = desc->loader(record->found);
             if (loader == NULL || !loader->reloads) return false;
             (*made)++;

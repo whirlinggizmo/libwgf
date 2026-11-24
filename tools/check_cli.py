@@ -17,7 +17,8 @@ what it said:
   screenshot  a PNG of frame 30, from a browser, and one flown there by --autopilot
   serve       the page reached in a browser, its Haxe edited while it runs: the new code
               runs, with the frame count it had (state kept, not a restart); then a
-              texture, a glTF, a sound, two fonts, an image, and a shader saved changed:
+              texture, a glTF, a sound, two fonts, an image, a cubemap, and a shader
+              saved changed:
               the page shows the new ones, its count going on; then each saved broken:
               the old ones kept, one error logged for each;
               then a file nothing was made from saved: the page loads again
@@ -269,12 +270,13 @@ def step_screenshot(game):
     return True
 
 
-def png(size):
-    """A PNG of `size` by `size` red pixels."""
+def png(size, height=None):
+    """A PNG of `size` by `size` red pixels, or `size` wide and `height` high."""
     def chunk(kind, data):
         return struct.pack('>I', len(data)) + kind + data + struct.pack('>I', zlib.crc32(kind + data) & 0xFFFFFFFF)
-    rows = b''.join(b'\x00' + b'\xff\x00\x00\xff' * size for _ in range(size))
-    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', size, size, 8, 6, 0, 0, 0)) +
+    height = size if height is None else height
+    rows = b''.join(b'\x00' + b'\xff\x00\x00\xff' * size for _ in range(height))
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', size, height, 8, 6, 0, 0, 0)) +
             chunk(b'IDAT', zlib.compress(rows)) + chunk(b'IEND', b''))
 
 
@@ -342,6 +344,10 @@ def served_assets():
         asset('line', 'tiny.fnt', 'tiny:Font', 'Font.enableBitmaps();\n\t\ttiny = Font.create("tiny.fnt");',
               'Std.int(tiny.getSize())', fnt(10), fnt(12), b'not a font any more',
               lambda v: v == 10, lambda v, first: v == 12),
+        # a cubemap of one image, a row of six faces: a face's size
+        asset('sky', 'sky.png', 'sky:Cubemap', 'sky = Cubemap.create("sky.png", CubemapLayout.AUTO);',
+              'sky.getSize()', png(12, 2), png(24, 4), b'not an image any more',
+              lambda v: v == 2, lambda v, first: v == 4),
         # a custom shader: whether it has the parameter only the changed one has
         asset('speed', 'shaders/look.wgfshader', 'look:Material',
               'look = Material.createCustom(Shader.create("shaders/look.wgfshader"));',
@@ -363,7 +369,7 @@ def write_assets(game, assets, which):
 def step_serve(game):
     """The page in a browser, its program with an initialized instance final and one asset of
     each kind served_assets lists (a texture, a glTF, a sound, a TrueType font, an image, a
-    bitmap font, a custom shader), served twice. As `wgf serve` alone: Main.hx edited while
+    bitmap font, a cubemap, a custom shader), served twice. As `wgf serve` alone: Main.hx edited while
     it runs, and the page loads again with the new code's line, its frame count from the
     start; then every asset saved changed, and it loads again with them. Then as
     `wgf serve --hot`, where the machine has hotreload-hx (said as skipped where it hasn't):

@@ -31,7 +31,13 @@ extern "C" {
  * - The negative faces are turned to match.
  *
  * Pixels are RGBA, 8 bits a channel, as stored. A picture's pixels are sRGB, so convert them
- * with wgf_srgb_to_linear in the shader. */
+ * with wgf_srgb_to_linear in the shader.
+ *
+ * A cubemap loads again in place (wgf_asset_reload) when its file is saved, or any of its six:
+ * - It keeps its handle, and is shown as it was until the new file is in.
+ * - One image's layout is read again from its shape, as AUTO reads it.
+ * - Six files are all read again, and made a cube once they are all in.
+ * - A file that doesn't load, or faces of two sizes, keep what it had, with one error logged. */
 typedef wgf_handle_t wgf_cubemap_t;
 
 /* How one image holds the six faces. A face is a square of `size` pixels. */

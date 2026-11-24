@@ -6,7 +6,9 @@
 #include "render/wgf_gfx_render_priv.h"
 #include "texture/wgf_gfx_cubemap_priv.h"
 #include "texture/wgf_gfx_png_priv.h"
+#include "wgf_core_load_priv.h"
 #include "wgf_core_priv.h"
+#include "wgf_asset.h"
 #include "wgf_cubemap.h"
 #include "wgf_fs.h"
 #include "wgf_handle.h"
@@ -23,7 +25,9 @@
  * one, texel by texel. Loading: a cross and a row, PENDING then READY at their face size
  * with the layout found; the same path the same cubemap; six face files READY as FACES; and
  * FAILED for a square image, a layout its shape isn't, faces of two sizes, a face that
- * isn't square, and a missing face. Bound to a custom material: refused for a texture2D's
+ * isn't square, and a missing face. Loaded again in place: one image at another size, then
+ * another layout; six files, any of them saved; and a broken file, or faces of two sizes,
+ * keeping what it had. Bound to a custom material: refused for a texture2D's
  * name, a texture's handle, and a built-in material, kept for a textureCube's; set while its
  * shader loads, a cubemap on a texture2D's name dropped once it is READY. Pixels:
  * wgf_gfx_cubemap_window_test. */
@@ -191,6 +195,62 @@ static void settle(wgf_handle_t resource)
     while (wgf_resource_get_status(resource) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0) {
         wgf_core_priv_update();
     }
+}
+
+/* Update until nothing is loading: a cubemap of six files loading again is six requests. */
+static void settle_all(void)
+{
+    const double start = wgf_time_get_seconds();
+    while (wgf_core_priv_load_get_pending_count() > 0 && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
+}
+
+/* Loaded again in place: one image (another size, then another layout, then a broken file),
+ * and six files (one saved, then faces of two sizes, then a broken one). */
+static void test_reload(void)
+{
+    wgf_cubemap_t one, six;
+    write_layout("cubes/again.png", WGF_CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE, 8);
+    write_plain("cubes/a.png", 8, 8, 10);
+    write_plain("cubes/b.png", 8, 8, 20);
+    one = wgf_cubemap_create("cubes/again.png", WGF_CUBEMAP_LAYOUT_AUTO);
+    six = wgf_cubemap_create_faces("cubes/a.png", "cubes/b.png", "cubes/a.png", "cubes/b.png", "cubes/a.png",
+                                   "cubes/b.png");
+    settle_all();
+    CHECK(wgf_cubemap_get_size(one) == 8 && wgf_cubemap_get_size(six) == 8);
+
+    write_layout("cubes/again.png", WGF_CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE, 16);
+    CHECK(wgf_asset_can_reload("cubes/again.png") && wgf_asset_reload("cubes/again.png") == 1);
+    settle_all();
+    CHECK(wgf_resource_get_status(one) == WGF_RESOURCE_STATUS_READY && wgf_cubemap_get_size(one) == 16);
+    write_layout("cubes/again.png", WGF_CUBEMAP_LAYOUT_LINE_HORIZONTAL, 4); /* its layout read again */
+    CHECK(wgf_asset_reload("cubes/again.png") == 1);
+    settle_all();
+    CHECK(wgf_cubemap_get_size(one) == 4 && wgf_cubemap_get_layout(one) == WGF_CUBEMAP_LAYOUT_LINE_HORIZONTAL);
+    write_bytes("cubes/again.png", (const unsigned char *)"not an image", 12);
+    CHECK(wgf_asset_reload("cubes/again.png") == 1);
+    settle_all();
+    CHECK(wgf_resource_get_status(one) == WGF_RESOURCE_STATUS_READY && wgf_cubemap_get_size(one) == 4); /* kept */
+
+    write_plain("cubes/a.png", 16, 16, 30);
+    write_plain("cubes/b.png", 16, 16, 40);
+    CHECK(wgf_asset_can_reload("cubes/b.png") && wgf_asset_reload("cubes/b.png") == 1); /* any of the six */
+    settle_all();
+    CHECK(wgf_resource_get_status(six) == WGF_RESOURCE_STATUS_READY && wgf_cubemap_get_size(six) == 16);
+    write_plain("cubes/b.png", 8, 8, 50); /* its faces two sizes */
+    CHECK(wgf_asset_reload("cubes/b.png") == 1);
+    settle_all();
+    CHECK(wgf_resource_get_status(six) == WGF_RESOURCE_STATUS_READY && wgf_cubemap_get_size(six) == 16); /* kept */
+    write_bytes("cubes/b.png", (const unsigned char *)"not an image", 12);
+    CHECK(wgf_asset_reload("cubes/a.png") == 1);
+    settle_all();
+    CHECK(wgf_resource_get_status(six) == WGF_RESOURCE_STATUS_READY && wgf_cubemap_get_size(six) == 16); /* kept */
+    write_plain("cubes/b.png", 4, 4, 60);
+    write_plain("cubes/a.png", 4, 4, 70);
+    CHECK(wgf_asset_reload("cubes/a.png") == 1);
+    settle_all();
+    CHECK(wgf_cubemap_get_size(six) == 4); /* and loads again after them */
+    wgf_resource_release(one);
+    wgf_resource_release(six);
 }
 
 static void test_loading(void)
@@ -370,6 +430,7 @@ int main(void)
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the failures below warn, on purpose */
     CHECK(wgf_gfx_priv_start());
     test_loading();
+    test_reload();
     test_binding();
     wgf_gfx_priv_stop();
     wgf_core_priv_shutdown();

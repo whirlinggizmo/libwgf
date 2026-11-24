@@ -44,6 +44,12 @@ typedef struct wgf_core_priv_resource_kind_t {
      * free included, which so must not take it again. As wgrender's resource kinds. */
     void (*lock)(void);
     void (*unlock)(void);
+    /* For a kind whose records are made from files other than their path (a cubemap of six
+     * files, each its own request), or NULL: whether `record` is made from the file `key`
+     * (normalized) in a way of its own, and so loads again by this alone (wgf_asset_reload):
+     * 1 it is, and with `go` it is set loading again, its `reloading` set; 0 the usual, its
+     * path and its loader. */
+    int (*reload)(wgf_handle_t resource, void *record, const char *key, bool go);
 } wgf_core_priv_resource_kind_t;
 
 /* Register the resources in `pool`, whose records start with a wgf_core_priv_resource_t,

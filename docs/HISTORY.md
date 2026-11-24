@@ -1094,6 +1094,15 @@ Rob's. A glTF loaded again in place kept its player, but the player knew its cli
 
 `tools/check_cli.py`'s serve step is a table now, a row a kind of asset: a texture, a glTF, a sound, a TrueType font, an image, a bitmap font, and a custom shader, the three added being the ones a page takes on differently from a desktop build (the browser decodes an image and a bitmap font's page; a shader's program is WebGL's). Each is saved changed, then broken. The shader is a packed `.wgfshader` (two of the examples'): the step where `wgf serve` packs a saved source isn't covered, since it needs sokol-shdc, which the check would then have to fetch.
 
+## Cubemaps load again in place (2026-11-24)
+
+Rob's. Missed in the lists of the kinds that don't load again until now: a cubemap's loaders are tables, by layout and by face, which the search for loaders didn't match, so the lists in `wgf_asset.h` and the docs left it out.
+
+- **One image** loads again through the kind's loader, AUTO's. The layout asked isn't known from the file's path, which is all the kind's loader is given, so it is read again from the image's shape; an explicit layout asked at create only refused a shape that wasn't it.
+- **Six files** have no path of their own (the record's is +X's), so core's reload, which finds a resource by its path, couldn't reach them. A kind may now say how its records load again (`reload` on the resource kind: whether a record is made from the saved file, and its loading again): a cubemap of six files is, by any of them, and requests all six again, fetched anew. The cube is made again once all six are in and none failed; a face that didn't load, or faces of two sizes, keep what it had, said once when the last request is in (`reloading` stays set until then, so a save while they load is passed over, as it is for any resource loading again). Faces of two sizes used to let go of the paths too, which left nothing to load again by; the paths are kept.
+- **A cubemap from a file never loaded in a page**, from the start (2026-11-20). In a page the browser decodes an image, which takes updates, and the cubemap's loader read the pixels the moment it started the decode: there were none, so it FAILED, and the example's sky and reflections were the FAILED checker. `tools/check_web.py` passed it, a FAILED cubemap being a warning, not an error; found by the serve check's cubemap row. The loader now waits for the decode in finish (WAIT) and cuts the faces there, as a bitmap font's pages do; natively it is still decoded and cut on the worker.
+- Tests: `wgf_gfx_cubemap_test` loads one image again at another size, then in another layout, then broken; and six files by either of their names, then with faces of two sizes, then a broken face, then fixed. The serve check has a cubemap row, a row of six faces, since in a page the browser decodes its image.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
