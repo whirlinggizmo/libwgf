@@ -77,4 +77,6 @@ if(WGF_TESTS AND WGF_HEADLESS)
         endif()
     endif()
     wgf_test(ui wgf_ui_document_test)
+    # a document loaded again in place: its handles by id, the program's changes made again
+    wgf_test(ui wgf_ui_document_reload_test)
 endif()

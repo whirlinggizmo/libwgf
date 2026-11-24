@@ -78,6 +78,11 @@ class Main {
 		Window.setSize(640, 360);
 		if (!Runtime.run(init, tick, frame, shutdown))
 			Log.message(LogLevel.ERROR, "feature test: the run was refused");
+		#if sys
+		// natively the run returns once libwgf has shut down: exiting in shutdown, before it,
+		// left RmlUi's documents alive at the process's exit, and its pools asserted
+		Sys.exit(reported && failures == 0 ? 0 : 1);
+		#end
 	}
 
 	// ---- init: everything that needs no frame ------------------------------------------
@@ -1614,8 +1619,6 @@ class Main {
 	static function shutdown():Void {
 		#if js
 		js.Syntax.code("if (typeof process !== 'undefined') process.exitCode = {0}", reported && failures == 0 ? 0 : 1);
-		#elseif sys
-		Sys.exit(reported && failures == 0 ? 0 : 1);
 		#end
 	}
 }

@@ -1196,8 +1196,8 @@ export declare const Asset: {
      * - A FAILED resource that now loads becomes READY.
      * - These load again: a texture (compressed ones too), an image, a cubemap, a glTF mesh
      *   with its images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a
-     *   font, and a text buffer. Each kind's header says what is kept across it.
-     * - These don't: a scene and a UI document. Each is left as it is, with a warning.
+     *   font, a text buffer, and a UI document. Each kind's header says what is kept across it.
+     * - A scene doesn't: it is left as it is, with a warning.
      * - A resource still loading is left as it is.
      *
      * Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
@@ -2813,7 +2813,9 @@ export type Document = raw.wgf_document_t;
  * - It loads with every file it names: its style sheets, images, and templates. They are made
  *   local first, so it loads the same from a web page as from a disk.
  * - It is READY once it is parsed.
- * - It is FAILED (logged) when it can't be read or isn't a document.
+ * - It is FAILED (logged) when it can't be read or isn't a document: it has no <rml>
+ *   element, or RmlUi's parser finds it malformed (a tag left open, as in a file cut short,
+ *   or a close tag that doesn't match), which RmlUi logs, naming the line.
  *
  * A game that never creates a document links none of RmlUi.
  *
@@ -2855,6 +2857,18 @@ export type Document = raw.wgf_document_t;
  * Elements are found by their id. An element's handle lives as long as its element. It is
  * refused from then on if the element is removed from its document (its parent's inner RML set
  * again), or its document is released.
+ *
+ * A document loads again in place (wgf_asset_reload) when its file is saved, or a style
+ * sheet, template, or image it names:
+ * - It keeps its handle, its visibility, and its events not yet taken.
+ * - An element's handle is kept on the new document's element of the same id. A handle to an
+ *   element without an id, or whose id the new file hasn't, is refused from then on.
+ * - The changes the program made to elements with an id are made again, in the order made:
+ *   text, RML, attributes, classes, properties, values, checked, and disabled. The last of
+ *   each is kept, from wgf_asset_enable_reload on.
+ * - The focus is on the element of the id it was on.
+ * - A file that isn't a document, as wgf_document_create says (one saved half-written, for
+ *   one), keeps it as it was, with one error logged.
  *
  * Tabs are RmlUi's `<tabset>`. Its `<tabs>`' `<tab>`s choose among its `<panels>`' `<panel>`s,
  * and the chosen tab and panel are `:selected` (wgf_element_get_number reads which). A tooltip

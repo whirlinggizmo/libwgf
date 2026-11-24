@@ -91,7 +91,7 @@ class Runtime {
 	/**
 		`wgf serve`'s assets: hotreload-hx's reloader asks the server for the files saved (a long
 		poll of its own) and tells this, which loads each again in place (Asset.reload). One
-		that can't be (Asset.canReload: a scene, a document, a file nothing is made from) loads
+		that can't be (Asset.canReload: a scene, a file nothing is made from) loads
 		the page again. The server names each
 		by its URL in the page, `/assets/<path>`; Asset.reload takes the path.
 	**/

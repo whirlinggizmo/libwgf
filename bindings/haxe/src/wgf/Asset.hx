@@ -284,8 +284,8 @@ class Asset {
 	    - A FAILED resource that now loads becomes READY.
 	    - These load again: a texture (compressed ones too), an image, a cubemap, a glTF mesh
 	      with its images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a
-	      font, and a text buffer. Each kind's header says what is kept across it.
-	    - These don't: a scene and a UI document. Each is left as it is, with a warning.
+	      font, a text buffer, and a UI document. Each kind's header says what is kept across it.
+	    - A scene doesn't: it is left as it is, with a warning.
 	    - A resource still loading is left as it is.
 
 	    Returns the number of resources set loading. Returns 0 if nothing was made from `path`,

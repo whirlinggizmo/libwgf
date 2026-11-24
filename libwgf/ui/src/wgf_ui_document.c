@@ -37,7 +37,10 @@
  * handles, and what RmlUi asks of libwgf (wgf_ui_rmlui_priv.h's C side): files read through
  * fs, textures made by gfx, glyphs laid out by fontstash, and the frame's input; drawing is
  * wgf_ui_document_draw.c's. A part, installed by the first document created, so a program that makes
- * none links none of RmlUi (whose C++ is wgf_ui_rmlui.cpp alone). */
+ * none links none of RmlUi (whose C++ is wgf_ui_rmlui.cpp alone). Loaded again in place
+ * (wgf_asset_reload), the new file takes the old document's place, its elements' handles kept
+ * by their ids, and the changes the program made to them made again (kept as they are made,
+ * where reload is enabled). */
 
 #define DOCUMENTS_MAX 4096
 #define ELEMENTS_MAX 65535
@@ -93,6 +96,21 @@ typedef struct held_t {
     int image_count;
 } held_t;
 
+/* A change the program made to an element with an id, kept to make again when its document
+ * loads again in place, where reload is enabled: the last of each (element, kind, name), in
+ * the order made. */
+enum { KEPT_TEXT, KEPT_RML, KEPT_VALUE, KEPT_ATTRIBUTE, KEPT_PROPERTY, KEPT_CLASS, KEPT_NUMBER, KEPT_CHECKED,
+       KEPT_DISABLED };
+typedef struct kept_t {
+    wgf_document_t document;
+    char *id;
+    int what;
+    char *name;  /* an attribute's, a property's, or a class's; NULL for the rest */
+    char *value; /* text, RML, a value, an attribute's (NULL: removed), or a property's ("": removed) */
+    bool on;     /* a class's, checked, disabled */
+    float number;
+} kept_t;
+
 typedef struct texture_t {
     bool used;
     bool dying;         /* let go of: freed in the next update, once no frame draws it */
@@ -124,6 +142,9 @@ static struct {
 
     held_t *held; /* changes waiting on their images, in the order made */
     int held_count, held_capacity;
+
+    kept_t *kept; /* the program's changes, made again when a document loads again */
+    int kept_count, kept_capacity;
 
     /* the frame's drawing */
     float origin_x, origin_y;
@@ -219,6 +240,44 @@ static bool fonts_loading(void)
     return false;
 }
 
+static void replay(wgf_document_t document, int number);
+
+/* Whether `bytes` have an <rml> element (any case): RmlUi makes a document of any text, and
+ * says nothing of one without it, so a file that isn't RML would be an empty document. */
+static bool has_rml(const unsigned char *bytes, int size)
+{
+    int i;
+    for (i = 0; i + 4 <= size; i++) {
+        if (bytes[i] == '<' && tolower(bytes[i + 1]) == 'r' && tolower(bytes[i + 2]) == 'm' &&
+            tolower(bytes[i + 3]) == 'l' && (i + 4 == size || !isalnum(bytes[i + 4]))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* A READY document's file loaded again (wgf_asset_reload): the new document in its place, the
+ * program's changes made again, the focus on the element of the id it was on. FAILED, the
+ * document as it was, when the file has no <rml> element or RmlUi's parser complains of it. */
+static wgf_core_priv_load_step_t finish_again(const loaded_t *loaded, wgf_document_t document, int number)
+{
+    char focus[256] = "";
+    const wgf_element_t focused = wgf_ui_priv_rml_get_focus(number);
+    if (focused != 0) snprintf(focus, sizeof(focus), "%s", wgf_element_get_id(focused));
+    if (!has_rml(loaded->bytes, loaded->size) ||
+        !wgf_ui_priv_rml_reload(number, (const char *)loaded->bytes, loaded->size, loaded->path)) {
+        wgf_log_warn("wgf_document: %s: not a document RmlUi can read", loaded->path);
+        return WGF_CORE_PRIV_LOAD_FAILED;
+    }
+    replay(document, number);
+    if (focus[0] != '\0') {
+        const wgf_element_t again = wgf_ui_priv_rml_find(number, focus);
+        if (again != 0) wgf_ui_priv_rml_set_focus(number, slot_of(again));
+    }
+    wgf_core_priv_resource_loaded(document, NULL);
+    return WGF_CORE_PRIV_LOAD_DONE;
+}
+
 static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
 {
     const loaded_t *loaded = (const loaded_t *)prepared;
@@ -228,11 +287,14 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
     if (!wgf_gfx_priv_render_is_running() || wgf_gfx_priv_render_is_lost() || fonts_loading()) {
         return WGF_CORE_PRIV_LOAD_WAIT; /* no GPU, or its context lost, or its fonts loading: until they are */
     }
+    if (document_ptr->number != 0) return finish_again(loaded, resource, document_ptr->number);
     if (!doc.rml) {
         doc.rml = wgf_ui_priv_rml_start();
         if (!doc.rml) return WGF_CORE_PRIV_LOAD_FAILED;
     }
-    number = wgf_ui_priv_rml_load((const char *)loaded->bytes, loaded->size, loaded->path, resource);
+    number = has_rml(loaded->bytes, loaded->size)
+                 ? wgf_ui_priv_rml_load((const char *)loaded->bytes, loaded->size, loaded->path, resource)
+                 : 0;
     /* loading may have made element handles: nothing moves documents, but be sure */
     document_ptr = document_of(resource);
     if (number == 0 || document_ptr == NULL) {
@@ -257,7 +319,7 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"document", prepare, finish, discard, fail, NULL, false, NULL};
+static const wgf_core_priv_loader_t loader = {"document", prepare, finish, discard, fail, NULL, true, NULL};
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {
@@ -265,10 +327,12 @@ static const wgf_core_priv_loader_t *loader_of(const char *path)
     return &loader;
 }
 
+static void forget(wgf_document_t document);
+
 static void free_document(wgf_handle_t document, void *record)
 {
     document_t *document_ptr = (document_t *)record;
-    (void)document;
+    forget(document);
     if (document_ptr->number != 0) wgf_ui_priv_rml_unload(document_ptr->number);
     document_ptr->number = 0;
 }
@@ -463,6 +527,100 @@ static bool change(wgf_element_t element, int slot, int what, const char *name, 
     return true;
 }
 
+/* ---- the program's changes, kept for a document loaded again -------------------------- */
+
+static void free_kept(kept_t *k)
+{
+    free(k->id);
+    free(k->name);
+    free(k->value);
+}
+
+/* A change the program made to `element` (slot `slot`), kept where reload is enabled and the
+ * element has an id (one without is never found again): in place of the last of its kind and
+ * name, at the end. */
+static void keep(wgf_element_t element, int slot, int what, const char *name, const char *value, bool on,
+                 float number)
+{
+    const char *id;
+    kept_t k;
+    int i;
+    if (!wgf_core_priv_resource_reloads) return;
+    id = wgf_ui_priv_rml_get_text(slot, WGF_UI_PRIV_RML_ID);
+    if (id == NULL || id[0] == '\0') return;
+    memset(&k, 0, sizeof(k));
+    k.id = copy_of(id); /* before another call returning text */
+    k.document = wgf_element_get_document(element);
+    k.what = what;
+    k.name = name != NULL ? copy_of(name) : NULL;
+    k.value = value != NULL ? copy_of(value) : NULL;
+    k.on = on;
+    k.number = number;
+    if (k.id == NULL || (name != NULL && k.name == NULL) || (value != NULL && k.value == NULL)) {
+        free_kept(&k);
+        wgf_log_error("wgf_document: out of memory keeping a change for a reload");
+        return;
+    }
+    for (i = 0; i < doc.kept_count; i++) { /* the last of its kind and name, superseded */
+        const kept_t *old = &doc.kept[i];
+        if (old->document == k.document && old->what == what && strcmp(old->id, k.id) == 0 &&
+            (old->name == NULL ? name == NULL : name != NULL && strcmp(old->name, name) == 0)) {
+            free_kept(&doc.kept[i]);
+            memmove(&doc.kept[i], &doc.kept[i + 1], sizeof(kept_t) * (size_t)(doc.kept_count - i - 1));
+            doc.kept_count--;
+            break;
+        }
+    }
+    if (doc.kept_count == doc.kept_capacity) {
+        const int capacity = doc.kept_capacity > 0 ? doc.kept_capacity * 2 : 16;
+        kept_t *grown = (kept_t *)realloc(doc.kept, sizeof(kept_t) * (size_t)capacity);
+        if (grown == NULL) {
+            free_kept(&k);
+            wgf_log_error("wgf_document: out of memory keeping a change for a reload");
+            return;
+        }
+        doc.kept = grown;
+        doc.kept_capacity = capacity;
+    }
+    doc.kept[doc.kept_count++] = k;
+}
+
+/* The changes kept for `document` made again, in the order made, on its elements of their
+ * ids now that it has loaded again (number `number`); one whose element the new file hasn't
+ * is kept, for a file that has it. */
+static void replay(wgf_document_t document, int number)
+{
+    int i;
+    for (i = 0; i < doc.kept_count; i++) {
+        const kept_t *k = &doc.kept[i];
+        const wgf_element_t element = k->document == document ? wgf_ui_priv_rml_find(number, k->id) : 0;
+        const int slot = element != 0 ? slot_of(element) : 0;
+        if (slot == 0) continue;
+        switch (k->what) {
+        case KEPT_TEXT: wgf_ui_priv_rml_set_text(slot, WGF_UI_PRIV_RML_TEXT, k->value); break;
+        case KEPT_RML: change(element, slot, HELD_RML, NULL, k->value); break;
+        case KEPT_VALUE: wgf_ui_priv_rml_set_text(slot, WGF_UI_PRIV_RML_VALUE, k->value); break;
+        case KEPT_ATTRIBUTE: change(element, slot, HELD_ATTRIBUTE, k->name, k->value); break;
+        case KEPT_PROPERTY: change(element, slot, HELD_PROPERTY, k->name, k->value); break;
+        case KEPT_CLASS: wgf_ui_priv_rml_set_class(slot, k->name, k->on); break;
+        case KEPT_NUMBER: wgf_ui_priv_rml_set_number(slot, k->number); break;
+        case KEPT_CHECKED: wgf_ui_priv_rml_set_checked(slot, k->on); break;
+        default: wgf_ui_priv_rml_set_disabled(slot, k->on); break;
+        }
+    }
+}
+
+/* The changes kept for `document` let go of (0: every document's). */
+static void forget(wgf_document_t document)
+{
+    int i, kept = 0;
+    for (i = 0; i < doc.kept_count; i++) {
+        if (document == 0 || doc.kept[i].document == document) free_kept(&doc.kept[i]);
+        else doc.kept[kept++] = doc.kept[i];
+    }
+    doc.kept_count = kept;
+}
+
 /* Each update: a change whose images have all settled (READY, or FAILED: RmlUi says what
  * it can't find) made, in the order made; one whose element went is dropped. */
 static void free_texture(texture_t *t);
@@ -519,6 +677,8 @@ static void stop(void)
     if (doc.keyboard) wgf_platform_priv_show_keyboard(false, 0.0f, 0.0f, 0.0f);
     for (i = 0; i < doc.held_count; i++) free_held(&doc.held[i]);
     free(doc.held);
+    forget(0);
+    free(doc.kept);
     if (doc.started) {
         wgf_core_priv_resource_unregister(&doc.document_pool); /* each document unloaded */
         wgf_core_priv_handle_pool_destroy(&doc.document_pool);
@@ -658,7 +818,9 @@ const char *wgf_element_get_id(wgf_element_t element)
 bool wgf_element_set_text(wgf_element_t element, const char *text)
 {
     const int slot = slot_of(element);
-    return slot != 0 && text != NULL && wgf_ui_priv_rml_set_text(slot, WGF_UI_PRIV_RML_TEXT, text);
+    if (slot == 0 || text == NULL || !wgf_ui_priv_rml_set_text(slot, WGF_UI_PRIV_RML_TEXT, text)) return false;
+    keep(element, slot, KEPT_TEXT, NULL, text, false, 0.0f);
+    return true;
 }
 
 const char *wgf_element_get_text(wgf_element_t element)
@@ -670,7 +832,9 @@ const char *wgf_element_get_text(wgf_element_t element)
 bool wgf_element_set_rml(wgf_element_t element, const char *rml)
 {
     const int slot = slot_of(element);
-    return slot != 0 && rml != NULL && change(element, slot, HELD_RML, NULL, rml);
+    if (slot == 0 || rml == NULL || !change(element, slot, HELD_RML, NULL, rml)) return false;
+    keep(element, slot, KEPT_RML, NULL, rml, false, 0.0f);
+    return true;
 }
 
 const char *wgf_element_get_rml(wgf_element_t element)
@@ -682,7 +846,11 @@ const char *wgf_element_get_rml(wgf_element_t element)
 bool wgf_element_set_attribute(wgf_element_t element, const char *name, const char *value)
 {
     const int slot = slot_of(element);
-    return slot != 0 && name != NULL && change(element, slot, HELD_ATTRIBUTE, name, value != NULL ? value : "");
+    if (slot == 0 || name == NULL || !change(element, slot, HELD_ATTRIBUTE, name, value != NULL ? value : "")) {
+        return false;
+    }
+    keep(element, slot, KEPT_ATTRIBUTE, name, value != NULL ? value : "", false, 0.0f);
+    return true;
 }
 
 const char *wgf_element_get_attribute(wgf_element_t element, const char *name)
@@ -704,13 +872,17 @@ bool wgf_element_remove_attribute(wgf_element_t element, const char *name)
 {
     const int slot = slot_of(element);
     /* a change held for it dropped */
-    return slot != 0 && name != NULL && change(element, slot, HELD_ATTRIBUTE, name, NULL);
+    if (slot == 0 || name == NULL || !change(element, slot, HELD_ATTRIBUTE, name, NULL)) return false;
+    keep(element, slot, KEPT_ATTRIBUTE, name, NULL, false, 0.0f);
+    return true;
 }
 
 bool wgf_element_set_class(wgf_element_t element, const char *name, bool on)
 {
     const int slot = slot_of(element);
-    return slot != 0 && wgf_ui_priv_rml_set_class(slot, name, on);
+    if (slot == 0 || !wgf_ui_priv_rml_set_class(slot, name, on)) return false;
+    keep(element, slot, KEPT_CLASS, name, NULL, on, 0.0f);
+    return true;
 }
 
 bool wgf_element_has_class(wgf_element_t element, const char *name)
@@ -722,7 +894,11 @@ bool wgf_element_has_class(wgf_element_t element, const char *name)
 bool wgf_element_set_property(wgf_element_t element, const char *name, const char *value)
 {
     const int slot = slot_of(element);
-    return slot != 0 && name != NULL && change(element, slot, HELD_PROPERTY, name, value != NULL ? value : "");
+    if (slot == 0 || name == NULL || !change(element, slot, HELD_PROPERTY, name, value != NULL ? value : "")) {
+        return false;
+    }
+    keep(element, slot, KEPT_PROPERTY, name, value != NULL ? value : "", false, 0.0f);
+    return true;
 }
 
 const char *wgf_element_get_property(wgf_element_t element, const char *name)
@@ -734,7 +910,9 @@ const char *wgf_element_get_property(wgf_element_t element, const char *name)
 bool wgf_element_set_value(wgf_element_t element, const char *value)
 {
     const int slot = slot_of(element);
-    return slot != 0 && wgf_ui_priv_rml_set_text(slot, WGF_UI_PRIV_RML_VALUE, value != NULL ? value : "");
+    if (slot == 0 || !wgf_ui_priv_rml_set_text(slot, WGF_UI_PRIV_RML_VALUE, value != NULL ? value : "")) return false;
+    keep(element, slot, KEPT_VALUE, NULL, value != NULL ? value : "", false, 0.0f);
+    return true;
 }
 
 const char *wgf_element_get_value(wgf_element_t element)
@@ -746,7 +924,9 @@ const char *wgf_element_get_value(wgf_element_t element)
 bool wgf_element_set_number(wgf_element_t element, float value)
 {
     const int slot = slot_of(element);
-    return slot != 0 && isfinite(value) && wgf_ui_priv_rml_set_number(slot, value);
+    if (slot == 0 || !isfinite(value) || !wgf_ui_priv_rml_set_number(slot, value)) return false;
+    keep(element, slot, KEPT_NUMBER, NULL, NULL, false, value);
+    return true;
 }
 
 float wgf_element_get_number(wgf_element_t element)
@@ -760,7 +940,9 @@ float wgf_element_get_number(wgf_element_t element)
 bool wgf_element_set_checked(wgf_element_t element, bool checked)
 {
     const int slot = slot_of(element);
-    return slot != 0 && wgf_ui_priv_rml_set_checked(slot, checked);
+    if (slot == 0 || !wgf_ui_priv_rml_set_checked(slot, checked)) return false;
+    keep(element, slot, KEPT_CHECKED, NULL, NULL, checked, 0.0f);
+    return true;
 }
 
 bool wgf_element_is_checked(wgf_element_t element)
@@ -772,7 +954,9 @@ bool wgf_element_is_checked(wgf_element_t element)
 bool wgf_element_set_disabled(wgf_element_t element, bool disabled)
 {
     const int slot = slot_of(element);
-    return slot != 0 && wgf_ui_priv_rml_set_disabled(slot, disabled);
+    if (slot == 0 || !wgf_ui_priv_rml_set_disabled(slot, disabled)) return false;
+    keep(element, slot, KEPT_DISABLED, NULL, NULL, disabled, 0.0f);
+    return true;
 }
 
 bool wgf_element_is_disabled(wgf_element_t element)

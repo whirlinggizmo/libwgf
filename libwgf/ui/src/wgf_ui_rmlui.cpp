@@ -29,6 +29,18 @@ constexpr int EVENTS_MAX = 2048; /* ints: two an event, 1024 events (wgf_documen
 
 /* ---- the system: time, logs, the clipboard, the cursor ------------------------------ */
 
+/* RmlUi's XML parser's complaints, counted while a document is read (-1: none is): it logs a
+ * malformed file and makes a document of it all the same, a tag left open, a stray close tag,
+ * a mismatched one, or bad data, each its message below (BaseXMLParser.cpp, XMLParser.cpp, in
+ * deps/rmlui). Its other messages, such as an image it can't find, aren't the file's form. */
+int parse_complaints = -1;
+
+bool is_parse_complaint(const Rml::String &message)
+{
+    return message.rfind("XML parse error", 0) == 0 || message.rfind("Found unexpected XML close tag", 0) == 0 ||
+           (message.rfind("Closing tag '", 0) == 0 && message.find("' mismatched on ") != Rml::String::npos);
+}
+
 class System final : public Rml::SystemInterface {
 public:
     double GetElapsedTime() override { return wgf_ui_priv_doc_seconds(); }
@@ -44,6 +56,7 @@ public:
         case Rml::Log::LT_INFO: level = 1; break;
         default: level = 0; break;
         }
+        if (parse_complaints >= 0 && is_parse_complaint(message)) parse_complaints++;
         wgf_ui_priv_doc_log(level, message.c_str());
         return true;
     }
@@ -767,10 +780,25 @@ void wgf_ui_priv_rml_stop(void)
     state = nullptr;
 }
 
+/* `rml` read as a document of the context: nullptr when RmlUi made none, or its parser
+ * complained (the one it made closed). */
+Rml::ElementDocument *parse(const char *rml, int size, const char *path)
+{
+    parse_complaints = 0;
+    Rml::ElementDocument *element = state->context->LoadDocumentFromMemory(Rml::String(rml, (size_t)size), path);
+    const int complaints = parse_complaints;
+    parse_complaints = -1;
+    if (element != nullptr && complaints > 0) {
+        element->Close();
+        return nullptr;
+    }
+    return element;
+}
+
 int wgf_ui_priv_rml_load(const char *rml, int size, const char *path, uint32_t owner)
 {
     if (state == nullptr) return 0;
-    Rml::ElementDocument *element = state->context->LoadDocumentFromMemory(Rml::String(rml, (size_t)size), path);
+    Rml::ElementDocument *element = parse(rml, size, path);
     if (element == nullptr) return 0;
     std::unique_ptr<Document> document(new Document);
     document->element = element;
@@ -788,6 +816,47 @@ int wgf_ui_priv_rml_load(const char *rml, int size, const char *path, uint32_t o
     }
     state->documents.push_back(std::move(document));
     return (int)state->documents.size();
+}
+
+bool wgf_ui_priv_rml_reload(int number, const char *rml, int size, const char *path)
+{
+    Document *document = document_at(number);
+    if (document == nullptr) return false;
+    Rml::Factory::ClearStyleSheetCache(); /* a style sheet or template saved: read again, not cached */
+    Rml::Factory::ClearTemplateCache();
+    Rml::ElementDocument *fresh = parse(rml, size, path);
+    if (fresh == nullptr) return false;
+    Rml::ElementDocument *old = document->element;
+    const Rml::EventId kinds[6] = {Rml::EventId::Click, Rml::EventId::Change, Rml::EventId::Submit,
+                                   Rml::EventId::Focus, Rml::EventId::Blur, Rml::EventId::Tabchange};
+    for (Rml::EventId id : kinds) {
+        old->RemoveEventListener(id, document->listener.get(), true);
+        fresh->AddEventListener(id, document->listener.get(), true);
+    }
+    for (size_t i = 0; i < state->slots.size(); i++) { /* each element held: the new one of its id, or gone */
+        Slot &s = state->slots[i];
+        if (s.handle == 0 || s.document != number) continue;
+        Rml::Element *was = s.element.get();
+        Rml::Element *now = nullptr;
+        if (was == old) now = fresh;
+        else if (was != nullptr && !was->GetId().empty()) now = fresh->GetElementById(was->GetId());
+        if (now == nullptr) {
+            free_slot((int)i + 1);
+            continue;
+        }
+        if (was != nullptr) state->slot_of.erase(was);
+        s.element = now->GetObserverPtr();
+        state->slot_of[now] = (int)i + 1;
+    }
+    document->element = fresh;
+    if (document->visible) {
+        fresh->Show(Rml::ModalFlag::None, Rml::FocusFlag::None);
+        fresh->PullToFront();
+    } else {
+        fresh->Hide();
+    }
+    old->Close(); /* gone at the context's next update */
+    return true;
 }
 
 void wgf_ui_priv_rml_unload(int number)

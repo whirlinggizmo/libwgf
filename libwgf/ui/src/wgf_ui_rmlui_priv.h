@@ -28,11 +28,18 @@ void wgf_ui_priv_rml_stop(void);
 void wgf_ui_priv_rml_release_textures(void);
 
 /* A document parsed from `rml` (size bytes; its relative paths from `path`'s directory),
- * hidden; 0 (logged by RmlUi) when it isn't one. `owner` is the C side's handle, given back
- * in the events. Unloading closes it: its elements gone, their handles told
- * (wgf_ui_priv_doc_element_gone). */
+ * hidden; 0 (logged by RmlUi) when it isn't one, or RmlUi's parser complained of its form
+ * (a tag left open, a close tag that doesn't match), though RmlUi would make one of it.
+ * `owner` is the C side's handle, given back in the events. Unloading closes it: its elements
+ * gone, their handles told (wgf_ui_priv_doc_element_gone). */
 int wgf_ui_priv_rml_load(const char *rml, int size, const char *path, uint32_t owner);
 void wgf_ui_priv_rml_unload(int document);
+/* The document's file loaded again in place (wgf_asset_reload): `rml` parsed as a new
+ * document, the style sheets and templates it names read again, which takes the old one's
+ * number, events, and visibility; each element the C side holds is the new document's of
+ * its id, and one with no id, or whose id the new one hasn't, is gone (its handle told).
+ * False, the document as it was, when `rml` isn't one, as load says. */
+bool wgf_ui_priv_rml_reload(int document, const char *rml, int size, const char *path);
 void wgf_ui_priv_rml_set_visible(int document, bool visible);
 bool wgf_ui_priv_rml_is_visible(int document);
 
