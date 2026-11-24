@@ -5243,8 +5243,10 @@ export function wgf_asset_evict(path) {
  *   a new actor.
  * - A file that doesn't load keeps what was loaded, with one error logged.
  * - A FAILED resource that now loads becomes READY.
- * - Only textures and glTF meshes load again. A resource of another kind is left as it
- *   is, with a warning.
+ * - These load again: a texture (compressed ones too), a glTF mesh with its images, a
+ *   Tiled map, an environment, and a text buffer.
+ * - These don't: a scene, a sound, a shader, a font, a sprite sheet, an image, and a UI
+ *   document. Each is left as it is, with a warning.
  * - A resource still loading is left as it is.
  *
  * Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
