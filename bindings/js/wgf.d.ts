@@ -3787,8 +3787,8 @@ export declare function wgf_asset_is_reload_enabled(): boolean;
  * - A FAILED resource that now loads becomes READY.
  * - These load again: a texture (compressed ones too), an image, a cubemap, a glTF mesh
  *   with its images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a
- *   font, a text buffer, and a UI document. Each kind's header says what is kept across it.
- * - A scene doesn't: it is left as it is, with a warning.
+ *   font, a text buffer, a UI document, and a scene (with wgf_scene_enable_reload). Each
+ *   kind's header says what is kept across it.
  * - A resource still loading is left as it is.
  *
  * Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
@@ -3803,7 +3803,7 @@ export declare function wgf_asset_reload(path: string | null): number;
  * the program again for a file it can't load again in place.
  *
  * Returns false if any resource made from it is of a kind that doesn't load again, if
- * nothing was made from it (a scene whose actors are already made, a file not loaded yet),
+ * nothing was made from it (a file not loaded yet),
  * for a path that isn't under the host, or when reload isn't enabled.
  */
 export declare function wgf_asset_can_reload(path: string | null): boolean;
@@ -12027,6 +12027,28 @@ export declare function wgf_motion_set_max_speed(actor: wgf_actor_t | 0, speed: 
  * It is clamped to 0 or more.
  */
 export declare function wgf_motion_get_max_speed(actor: wgf_actor_t | 0): number;
+
+/**
+ * Enables loading scenes again in place, or says whether it is enabled.
+ *
+ * - It enables reload for every other kind too (wgf_asset_enable_reload), which scene reload
+ *   needs: a program that reloads only its other assets calls that alone.
+ * - The wgf tool's own builds call it; a game's export doesn't, and carries none of scene
+ *   reload's code where the linker drops what nothing calls (the web).
+ * - Call it before the scenes' actors are made: what a scene makes is kept from then on.
+ * - Without it, a scene's file saved isn't loaded again in place: under `wgf serve --hot`
+ *   the page loads again.
+ *
+ * Returns true.
+ */
+export declare function wgf_scene_enable_reload(): boolean;
+
+/**
+ * Enables loading scenes again in place, or says whether it is enabled.
+ *
+ * See wgf_scene_enable_reload for the rest.
+ */
+export declare function wgf_scene_is_reload_enabled(): boolean;
 
 /**
  * Creates the scene at `path`, and starts loading it. The same path again returns the same

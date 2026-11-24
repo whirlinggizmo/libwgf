@@ -24,8 +24,8 @@ textures, the window -- is untouched. Its reloader asks /__hotreload_assets?sinc
 answered with the saved files' URLs (/assets/<path>); the Haxe runtime's hot build, told by
 it (Reloader.assetsChanged), loads each again in place (wgf_asset_reload), its handle kept;
 a file that doesn't load keeps what it had, with one error logged in the page. A file that
-can't be loaded again in place (wgf_asset_can_reload says: a scene, a file
-nothing was made from) loads the page again instead.
+can't be loaded again in place (wgf_asset_can_reload says: a file nothing
+was made from) loads the page again instead.
 
 The game's shaders/*.glsl are watched as well: one saved is packed again
 (tools/pack_shader.py, which needs sokol-shdc: tools/setup_shdc.py) into

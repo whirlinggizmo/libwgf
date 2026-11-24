@@ -27,8 +27,8 @@ FEATURES = {
                             "bitmap fonts: a font made from a .fnt or an image of glyphs"),
     'autopilot': Feature('wgf_autopilot', '_wgf_app_enable_autopilot', 'wgf_app_enable_autopilot',
                          "the autopilot's runner: the build's, not the game's (--keep-autopilot)"),
-    'reload': Feature('wgf_reload', '_wgf_asset_enable_reload', 'wgf_asset_enable_reload',
-                      "loading a saved asset again in place (wgf serve): the build's, not the game's"),
+    'reload': Feature('wgf_reload', '_wgf_scene_enable_reload', 'wgf_scene_enable_reload',
+                      "loading a saved asset again in place, scenes too (wgf serve): the build's, not the game's"),
 }
 
 # Features a game declares; the rest are a build's.

@@ -36,6 +36,21 @@ extern "C" {
  * file has loaded. A block that names no node is a new actor there, also made then. The scene
  * is held until then, and the references in that tree are found then.
  *
+ * A scene loads again in place (wgf_asset_reload) when its file is saved, where scene reload
+ * is enabled (wgf_scene_enable_reload) before the scene's actors are made. Its blocks are
+ * matched to the new file's by their paths, and what the scene made follows:
+ * - An actor whose block the new file has keeps its handle, and only what the file changed is
+ *   changed on it: a setting of a new value, a component or a behavior added or removed, a
+ *   behavior's parameter. What the game did to it (moved it, set its velocity) stays, but
+ *   where the file changed that same setting. A setting the new file drops is left as it is.
+ * - An actor whose block is gone is destroyed, with its children. A glTF file's node is left.
+ * - An actor whose block's kind changed (a shape made a sprite) is made again, a new handle.
+ * - A block new to the file is made under each actor of its parent's block, and a new top
+ *   block under each parent the scene was instantiated under.
+ * - A prefab's handle follows its prefab by its name. One the file no longer has is let go of,
+ *   and spawning it returns 0. The prefab's spawned copies change as the scene's actors do.
+ * - A file that doesn't load keeps the scene as it was, with its bad lines logged.
+ *
  * Every refusal FAILS the scene, logging the line with its number. The refusals are:
  * - an unknown line, kind, component, or key
  * - a value of the wrong shape
@@ -47,6 +62,20 @@ typedef wgf_handle_t wgf_scene_t;
 /* One of a scene's prefabs, found once by its name (wgf_scene_find_prefab) and kept. You spawn
  * it as often as you want, with no lookup. It is valid while its scene is. */
 typedef wgf_handle_t wgf_prefab_t;
+
+/* Enables loading scenes again in place, or says whether it is enabled.
+ *
+ * - It enables reload for every other kind too (wgf_asset_enable_reload), which scene reload
+ *   needs: a program that reloads only its other assets calls that alone.
+ * - The wgf tool's own builds call it; a game's export doesn't, and carries none of scene
+ *   reload's code where the linker drops what nothing calls (the web).
+ * - Call it before the scenes' actors are made: what a scene makes is kept from then on.
+ * - Without it, a scene's file saved isn't loaded again in place: under `wgf serve --hot`
+ *   the page loads again.
+ *
+ * Returns true. */
+WGF_API bool wgf_scene_enable_reload(void);
+WGF_API bool wgf_scene_is_reload_enabled(void);
 
 /* Creates the scene at `path`, and starts loading it. The same path again returns the same
  * scene, with one more reference. Returns 0 only when there is no room for another scene. */

@@ -11,6 +11,7 @@ wgf_layer(ecs
         src/wgf_ecs_actor.c
         src/wgf_ecs_store.c
         src/wgf_ecs_scene.c
+        src/wgf_ecs_scene_reload.c
         src/wgf_ecs_screen.c
         src/wgf_ecs_tilemap.c
         src/wgf_ecs_tween.c

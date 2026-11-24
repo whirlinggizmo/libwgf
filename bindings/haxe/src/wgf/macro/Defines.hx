@@ -20,7 +20,7 @@ class Defines {
 		},
 		{
 			define: "wgf_reload",
-			doc: "Lets a native build load its saved assets again in place (Asset.enableReload): what the wgf tool's own builds pass, and what `wgf export` leaves out. On the web the host decides: reload is enabled when it exports the call."
+			doc: "Lets a native build load its saved assets again in place, scenes too (Scene.enableReload): what the wgf tool's own builds pass, and what `wgf export` leaves out. On the web the host decides: reload is enabled when it exports the call."
 		},
 		{
 			define: "wgf_record",

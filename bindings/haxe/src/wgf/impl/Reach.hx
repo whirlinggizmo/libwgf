@@ -911,12 +911,14 @@ class Reach {
 		"wgf_resource_release",
 		"wgf_resource_set_load_budget",
 		"wgf_scene_create",
+		"wgf_scene_enable_reload",
 		"wgf_scene_find_prefab",
 		"wgf_scene_get_actor_count",
 		"wgf_scene_get_prefab_count",
 		"wgf_scene_get_prefab_name",
 		"wgf_scene_has_prefab",
 		"wgf_scene_instantiate",
+		"wgf_scene_is_reload_enabled",
 		"wgf_scene_spawn_objects",
 		"wgf_screen_add_stage",
 		"wgf_screen_create",
@@ -1478,7 +1480,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1469) 0];
+	static final counts:Array<Int> = [for (_ in 0...1471) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

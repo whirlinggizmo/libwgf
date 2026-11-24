@@ -11,6 +11,7 @@
 #include "wgf_collider.h"
 #include "wgf_color.h"
 #include "wgf_core_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_world.h"
 #include "wgf_component.h"
 #include "wgf_fs.h"
@@ -74,6 +75,117 @@ static wgf_scene_t load(const char *path, const char *text)
     while (wgf_resource_get_status(scene) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0)
         wgf_core_priv_update();
     return scene;
+}
+
+/* A level, then saved changed: the ship's color, velocity, and behavior's speed changed and its
+ * flame gone, a shield new under it; the rock gone; the sign a sprite now; a moon new at the
+ * top; the bullet's lifetime longer; the dust prefab gone. */
+static const char *level_before = "wgf-scene 2\n"
+                                  "actor ship\n"
+                                  "  shape2d circle=10 color=#FF0000\n"
+                                  "  transform position=10,10,0\n"
+                                  "  motion velocity=1,0,0\n"
+                                  "  behavior name=Ship speed=3 lives=2\n"
+                                  "end\n"
+                                  "actor ship/flame\n"
+                                  "  shape2d circle=2\n"
+                                  "end\n"
+                                  "actor rock\n"
+                                  "  shape2d circle=5\n"
+                                  "end\n"
+                                  "actor sign\n"
+                                  "  shape2d circle=1\n"
+                                  "end\n"
+                                  "prefab bullet\n"
+                                  "  shape2d circle=1\n"
+                                  "  lifetime seconds=4\n"
+                                  "end\n"
+                                  "prefab dust\n"
+                                  "  shape2d circle=1\n"
+                                  "end\n";
+
+static const char *level_after = "wgf-scene 2\n"
+                                 "actor ship\n"
+                                 "  shape2d circle=10 color=#00FF00\n"
+                                 "  transform position=10,10,0\n"
+                                 "  motion velocity=5,0,0\n"
+                                 "  behavior name=Ship speed=7 lives=2\n"
+                                 "end\n"
+                                 "actor ship/shield\n"
+                                 "  shape2d circle=12\n"
+                                 "end\n"
+                                 "actor sign\n"
+                                 "  sprite size=4,4\n"
+                                 "end\n"
+                                 "actor moon\n"
+                                 "  shape2d circle=30\n"
+                                 "end\n"
+                                 "prefab bullet\n"
+                                 "  shape2d circle=1\n"
+                                 "  lifetime seconds=9\n"
+                                 "end\n";
+
+/* Update until `scene` has loaded again (wgf_asset_reload). */
+static void settle_reload(wgf_scene_t scene)
+{
+    const double start = wgf_time_get_seconds();
+    while (wgf_core_priv_resource_is_reloading(scene) && wgf_time_get_seconds() - start < 30.0)
+        wgf_core_priv_update();
+}
+
+/* A scene loaded again in place, under the game's own changes: what the file changed changed,
+ * what the game changed kept, blocks gone removed and new ones made, a prefab's handle and its
+ * spawned copy following it; and a file with a bad line keeping the scene as it was. */
+static void test_reload(void)
+{
+    const wgf_actor_t world = wgf_stage2d_create();
+    wgf_scene_t level = load("scenes/level.scene", level_before);
+    wgf_prefab_t bullet, dust;
+    wgf_actor_t ship, flame, rock, sign, shot;
+    expect(wgf_scene_instantiate(level, world) == 3, "the level made");
+    ship = wgf_actor_find(world, "ship");
+    flame = wgf_actor_find(world, "ship/flame");
+    rock = wgf_actor_find(world, "rock");
+    sign = wgf_actor_find(world, "sign");
+    bullet = wgf_scene_find_prefab(level, "bullet");
+    dust = wgf_scene_find_prefab(level, "dust");
+    shot = wgf_prefab_spawn(bullet, world);
+    expect(ship && flame && rock && sign && bullet && dust && shot, "its actors, prefabs, and a bullet");
+    wgf_actor_set_position(ship, 50, 60, 0); /* the game's */
+
+    write_file("scenes/level.scene", level_after);
+    expect(wgf_asset_reload("scenes/level.scene") == 1, "the level loads again");
+    settle_reload(level);
+    expect(wgf_handle_is_alive(ship) && wgf_shape2d_get_color(ship) == 0x00FF00FFu &&
+               near(wgf_motion_get_velocity(ship).x, 5),
+           "the ship kept, its color and velocity the new file's");
+    expect(near(wgf_actor_get_position(ship).x, 50) && near(wgf_actor_get_position(ship).y, 60),
+           "where the game moved it kept: the file's position didn't change");
+    expect(strcmp(wgf_behavior_get_param(ship, wgf_actor_find_behavior(ship, "Ship"), "speed"), "7") == 0 &&
+               wgf_actor_get_behavior_count(ship) == 1,
+           "its behavior's parameter the new file's, the behavior not added twice");
+    expect(!wgf_handle_is_alive(flame) && wgf_actor_find(world, "ship/shield") != 0,
+           "its flame gone, a shield new under it");
+    expect(!wgf_handle_is_alive(rock), "the rock gone");
+    expect(!wgf_handle_is_alive(sign) && wgf_actor_get_kind(wgf_actor_find(world, "sign")) == WGF_ACTOR_KIND_SPRITE,
+           "the sign a sprite now: made again");
+    expect(wgf_actor_find(world, "moon") != 0, "a moon new at the top, under where the level was made");
+    expect(wgf_handle_is_alive(shot) && near(wgf_lifetime_get_seconds(shot), 9),
+           "the bullet already spawned: its lifetime the new file's");
+    expect(wgf_scene_find_prefab(level, "bullet") == bullet && wgf_prefab_spawn(bullet, world) != 0,
+           "the bullet's handle kept, and it spawns");
+    expect(wgf_prefab_spawn(dust, world) == 0 && !wgf_scene_has_prefab(level, "dust"), "the dust prefab gone");
+
+    wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* its bad line, logged on purpose */
+    write_file("scenes/level.scene", "wgf-scene 2\nactor ship\n  shape2d wings=2\nend\n");
+    expect(wgf_asset_reload("scenes/level.scene") == 1, "a file with a bad line, loading again");
+    settle_reload(level);
+    wgf_log_set_level(WGF_LOG_LEVEL_INFO);
+    expect(wgf_resource_get_status(level) == WGF_RESOURCE_STATUS_READY && wgf_handle_is_alive(ship) &&
+               wgf_actor_find(world, "moon") != 0,
+           "what it had is kept");
+    wgf_actor_destroy(world, WGF_ACTOR_DESTROY_CHILDREN);
+    wgf_resource_release(level);
 }
 
 static bool refused(const char *name, const char *text)
@@ -144,7 +256,7 @@ int main(void)
     wgf_scene_t field;
 
     wgf_core_priv_init();
-    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
+    wgf_scene_enable_reload(); /* what wgf serve does, to load its files again, scenes too */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the refusals below log, on purpose */
     expect(wgf_gfx_priv_start(), "gfx");
     stage = wgf_stage2d_create();
@@ -160,7 +272,7 @@ int main(void)
            "the prefabs in file order");
     expect(wgf_scene_has_prefab(field, "rock") && !wgf_scene_has_prefab(field, "ship"), "has a prefab, not an actor");
     expect(wgf_scene_create("scenes/field.scene") == field, "the same path: the same scene");
-    expect(!wgf_asset_can_reload("scenes/field.scene"), "a scene doesn't load again in place");
+    expect(wgf_asset_can_reload("scenes/field.scene"), "a scene loads again in place");
     wgf_resource_release(field);
 
     /* instantiated */
@@ -727,6 +839,7 @@ int main(void)
 
     wgf_world_clear();
     wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
+    test_reload();
     wgf_gfx_priv_stop();
     wgf_core_priv_shutdown();
     return failures == 0 ? 0 : 1;

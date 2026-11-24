@@ -2040,6 +2040,10 @@ export const Resource = Object.freeze({
 });
 // wgf: typed Scene
 export const Scene = Object.freeze({
+    // wgf: call wgf_scene_enable_reload
+    enableReload: raw.wgf_scene_enable_reload,
+    // wgf: call wgf_scene_is_reload_enabled
+    isReloadEnabled: raw.wgf_scene_is_reload_enabled,
     // wgf: call wgf_scene_create
     create: raw.wgf_scene_create,
     // wgf: call wgf_scene_instantiate

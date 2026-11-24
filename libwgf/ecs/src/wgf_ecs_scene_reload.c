@@ -1,0 +1,258 @@
+#include "wgf_scene.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "wgf_actor.h"
+#include "wgf_asset.h"
+#include "wgf_behavior.h"
+#include "wgf_component.h"
+#include "wgf_ecs_priv.h"
+#include "wgf_ecs_scene_priv.h"
+
+/* A scene loaded again in place (wgf_scene.h): what changed between a block as its actors were
+ * made and as the file has it now, changed on them, block by block, matched by their paths.
+ * A file of its own, linked by wgf_scene_enable_reload alone, which hands the scene file its
+ * entry (wgf_ecs_priv_scene_set_reload): a program that never calls it links none of this. */
+
+typedef wgf_ecs_priv_scene_setting_t setting_t;
+typedef wgf_ecs_priv_scene_line_t line_t;
+typedef wgf_ecs_priv_scene_thing_t thing_t;
+typedef wgf_ecs_priv_scene_made_t made_t;
+typedef wgf_ecs_priv_scene_placed_t placed_t;
+
+/* A block's settings as an actor is made of them: its prefab's first (and that one's), then its
+ * own, the last of each line kind, behavior, and key kept. A fact with no setting is a line's
+ * own: a component or a behavior the block has. What a file loaded again is compared by. */
+typedef struct fact_t {
+    int kind;                 /* the line's, into kinds[] */
+    const char *behavior;     /* a behavior line's name; "" for the rest */
+    const setting_t *setting; /* NULL: the line itself */
+    const line_t *line;
+} fact_t;
+
+typedef struct facts_t {
+    fact_t *at;
+    int count, capacity;
+} facts_t;
+
+static int find_fact(const facts_t *facts, int kind, const char *behavior, const char *key)
+{
+    int i;
+    for (i = 0; i < facts->count; i++) {
+        const fact_t *f = &facts->at[i];
+        if (f->kind == kind && strcmp(f->behavior, behavior) == 0 &&
+            (f->setting == NULL ? key == NULL : key != NULL && strcmp(f->setting->key, key) == 0)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+/* `fact` in place of the last of its kind, behavior, and key, or added; false out of memory. */
+static bool add_fact(facts_t *facts, fact_t fact)
+{
+    const int at = find_fact(facts, fact.kind, fact.behavior, fact.setting != NULL ? fact.setting->key : NULL);
+    if (at >= 0) {
+        facts->at[at] = fact;
+        return true;
+    }
+    if (facts->count == facts->capacity) {
+        const int capacity = facts->capacity > 0 ? facts->capacity * 2 : 32;
+        fact_t *grown = (fact_t *)realloc(facts->at, sizeof(fact_t) * (size_t)capacity);
+        if (grown == NULL) return false;
+        facts->at = grown;
+        facts->capacity = capacity;
+    }
+    facts->at[facts->count++] = fact;
+    return true;
+}
+
+/* Block `thing`'s facts into `facts`, as apply_thing applies its lines; `behavior` the name of
+ * the behavior its parameters go to, as it goes. False out of memory. */
+static bool gather(const wgf_ecs_priv_scene_data_t *data, int thing, facts_t *facts, const char **behavior,
+                   int depth)
+{
+    const thing_t *block = &data->things[thing];
+    int i, j;
+    if (block->from >= 0 && depth < WGF_ECS_PRIV_SCENE_DEPTH_MAX &&
+        !gather(data, block->from, facts, behavior, depth + 1)) {
+        return false;
+    }
+    for (i = 0; i < block->count; i++) {
+        const line_t *line = &block->lines[i];
+        const bool is_behavior = wgf_ecs_priv_scene_role(line->kind) == WGF_ECS_PRIV_SCENE_ROLE_BEHAVIOR;
+        fact_t fact;
+        for (j = 0; is_behavior && j < line->count; j++) {
+            if (strcmp(line->settings[j].key, "name") == 0) *behavior = line->settings[j].value;
+        }
+        fact.kind = line->kind;
+        fact.behavior = is_behavior ? *behavior : "";
+        fact.setting = NULL;
+        fact.line = line;
+        if (!add_fact(facts, fact)) return false;
+        for (j = 0; j < line->count; j++) {
+            if (is_behavior && strcmp(line->settings[j].key, "name") == 0) continue;
+            fact.setting = &line->settings[j];
+            if (!add_fact(facts, fact)) return false;
+        }
+    }
+    return true;
+}
+
+/* What changed between an actor's block as it was made (`was`) and as the file has it now: its
+ * components and behaviors the file no longer has let go of, the ones it has new added, and
+ * each setting new or of another value applied. A setting the file no longer has is left as
+ * it is: what it was before the file set it isn't known. A voice's play isn't played again. */
+static void change(wgf_actor_t actor, const facts_t *was, const facts_t *now)
+{
+    bool behaviors = false;
+    int i;
+    for (i = 0; i < was->count; i++) {
+        const fact_t *f = &was->at[i];
+        if (f->setting != NULL || find_fact(now, f->kind, f->behavior, NULL) >= 0) continue;
+        if (wgf_ecs_priv_scene_role(f->kind) == WGF_ECS_PRIV_SCENE_ROLE_COMPONENT) {
+            wgf_actor_remove_component(actor, (wgf_component_t)wgf_ecs_priv_scene_what(f->kind));
+        } else if (wgf_ecs_priv_scene_role(f->kind) == WGF_ECS_PRIV_SCENE_ROLE_BEHAVIOR && f->behavior[0] != '\0') {
+            const int behavior = wgf_actor_find_behavior(actor, f->behavior);
+            if (behavior != 0) wgf_actor_remove_behavior(actor, behavior);
+            behaviors = true;
+        }
+    }
+    for (i = 0; i < now->count; i++) {
+        const fact_t *f = &now->at[i];
+        if (f->setting != NULL || find_fact(was, f->kind, f->behavior, NULL) >= 0) continue;
+        if (wgf_ecs_priv_scene_role(f->kind) == WGF_ECS_PRIV_SCENE_ROLE_COMPONENT) {
+            wgf_actor_add_component(actor, (wgf_component_t)wgf_ecs_priv_scene_what(f->kind));
+        } else if (wgf_ecs_priv_scene_role(f->kind) == WGF_ECS_PRIV_SCENE_ROLE_BEHAVIOR && f->behavior[0] != '\0') {
+            wgf_actor_add_behavior(actor, f->behavior);
+            behaviors = true;
+        }
+    }
+    for (i = 0; i < now->count; i++) {
+        const fact_t *f = &now->at[i];
+        int at, behavior = 0;
+        if (f->setting == NULL) continue;
+        at = find_fact(was, f->kind, f->behavior, f->setting->key);
+        if (at >= 0 && strcmp(was->at[at].setting->value, f->setting->value) == 0) continue;
+        if (wgf_ecs_priv_scene_role(f->kind) == WGF_ECS_PRIV_SCENE_ROLE_BEHAVIOR) {
+            behavior = wgf_actor_find_behavior(actor, f->behavior);
+            if (behavior == 0) continue;
+            behaviors = true;
+        }
+        if (wgf_ecs_priv_scene_what(f->kind) == WGF_COMPONENT_VOICE &&
+            wgf_ecs_priv_scene_role(f->kind) == WGF_ECS_PRIV_SCENE_ROLE_COMPONENT &&
+            (strcmp(f->setting->key, "sound") == 0 || strcmp(f->setting->key, "streamed") == 0)) {
+            wgf_ecs_priv_scene_apply_sound(actor, f->line);
+            continue;
+        }
+        wgf_ecs_priv_scene_apply(actor, f->kind, f->setting, behavior);
+    }
+    if (behaviors) wgf_ecs_priv_behaviors_resolve(actor); /* its references found in the tree it's in now */
+}
+
+/* An actor made from block `thing` of `was` changed to block `now_thing` of `now`; false out of
+ * memory (it is left as it was). */
+static bool change_block(wgf_actor_t actor, const wgf_ecs_priv_scene_data_t *was, int thing,
+                         const wgf_ecs_priv_scene_data_t *now, int now_thing)
+{
+    facts_t before = {NULL, 0, 0}, after = {NULL, 0, 0};
+    const char *behavior = "";
+    bool ok = gather(was, thing, &before, &behavior, 0);
+    behavior = "";
+    ok = ok && gather(now, now_thing, &after, &behavior, 0);
+    if (ok) change(actor, &before, &after);
+    free(before.at);
+    free(after.at);
+    return ok;
+}
+
+/* `scene`'s file loaded again, its data `was` and now `now` (the scene's already): what it
+ * made changed in place, block by block, matched by their paths. */
+static void again(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was, const wgf_ecs_priv_scene_data_t *now)
+{
+    wgf_actor_t *fresh = NULL;
+    made_t *list;
+    placed_t *places;
+    int i, j, count, place_count, fresh_count = 0;
+    wgf_scene_t before;
+    wgf_ecs_priv_scene_follow(scene, was, now);
+    before = wgf_ecs_priv_scene_set_making(scene);
+    /* each actor it made: changed to its block in the new file, removed with it, or made again
+       for a kind that changed (its handle a new one); its record moved to the new block */
+    wgf_ecs_priv_scene_compact();
+    wgf_ecs_priv_scene_set_changing(true);
+    wgf_ecs_priv_scene_made(&count);
+    for (i = 0; i < count; i++) {
+        made_t m;
+        int now_thing;
+        list = wgf_ecs_priv_scene_made(&j); /* made again: making an actor may move the records */
+        m = list[i];
+        if (m.scene != scene || !wgf_handle_is_alive(m.actor)) continue;
+        now_thing = wgf_ecs_priv_scene_find_path(now, was->things[m.thing].path, was->things[m.thing].prefab);
+        if (now_thing < 0) {
+            list[i].scene = 0;
+            if (!m.node) wgf_actor_destroy(m.actor, WGF_ACTOR_DESTROY_CHILDREN);
+            continue;
+        }
+        if (!m.node && wgf_ecs_priv_scene_kind_of(now, now_thing) != wgf_ecs_priv_scene_kind_of(was, m.thing)) {
+            const wgf_actor_t parent = wgf_actor_get_parent(m.actor);
+            wgf_actor_t *grown;
+            list[i].scene = 0;
+            wgf_actor_destroy(m.actor, WGF_ACTOR_DESTROY_CHILDREN);
+            grown = (wgf_actor_t *)realloc(fresh, sizeof(wgf_actor_t) * (size_t)(fresh_count + 1));
+            if (grown == NULL) continue;
+            fresh = grown;
+            fresh[fresh_count] = wgf_ecs_priv_scene_make(now, now_thing, parent, parent != 0 ? 1 : 0);
+            if (fresh[fresh_count] != 0) fresh_count++;
+            continue;
+        }
+        change_block(m.actor, was, m.thing, now, now_thing);
+        list[i].thing = now_thing;
+    }
+    /* each block new to the file, made under each actor of its parent's block (one new too is
+       made with its parent), or, at the top, under each parent an instantiate put the scene */
+    wgf_ecs_priv_scene_made(&count);
+    wgf_ecs_priv_scene_placed(&place_count);
+    for (j = 0; j < now->count; j++) {
+        const thing_t *block = &now->things[j];
+        if (wgf_ecs_priv_scene_find_path(was, block->path, block->prefab) >= 0) continue;
+        if (block->parent >= 0 &&
+            wgf_ecs_priv_scene_find_path(was, now->things[block->parent].path, block->prefab) < 0) {
+            continue;
+        }
+        if (block->parent < 0 && block->prefab) continue; /* a prefab: made as it is spawned */
+        for (i = 0; i < (block->parent >= 0 ? count : place_count); i++) {
+            wgf_actor_t parent, actor;
+            wgf_actor_t *grown;
+            int unused;
+            if (block->parent >= 0) {
+                list = wgf_ecs_priv_scene_made(&unused);
+                if (list[i].scene != scene || list[i].thing != block->parent || !wgf_handle_is_alive(list[i].actor)) {
+                    continue;
+                }
+                parent = list[i].actor;
+            } else {
+                places = wgf_ecs_priv_scene_placed(&unused);
+                if (places[i].scene != scene) continue;
+                parent = places[i].parent;
+            }
+            actor = wgf_ecs_priv_scene_make(now, j, parent, block->parent >= 0 ? 1 : 0);
+            grown = actor != 0 ? (wgf_actor_t *)realloc(fresh, sizeof(wgf_actor_t) * (size_t)(fresh_count + 1)) : NULL;
+            if (grown == NULL) continue;
+            fresh = grown;
+            fresh[fresh_count++] = actor;
+        }
+    }
+    wgf_ecs_priv_scene_set_making(before);
+    wgf_ecs_priv_scene_set_changing(false);
+    for (i = 0; i < fresh_count; i++) wgf_ecs_priv_scene_resolve(fresh[i]); /* all made: each can refer to any */
+    free(fresh);
+}
+
+bool wgf_scene_enable_reload(void)
+{
+    wgf_asset_enable_reload(); /* what loads anything again */
+    wgf_ecs_priv_scene_set_reload(again);
+    return true;
+}

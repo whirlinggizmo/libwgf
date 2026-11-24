@@ -234,8 +234,8 @@ WGF_API bool wgf_asset_is_reload_enabled(void);
  * - A FAILED resource that now loads becomes READY.
  * - These load again: a texture (compressed ones too), an image, a cubemap, a glTF mesh
  *   with its images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a
- *   font, a text buffer, and a UI document. Each kind's header says what is kept across it.
- * - A scene doesn't: it is left as it is, with a warning.
+ *   font, a text buffer, a UI document, and a scene (with wgf_scene_enable_reload). Each
+ *   kind's header says what is kept across it.
  * - A resource still loading is left as it is.
  *
  * Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
@@ -248,7 +248,7 @@ WGF_API int wgf_asset_reload(const char *path);
  * the program again for a file it can't load again in place.
  *
  * Returns false if any resource made from it is of a kind that doesn't load again, if
- * nothing was made from it (a scene whose actors are already made, a file not loaded yet),
+ * nothing was made from it (a file not loaded yet),
  * for a path that isn't under the host, or when reload isn't enabled. */
 WGF_API bool wgf_asset_can_reload(const char *path);
 

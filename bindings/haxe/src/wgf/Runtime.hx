@@ -81,7 +81,7 @@ class Runtime {
 		#if wgf_reload
 		// a build that loads its saved assets again in place (`wgf build`, `run`, and the checks
 		// pass -D wgf_reload); a shipped one keeps nothing for a reload
-		Asset.enableReload();
+		Scene.enableReload(); // and the other assets', which it turns on
 		#end
 		return untyped __cpp__("::wgf_app_run(wgf_hx_init, wgf_hx_tick, wgf_hx_frame, wgf_hx_shutdown, (void *)0)");
 		#end
@@ -91,8 +91,8 @@ class Runtime {
 	/**
 		`wgf serve`'s assets: hotreload-hx's reloader asks the server for the files saved (a long
 		poll of its own) and tells this, which loads each again in place (Asset.reload). One
-		that can't be (Asset.canReload: a scene, a file nothing is made from) loads
-		the page again. The server names each
+		that can't be (Asset.canReload: a file nothing is made from) loads the page
+		again. The server names each
 		by its URL in the page, `/assets/<path>`; Asset.reload takes the path.
 	**/
 	static var reloader:hotreload.Reloader;

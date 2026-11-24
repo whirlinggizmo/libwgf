@@ -290,6 +290,7 @@ class Main {
 		expect(Asset.setHost("../assets") && Asset.getHost() != "", "the asset host (beside the program)");
 		Log.message(LogLevel.INFO, "feature-test assets from " + Asset.getHost());
 		expect(Asset.enableReload() && Asset.isReloadEnabled(), "reload enabled");
+		expect(Scene.enableReload() && Scene.isReloadEnabled(), "scene reload enabled");
 		expect(Asset.reload("nothing/made/from.png") == 0, "a reload of a path nothing was made from: none");
 		expect(!Asset.canReload("nothing/made/from.png"), "a path nothing was made from can't load again");
 		Asset.setCacheDir("feature-cache");
