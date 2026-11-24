@@ -248,6 +248,7 @@ int main(void)
     expect(wgf_font_enable_bitmaps() && wgf_font_is_bitmaps_enabled(), "bitmap fonts linked");
 
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     write_page("bitmap_test/page.png");
     write_text("bitmap_test/test.fnt", FNT);
     write_file("bitmap_test/binary.fnt", bytes, binary_fnt(bytes, 0));

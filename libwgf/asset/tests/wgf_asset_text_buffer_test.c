@@ -121,6 +121,9 @@ static void test_loaded(void)
     /* loaded again in place: the file's text, the change gone, a new version */
     version = wgf_text_buffer_get_version(credits);
     write_text("text/credits.txt", "Made by Rob, again.");
+    CHECK(!wgf_asset_is_reload_enabled() && !wgf_asset_can_reload("text/credits.txt") &&
+          wgf_asset_reload("text/credits.txt") == 0); /* not enabled: nothing loads again */
+    CHECK(wgf_asset_enable_reload() && wgf_asset_is_reload_enabled());
     CHECK(wgf_asset_can_reload("text/credits.txt"));
     CHECK(!wgf_asset_can_reload("text/unloaded.txt") && !wgf_asset_can_reload("../outside.txt") &&
           !wgf_asset_can_reload(NULL)); /* nothing made from it, not under the host, no path */

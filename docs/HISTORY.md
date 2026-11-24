@@ -1103,6 +1103,14 @@ Rob's. Missed in the lists of the kinds that don't load again until now: a cubem
 - **A cubemap from a file never loaded in a page**, from the start (2026-11-20). In a page the browser decodes an image, which takes updates, and the cubemap's loader read the pixels the moment it started the decode: there were none, so it FAILED, and the example's sky and reflections were the FAILED checker. `tools/check_web.py` passed it, a FAILED cubemap being a warning, not an error; found by the serve check's cubemap row. The loader now waits for the decode in finish (WAIT) and cuts the faces there, as a bitmap font's pages do; natively it is still decoded and cut on the worker.
 - Tests: `wgf_gfx_cubemap_test` loads one image again at another size, then in another layout, then broken; and six files by either of their names, then with faces of two sizes, then a broken face, then fixed. The serve check has a cubemap row, a row of six faces, since in a page the browser decodes its image.
 
+## Reload is enabled by a build, as the autopilot's runner is (2026-11-24)
+
+Rob's. With most kinds loading again in place, some of what a reload needs is kept while the program runs, whether a reload comes or not: a model's clip by its name as it is played, and (next) a document's elements' changes, recorded at every setter. A shipped game shouldn't pay for that.
+
+- **`wgf_asset_enable_reload`** turns it on, `wgf_asset_is_reload_enabled` says. Without it, `wgf_asset_reload` loads nothing (logged once), `wgf_asset_can_reload` is false, and nothing is kept for one.
+- **A build's, not a game's.** It is a feature of `tools/wgf/features.py` beside the autopilot's runner: the `wgf` tool's own builds have it (`-D wgf_reload` natively, which `Runtime.hx` turns into the call), a game's export doesn't. On the web the JS binding calls it when the host exports it, as it does the runner's: the full host of `wgf serve` does, an export's trimmed host doesn't. It isn't a `wgf.json` setting, since whether a game reloads is how it is being run, not what its data needs.
+- What a reload does stays linked where its kind is (a few lines in each loader's finish); `wgf_asset_reload`, core's loops over the resources, and the hot page's asset poll are reached only from a build that loads again, so an export's trimmed host drops them.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

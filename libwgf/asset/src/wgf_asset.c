@@ -162,10 +162,27 @@ void wgf_asset_priv_note_named(const char *file, const char *named)
     name_count++;
 }
 
+bool wgf_asset_enable_reload(void)
+{
+    wgf_core_priv_resource_reloads = true;
+    return true;
+}
+
+bool wgf_asset_is_reload_enabled(void)
+{
+    return wgf_core_priv_resource_reloads;
+}
+
 int wgf_asset_reload(const char *path)
 {
+    static bool told;
     char logical[WGF_ASSET_PRIV_PATH_MAX];
     int count, i, j;
+    if (!wgf_core_priv_resource_reloads) {
+        if (!told) wgf_log_warn("wgf_asset_reload: reload isn't enabled (wgf_asset_enable_reload): nothing loaded");
+        told = true;
+        return 0;
+    }
     wgf_asset_priv_install();
     if (path == NULL || !wgf_asset_priv_normalize_path(path, logical, sizeof(logical))) {
         wgf_log_warn("wgf_asset_reload: %s isn't a path under the host", path != NULL ? path : "(null)");
@@ -186,7 +203,10 @@ bool wgf_asset_can_reload(const char *path)
 {
     char logical[WGF_ASSET_PRIV_PATH_MAX];
     int made = 0, i;
-    if (path == NULL || !wgf_asset_priv_normalize_path(path, logical, sizeof(logical))) return false;
+    if (!wgf_core_priv_resource_reloads || path == NULL ||
+        !wgf_asset_priv_normalize_path(path, logical, sizeof(logical))) {
+        return false;
+    }
     if (!wgf_core_priv_resource_can_reload(logical, &made)) return false;
     for (i = 0; i < name_count; i++) { /* the files that name it */
         if (strcmp(names[i].named, logical) == 0 && !wgf_core_priv_resource_can_reload(names[i].file, &made)) {

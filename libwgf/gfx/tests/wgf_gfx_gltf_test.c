@@ -235,6 +235,7 @@ int main(void)
     wgf_vec3_t lo, hi;
 
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the failures below warn, on purpose */
     write_file("models/tri.gltf", gltf, (int)sizeof(gltf) - 1);
     write_file("models/tri.bin", tri, (int)sizeof(tri));

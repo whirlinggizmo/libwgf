@@ -78,6 +78,11 @@ class Runtime {
 		// a shipped one (`wgf export`) links none of the runner
 		App.enableAutopilot();
 		#end
+		#if wgf_reload
+		// a build that loads its saved assets again in place (`wgf build`, `run`, and the checks
+		// pass -D wgf_reload); a shipped one keeps nothing for a reload
+		Asset.enableReload();
+		#end
 		return untyped __cpp__("::wgf_app_run(wgf_hx_init, wgf_hx_tick, wgf_hx_frame, wgf_hx_shutdown, (void *)0)");
 		#end
 	}

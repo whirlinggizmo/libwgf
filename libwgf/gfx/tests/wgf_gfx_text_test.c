@@ -77,6 +77,7 @@ int main(void)
     char source[32] = "hello";
 
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     expect(wgf_font_measure(0, "x", 16).x == 0, "nothing measures before setup");
     expect(wgf_gfx_priv_start(), "setup");
 

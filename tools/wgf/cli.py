@@ -38,7 +38,8 @@
                                          held to the game's size budget (default both);
                                          --autopilot flies each with FILE, not the smoke run;
                                          each ships without the autopilot's runner
-                                         (smoke-tested with it) unless --keep-autopilot
+                                         (smoke-tested with it) unless --keep-autopilot,
+                                         and without reload
 
 An autopilot FILE flown is a path, or a file in the game's autopilot folder by its name
 (`wgf autopilot lap.autopilot`), as wgf.json's "playthrough" names one.

@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "1ae2be36039229ec" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "fd6afd9466bc245d" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -244,6 +244,9 @@ export function wgf_app_run(init, tick, frame, shutdown) {
     // a host with the autopilot's runner lets an autopilot fly the run; a game's web export
     // leaves it out (`wgf export`), so its host has none
     if (typeof host["_wgf_app_enable_autopilot"] === "function") host["_wgf_app_enable_autopilot"]();
+    // a host that can load assets again in place keeps what a reload needs; a game's web
+    // export leaves the call out (`wgf export`), so its host keeps nothing for one
+    if (typeof host["_wgf_asset_enable_reload"] === "function") host["_wgf_asset_enable_reload"]();
     return host["_wgf_app_run"](trampolines[0], trampolines[1], trampolines[2], trampolines[3], 0) !== 0;
 }
 
@@ -5229,11 +5232,39 @@ export function wgf_asset_evict(path) {
     return value !== 0;
 }
 
+// wgf: call wgf_asset_enable_reload
+/**
+ * Enables loading assets again in place (wgf_asset_reload), or says whether it is enabled.
+ *
+ * - The wgf tool's own builds enable it (`wgf serve`, `build`, and `run`); a game's export
+ *   doesn't. On the web the host decides: it is enabled when the host exports this call.
+ * - Call it before the assets are made. What a reload keeps is kept from then on: the
+ *   changes a program makes to a document's elements, the name of a model's clip playing.
+ * - Without it, nothing is kept for a reload, and a program pays nothing for one.
+ *
+ * Returns true.
+ */
+export function wgf_asset_enable_reload() {
+    const value = host["_wgf_asset_enable_reload"]();
+    return value !== 0;
+}
+
+// wgf: call wgf_asset_is_reload_enabled
+/**
+ * Enables loading assets again in place (wgf_asset_reload), or says whether it is enabled.
+ *
+ * See wgf_asset_enable_reload for the rest.
+ */
+export function wgf_asset_is_reload_enabled() {
+    const value = host["_wgf_asset_is_reload_enabled"]();
+    return value !== 0;
+}
+
 // wgf: call wgf_asset_reload
 /**
  * Loads again, in place, every resource made from `path`, and every file that names it,
  * such as a glTF whose buffer or image it is. `wgf serve` does this with an asset saved
- * while the game runs.
+ * while the game runs. It needs wgf_asset_enable_reload.
  *
  * - Each file is fetched anew, never from the cache or this run's store.
  * - Each resource keeps its handle, and stays READY all the while. Whatever uses it draws
@@ -5250,7 +5281,7 @@ export function wgf_asset_evict(path) {
  * - A resource still loading is left as it is.
  *
  * Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
- * or for a path that isn't under the host.
+ * for a path that isn't under the host, or when reload isn't enabled (logged once).
  */
 export function wgf_asset_reload(path) {
     const mark = host["stackSave"]();
@@ -5268,7 +5299,7 @@ export function wgf_asset_reload(path) {
  *
  * Returns false if any resource made from it is of a kind that doesn't load again, if
  * nothing was made from it (a scene whose actors are already made, a file not loaded yet),
- * or for a path that isn't under the host.
+ * for a path that isn't under the host, or when reload isn't enabled.
  */
 export function wgf_asset_can_reload(path) {
     const mark = host["stackSave"]();

@@ -100,6 +100,7 @@ int main(void)
     int i;
 
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR);
     expect(wgf_gfx_priv_start(), "setup");
     write = wgf_fs_write("sheet_test/four.png", png_2x2, (int)sizeof(png_2x2));

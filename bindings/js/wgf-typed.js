@@ -256,6 +256,10 @@ export const Asset = Object.freeze({
     getFetchTimeout: raw.wgf_asset_get_fetch_timeout,
     // wgf: call wgf_asset_evict
     evict: raw.wgf_asset_evict,
+    // wgf: call wgf_asset_enable_reload
+    enableReload: raw.wgf_asset_enable_reload,
+    // wgf: call wgf_asset_is_reload_enabled
+    isReloadEnabled: raw.wgf_asset_is_reload_enabled,
     // wgf: call wgf_asset_reload
     reload: raw.wgf_asset_reload,
     // wgf: call wgf_asset_can_reload

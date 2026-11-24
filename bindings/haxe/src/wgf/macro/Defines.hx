@@ -19,6 +19,10 @@ class Defines {
 			doc: "Links the autopilot's runner into a native build (App.enableAutopilot), so an autopilot can fly it: what the wgf tool's own builds pass, and what `wgf export` leaves out unless --keep-autopilot. On the web the host decides: its runner is there when it exports the call."
 		},
 		{
+			define: "wgf_reload",
+			doc: "Lets a native build load its saved assets again in place (Asset.enableReload): what the wgf tool's own builds pass, and what `wgf export` leaves out. On the web the host decides: reload is enabled when it exports the call."
+		},
+		{
 			define: "wgf_record",
 			doc: "A native build made to record a run by hand as an autopilot (`wgf autopilot --record`), the only build with the recorder in it: never a shipped one."
 		},

@@ -100,6 +100,11 @@ void wgf_core_priv_resource_loaded(wgf_handle_t resource, const char *found);
  * loader filling it anew once the new file is in (a loader that `reloads`: is_reloading says
  * so), and a failure leaving it as it was, with one error logged. A resource still loading,
  * or of a kind that doesn't reload (warned), is left. The number set loading. */
+/* Whether resources may load again in place (wgf_asset_enable_reload): what a reload needs
+ * kept while the program runs (a document's changes, a model's clip by its name) is kept only
+ * then. False in a game's export. Set once, and kept across core's shutdown. */
+extern bool wgf_core_priv_resource_reloads;
+
 int wgf_core_priv_resource_reload(const char *path);
 /* Whether every resource made from `path` is of a kind that loads again in place: false at
  * the first that isn't. Each one that is adds 1 to `*made`, one still loading included. */

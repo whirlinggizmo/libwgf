@@ -10,6 +10,7 @@
 #include "mesh/wgf_gfx_mesh_record_priv.h"
 #include "stage/wgf_gfx_model_priv.h"
 #include "wgf_core_part_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
 #include "wgf_quat.h"
 #include "wgf_resource.h"
@@ -117,11 +118,12 @@ static int clip_named(const wgf_gfx_priv_mesh_record_t *record, const char *name
 }
 
 /* Clip `animation`'s name into `out` (64 bytes), "" for none or one the file doesn't name:
- * what finds the clip again when the file loads again. Left as it is while the file loads. */
+ * what finds the clip again when the file loads again, kept only where reload is enabled
+ * (without, the clip is followed by its number). Left as it is while the file loads. */
 static void keep_name(char *out, const wgf_gfx_priv_mesh_record_t *record, int animation)
 {
     const wgf_gfx_priv_mesh_animation_t *clip = clip_of(record, animation);
-    if (record == NULL) return;
+    if (record == NULL || !wgf_core_priv_resource_reloads) return;
     snprintf(out, 64, "%s", clip != NULL && clip->name != NULL ? clip->name : "");
 }
 

@@ -233,6 +233,7 @@ int main(void)
     wgf_actor_t root, stage, camera, body, hip, plain;
 
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the refusals below warn, on purpose */
     write_glb("models/arm.glb", json);
     write_glb("models/clips.glb", clips_json);

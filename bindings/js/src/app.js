@@ -76,5 +76,8 @@ export function wgf_app_run(init, tick, frame, shutdown) {
     // a host with the autopilot's runner lets an autopilot fly the run; a game's web export
     // leaves it out (`wgf export`), so its host has none
     if (typeof host["_wgf_app_enable_autopilot"] === "function") host["_wgf_app_enable_autopilot"]();
+    // a host that can load assets again in place keeps what a reload needs; a game's web
+    // export leaves the call out (`wgf export`), so its host keeps nothing for one
+    if (typeof host["_wgf_asset_enable_reload"] === "function") host["_wgf_asset_enable_reload"]();
     return host["_wgf_app_run"](trampolines[0], trampolines[1], trampolines[2], trampolines[3], 0) !== 0;
 }

@@ -427,6 +427,7 @@ int main(void)
     test_extract(WGF_CUBEMAP_LAYOUT_LINE_HORIZONTAL);
 
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the failures below warn, on purpose */
     CHECK(wgf_gfx_priv_start());
     test_loading();

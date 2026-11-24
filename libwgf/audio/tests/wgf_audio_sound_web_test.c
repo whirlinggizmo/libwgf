@@ -214,6 +214,7 @@ static void on_frame(void *user)
 
 int main(void)
 {
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_app_run(NULL, NULL, on_frame, NULL, NULL);
     return 0;
 }

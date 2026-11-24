@@ -430,6 +430,7 @@ int main(void)
     test_brdf_lut();
     test_half_float();
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the missing file warns, on purpose */
     CHECK(wgf_gfx_priv_start());
     test_api();

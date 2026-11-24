@@ -180,6 +180,7 @@ int main(void)
     const unsigned char not_an_image[] = "this is not an image";
 
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_log_set_level(WGF_LOG_LEVEL_ERROR); /* the failures below warn, on purpose */
     write_file("images/rock.png", rock_png, (int)sizeof(rock_png));
     write_file("images/broken.png", not_an_image, (int)sizeof(not_an_image));

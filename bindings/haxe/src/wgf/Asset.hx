@@ -248,9 +248,31 @@ class Asset {
 		return Raw.wgf_asset_evict(path);
 
 	/**
+	    Enables loading assets again in place (wgf_asset_reload), or says whether it is enabled.
+
+	    - The wgf tool's own builds enable it (`wgf serve`, `build`, and `run`); a game's export
+	      doesn't. On the web the host decides: it is enabled when the host exports this call.
+	    - Call it before the assets are made. What a reload keeps is kept from then on: the
+	      changes a program makes to a document's elements, the name of a model's clip playing.
+	    - Without it, nothing is kept for a reload, and a program pays nothing for one.
+
+	    Returns true.
+	**/
+	public static inline function enableReload():Bool
+		return Raw.wgf_asset_enable_reload();
+
+	/**
+	    Enables loading assets again in place (wgf_asset_reload), or says whether it is enabled.
+
+	    See Asset.enableReload for the rest.
+	**/
+	public static inline function isReloadEnabled():Bool
+		return Raw.wgf_asset_is_reload_enabled();
+
+	/**
 	    Loads again, in place, every resource made from `path`, and every file that names it,
 	    such as a glTF whose buffer or image it is. `wgf serve` does this with an asset saved
-	    while the game runs.
+	    while the game runs. It needs wgf_asset_enable_reload.
 
 	    - Each file is fetched anew, never from the cache or this run's store.
 	    - Each resource keeps its handle, and stays READY all the while. Whatever uses it draws
@@ -267,7 +289,7 @@ class Asset {
 	    - A resource still loading is left as it is.
 
 	    Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
-	    or for a path that isn't under the host.
+	    for a path that isn't under the host, or when reload isn't enabled (logged once).
 	**/
 	public static inline function reload(path:String):Int
 		return Raw.wgf_asset_reload(path);
@@ -280,7 +302,7 @@ class Asset {
 
 	    Returns false if any resource made from it is of a kind that doesn't load again, if
 	    nothing was made from it (a scene whose actors are already made, a file not loaded yet),
-	    or for a path that isn't under the host.
+	    for a path that isn't under the host, or when reload isn't enabled.
 	**/
 	public static inline function canReload(path:String):Bool
 		return Raw.wgf_asset_can_reload(path);

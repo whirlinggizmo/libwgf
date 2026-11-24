@@ -212,6 +212,8 @@ bool wgf_core_priv_resource_is_reloading(wgf_handle_t resource)
     return record_ptr != NULL && record_ptr->reloading;
 }
 
+bool wgf_core_priv_resource_reloads;
+
 int wgf_core_priv_resource_reload(const char *path)
 {
     char key[WGF_CORE_PRIV_FS_PATH_MAX];

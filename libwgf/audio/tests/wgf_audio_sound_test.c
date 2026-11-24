@@ -199,6 +199,7 @@ int main(void)
 {
     wgf_handle_t missing, garbage, garbage_streamed;
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_core_priv_fs_set_root("audio_sound_test_root");
     copy_asset("music/a_hero_is_born.mp3");
     copy_asset("sounds/click_004.ogg");

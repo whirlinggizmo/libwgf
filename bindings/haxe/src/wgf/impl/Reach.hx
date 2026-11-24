@@ -114,6 +114,7 @@ class Reach {
 		"wgf_asset_can_reload",
 		"wgf_asset_clear_cache",
 		"wgf_asset_clear_redirects",
+		"wgf_asset_enable_reload",
 		"wgf_asset_ensure",
 		"wgf_asset_evict",
 		"wgf_asset_fetch_done",
@@ -129,6 +130,7 @@ class Reach {
 		"wgf_asset_group_add",
 		"wgf_asset_group_create",
 		"wgf_asset_is_fetching",
+		"wgf_asset_is_reload_enabled",
 		"wgf_asset_ping_get_milliseconds",
 		"wgf_asset_ping_host",
 		"wgf_asset_reload",
@@ -1476,7 +1478,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1467) 0];
+	static final counts:Array<Int> = [for (_ in 0...1469) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

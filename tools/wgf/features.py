@@ -4,8 +4,8 @@ host's export that does, and the C call a program makes instead.
 
 A part a game's data needs, though its code never names it (a scene's model path=, its emitter
 lines), is a feature it declares in wgf.json ("features"): a fact about the game, the same in
-every build. The autopilot's runner is the build's instead: the tool's own builds have it, and
-an export doesn't unless --keep-autopilot. Nothing is read from a game's files to guess: a
+every build. The autopilot's runner and reload are the build's instead: the tool's own builds
+have them, and an export doesn't (the runner unless --keep-autopilot). Nothing is read from a game's files to guess: a
 program that reaches a part it didn't declare says so, naming the feature, and an export's
 smoke run and playthrough fly the trimmed build, so a miss fails there, before it ships.
 Standard library only."""
@@ -27,6 +27,8 @@ FEATURES = {
                             "bitmap fonts: a font made from a .fnt or an image of glyphs"),
     'autopilot': Feature('wgf_autopilot', '_wgf_app_enable_autopilot', 'wgf_app_enable_autopilot',
                          "the autopilot's runner: the build's, not the game's (--keep-autopilot)"),
+    'reload': Feature('wgf_reload', '_wgf_asset_enable_reload', 'wgf_asset_enable_reload',
+                      "loading a saved asset again in place (wgf serve): the build's, not the game's"),
 }
 
 # Features a game declares; the rest are a build's.

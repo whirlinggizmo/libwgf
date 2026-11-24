@@ -438,6 +438,7 @@ static void textures(void)
 int main(void)
 {
     wgf_core_priv_init();
+    wgf_asset_enable_reload(); /* what wgf serve does, to load its files again */
     wgf_log_set_level(WGF_LOG_LEVEL_FATAL); /* the refusals below log, on purpose */
     generated();
     pixels();
