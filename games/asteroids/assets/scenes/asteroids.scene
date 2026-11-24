@@ -10,6 +10,7 @@ prefab ship
   shape2d polygon=18,0,-12,-11,-6,0,-12,11 outline=2 color=#7FD4FF
 end
 prefab ship/emitter2d
+  transform position=-13,0,0
   emitter2d rate=70 emitting=false max=64 life=0.12,0.3 velocity=-135,0,0.4,0.33 size=3,0 color=#FFB040FF,#FF400000 alpha=blend lingering=true
 end
 
