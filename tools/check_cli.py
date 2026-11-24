@@ -17,9 +17,9 @@ what it said:
   screenshot  a PNG of frame 30, from a browser, and one flown there by --autopilot
   serve       the page reached in a browser, its Haxe edited while it runs: the new code
               runs, with the frame count it had (state kept, not a restart); then a
-              texture, a glTF, a sound, and a font saved changed: the page shows the new
-              ones, its count going on; then the texture, the sound, and the font saved
-              broken: the old ones kept, one error logged for each;
+              texture, a glTF, a sound, two fonts, an image, and a shader saved changed:
+              the page shows the new ones, its count going on; then each saved broken:
+              the old ones kept, one error logged for each;
               then a file nothing was made from saved: the page loads again
   export      export/web (a trimmed host, under the budget, its assets' manifests
               written, none in the game's) and export/desktop, each flown by the
@@ -305,47 +305,98 @@ def car_gltf(x):
                        'min': [0, 0, 0], 'max': [1, 1, 0]}]})
 
 
+def served_assets():
+    """What the serve step's game loads, one of each kind a page takes on differently from a
+    desktop build (the browser decodes it, or the web has code of its own for it). Each: the
+    word its value follows in the page's log, its file, the Haxe that declares, makes, and
+    says it, its file's bytes first, saved changed, and saved broken (None: never broken),
+    and whether a value is the first file's, or (given the first's) the changed one's."""
+    shaders = ROOT / 'examples' / 'assets' / 'shaders'
+
+    def fnt(line):
+        return (f'common lineHeight={line} base=8 scaleW=8 scaleH=8 pages=1 packed=0\n'
+                'page id=0 file="tiny.png"\n'
+                'char id=65 x=0 y=0 width=5 height=7 xoffset=0 yoffset=1 xadvance=6 page=0 chnl=15\n').encode()
+
+    def asset(word, file, declare, make, say, first, changed, broken, was, now):
+        return {'word': word, 'file': file, 'declare': declare, 'make': make, 'say': say, 'first': first,
+                'changed': changed, 'broken': broken, 'was': was, 'now': now}
+
+    return [
+        asset('rock', 'rock.png', 'rock:Texture', 'rock = Texture.create("rock.png");', 'rock.getWidth()',
+              png(2), png(4), b'not an image any more', lambda v: v == 2, lambda v, first: v == 4),
+        asset('body', 'car.gltf', 'car:Model', 'car = Model.create(Mesh.create("car.gltf"));',
+              'Std.int(car.find("body").getPosition().x)', car_gltf(1).encode(), car_gltf(3).encode(), None,
+              lambda v: v == 1, lambda v, first: v == 3),
+        # a sound's length in milliseconds
+        asset('beep', 'beep.wav', 'beep:Sound', 'beep = Sound.create("beep.wav");',
+              'Std.int(beep.getDuration() * 1000)', wav(100), wav(300), b'not a sound any more',
+              lambda v: 50 < v < 200, lambda v, first: v > 200),
+        # a line's width in a TrueType font: another typeface's is another width
+        asset('words', 'face.ttf', 'face:Font', 'face = Font.create("face.ttf");',
+              'Std.int(face.measure("Hello, world", 40).x)', font_file('mono'), font_file('komika'),
+              b'not a font any more', lambda v: v > 0, lambda v, first: v > 0 and v != first),
+        asset('pic', 'pic.png', 'pic:Image', 'pic = Image.create("pic.png");', 'pic.getWidth()',
+              png(2), png(6), b'not an image any more', lambda v: v == 2, lambda v, first: v == 6),
+        # a bitmap font's line height; its page is tiny.png
+        asset('line', 'tiny.fnt', 'tiny:Font', 'Font.enableBitmaps();\n\t\ttiny = Font.create("tiny.fnt");',
+              'Std.int(tiny.getSize())', fnt(10), fnt(12), b'not a font any more',
+              lambda v: v == 10, lambda v, first: v == 12),
+        # a custom shader: whether it has the parameter only the changed one has
+        asset('speed', 'shaders/look.wgfshader', 'look:Material',
+              'look = Material.createCustom(Shader.create("shaders/look.wgfshader"));',
+              '(look.setFloat("speed", 1.0) ? 1 : 0)', (shaders / 'toon.wgfshader').read_bytes(),
+              (shaders / 'dissolve.wgfshader').read_bytes(), b'not a shader any more',
+              lambda v: v == 0, lambda v, first: v == 1),
+    ]
+
+
+def write_assets(game, assets, which):
+    """Each asset's `which` bytes ('first', 'changed', 'broken') saved over its file."""
+    for a in assets:
+        if a[which] is not None:
+            path = game / 'assets' / a['file']
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(a[which])
+
+
 def step_serve(game):
-    """The page in a browser, its program with an initialized instance final, a texture, a
-    glTF, a sound, and a font, served twice. As `wgf serve` alone: Main.hx edited while it runs, and the page
-    loads again with the new code's line, its frame count from the start; then the texture
-    and the glTF saved changed, and it loads again with their new size and place. Then as
+    """The page in a browser, its program with an initialized instance final and one asset of
+    each kind served_assets lists (a texture, a glTF, a sound, a TrueType font, an image, a
+    bitmap font, a custom shader), served twice. As `wgf serve` alone: Main.hx edited while
+    it runs, and the page loads again with the new code's line, its frame count from the
+    start; then every asset saved changed, and it loads again with them. Then as
     `wgf serve --hot`, where the machine has hotreload-hx (said as skipped where it hasn't):
-    Main.hx edited, the new code's line with the frame count going on from where it was; the
-    texture, the glTF, the sound, and the font saved, their new size, place, length, and
-    line's width in its log, the count going on; the texture, the sound, and the font saved
-    broken, the old ones kept, and one error logged for each; then a file nothing
+    Main.hx edited, the new code's line with the frame count going on from where it was;
+    every asset saved changed, each one's new value in its log, the count going on; each
+    saved broken, the old ones kept, and one error logged for each; then a file nothing
     was made from saved, and the page loads again (its count from the start)."""
     why = needs(web=True, browser_too=True)
     if why:
         return why
+    assets = served_assets()
     # a class with an initialized instance final, which a hot build once refused
     (game / 'src' / 'Held.hx').write_text('class Held {\n\tpublic final count = [0];\n\n\tpublic function new() {}\n}\n')
-    (game / 'assets' / 'rock.png').write_bytes(png(2))
-    (game / 'assets' / 'car.gltf').write_text(car_gltf(1))
-    (game / 'assets' / 'beep.wav').write_bytes(wav(100))
-    (game / 'assets' / 'face.ttf').write_bytes(font_file('mono'))
+    write_assets(game, assets, 'first')
+    (game / 'assets' / 'tiny.png').write_bytes(png(8))  # the bitmap font's page
     main = game / 'src' / 'Main.hx'
+    declared = ''.join(f'\tstatic var {a["declare"]} = 0;\n' for a in assets)
+    made = ''.join(f'\t\t{a["make"]}\n' for a in assets)
+    said = ', '.join(f'{a["word"]} ${{{a["say"]}}}' for a in assets)
     main.write_text(main.read_text()
-                    .replace('\tstatic var flips = 0;\n', '\tstatic var flips = 0;\n\tstatic final held = new Held();\n'
-                             '\tstatic var rock:Texture = 0;\n\tstatic var car:Model = 0;\n\tstatic var beep:Sound = 0;\n'
-                             '\tstatic var face:Font = 0;\n')
+                    .replace('\tstatic var flips = 0;\n',
+                             '\tstatic var flips = 0;\n\tstatic final held = new Held();\n' + declared)
                     .replace('\t\tframes++;\n', '\t\tframes++;\n\t\theld.count[0] = frames;\n')
-                    .replace('\t\tworld = Stage2d.create();\n', '\t\tworld = Stage2d.create();\n'
-                             '\t\trock = Texture.create("rock.png");\n\t\tcar = Model.create(Mesh.create("car.gltf"));\n'
-                             '\t\tbeep = Sound.create("beep.wav");\n\t\tface = Font.create("face.ttf");\n')
+                    .replace('\t\tworld = Stage2d.create();\n', '\t\tworld = Stage2d.create();\n' + made)
                     .replace("\t\t\tLog.message(LogLevel.INFO, 'hello, frame $frames');\n",
-                             "\t\t\tLog.message(LogLevel.INFO, 'hello, frame $frames; rock ${rock.getWidth()}, body at '\n"
-                             "\t\t\t\t+ Std.int(car.find(\"body\").getPosition().x) + ', beep '\n"
-                             "\t\t\t\t+ Std.int(beep.getDuration() * 1000) + ', words '\n"
-                             "\t\t\t\t+ Std.int(face.measure(\"Hello, world\", 40).x));\n"))
-    if ('held.count' not in main.read_text() or 'rock.getWidth' not in main.read_text() or
-            'beep.getDuration' not in main.read_text() or 'face.measure' not in main.read_text()):
+                             f"\t\t\tLog.message(LogLevel.INFO, 'hello, frame $frames; {said}');\n"))
+    text = main.read_text()
+    if 'held.count' not in text or any(a['make'] not in text or a['say'] not in text for a in assets):
         return problem('wgf serve: the template\'s Main.hx changed; give the check its instance final and assets '
                        'again', '')
     sys.path.insert(0, str(ROOT / 'tools' / 'wgf'))
     import game as games  # the tool's own module: its page runner, and whether the machine has hotreload-hx
-    served = serve_once(game, main, games, hot=False)
+    served = serve_once(game, main, games, assets, hot=False)
     if served is not True:
         return served
     if not games.has_hot():
@@ -353,26 +404,26 @@ def step_serve(game):
         return True
     # as it was before the first serve changed them
     main.write_text(main.read_text().replace("'reloaded, frame $frames", "'hello, frame $frames"))
-    (game / 'assets' / 'rock.png').write_bytes(png(2))
-    (game / 'assets' / 'car.gltf').write_text(car_gltf(1))
-    (game / 'assets' / 'beep.wav').write_bytes(wav(100))
-    (game / 'assets' / 'face.ttf').write_bytes(font_file('mono'))
-    return serve_once(game, main, games, hot=True)
+    write_assets(game, assets, 'first')
+    return serve_once(game, main, games, assets, hot=True)
 
 
-def serve_once(game, main, games, hot):
+def serve_once(game, main, games, assets, hot):
     """One `wgf serve` of the game (step_serve), hot or not; True, or the problem."""
     port = browser.free_port()
     process = subprocess.Popen([sys.executable, str(WGF), 'serve', '--port', str(port)] + (['--hot'] if hot else []),
                                cwd=game, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
     served = []
     threading.Thread(target=lambda: served.extend(process.stdout), daemon=True).start()
+    breakable = sum(1 for a in assets if a['broken'] is not None)
+    kinds = ', '.join(a['file'] for a in assets)
     try:
         if not wait(lambda: any(' at http://' in line for line in served), 600):
             return problem('wgf serve: never said where it serves', ''.join(served))
-        # the steps, each begun by a line of the page's: code edited, assets saved, a broken one saved
-        state = {'step': 'code', 'before': 0, 'assets_at': 0, 'broken_at': 0, 'errors': 0, 'done': False}
-        said = re.compile(r'(hello|reloaded), frame (\d+); rock (\d+), body at (-?\d+), beep (\d+), words (\d+)')
+        # the steps, each begun by a line of the page's: code edited, assets saved, broken ones saved
+        state = {'step': 'code', 'before': 0, 'assets_at': 0, 'broken_at': 0, 'errors': 0, 'done': False, 'first': {},
+                 'last': {}}
+        said = re.compile(r'(hello|reloaded), frame (\d+); (.*)')
 
         def on_line(line):
             if "didn't load again" in line:
@@ -380,12 +431,16 @@ def serve_once(game, main, games, hot):
             m = said.search(line)
             if not m:
                 return False
-            word, frame, width, x = m.group(1), int(m.group(2)), int(m.group(3)), int(m.group(4))
-            beep = int(m.group(5))  # the sound's length in milliseconds: 100 first, 300 saved changed
-            words = int(m.group(6))  # a line's width in the font: the first typeface's, then a wider one's
-            if (state['step'] == 'code' and word == 'hello' and frame >= 120 and width == 2 and x == 1 and
-                    50 < beep < 200 and words > 0):
-                state['words'] = words
+            word, frame = m.group(1), int(m.group(2))
+            values = {name: int(value) for name, value in re.findall(r'(\w+) (-?\d+)', m.group(3))}
+            if any(a['word'] not in values for a in assets):
+                return False
+            state['last'] = values
+            first = all(a['was'](values[a['word']]) for a in assets)
+            changed = bool(state['first']) and all(a['now'](values[a['word']], state['first'][a['word']])
+                                                   for a in assets)
+            if state['step'] == 'code' and word == 'hello' and frame >= 120 and first:
+                state['first'] = values
                 state['before'] = frame
                 state['step'] = 'reloaded'
                 # code, not a static's first value: a reload keeps every static's value
@@ -394,26 +449,20 @@ def serve_once(game, main, games, hot):
                 state['after'] = frame
                 state['step'] = 'assets'
                 state['assets_at'] = frame
-                (game / 'assets' / 'rock.png').write_bytes(png(4))
-                (game / 'assets' / 'car.gltf').write_text(car_gltf(3))
-                (game / 'assets' / 'beep.wav').write_bytes(wav(300))
-                (game / 'assets' / 'face.ttf').write_bytes(font_file('komika'))
-            elif state['step'] == 'assets' and width == 4 and x == 3 and beep > 200 and words != state['words']:
-                state['words'] = words
+                write_assets(game, assets, 'changed')
+            elif state['step'] == 'assets' and changed:
                 state['shown_at'] = frame
                 if not hot:  # loaded again with them: all a page that isn't hot is asked
                     state['step'] = 'shown'
                     state['done'] = True
                     return True
                 state['step'] = 'broken'
-                (game / 'assets' / 'rock.png').write_bytes(b'not an image any more')
-                (game / 'assets' / 'beep.wav').write_bytes(b'not a sound any more')
-                (game / 'assets' / 'face.ttf').write_bytes(b'not a font any more')
-            elif state['step'] == 'broken' and state['errors'] > 2:
+                write_assets(game, assets, 'broken')
+            elif state['step'] == 'broken' and state['errors'] >= breakable:
                 if 'broken_at' not in state or state['broken_at'] == 0:
-                    state['broken_at'] = frame  # the first line after the error: one more to be sure
+                    state['broken_at'] = frame  # the first line after the errors: one more to be sure
                 elif frame > state['broken_at']:
-                    state['kept'] = width == 4 and beep > 200 and words == state['words']
+                    state['kept'] = changed
                     state['step'] = 'whole'
                     state['whole_from'] = frame
                     (game / 'assets' / 'notes.txt').write_text('nothing is made from this\n')
@@ -426,7 +475,8 @@ def serve_once(game, main, games, hot):
                                    echo=False)
         log = '\n'.join(lines) + ''.join(served)
         if state['step'] == 'code':
-            return problem('wgf serve: the page never said hello with its first texture, glTF, sound, and font', log)
+            return problem(f'wgf serve: the page never said hello with its first assets ({kinds}); last, '
+                           f'{state["last"]}', log)
         if state['step'] == 'reloaded':
             return problem('wgf serve: the edit never reached the page', log)
         if hot and state['after'] <= state['before']:
@@ -436,26 +486,25 @@ def serve_once(game, main, games, hot):
             return problem(f'wgf serve: the page went on counting, to {state["after"]} from {state["before"]}, with '
                            'the new code: it took it on without loading again', log)
         if state['step'] == 'assets':
-            return problem('wgf serve: the saved texture, glTF, sound, and font never showed in the page (a rock 4 '
-                           'wide, the body at 3, a beep of 300 ms, a line of another width)', log)
+            return problem(f'wgf serve: the saved assets never all showed in the page; first {state["first"]}, last '
+                           f'{state["last"]}', log)
         if not hot:
             print(f'check_cli: serve: edited at frame {state["before"]}; the page loaded again and the new code said '
-                  f'so at frame {state["after"]}; a texture, a glTF, a sound, and a font saved, and it loaded again '
-                  'with them')
+                  f'so at frame {state["after"]}; {len(assets)} assets saved ({kinds}), and it loaded again with them')
             return True
         if state['step'] == 'broken':
-            return problem('wgf serve: a broken texture, sound, and font saved: not an error logged for each, or '
-                           'no line after them', log)
+            return problem(f'wgf serve: {breakable} assets saved broken: {state["errors"]} error(s) logged (one each '
+                           'wanted), or no line after them', log)
         if not state['done']:
             return problem('wgf serve --hot: a file nothing was made from was saved, and the page never loaded '
                            'again', log)
-        if not state['kept'] or state['errors'] != 3 or state['shown_at'] <= state['assets_at']:
-            return problem(f'wgf serve: a broken texture, sound, and font saved: kept {state["kept"]}, '
-                           f'{state["errors"]} error(s) logged (one each wanted)', log)
+        if not state['kept'] or state['errors'] != breakable or state['shown_at'] <= state['assets_at']:
+            return problem(f'wgf serve: {breakable} assets saved broken: kept {state["kept"]}, {state["errors"]} '
+                           f'error(s) logged (one each wanted); last, {state["last"]}', log)
         print(f'check_cli: serve --hot: edited at frame {state["before"]}; the new code said so at frame {state["after"]}, '
-              f'its state kept; a texture, a glTF, a sound, and a font saved, shown by frame {state["shown_at"]}; '
-              'the texture, the sound, and the font saved broken, the old ones kept and one error logged for each; '
-              'a file nothing was made from saved, and the page loaded again')
+              f'its state kept; {len(assets)} assets saved ({kinds}), shown by frame {state["shown_at"]}; '
+              f'{breakable} saved broken, the old ones kept and one error logged for each; a file nothing was made '
+              'from saved, and the page loaded again')
         return True
     finally:
         process.terminate()

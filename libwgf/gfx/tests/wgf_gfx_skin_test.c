@@ -7,9 +7,11 @@
 #include "render/wgf_gfx_render_priv.h"
 #include "stage/wgf_gfx_stage3d_priv.h"
 #include "wgf_actor.h"
+#include "wgf_asset.h"
 #include "wgf_camera3d.h"
 #include "wgf_core_part_priv.h"
 #include "wgf_core_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_fs.h"
 #include "wgf_log.h"
 #include "wgf_mesh.h"
@@ -28,7 +30,8 @@
  * loaded too), its joints' actors posed at known times, the time moved on by the part's update,
  * wrapped looping and COMPLETE not, paused, resumed, stopped, backwards; a crossfade's weight
  * and its blended pose; the skinned part drawn placed by the root, its joint matrices among
- * the frame's as the pose says; and refusals: a model that isn't a file's root, an animation
+ * the frame's as the pose says; the file loaded again under a clip and a layer playing, its
+ * clips in another order; and refusals: a model that isn't a file's root, an animation
  * the file hasn't, numbers that aren't. */
 
 static int failures;
@@ -135,6 +138,33 @@ static const char json[] =
     "{\"name\":\"empty\",\"channels\":[],\"samplers\":[]}],"
     ACCESSORS;
 
+/* The file saved changed: a node more ("tail"), "spline" before "raise", and no "empty". */
+static const char json_reordered[] =
+    "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0,2,3]}],"
+    "\"nodes\":[{\"name\":\"hip\",\"children\":[1]},{\"name\":\"arm\",\"translation\":[0,1,0]},"
+    "{\"name\":\"body\",\"mesh\":0,\"skin\":0},{\"name\":\"tail\"}],"
+    "\"skins\":[{\"joints\":[0,1],\"inverseBindMatrices\":3}],"
+    "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0,\"JOINTS_0\":1,\"WEIGHTS_0\":2}}]}],"
+    "\"animations\":["
+    "{\"name\":\"spline\",\"channels\":[{\"sampler\":0,\"target\":{\"node\":1,\"path\":\"translation\"}}],"
+    "\"samplers\":[{\"input\":8,\"output\":9,\"interpolation\":\"CUBICSPLINE\"}]},"
+    "{\"name\":\"raise\",\"channels\":[{\"sampler\":0,\"target\":{\"node\":1,\"path\":\"translation\"}},"
+    "{\"sampler\":1,\"target\":{\"node\":0,\"path\":\"rotation\"}}],"
+    "\"samplers\":[{\"input\":4,\"output\":5},{\"input\":6,\"output\":7,\"interpolation\":\"STEP\"}]}],"
+    ACCESSORS;
+
+/* And with "spline" alone. */
+static const char json_spline[] =
+    "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[0,2,3]}],"
+    "\"nodes\":[{\"name\":\"hip\",\"children\":[1]},{\"name\":\"arm\",\"translation\":[0,1,0]},"
+    "{\"name\":\"body\",\"mesh\":0,\"skin\":0},{\"name\":\"tail\"}],"
+    "\"skins\":[{\"joints\":[0,1],\"inverseBindMatrices\":3}],"
+    "\"meshes\":[{\"primitives\":[{\"attributes\":{\"POSITION\":0,\"JOINTS_0\":1,\"WEIGHTS_0\":2}}]}],"
+    "\"animations\":["
+    "{\"name\":\"spline\",\"channels\":[{\"sampler\":0,\"target\":{\"node\":1,\"path\":\"translation\"}}],"
+    "\"samplers\":[{\"input\":8,\"output\":9,\"interpolation\":\"CUBICSPLINE\"}]}],"
+    ACCESSORS;
+
 /* A file of animations alone, its skeleton's nodes in another order (the arm first): "raise"
  * by the nodes' names, as Wardens' Animations.glb is for its part models. */
 static const char clips_json[] =
@@ -145,6 +175,13 @@ static const char clips_json[] =
     "{\"sampler\":1,\"target\":{\"node\":1,\"path\":\"rotation\"}}],"
     "\"samplers\":[{\"input\":4,\"output\":5},{\"input\":6,\"output\":7,\"interpolation\":\"STEP\"}]}],"
     ACCESSORS;
+
+/* Update until `mesh` has loaded again (wgf_asset_reload). */
+static void settle_reload(wgf_mesh_t mesh)
+{
+    const double start = wgf_time_get_seconds();
+    while (wgf_core_priv_resource_is_reloading(mesh) && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
+}
 
 /* `text` and the buffer as a .glb file at `path`. */
 static void write_glb(const char *path, const char *text)
@@ -465,6 +502,41 @@ int main(void)
                "itself, or not a root: refused");
         wgf_model_stop_layer_animation(root, 0, 0.0f);
         wgf_actor_destroy(part, WGF_ACTOR_DESTROY_CHILDREN);
+    }
+
+    { /* the file loaded again in place while its clip and a layer play: on in the clips of
+         their names, whatever their numbers are now, the layer's mask made for one node more */
+        float before;
+        wgf_model_set_animation_speed(root, 1.0f);
+        wgf_model_play_animation(root, 0, 0.0f); /* raise */
+        wgf_model_set_animation_time(root, 0.5f);
+        wgf_model_play_layer_animation(root, 0, 1, "arm", 0.0f, true); /* spline, on the arm */
+        wgf_core_priv_part_update(0.25f); /* both moved on, and posed */
+        before = arm_y(root);
+        write_glb("models/arm.glb", json_reordered);
+        expect(wgf_asset_reload("models/arm.glb") == 1, "the file saved changed, loading again");
+        settle_reload(mesh);
+        expect(wgf_model_get_animation_count(root) == 2 && wgf_model_find_animation(root, "raise") == 1,
+               "its clips in another order, one fewer");
+        expect(wgf_model_get_animation(root) == 1 && state_of(root) == WGF_PLAY_STATE_PLAYING &&
+                   near(time_of(root), 0.75f),
+               "the clip playing: on in the clip of its name, at its time");
+        expect(wgf_model_get_layer_animation(root, 0) == 0 && near(arm_y(root), before),
+               "its layer too, and the pose as it was");
+        wgf_core_priv_part_update(0.25f);
+        expect(near(time_of(root), 1.0f), "and it moves on");
+        write_glb("models/arm.glb", json_spline);
+        expect(wgf_asset_reload("models/arm.glb") == 1, "saved without the clip playing");
+        settle_reload(mesh);
+        expect(wgf_model_get_animation(root) == -1 && state_of(root) == WGF_PLAY_STATE_STOPPED,
+               "the clip gone from the file: stopped");
+        expect(wgf_model_get_layer_animation(root, 0) == 0, "the layer's clip still there: on");
+        wgf_core_priv_part_update(0.25f);
+        wgf_model_stop_layer_animation(root, 0, 0.0f);
+        write_glb("models/arm.glb", json); /* as it was, for what follows */
+        expect(wgf_asset_reload("models/arm.glb") == 1, "the first file again");
+        settle_reload(mesh);
+        expect(wgf_model_get_animation_count(root) == 3, "its three clips");
     }
 
     /* refusals */

@@ -45,6 +45,9 @@ WGF_API wgf_actor_t wgf_model_create(wgf_mesh_t mesh);
  * - A node the file no longer has is gone, with its actor and every actor under it.
  * - A new node is made.
  * - The file's lights are made again.
+ * - An animation playing goes on at its time, in the clip of the same name, whatever its
+ *   number in the file is now. It stops if the file no longer has a clip of that name
+ *   (logged). A layer does the same, and stops too if the file no longer has its bone.
  *
  * set_mesh returns false if:
  * - `mesh` isn't a mesh.

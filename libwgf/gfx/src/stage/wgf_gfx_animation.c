@@ -24,7 +24,9 @@
  * moves and the next doesn't goes back, and a clip moved on is posed at once in the part's
  * update rather than when it is needed (libwgt's lazy pose and its clip boxes: the robots
  * benchmark draws every robot it moves). Linked by the first animation call alone, which
- * installs the part. */
+ * installs the part. A clip is chosen by its number in the file, and kept by its name too: a
+ * file loaded again in place (wgf_asset_reload) may have its clips in another order, and a
+ * player goes on in the clip of the name it played. */
 
 typedef struct trs_t {
     wgf_vec3_t position;
@@ -41,12 +43,14 @@ typedef struct layer_t {
     float time, weight, target, fade;
     bool loop;
     char bone[64]; /* its mask's bone, by name: made again on another file's tree */
+    char clip[64]; /* its clip's name, "" unknown or unnamed: found again when the file loads again */
     unsigned char *mask;
     trs_t *layered;
 } layer_t;
 
 struct wgf_gfx_priv_animation_t {
     int animation; /* playing (or stopped at, paused in): into the file's; -1 none */
+    char clip[64]; /* its name, "" unknown or unnamed: found again when the file loads again */
     int state;     /* wgf_play_state_t */
     float time;    /* seconds into it */
     float speed;
@@ -100,6 +104,25 @@ static const wgf_gfx_priv_mesh_animation_t *clip_of(const wgf_gfx_priv_mesh_reco
 {
     return record != NULL && animation >= 0 && animation < record->animation_count ? &record->animations[animation]
                                                                                     : NULL;
+}
+
+/* The number of the clip named `name` among `record`'s; -1 for none, or no name. */
+static int clip_named(const wgf_gfx_priv_mesh_record_t *record, const char *name)
+{
+    int i;
+    for (i = 0; record != NULL && name[0] != '\0' && i < record->animation_count; i++) {
+        if (record->animations[i].name != NULL && strcmp(record->animations[i].name, name) == 0) return i;
+    }
+    return -1;
+}
+
+/* Clip `animation`'s name into `out` (64 bytes), "" for none or one the file doesn't name:
+ * what finds the clip again when the file loads again. Left as it is while the file loads. */
+static void keep_name(char *out, const wgf_gfx_priv_mesh_record_t *record, int animation)
+{
+    const wgf_gfx_priv_mesh_animation_t *clip = clip_of(record, animation);
+    if (record == NULL) return;
+    snprintf(out, 64, "%s", clip != NULL && clip->name != NULL ? clip->name : "");
 }
 
 /* Where its clips come from: another file's (READY; NULL while it loads), or its own. */
@@ -471,29 +494,78 @@ static wgf_core_priv_part_t part = {.name = "animation",
                                     .update = update,
                                     .stop = stop};
 
+static bool mask_of(const wgf_gfx_priv_mesh_record_t *record, const char *bone, unsigned char *mask);
+
+/* A layer of a tree made again, its file's nodes and clips perhaps others now: on in the clip
+ * of the name it played, its mask made again from its bone's name for the nodes there are
+ * now. False (the layer over) when the file no longer has the clip or the bone. */
+static bool layer_again(layer_t *layer, const wgf_gfx_priv_mesh_record_t *file,
+                        const wgf_gfx_priv_mesh_record_t *clips)
+{
+    unsigned char *mask;
+    trs_t *layered;
+    if (layer->clip[0] != '\0') layer->animation = clip_named(clips, layer->clip);
+    if (clip_of(clips, layer->animation) == NULL) return false;
+    mask = (unsigned char *)calloc((size_t)file->node_count + 1, 1);
+    layered = (trs_t *)calloc((size_t)file->node_count + 1, sizeof(trs_t));
+    if (mask == NULL || layered == NULL || !mask_of(file, layer->bone, mask)) {
+        free(mask);
+        free(layered);
+        return false;
+    }
+    free(layer->mask);
+    free(layer->layered);
+    layer->mask = mask;
+    layer->layered = layered;
+    keep_name(layer->clip, clips, layer->animation);
+    return true;
+}
+
 /* A file's root's tree made (or made again, its file loaded again), or its file FAILED: a
- * clip chosen while it loaded that the file hasn't is dropped, warned; else the tree posed
- * where the player is. */
+ * clip chosen while it loaded that the file hasn't is dropped, warned; a clip played before
+ * the file loaded again is found by its name, and dropped the same when the file no longer
+ * has it; its layers the same, their masks made for the nodes the file has now; else the
+ * tree posed where the player is. */
 static void built(wgf_actor_t model)
 {
     wgf_gfx_priv_actor_t *root_ptr = root_of(model);
     animation_t *anim = root_ptr != NULL ? root_ptr->as.model.animation : NULL;
     const wgf_gfx_priv_mesh_record_t *record;
+    int l;
     if (anim == NULL) return;
     record = file_of(root_ptr) != NULL ? clips_of(root_ptr) : NULL;
     if (record == NULL) {
         if (anim->state == WGF_PLAY_STATE_PLAYING && file_of(root_ptr) == NULL) anim->state = WGF_PLAY_STATE_COMPLETE;
         return;
     }
-    if (anim->animation >= record->animation_count) {
+    anim->map_count = -1; /* another file's clips: its nodes matched to this file's again */
+    for (l = 0; l < WGF_MODEL_LAYERS; l++) {
+        layer_t *layer = &anim->layers[l];
+        if (layer->animation >= 0 && !layer_again(layer, file_of(root_ptr), record)) {
+            layer->animation = -1;
+            layer->weight = 0.0f;
+            layer->state = WGF_PLAY_STATE_STOPPED;
+        }
+    }
+    if (anim->animation >= 0 && anim->clip[0] != '\0' && clip_named(record, anim->clip) < 0) {
+        wgf_log_warn("wgf_model: %s no longer has the animation \"%s\", which was playing",
+                     wgf_resource_get_path(root_ptr->as.model.mesh), anim->clip);
+        anim->animation = record->animation_count; /* dropped below */
+    } else if (anim->animation >= 0 && anim->clip[0] != '\0') {
+        anim->animation = clip_named(record, anim->clip);
+    } else if (anim->animation >= record->animation_count) {
         wgf_log_warn("wgf_model: %s has %d animations, not animation %d, played while it loaded",
                      wgf_resource_get_path(root_ptr->as.model.mesh), record->animation_count, anim->animation);
+    }
+    if (anim->animation >= record->animation_count) {
         anim->animation = -1;
+        anim->clip[0] = '\0';
         anim->state = WGF_PLAY_STATE_STOPPED;
         anim->time = 0.0f;
         anim->fresh = anim->fading = false;
         return;
     }
+    keep_name(anim->clip, record, anim->animation);
     if (!anim->fresh) anim->time = wrap(anim->time, duration_of(record, anim->animation), anim->loop);
     anim->fading = false; /* nothing was shown to fade from */
     pose(model);
@@ -617,6 +689,8 @@ bool wgf_model_play_animation(wgf_actor_t model, int animation, float fade)
         anim->fading = false;
     }
     anim->animation = animation;
+    anim->clip[0] = '\0';
+    keep_name(anim->clip, record, animation);
     anim->state = WGF_PLAY_STATE_PLAYING;
     anim->time = 0.0f;
     anim->fresh = true;
@@ -780,6 +854,7 @@ bool wgf_model_play_layer_animation(wgf_actor_t model, int index, int animation,
     layer->layered = layered;
     if (layer->animation < 0) layer->weight = fade > 0.0f ? 0.0f : 1.0f;
     layer->animation = animation;
+    keep_name(layer->clip, clips, animation);
     layer->time = 0.0f;
     layer->loop = loop;
     snprintf(layer->bone, sizeof(layer->bone), "%s", bone);
@@ -869,6 +944,7 @@ bool wgf_model_sync_animation(wgf_actor_t model, wgf_actor_t from)
     anim = player_of(model);
     if (anim == NULL) return false;
     anim->animation = src->animation;
+    keep_name(anim->clip, clips, src->animation);
     anim->state = src->state;
     anim->time = src->fresh ? start_of(src, clips) : src->time;
     anim->speed = src->speed;

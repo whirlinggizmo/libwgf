@@ -1083,6 +1083,17 @@ Rob's, after the four kinds above; scenes and UI documents are what is left.
 - **What laid text out is told.** The atlas's version moves, which a document already watches. Fonts loaded again are counted (`wgf_gfx_priv_font_reloads`), and the UI's font key mixes the count in: the key is what Clay's cache of measured words and a text view's line breaks go by, and a font loaded again keeps its handle, so the key didn't change before. Text actors and immediate mode lay out every frame.
 - Tests: natively a TrueType font loaded again as the examples' other typeface (it measures as the new one, is drawn, a broken file kept, the first again), and a bitmap font with a taller line; `tools/check_cli.py`'s serve step saves a font changed, then broken, in a browser, where a font's face is the browser's.
 
+## A playing animation follows its clip by name when its file loads again (2026-11-24)
+
+Rob's. A glTF loaded again in place kept its player, but the player knew its clip by its number in the file alone: with the clips saved in another order it went on in whichever clip had the number now, and only the main clip was checked against the new file, not the layers.
+
+- **A clip's name is kept beside its number**, for the main clip and each layer, as it is played (and once the file is there, for one played while it loaded). When the tree is made again, each is found by its name; one the file no longer has stops, the main clip's with a warning. A clip the file doesn't name is followed by its number, as before.
+- **A layer's mask is made again** from its bone's name, for the nodes the file has now. Its buffers were the old file's size: one node more fit in the spare slot they are made with, two more would have been read and written past. A layer whose bone is gone stops.
+- **Another file's clips** (`wgf_model_set_animations`) are matched to this file's nodes again when this file loads again; the match was kept while the other file's node count stayed the same. When the other file is the one loaded again, nothing tells the player: left as it was.
+- Test: `wgf_gfx_skin_test` loads its file again under a clip and a layer playing, with the clips in another order and a node more, then without the clip playing. It fails against the player as it was.
+
+`tools/check_cli.py`'s serve step is a table now, a row a kind of asset: a texture, a glTF, a sound, a TrueType font, an image, a bitmap font, and a custom shader, the three added being the ones a page takes on differently from a desktop build (the browser decodes an image and a bitmap font's page; a shader's program is WebGL's). Each is saved changed, then broken. The shader is a packed `.wgfshader` (two of the examples'): the step where `wgf serve` packs a saved source isn't covered, since it needs sokol-shdc, which the check would then have to fetch.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
