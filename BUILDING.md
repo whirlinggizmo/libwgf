@@ -12,7 +12,7 @@ Required: CMake 3.21 or newer, Python 3.12 or newer, Ninja, a C compiler (gcc or
 
 | For | Needs |
 | --- | --- |
-| the web presets | [Emscripten](https://emscripten.org/docs/getting_started/downloads.html), exactly the version in `cmake/emscripten-version.txt` (5.0.7): `emsdk install 5.0.7 && emsdk activate 5.0.7`, then `$EMSDK` set or `emcc` on PATH. It brings node, which runs the web tests, and the clang the API check uses |
+| the web presets | [Emscripten](https://emscripten.org/docs/getting_started/downloads.html), exactly the version in `cmake/emscripten-version.txt` (7.0.1): `emsdk install 7.0.1 && emsdk activate 7.0.1`, then `$EMSDK` set or `emcc` on PATH. It brings node, which runs the web tests, and the clang the API check uses |
 | the browser tests | a Chromium-based browser: Chrome, Chromium, Brave, or Edge |
 | the native window tests | Xvfb and Mesa (OpenGL on the CPU) |
 | the Windows presets, cross-built | MinGW-w64 (`x86_64-w64-mingw32-gcc`), and to run their tests Wine (`wine64`, or Proton from Steam) |

@@ -1048,6 +1048,12 @@ A rectangle shape drew from its top-left corner, while a sprite, a circle, a rec
 - **A rectangle placed by its corner sets `pivot=0,0`** (`wgf_shape2d_set_pivot(shape, 0, 0)`): a backdrop, a HUD's button, a meter that grows from its left edge. `wgf_draw_rectangle`, the immediate call, still takes its top-left corner.
 - **What changed with it:** the scenes' `pivot=0.5,0.5` are gone; ecs-platformer, ecs-screens, gfx-picking, and the screens examples set `pivot=0,0` where they place by a corner. The behaviors examples' spinning bars and spawner set no pivot, so they now turn about their middles, on their colliders, where they swung about a corner before.
 
+## Hidden public calls, and Emscripten 7.0.1 (2026-11-24)
+
+Four public calls were built hidden: the presentation's bar colour and immediate mode's blend mode, each a setter and a getter. Their source file never included the two headers, so the compiler never saw `WGF_API` on them. A static link doesn't mind, and every program here links statically; a program that loads the library dynamically found them missing (reported from a session building against libwgf). The C warnings now include `-Wmissing-prototypes`, which fails a function defined out of sight of its declaration. It found two more files, both with private functions. MinGW's build had been failing since the text buffer went in: its log lines used `%zu`, which MinGW refuses.
+
+Rob's: the Emscripten pin moved from 5.0.7 to 7.0.1, then the latest. Nothing in the source changed for it, and no warning was new. Every size stayed within the check's tolerance, most a little smaller (the skeleton 77.7 to 77.1 KB gzip). The baseline was measured again, libwgt and wgrender-c included; both pin 5.0.7 themselves, so they were built with their own overrides (`LIBWGT_EMSCRIPTEN_VERSION`, `WGRENDER_EMSCRIPTEN_VERSION`). The frame times in the benchmarks were not measured again.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

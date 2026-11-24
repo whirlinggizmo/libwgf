@@ -105,7 +105,7 @@ Each game lives in `games/<name>/`, uses only libwgf's public API, is deployed t
 - Testing comes first. Unit tests for logic. A headless smoke run of every game and example that fails on a crash, a hang, or an error log. A browser check that loads every game in headless Chromium. Image comparison for rendering once a regression slips past smoke.
 - A feature-test scene that exercises every component and the whole public API, run in CI on Linux, Windows, and the web.
 - Test machines, besides CI:
-  - This machine (Linux) runs the web builds with Emscripten 5.0.7 from `$EMSDK`, and the browser checks in headless Brave.
+  - This machine (Linux) runs the web builds with Emscripten 7.0.1 from `$EMSDK`, and the browser checks in headless Brave.
   - Windows builds cross-compiled with MinGW run their tests under Wine, found as libwgt's `tools/wine.py` finds it (Steam's Proton).
   - MSVC builds and native Windows runs go over ssh to `sightblinder` (Windows 11, Visual Studio 2026 Community, CMake, Python), as libwgt's `tools/run_remote_windows.py` does.
 - Before every commit: review the diff against `docs/CONVENTIONS.md`, run the full verification, and make sure tests pass. A skipped check is reported as skipped, never as passed.
