@@ -124,6 +124,8 @@ if(WGF_TESTS)
         wgf_test(gfx wgf_gfx_environment_test)
         wgf_test(gfx wgf_gfx_shape3d_test)
         wgf_test(gfx wgf_gfx_text_test)
+        # the examples' other typeface, to load a font again as
+        target_compile_definitions(wgf_gfx_text_test PRIVATE WGF_TEST_ASSETS="${PROJECT_SOURCE_DIR}/examples/assets")
         wgf_test(gfx wgf_gfx_font_bitmap_test)
         wgf_test(gfx wgf_gfx_font_no_bitmaps_test)
         wgf_test(gfx wgf_gfx_texture_test)

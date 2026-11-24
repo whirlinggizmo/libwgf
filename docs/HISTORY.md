@@ -1074,6 +1074,15 @@ Rob's: the kinds `wgf_asset_reload` left alone, but for scenes. Fonts and UI doc
 - **A shader**'s new program is made first, then the old one and its pipelines are destroyed. Its record counts its loads, and a custom material checks its values against the shader again when that number moves: kept by name and type, dropped (warned) where the new one has no such parameter. A file of the other kind (a surface shader, a screen effect) is refused, and the shader kept.
 - Tests: each kind natively (the new data in the same handle, then a broken file kept), the sound under asan with voices playing through the swap, and in a browser from a file its page's server has, since a reload fetches anew and a page can't change what its server holds.
 
+## Fonts load again in place (2026-11-24)
+
+Rob's, after the four kinds above; scenes and UI documents are what is left.
+
+- **A TrueType font** is given to fontstash as a new font, since fontstash can't let go of one. The font it was is retired: parked under no path, so no later create takes it back, its bytes freed when fontstash is. The atlas is emptied, so the old font's glyphs go and every other's are drawn again at their next use.
+- **A bitmap font** has the new file's glyphs and new pages; the old pages are released. Its filter is kept. A `.fnt`'s page saved loads the font again where the asset part has noted the page as the font's (its lister).
+- **What laid text out is told.** The atlas's version moves, which a document already watches. Fonts loaded again are counted (`wgf_gfx_priv_font_reloads`), and the UI's font key mixes the count in: the key is what Clay's cache of measured words and a text view's line breaks go by, and a font loaded again keeps its handle, so the key didn't change before. Text actors and immediate mode lay out every frame.
+- Tests: natively a TrueType font loaded again as the examples' other typeface (it measures as the new one, is drawn, a broken file kept, the first again), and a bitmap font with a taller line; `tools/check_cli.py`'s serve step saves a font changed, then broken, in a browser, where a font's face is the browser's.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

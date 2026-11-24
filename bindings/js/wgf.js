@@ -5244,9 +5244,9 @@ export function wgf_asset_evict(path) {
  * - A file that doesn't load keeps what was loaded, with one error logged.
  * - A FAILED resource that now loads becomes READY.
  * - These load again: a texture (compressed ones too), an image, a glTF mesh with its
- *   images, a sprite sheet, a Tiled map, an environment, a shader, a sound, and a text
- *   buffer. Each kind's header says what is kept across it.
- * - These don't: a scene, a font, and a UI document. Each is left as it is, with a warning.
+ *   images, a sprite sheet, a Tiled map, an environment, a shader, a sound, a font, and a
+ *   text buffer. Each kind's header says what is kept across it.
+ * - These don't: a scene and a UI document. Each is left as it is, with a warning.
  * - A resource still loading is left as it is.
  *
  * Returns the number of resources set loading. Returns 0 if nothing was made from `path`,
@@ -6845,6 +6845,11 @@ export function wgf_texture_read_destroy(read) {
  * - through its filter (wgf_font_set_filter).
  *
  * A font loaded before, and released since, comes back READY at once.
+ *
+ * A font loads again in place (wgf_asset_reload) when its file is saved, or a .fnt's page:
+ * - It keeps its handle and its filter, and text in it is measured and drawn as the new
+ *   file says from then on. Text actors, the UI, and documents lay their text out again.
+ * - A file that can't be loaded keeps the font as it was, with one error logged.
  *
  * Returns 0 only if there is no room for another font. A font that can't be loaded FAILED.
  * A bitmap font also FAILED for a channel-packed .fnt, a page or number out of range, a

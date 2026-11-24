@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "wgf_core_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_platform_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "jetbrains_mono_ascii.h"
@@ -10,6 +11,8 @@
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
 #include "wgf.h"
+#include "wgf_asset.h"
+#include "wgf_resource.h"
 #include "wgf_fs.h"
 #include "wgf_handle.h"
 #include "wgf_time.h"
@@ -50,6 +53,13 @@ static void settle_font(wgf_handle_t font)
     const double start = wgf_time_get_seconds();
     while (wgf_resource_get_status(font) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0)
         wgf_core_priv_update();
+}
+
+/* Update until `font` has loaded again (wgf_asset_reload). */
+static void settle_reload(wgf_handle_t font)
+{
+    const double start = wgf_time_get_seconds();
+    while (wgf_core_priv_resource_is_reloading(font) && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
 }
 
 static void write_file(const char *path, const unsigned char *data, int size)
@@ -166,6 +176,41 @@ int main(void)
     again = wgf_font_create("text_test/mono.ttf");
     expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_READY,
            "a font released earlier comes back ready at once");
+
+    /* loaded again in place: another typeface under the same handle, then a broken file kept,
+       then the first again */
+    {
+        static unsigned char other[512 * 1024];
+        const unsigned atlas = wgf_gfx_priv_font_atlas_version(), reloads = wgf_gfx_priv_font_reloads();
+        FILE *file = fopen(WGF_TEST_ASSETS "/fonts/Komika/KOMIKAH_.ttf", "rb");
+        const int size = file != NULL ? (int)fread(other, 1, sizeof(other), file) : 0;
+        wgf_vec2_t changed;
+        if (file != NULL) fclose(file);
+        expect(size > 0 && size < (int)sizeof(other), "the examples' other font read");
+        write_file("text_test/mono.ttf", other, size);
+        expect(wgf_asset_can_reload("text_test/mono.ttf") && wgf_asset_reload("text_test/mono.ttf") == 1,
+               "a font loads again");
+        settle_reload(again);
+        changed = wgf_font_measure(again, "Hello", 16);
+        expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_READY && fabsf(changed.x - one.x) > 0.5f,
+               "in place: the same handle, measuring as the new typeface");
+        expect(wgf_gfx_priv_font_atlas_version() != atlas && wgf_gfx_priv_font_reloads() == reloads + 1,
+               "what laid text out in it is told");
+        begin_frame(64, 64, 1.0f);
+        wgf_draw_text(again, "Hello", 0, 0, 16, WGF_COLOR_WHITE);
+        expect(sgl_num_vertices() == 5 * 6, "and drawn in it");
+        wgf_gfx_priv_end_frame();
+        write_file("text_test/mono.ttf", (const unsigned char *)"not a font", 10);
+        expect(wgf_asset_reload("text_test/mono.ttf") == 1, "a broken file, loading again");
+        settle_reload(again);
+        expect(wgf_resource_get_status(again) == WGF_RESOURCE_STATUS_READY &&
+                   wgf_font_measure(again, "Hello", 16).x == changed.x,
+               "what it had is kept");
+        write_file("text_test/mono.ttf", jetbrains_mono_ascii_ttf, (int)sizeof(jetbrains_mono_ascii_ttf));
+        expect(wgf_asset_reload("text_test/mono.ttf") == 1, "the first file again");
+        settle_reload(again);
+        expect(fabsf(wgf_font_measure(again, "Hello", 16).x - one.x) < 0.01f, "measures as it did");
+    }
 
     /* the text actor */
     text = wgf_text_create(again);

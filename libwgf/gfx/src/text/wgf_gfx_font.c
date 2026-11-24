@@ -30,6 +30,10 @@
  * fontstash on the main thread. fontstash can't let go of a font, so a font
  * released for the last time is parked, bytes and all, and a later create of the
  * same file takes it back at once. Cribbed from wgrender's wgr_font and wgr_text.
+ * A font loaded again in place is given to fontstash as a new font; the one it was is
+ * retired (parked under no path, so nothing takes it back), the atlas is emptied of its
+ * glyphs, and what laid text out in it is told (the atlas's version, and the fonts'
+ * reloads).
  *
  * Or a bitmap font (a BMFont .fnt, or an image of glyphs): read and its pages decoded on
  * the worker (wgf_gfx_font_bitmap.c), the pages made textures of its own on the main
@@ -69,6 +73,7 @@ static wgf_handle_t default_font; /* 0: the built-in font */
 static bool grow_pending;
 static bool full_warned;
 static unsigned atlas_version = 1; /* changed whenever glyphs' places in the atlas change (wgf_gfx_font_priv.h) */
+static unsigned reloads; /* fonts loaded again in place, counted: text measured before is measured again */
 
 static bool pool_ready;
 static wgf_core_priv_handle_pool_t font_pool;
@@ -163,6 +168,40 @@ static bool is_whole_font(const unsigned char *bytes, int size)
     return true;
 }
 
+/* A font fontstash was given, done with while fontstash lives: remembered under `path` ("":
+ * retired, never taken back), so its bytes are freed once fontstash is gone. Without the
+ * memory to remember it, its bytes go unfreed until exit, since fontstash may still read
+ * them. */
+static void park(const char *path, int fons_id, unsigned char *bytes)
+{
+    if (parked_count == parked_capacity) {
+        const int capacity = parked_capacity > 0 ? parked_capacity * 2 : 8;
+        parked_t *grown = (parked_t *)realloc(parked, sizeof(parked_t) * (size_t)capacity);
+        if (grown != NULL) {
+            parked = grown;
+            parked_capacity = capacity;
+        }
+    }
+    if (parked_count < parked_capacity) {
+        snprintf(parked[parked_count].path, sizeof(parked[parked_count].path), "%s", path);
+        parked[parked_count].fons_id = fons_id;
+        parked[parked_count].bytes = bytes;
+        parked_count++;
+    }
+}
+
+/* A font has loaded again in place: the atlas emptied (the glyphs of the font it was are
+ * in it, and every other's are drawn again at their next use), and what laid text out
+ * told. */
+static void reloaded(void)
+{
+    int width = 0, height = 0;
+    fonsGetAtlasSize(fons, &width, &height);
+    fonsResetAtlas(fons, width, height);
+    atlas_version++;
+    reloads++;
+}
+
 static void *prepare(const char *path)
 {
     loaded_t *loaded = (loaded_t *)calloc(1, sizeof(loaded_t));
@@ -204,6 +243,11 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
         wgf_log_warn("wgf_gfx_font: %s: not a font it can read", font_ptr->resource.path);
         return WGF_CORE_PRIV_LOAD_FAILED;
     }
+    if (font_ptr->fons_id != FONS_INVALID) { /* loaded again: the font it was, retired */
+        wgf_gfx_priv_face_close(font_ptr->bytes);
+        park("", font_ptr->fons_id, font_ptr->bytes);
+        reloaded();
+    }
     font_ptr->fons_id = id;
     font_ptr->bytes = loaded->bytes;
     loaded->bytes = NULL; /* the font's now */
@@ -224,7 +268,7 @@ static void fail(wgf_handle_t resource)
     wgf_core_priv_resource_failed(resource);
 }
 
-static const wgf_core_priv_loader_t loader = {"font", prepare, finish, discard, fail, NULL, false, NULL};
+static const wgf_core_priv_loader_t loader = {"font", prepare, finish, discard, fail, NULL, true, NULL};
 
 /* --- the bitmap fonts' loader ------------------------------------------------- */
 
@@ -399,6 +443,11 @@ static wgf_core_priv_load_step_t finish_bitmap(void *prepared, wgf_handle_t reso
         wgf_texture_set_sampling(pages[page], WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP, font_ptr->filter);
     }
     font_ptr = font_of(resource); /* making textures made no fonts, but ask again */
+    if (font_ptr->bitmap != NULL) { /* loaded again: the glyphs and pages it had, let go of */
+        for (page = 0; page < font_ptr->bitmap->page_count; page++) wgf_resource_release(font_ptr->pages[page]);
+        wgf_gfx_priv_bitmap_free(font_ptr->bitmap);
+        reloaded();
+    }
     memcpy(font_ptr->pages, pages, sizeof(pages));
     font_ptr->bitmap = loaded->bitmap;
     loaded->bitmap = NULL; /* the font's now */
@@ -407,7 +456,7 @@ static wgf_core_priv_load_step_t finish_bitmap(void *prepared, wgf_handle_t reso
 }
 
 static const wgf_core_priv_loader_t bitmap_loader = {"bitmap font", prepare_bitmap, finish_bitmap, discard_bitmap,
-                                                     fail, NULL, false, NULL};
+                                                     fail, NULL, true, NULL};
 
 /* The GPU's context given back: a bitmap font's file read again (as this run has it) and
  * only its pages made again, each into the texture it made before. */
@@ -470,21 +519,7 @@ static void free_font(wgf_handle_t font, void *record)
         free(font_ptr->bytes);
         return;
     }
-    if (parked_count == parked_capacity) {
-        const int capacity = parked_capacity > 0 ? parked_capacity * 2 : 8;
-        parked_t *grown = (parked_t *)realloc(parked, sizeof(parked_t) * (size_t)capacity);
-        if (grown != NULL) {
-            parked = grown;
-            parked_capacity = capacity;
-        }
-    }
-    if (parked_count < parked_capacity) {
-        snprintf(parked[parked_count].path, sizeof(parked[parked_count].path), "%s", font_ptr->resource.path);
-        parked[parked_count].fons_id = font_ptr->fons_id;
-        parked[parked_count].bytes = font_ptr->bytes;
-        parked_count++;
-    }
-    /* out of memory to remember it: its bytes go unfreed until exit, since fontstash may still read them */
+    park(font_ptr->resource.path, font_ptr->fons_id, font_ptr->bytes);
 }
 
 static const wgf_core_priv_resource_kind_t resource_kind = {.create = "wgf_font_create",
@@ -1181,6 +1216,11 @@ bool wgf_gfx_priv_font_shader(sg_shader *shader)
 unsigned wgf_gfx_priv_font_atlas_version(void)
 {
     return atlas_version;
+}
+
+unsigned wgf_gfx_priv_font_reloads(void)
+{
+    return reloads;
 }
 
 /* A full atlas grows, but never in the middle of a frame: draws recorded earlier

@@ -96,5 +96,8 @@ bool wgf_gfx_priv_font_atlas(sg_view *atlas, sg_sampler *sampler, sgl_pipeline *
  * False before setup. */
 bool wgf_gfx_priv_font_shader(sg_shader *shader);
 unsigned wgf_gfx_priv_font_atlas_version(void);
+/* How many times a font has loaded again in place (wgf_asset_reload): text measured or
+ * broken into lines before is wrong for that font, which keeps its handle. */
+unsigned wgf_gfx_priv_font_reloads(void);
 
 #endif

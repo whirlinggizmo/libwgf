@@ -951,13 +951,15 @@ bool wgf_ui_set_color(wgf_color_t color)
     return true;
 }
 
-/* What Clay's cache of measured words knows the style's font by: its handle, and whether
- * it is READY (before, it measures as the built-in font), so a word measured in one font
- * is measured again in another. */
+/* What Clay's cache of measured words knows the style's font by: its handle, whether it is
+ * READY (before, it measures as the built-in font), and how many fonts have loaded again
+ * in place (one that has keeps its handle), so a word measured in one font is measured
+ * again in another. */
 static uint16_t font_key(void)
 {
     const bool ready = ui.font != 0 && wgf_resource_get_status(ui.font) == WGF_RESOURCE_STATUS_READY;
-    return (uint16_t)(((ui.font ^ (ui.font >> 15)) & 0x7FFFu) | (ready ? 0x8000u : 0u));
+    const uint32_t mixed = ui.font ^ (ui.font >> 15) ^ (wgf_gfx_priv_font_reloads() * 0x9E5u);
+    return (uint16_t)((mixed & 0x7FFFu) | (ready ? 0x8000u : 0u));
 }
 
 /* Text, the first `length` bytes of `text`, `piece` (NULL for none) the widget whose text

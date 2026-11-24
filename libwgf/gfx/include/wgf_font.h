@@ -43,6 +43,11 @@ typedef wgf_handle_t wgf_font_t;
  *
  * A font loaded before, and released since, comes back READY at once.
  *
+ * A font loads again in place (wgf_asset_reload) when its file is saved, or a .fnt's page:
+ * - It keeps its handle and its filter, and text in it is measured and drawn as the new
+ *   file says from then on. Text actors, the UI, and documents lay their text out again.
+ * - A file that can't be loaded keeps the font as it was, with one error logged.
+ *
  * Returns 0 only if there is no room for another font. A font that can't be loaded FAILED.
  * A bitmap font also FAILED for a channel-packed .fnt, a page or number out of range, a
  * character given twice, or no glyphs. */

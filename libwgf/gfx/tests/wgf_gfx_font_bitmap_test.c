@@ -5,6 +5,7 @@
 
 #include "wgf_core_priv.h"
 #include "wgf_core_load_priv.h"
+#include "wgf_core_resource_priv.h"
 #include "wgf_platform_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "text/wgf_gfx_font_priv.h"
@@ -12,6 +13,7 @@
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "util/sokol_gl.h"
 #include "wgf_actor.h"
+#include "wgf_asset.h"
 #include "wgf_camera3d.h"
 #include "wgf_color.h"
 #include "wgf_draw.h"
@@ -56,6 +58,13 @@ static void settle(wgf_handle_t resource)
     const double start = wgf_time_get_seconds();
     while (wgf_resource_get_status(resource) == WGF_RESOURCE_STATUS_PENDING && wgf_time_get_seconds() - start < 30.0)
         wgf_core_priv_update();
+}
+
+/* Update until `font` has loaded again (wgf_asset_reload). */
+static void settle_reload(wgf_handle_t font)
+{
+    const double start = wgf_time_get_seconds();
+    while (wgf_core_priv_resource_is_reloading(font) && wgf_time_get_seconds() - start < 30.0) wgf_core_priv_update();
 }
 
 static void write_file(const char *path, const void *data, int size)
@@ -397,6 +406,39 @@ int main(void)
         expect(drawn == 3 * 6, "a text actor on a 3D stage in a bitmap font: a quad a glyph");
         expect(direct == 2 * 6, "draw_text_3d in a bitmap font");
         wgf_actor_destroy(world, WGF_ACTOR_DESTROY_CHILDREN);
+    }
+
+    /* loaded again in place: the new file's glyphs and a new page; a broken file keeps what
+       it had. (Its page saved loads it again too, where the asset part has noted the page
+       as the font's: the lister above, and wgf_gfx_gltf_test's buffer.) */
+    {
+        static char taller[sizeof(FNT)];
+        const wgf_texture_t page = wgf_gfx_priv_font_page(font, 0);
+        const unsigned atlas = wgf_gfx_priv_font_atlas_version(), reloads = wgf_gfx_priv_font_reloads();
+        char *at;
+        memcpy(taller, FNT, sizeof(FNT));
+        at = strstr(taller, "lineHeight=10");
+        expect(at != NULL, "the test's .fnt has its line height");
+        if (at != NULL) at[12] = '2'; /* a line 12 high */
+        write_text("bitmap_test/test.fnt", taller);
+        expect(wgf_asset_can_reload("bitmap_test/test.fnt") && wgf_asset_reload("bitmap_test/test.fnt") == 1,
+               "a bitmap font loads again");
+        settle_reload(font);
+        expect(wgf_resource_get_status(font) == WGF_RESOURCE_STATUS_READY && wgf_font_get_size(font) == 12,
+               "in place: the same handle, the new file's line");
+        expect(wgf_gfx_priv_font_page(font, 0) != 0 && wgf_resource_get_status(page) == WGF_RESOURCE_STATUS_NONE,
+               "a page of its own again, the old one let go of");
+        expect(wgf_gfx_priv_font_atlas_version() != atlas && wgf_gfx_priv_font_reloads() == reloads + 1,
+               "what laid text out in it is told");
+        expect(wgf_font_get_filter(font) == WGF_TEXTURE_FILTER_NEAREST &&
+                   wgf_texture_get_filter(wgf_gfx_priv_font_page(font, 0)) == WGF_TEXTURE_FILTER_NEAREST,
+               "its filter kept");
+        write_text("bitmap_test/test.fnt", "not a font\n");
+        expect(wgf_asset_reload("bitmap_test/test.fnt") == 1, "a broken file, loading again");
+        settle_reload(font);
+        expect(wgf_resource_get_status(font) == WGF_RESOURCE_STATUS_READY && wgf_font_get_size(font) == 12 &&
+                   near(wgf_font_measure(font, "AV", 12).x, 10),
+               "what it had is kept");
     }
 
     /* let go of: its page with it */
