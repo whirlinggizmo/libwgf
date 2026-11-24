@@ -23,9 +23,9 @@ else()
 endif()
 set(WGF_OUT "${CMAKE_CURRENT_LIST_DIR}/../../out/${wgf_platform}/debug" CACHE PATH "A staged libwgf variant")
 option(WGF_HEADLESS "WGF_OUT is a headless variant: no window or GPU" OFF)
-# For tools/check_web.py alone: exports two of libwgf's private functions from the web
+# For tools/check_web.py alone: exports four of libwgf's private functions from the web
 # build, by name at the link, so the check can ask how many loads are pending and which
-# are stuck. The library exports nothing it doesn't declare; a program of one's own
+# are stuck, and how many failed and which. The library exports nothing it doesn't declare; a program of one's own
 # leaves this off.
 option(WGF_CHECK_EXPORTS "Export the loader's pending count and log, for tools/check_web.py" OFF)
 set(wgf_example_dir "${CMAKE_CURRENT_LIST_DIR}") # this file's: inside the function, the list dir is the caller's
@@ -70,7 +70,8 @@ function(wgf_example name)
         # one list: a second EXPORTED_FUNCTIONS would replace the first
         set(exports _main)
         if(WGF_CHECK_EXPORTS)
-            list(APPEND exports _wgf_core_priv_load_get_pending_count _wgf_core_priv_load_log_pending)
+            list(APPEND exports _wgf_core_priv_load_get_pending_count _wgf_core_priv_load_log_pending
+                 _wgf_core_priv_load_get_failed_count _wgf_core_priv_load_log_failed)
         endif()
         if(WGF_CHECK_EXPORTS)
             list(JOIN exports "\n" exports)

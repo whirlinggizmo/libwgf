@@ -188,6 +188,12 @@ int wgf_core_priv_load_get_pending_count(void);
  * ran out of time, as wgrender's wgri_asset_pending_log. The number warned of. */
 int wgf_core_priv_load_log_pending(void);
 
+/* How many loads ended FAILED since core started (one fetched again and loaded isn't), and
+ * the last 16's paths warned, one line each: for a check that fails an example a load of
+ * which failed, a failure being a warning. The count. */
+int wgf_core_priv_load_get_failed_count(void);
+int wgf_core_priv_load_log_failed(void);
+
 /* Started and stopped with core; run in wgf_update, after fs. Stopping
  * discards every request's prepared data without calling fail: the layers that made
  * the requests have stopped first. */

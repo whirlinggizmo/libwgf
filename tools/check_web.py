@@ -19,7 +19,8 @@ An example has started when gfx logs its backend ("wgf_gfx: ..."), within --star
 is then checked once nothing is loading -- the loader has no request pending and the
 page no request in flight -- and nothing has changed for --quiet ms (default 1500), or
 --settle ms after it started (default 20000), whichever is first; one still loading
-then fails, and the loader names what is stuck and where. It fails if, from loading
+then fails, and the loader names what is stuck and where. One a load of which failed
+fails too (a failure is a warning), the loader naming the files. It fails if, from loading
 until then, it throws, logs a console error (but core's log lines below error level,
 which arrive as console errors), logs an [ERROR] or [FATAL] line or a sokol panic, or
 the browser logs an error (network ones aside: a missing favicon is a 404). Its
@@ -64,12 +65,14 @@ PENDING = ("typeof Module !== 'undefined' && Module._wgf_core_priv_load_get_pend
            " ? Module._wgf_core_priv_load_get_pending_count() : -1")
 LOG_PENDING = ("typeof Module !== 'undefined' && Module._wgf_core_priv_load_log_pending"
                " && Module._wgf_core_priv_load_log_pending()")
+FAILED = ("typeof Module !== 'undefined' && Module._wgf_core_priv_load_log_failed"
+          " ? Module._wgf_core_priv_load_log_failed() : -1")
 
 
 def check(browser_session, debug_base, url, opts, shot_path):
     """Load one example in a browser context of its own: what it logged, the problems
     found, when it started, and what was still loading."""
-    result = {'console': [], 'errors': [], 'started': None, 'backend': None, 'pending': -1}
+    result = {'console': [], 'errors': [], 'started': None, 'backend': None, 'pending': -1, 'failed': -1}
     lock = threading.Lock()
     inflight = set()
     state = {'loaded': time.monotonic(), 'activity': time.monotonic()}
@@ -134,6 +137,10 @@ def check(browser_session, debug_base, url, opts, shot_path):
             if pending and pending > 0:  # out of time: the loader names what is stuck, and where
                 session.try_send('Runtime.evaluate', {'expression': LOG_PENDING})
                 time.sleep(0.3)  # its warnings arrive as console events
+            answer = session.try_send('Runtime.evaluate', {'expression': FAILED, 'returnByValue': True})
+            result['failed'] = answer['result'].get('value', -1) if answer else -1
+            if result['failed'] and result['failed'] > 0:
+                time.sleep(0.3)  # the failed loads' warnings, as console events
         shot = session.try_send('Page.captureScreenshot', {'format': 'png'})
         if shot:
             shot_path.write_bytes(base64.b64decode(shot['data']))
@@ -159,6 +166,9 @@ def problems_of(result, opts, backend):
         problems.append(f'still loading {opts.settle} ms after starting ({result["pending"]} pending):')
         stuck = [line for line in result['console'] if 'wgf_core_load: pending:' in line]
         problems += [f'  | {line}' for line in (stuck or result['console'][-6:])]
+    if result['started'] is not None and result['failed'] is not None and result['failed'] > 0:
+        problems.append(f'{result["failed"]} load(s) failed:')
+        problems += [f'  | {line}' for line in result['console'] if 'wgf_core_load: failed:' in line]
     return problems
 
 

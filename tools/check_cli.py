@@ -45,6 +45,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import binding  # noqa: E402
 import browser  # noqa: E402
+import usercache  # noqa: E402
 import variants  # noqa: E402
 import webhost  # noqa: E402
 
@@ -307,24 +308,50 @@ def car_gltf(x):
                        'min': [0, 0, 0], 'max': [1, 1, 0]}]})
 
 
-def served_assets():
+def shdc_cached():
+    """Whether the pinned sokol-shdc is in the user cache already (tools/setup_shdc.py puts
+    it there): what `wgf serve` packs a shader's source with. Looked for, never fetched."""
+    version = (ROOT / 'deps' / 'sokol' / 'VERSION').read_text().split()
+    if 'sokol-tools-bin' not in version or version.index('sokol-tools-bin') + 1 >= len(version):
+        return False
+    commit = version[version.index('sokol-tools-bin') + 1]
+    name = 'sokol-shdc.exe' if os.name == 'nt' else 'sokol-shdc'
+    return (usercache.cache_dir('sokol-shdc', commit[:12]) / name).is_file()
+
+
+def served_assets(packs):
     """What the serve step's game loads, one of each kind a page takes on differently from a
     desktop build (the browser decodes it, or the web has code of its own for it). Each: the
-    word its value follows in the page's log, its file, the Haxe that declares, makes, and
-    says it, its file's bytes first, saved changed, and saved broken (None: never broken),
-    and whether a value is the first file's, or (given the first's) the changed one's."""
+    word its value follows in the page's log, its file (in `dir` of the game: its assets'
+    unless it says), the Haxe that declares, makes, and says it, its file's bytes first,
+    saved changed, and saved broken (None: never broken), whether a value is the first
+    file's, or (given the first's) the changed one's, and a file of the assets' written
+    with the first (`packed`, its path and bytes). With `packs` (sokol-shdc cached), a
+    shader's source too, which `wgf serve` packs into the assets as it is saved."""
     shaders = ROOT / 'examples' / 'assets' / 'shaders'
+    sources = ROOT / 'examples' / 'shaders'
 
     def fnt(line):
         return (f'common lineHeight={line} base=8 scaleW=8 scaleH=8 pages=1 packed=0\n'
                 'page id=0 file="tiny.png"\n'
                 'char id=65 x=0 y=0 width=5 height=7 xoffset=0 yoffset=1 xadvance=6 page=0 chnl=15\n').encode()
 
-    def asset(word, file, declare, make, say, first, changed, broken, was, now):
+    def asset(word, file, declare, make, say, first, changed, broken, was, now, dir='assets', packed=None):
         return {'word': word, 'file': file, 'declare': declare, 'make': make, 'say': say, 'first': first,
-                'changed': changed, 'broken': broken, 'was': was, 'now': now}
+                'changed': changed, 'broken': broken, 'was': was, 'now': now, 'dir': dir, 'packed': packed}
 
-    return [
+    source = [
+        # a shader's source, packed by wgf serve as it is saved, then loaded again: whether it
+        # has the parameter only the changed one has (one that won't compile is said by the
+        # server, its packed file left: the page sees nothing to break)
+        asset('packed', 'shaders/look2.glsl', 'look2:Material',
+              'look2 = Material.createCustom(Shader.create("shaders/look2.wgfshader"));',
+              '(look2.setFloat("speed", 1.0) ? 1 : 0)', (sources / 'toon.glsl').read_bytes(),
+              (sources / 'dissolve.glsl').read_bytes(), None, lambda v: v == 0, lambda v, first: v == 1,
+              dir='.', packed=('shaders/look2.wgfshader', (shaders / 'toon.wgfshader').read_bytes())),
+    ] if packs else []
+
+    return source + [
         asset('rock', 'rock.png', 'rock:Texture', 'rock = Texture.create("rock.png");', 'rock.getWidth()',
               png(2), png(4), b'not an image any more', lambda v: v == 2, lambda v, first: v == 4),
         asset('body', 'car.gltf', 'car:Model', 'car = Model.create(Mesh.create("car.gltf"));',
@@ -358,18 +385,23 @@ def served_assets():
 
 
 def write_assets(game, assets, which):
-    """Each asset's `which` bytes ('first', 'changed', 'broken') saved over its file."""
+    """Each asset's `which` bytes ('first', 'changed', 'broken') saved over its file, and with
+    the first, the file of the assets it comes with."""
     for a in assets:
-        if a[which] is not None:
-            path = game / 'assets' / a['file']
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(a[which])
+        files = [(game / a['dir'] / a['file'], a[which])]
+        if which == 'first' and a['packed'] is not None:
+            files.append((game / 'assets' / a['packed'][0], a['packed'][1]))
+        for path, data in files:
+            if data is not None:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
 
 
 def step_serve(game):
     """The page in a browser, its program with an initialized instance final and one asset of
     each kind served_assets lists (a texture, a glTF, a sound, a TrueType font, an image, a
-    bitmap font, a cubemap, a custom shader), served twice. As `wgf serve` alone: Main.hx edited while
+    bitmap font, a cubemap, a custom shader, and, where sokol-shdc is cached, a shader's source
+    that the server packs), served twice. As `wgf serve` alone: Main.hx edited while
     it runs, and the page loads again with the new code's line, its frame count from the
     start; then every asset saved changed, and it loads again with them. Then as
     `wgf serve --hot`, where the machine has hotreload-hx (said as skipped where it hasn't):
@@ -380,7 +412,10 @@ def step_serve(game):
     why = needs(web=True, browser_too=True)
     if why:
         return why
-    assets = served_assets()
+    assets = served_assets(shdc_cached())
+    if not shdc_cached():
+        print('check_cli: serve: a shader\'s source SKIPPED: no sokol-shdc in the user cache (tools/setup_shdc.py '
+              'fetches it)')
     # a class with an initialized instance final, which a hot build once refused
     (game / 'src' / 'Held.hx').write_text('class Held {\n\tpublic final count = [0];\n\n\tpublic function new() {}\n}\n')
     write_assets(game, assets, 'first')

@@ -66,6 +66,14 @@ typedef struct ring_t {
 } ring_t;
 
 static bool running;
+
+/* Loads that ended FAILED since core started, and the last few's paths: what a check of the
+ * examples (tools/check_web.py) asks, a failed load being a warning, not an error. */
+#define FAILED_KEPT 16
+static struct {
+    int count;
+    char paths[FAILED_KEPT][WGF_CORE_PRIV_FS_PATH_MAX];
+} failed_loads;
 static wgf_core_priv_handle_pool_t request_pool;
 static request_t *requests;
 static unsigned long next_order;
@@ -211,7 +219,12 @@ static void end_request(wgf_handle_t handle, request_t *request_ptr, bool failed
         return;
     }
     if (request_ptr->asked && wgf_core_priv_load_hooks.forget != NULL) wgf_core_priv_load_hooks.forget(handle);
-    if (failed) request_ptr->loader->fail(request_ptr->resource);
+    if (failed) {
+        snprintf(failed_loads.paths[failed_loads.count % FAILED_KEPT], WGF_CORE_PRIV_FS_PATH_MAX, "%s",
+                 request_ptr->path);
+        failed_loads.count++;
+        request_ptr->loader->fail(request_ptr->resource);
+    }
     wgf_core_priv_handle_pool_free(&request_pool, handle);
 }
 
@@ -343,6 +356,21 @@ int wgf_core_priv_load_get_pending_count(void)
         }
     }
     return count;
+}
+
+int wgf_core_priv_load_get_failed_count(void)
+{
+    return failed_loads.count;
+}
+
+int wgf_core_priv_load_log_failed(void)
+{
+    int i;
+    const int first = failed_loads.count > FAILED_KEPT ? failed_loads.count - FAILED_KEPT : 0;
+    for (i = first; i < failed_loads.count; i++) {
+        wgf_log_warn("wgf_core_load: failed: %s", failed_loads.paths[i % FAILED_KEPT]);
+    }
+    return failed_loads.count;
 }
 
 int wgf_core_priv_load_log_pending(void)
@@ -647,6 +675,7 @@ void wgf_core_priv_load_init(void)
     start_workers(worker_request >= 0 ? worker_request : default_worker_count());
     next_order = 0;
     running = true;
+    memset(&failed_loads, 0, sizeof(failed_loads));
 }
 
 void wgf_core_priv_load_deinit(void)

@@ -1141,6 +1141,10 @@ Rob's: `wgf serve` tells a page of a saved file, but a desktop build, `wgf run` 
 
 From the list of what was left: a model with clips from another glTF (`wgf_model_set_animations`) wasn't told when that file loaded again, only models made from it were. The file part now tells each other root as a file loads (`wgf_gfx_priv_model_clips_loaded`, a hook the animation part sets), and a model whose clips come from it goes on in them by name, as for its own file. Test: `wgf_gfx_skin_test` saves the clips' file with a clip before the one playing.
 
+## A shader's source in the serve check, and failed loads in the browser check (2026-11-24)
+
+From the list of what was left. `tools/check_cli.py`'s serve step saves a shader's source changed too (`shaders/look2.glsl`), which `wgf serve` packs before the page loads it again in place, where sokol-shdc is in the user cache already (said as skipped where it isn't: nothing is fetched for a check). `tools/check_web.py` fails an example a load of which failed, naming the files: a failure is a warning, which is how every cubemap from a file failed in a page for four days with the check passing. The loader counts what ended FAILED and keeps the last 16 paths (`wgf_core_priv_load_get_failed_count`, `_log_failed`), exported for the check as the pending count is.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
