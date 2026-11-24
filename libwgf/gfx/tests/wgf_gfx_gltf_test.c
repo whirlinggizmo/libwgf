@@ -399,6 +399,8 @@ int main(void)
                "the new material drawn by the kept mesh");
 
         write_file("models/car.bin", big, (int)sizeof(big));
+        expect(wgf_asset_can_reload("models/car.bin") && wgf_asset_can_reload("models/car.gltf"),
+               "a file and the buffer it names: both can load again");
         expect(wgf_asset_reload("models/car.bin") == 1, "its buffer saved: the file that names it, loading again");
         settle_reload(file);
         expect(wgf_gfx_priv_mesh_get_bounds(part, &lo, &hi) && near(hi.x, 2.0f) && wgf_model_get_mesh(body) == part,

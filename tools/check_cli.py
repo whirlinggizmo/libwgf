@@ -18,7 +18,8 @@ what it said:
   serve       the page reached in a browser, its Haxe edited while it runs: the new code
               runs, with the frame count it had (state kept, not a restart); then a
               texture and a glTF saved changed: the page shows the new ones, its count
-              going on; then a broken texture saved: the old one kept, one error logged
+              going on; then a broken texture saved: the old one kept, one error logged;
+              then a file nothing was made from saved: the page loads again
   export      export/web (a trimmed host, under the budget, its assets' manifests
               written, none in the game's) and export/desktop, each flown by the
               autopilot --autopilot names (the smoke one, here, by its name alone)
@@ -297,7 +298,8 @@ def step_serve(game):
     `wgf serve --hot`, where the machine has hotreload-hx (said as skipped where it hasn't):
     Main.hx edited, the new code's line with the frame count going on from where it was; the
     texture and the glTF saved, their new size and place in its log, the count going on;
-    the texture saved broken, the old one kept, and one error logged."""
+    the texture saved broken, the old one kept, and one error logged; then a file nothing
+    was made from saved, and the page loads again (its count from the start)."""
     why = needs(web=True, browser_too=True)
     if why:
         return why
@@ -378,8 +380,12 @@ def serve_once(game, main, games, hot):
                     state['broken_at'] = frame  # the first line after the error: one more to be sure
                 elif frame > state['broken_at']:
                     state['kept'] = width == 4
-                    state['done'] = True
-                    return True
+                    state['step'] = 'whole'
+                    state['whole_from'] = frame
+                    (game / 'assets' / 'notes.txt').write_text('nothing is made from this\n')
+            elif state['step'] == 'whole' and frame < state['whole_from']:  # counting from the start: a new page
+                state['done'] = True
+                return True
             return False
 
         lines = games.run_page_url(f'http://127.0.0.1:{port}/index.html', until=(), timeout=360, on_line=on_line,
@@ -402,14 +408,18 @@ def serve_once(game, main, games, hot):
             print(f'check_cli: serve: edited at frame {state["before"]}; the page loaded again and the new code said '
                   f'so at frame {state["after"]}; a texture and a glTF saved, and it loaded again with them')
             return True
-        if not state['done']:
+        if state['step'] == 'broken':
             return problem('wgf serve: a broken texture saved: no error logged, or no line after it', log)
+        if not state['done']:
+            return problem('wgf serve --hot: a file nothing was made from was saved, and the page never loaded '
+                           'again', log)
         if not state['kept'] or state['errors'] != 1 or state['shown_at'] <= state['assets_at']:
             return problem(f'wgf serve: a broken texture saved: kept {state["kept"]}, {state["errors"]} error(s) '
                            'logged (one wanted)', log)
         print(f'check_cli: serve --hot: edited at frame {state["before"]}; the new code said so at frame {state["after"]}, '
               f'its state kept; a texture and a glTF saved, shown by frame {state["shown_at"]}; a broken texture '
-              'saved, the old one kept and one error logged')
+              'saved, the old one kept and one error logged; a file nothing was made from saved, and the page '
+              'loaded again')
         return True
     finally:
         process.terminate()

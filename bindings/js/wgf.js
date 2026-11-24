@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "ae38e30bb821443a" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "1ae2be36039229ec" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -5257,6 +5257,24 @@ export function wgf_asset_reload(path) {
     const value = host["_wgf_asset_reload"](cstr(path));
     host["stackRestore"](mark);
     return value;
+}
+
+// wgf: call wgf_asset_can_reload
+/**
+ * Returns true if wgf_asset_reload(path) would bring the saved file into everything made
+ * from it: at least one resource was made from `path` or from a file that names it, and
+ * each is of a kind that loads again. A tool that watches files asks this first, and starts
+ * the program again for a file it can't load again in place.
+ *
+ * Returns false if any resource made from it is of a kind that doesn't load again, if
+ * nothing was made from it (a scene whose actors are already made, a file not loaded yet),
+ * or for a path that isn't under the host.
+ */
+export function wgf_asset_can_reload(path) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_asset_can_reload"](cstr(path));
+    host["stackRestore"](mark);
+    return value !== 0;
 }
 
 // wgf: call wgf_asset_clear_cache

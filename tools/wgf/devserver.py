@@ -23,7 +23,9 @@ every static keeps its value, every object its fields, the C side -- entities, n
 textures, the window -- is untouched. Its reloader asks /__hotreload_assets?since=<n> too,
 answered with the saved files' URLs (/assets/<path>); the Haxe runtime's hot build, told by
 it (Reloader.assetsChanged), loads each again in place (wgf_asset_reload), its handle kept;
-a file that doesn't load keeps what it had, with one error logged in the page.
+a file that doesn't load keeps what it had, with one error logged in the page. A file that
+can't be loaded again in place (wgf_asset_can_reload says: a scene, a sound, a file
+nothing was made from) loads the page again instead.
 
 The game's shaders/*.glsl are watched as well: one saved is packed again
 (tools/pack_shader.py, which needs sokol-shdc: tools/setup_shdc.py) into
@@ -48,9 +50,6 @@ import server  # noqa: E402
 
 POLL_SECONDS = 20  # a long poll's longest wait: then the page asks again
 MODES = ('reload', 'none', 'hot')
-# what wgf_asset_reload loads again in place (textures, glTF and what a glTF names): a hot
-# page is told of these, and loads again whole for anything else
-IN_PLACE = ('.png', '.jpg', '.jpeg', '.bmp', '.tga', '.gif', '.ktx', '.gltf', '.glb', '.bin')
 RELOAD_SCRIPT = ('<script>(function ask(n){fetch("/__wgf_reload?since="+n,{cache:"no-store"}).then(function(r){'
                  'return r.json()}).then(function(a){if(n>=0&&a.version>n)location.reload();else ask(a.version)},'
                  'function(){setTimeout(function(){ask(n)},1000)})})(-1)</script>')
@@ -231,7 +230,7 @@ class Server:
     def assets_saved(self, changed):
         """Asset files saved (or gone): copied first where the build has a copy of the
         assets rather than a link to them; then, by the mode, the page loads again, or
-        (hot) is told the ones it can load again in place, and loads again for any other."""
+        (hot) is told them, and loads each again in place or itself again (its choice)."""
         served = self.out / 'assets'
         names = []
         for path in changed:
@@ -243,8 +242,8 @@ class Server:
         said = ', '.join(names)
         if self.mode == 'none':
             self.echo(f'wgf serve: {said} saved; load the page again for it')
-        elif self.mode == 'hot' and all(name.lower().endswith(IN_PLACE) for name in names):
-            self.echo(f'wgf serve: {said} saved; the page loads it again in place')
+        elif self.mode == 'hot':  # the page knows what was made from each: it chooses
+            self.echo(f'wgf serve: {said} saved; the page loads it again in place, or loads again')
             self.saved.bump(names)
         else:
             self.echo(f'wgf serve: {said} saved; the page loads again')

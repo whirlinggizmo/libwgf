@@ -230,6 +230,16 @@ WGF_API bool wgf_asset_evict(const char *path);
  * or for a path that isn't under the host. */
 WGF_API int wgf_asset_reload(const char *path);
 
+/* Returns true if wgf_asset_reload(path) would bring the saved file into everything made
+ * from it: at least one resource was made from `path` or from a file that names it, and
+ * each is of a kind that loads again. A tool that watches files asks this first, and starts
+ * the program again for a file it can't load again in place.
+ *
+ * Returns false if any resource made from it is of a kind that doesn't load again, if
+ * nothing was made from it (a scene whose actors are already made, a file not loaded yet),
+ * or for a path that isn't under the host. */
+WGF_API bool wgf_asset_can_reload(const char *path);
+
 /* Forgets every cached file, so the next ensure of any file fetches it again. It also
  * forgets what was read of the manifests, so the root manifest is asked about again.
  *

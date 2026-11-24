@@ -18,6 +18,7 @@
 #include "wgf_log.h"
 #include "wgf_motion.h"
 #include "wgf_actor.h"
+#include "wgf_asset.h"
 #include "wgf_emitter3d.h"
 #include "wgf_resource.h"
 #include "wgf_scene.h"
@@ -158,6 +159,7 @@ int main(void)
            "the prefabs in file order");
     expect(wgf_scene_has_prefab(field, "rock") && !wgf_scene_has_prefab(field, "ship"), "has a prefab, not an actor");
     expect(wgf_scene_create("scenes/field.scene") == field, "the same path: the same scene");
+    expect(!wgf_asset_can_reload("scenes/field.scene"), "a scene doesn't load again in place");
     wgf_resource_release(field);
 
     /* instantiated */

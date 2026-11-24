@@ -182,6 +182,20 @@ int wgf_asset_reload(const char *path)
     return count;
 }
 
+bool wgf_asset_can_reload(const char *path)
+{
+    char logical[WGF_ASSET_PRIV_PATH_MAX];
+    int made = 0, i;
+    if (path == NULL || !wgf_asset_priv_normalize_path(path, logical, sizeof(logical))) return false;
+    if (!wgf_core_priv_resource_can_reload(logical, &made)) return false;
+    for (i = 0; i < name_count; i++) { /* the files that name it */
+        if (strcmp(names[i].named, logical) == 0 && !wgf_core_priv_resource_can_reload(names[i].file, &made)) {
+            return false;
+        }
+    }
+    return made > 0;
+}
+
 static void stop(void)
 {
     free(names);

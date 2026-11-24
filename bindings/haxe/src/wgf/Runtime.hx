@@ -85,16 +85,24 @@ class Runtime {
 	#if (js && hotreload)
 	/**
 		`wgf serve`'s assets: hotreload-hx's reloader asks the server for the files saved (a long
-		poll of its own) and tells this, which loads each again in place (Asset.reload). The
-		server names each by its URL in the page, `/assets/<path>`; Asset.reload takes the path.
+		poll of its own) and tells this, which loads each again in place (Asset.reload). One
+		that can't be (Asset.canReload: a scene, a sound, an image something holds that isn't
+		a texture, a file nothing is made from) loads the page again. The server names each
+		by its URL in the page, `/assets/<path>`; Asset.reload takes the path.
 	**/
 	static var reloader:hotreload.Reloader;
 
 	static function watchAssets():Void {
 		reloader = new hotreload.Reloader();
 		reloader.assetsChanged = function(urls:Array<String>) {
-			for (url in urls)
-				Asset.reload(StringTools.startsWith(url, "/assets/") ? url.substr(8) : url);
+			for (url in urls) {
+				final path = StringTools.startsWith(url, "/assets/") ? url.substr(8) : url;
+				if (!Asset.canReload(path)) {
+					js.Browser.location.reload();
+					return;
+				}
+				Asset.reload(path);
+			}
 		};
 	}
 	#end

@@ -1054,6 +1054,15 @@ Four public calls were built hidden: the presentation's bar colour and immediate
 
 Rob's: the Emscripten pin moved from 5.0.7 to 7.0.1, then the latest. Nothing in the source changed for it, and no warning was new. Every size stayed within the check's tolerance, most a little smaller (the skeleton 77.7 to 77.1 KB gzip). The baseline was measured again, libwgt and wgrender-c included; both pin 5.0.7 themselves, so they were built with their own overrides (`LIBWGT_EMSCRIPTEN_VERSION`, `WGRENDER_EMSCRIPTEN_VERSION`). The frame times in the benchmarks were not measured again.
 
+## A hot page chooses what loads again in place (2026-11-24)
+
+Rob's. `wgf serve --hot` chose by a file's extension, from a list in the server: images, `.ktx`, and glTF's files. That was wrong both ways. The library had since learned to load a Tiled map, an environment, and a text buffer again in place, and the list didn't have them, so each loaded the page again. And an image held by something that isn't a texture (a bitmap font made from an image, an image on the CPU) was on the list: the page was told to load it again in place, the library left it as it was with a warning, and the old picture stayed.
+
+- **`wgf_asset_can_reload(path)`**, new and public: true when at least one resource was made from the path, or from a file that names it, and every one is of a kind that loads again.
+- **The server keeps no list.** A hot page is told every saved asset. The Haxe runtime asks `wgf_asset_can_reload` for each: it loads the file again in place, or loads the page again.
+- **A file nothing was made from loads the page again.** A scene's actors are already made, and a file not loaded yet may be read by the next line of code; neither can be known from the page, so the safe answer is a new page. An image not loaded yet used to do nothing.
+- `tools/check_cli.py`'s serve step saves such a file last, and the page must count from the start again.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

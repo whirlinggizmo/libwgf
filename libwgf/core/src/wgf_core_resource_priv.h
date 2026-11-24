@@ -95,6 +95,9 @@ void wgf_core_priv_resource_loaded(wgf_handle_t resource, const char *found);
  * so), and a failure leaving it as it was, with one error logged. A resource still loading,
  * or of a kind that doesn't reload (warned), is left. The number set loading. */
 int wgf_core_priv_resource_reload(const char *path);
+/* Whether every resource made from `path` is of a kind that loads again in place: false at
+ * the first that isn't. Each one that is adds 1 to `*made`, one still loading included. */
+bool wgf_core_priv_resource_can_reload(const char *path, int *made);
 
 /* `resource` (READY, read from a file) loaded again from its file as this run has it (no
  * fetch: the web's copy, where wgf_core_priv_resource_reload fetches anew), with `loader`,

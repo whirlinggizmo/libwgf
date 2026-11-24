@@ -111,6 +111,7 @@ class Reach {
 		"wgf_arcade2d_set_solid_mask",
 		"wgf_arcade2d_set_velocity",
 		"wgf_asset_add_redirect",
+		"wgf_asset_can_reload",
 		"wgf_asset_clear_cache",
 		"wgf_asset_clear_redirects",
 		"wgf_asset_ensure",
@@ -1475,7 +1476,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1466) 0];
+	static final counts:Array<Int> = [for (_ in 0...1467) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;
