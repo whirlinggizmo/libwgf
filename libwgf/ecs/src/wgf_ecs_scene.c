@@ -1576,7 +1576,7 @@ int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent)
 {
     const wgf_ecs_priv_scene_data_t *data = ready(scene);
     wgf_actor_t *made_actors;
-    int i, made = 0;
+    int i, top = 0;
     if (data == NULL || (parent != 0 && wgf_actor_get_kind(parent) == WGF_ACTOR_KIND_NONE)) return 0;
     made_actors = (wgf_actor_t *)malloc(sizeof(wgf_actor_t) * (size_t)(data->count > 0 ? data->count : 1));
     if (made_actors == NULL) {
@@ -1589,13 +1589,13 @@ int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent)
         data = ready(scene); /* making actors doesn't free the scene, but look again */
         if (!data->things[i].prefab && data->things[i].parent < 0) {
             const wgf_actor_t actor = make(data, i, parent, 0);
-            if (actor != 0) made_actors[made++] = actor;
+            if (actor != 0) made_actors[top++] = actor;
         }
     }
     making = 0;
-    for (i = 0; i < made; i++) resolve_tree(made_actors[i]); /* all made, so each can refer to any */
+    for (i = 0; i < top; i++) resolve_tree(made_actors[i]); /* all made, so each can refer to any */
     free(made_actors);
-    return made;
+    return top;
 }
 
 wgf_prefab_t wgf_scene_find_prefab(wgf_scene_t scene, const char *name)
