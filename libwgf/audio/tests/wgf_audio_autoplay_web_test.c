@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "wgf_app.h"
+#include "wgf_audio.h"
 #include "wgf_resource.h"
 #include "wgf_sound.h"
 #include "wgf_time.h"
@@ -12,7 +13,10 @@
  * media element's play() stood in for by one refusing as the autoplay rule does
  * (NotAllowedError) outside a tap's event. A voice played at the title, before any tap,
  * isn't an unhandled rejection: it is played again inside the next tap's own event; one
- * stopped before that tap stays stopped. */
+ * stopped before that tap stays stopped. And whether sound is held back
+ * (wgf_audio_is_blocked): the browser that runs the tests lets sound start untapped, so the
+ * audio context's state and the page's user activation are stood in for too, suspended and
+ * none until the first tap, which is held back until then, and not after. */
 
 static int failures;
 static int phase;
@@ -47,9 +51,22 @@ EM_JS(void, stub_autoplay, (void), {
         return play.call(this);
     };
     window.addEventListener("unhandledrejection", () => { log.unhandled++; });
+    /* as a browser that holds sound back has it: no activation, the context suspended, until
+       the first tap */
+    Module.activated = false;
+    Object.defineProperty(Navigator.prototype, "userActivation", {
+        configurable: true,
+        get: () => ({hasBeenActive: Module.activated, isActive: false})
+    });
+    Object.defineProperty(AudioContext.prototype, "state", {
+        configurable: true,
+        get: () => Module.activated ? "running" : "suspended"
+    });
     /* a tap: the page's listeners run inside its event, the only time play() is let through */
     Module.tap = () => {
         tapped = true;
+        Module.activated = true;
+        window.dispatchEvent(new Event("pointerdown"));
         window.dispatchEvent(new Event("pointerup"));
         tapped = false;
     };
@@ -74,6 +91,7 @@ static void on_frame(void *user)
     }
     switch (phase) {
         case 0:
+            expect(wgf_audio_is_blocked(), "before any input: sound held back");
             music = wgf_sound_create_streamed("music/a_hero_is_born.mp3");
             since = now;
             phase = 1;
@@ -91,8 +109,10 @@ static void on_frame(void *user)
                 expect(js("Module.autoplayLog.refused === 1 && Module.autoplayLog.unhandled === 0"),
                        "refused by the autoplay rule, and answered: no unhandled rejection");
                 expect(js("Module.autoplayLog.played === 0"), "not played before a tap");
+                expect(wgf_audio_is_blocked(), "audio running, the context suspended: still held back");
                 js("Module.tap()");
                 expect(js("Module.autoplayLog.played === 1"), "played inside the tap");
+                expect(!wgf_audio_is_blocked(), "after a tap: not held back");
                 wgf_voice_stop(voice);
                 since = now;
                 phase = 3;

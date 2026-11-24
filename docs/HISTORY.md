@@ -1149,6 +1149,10 @@ From the list of what was left. `tools/check_cli.py`'s serve step saves a shader
 
 The examples' friction (e): reaching a behavior's object in Haxe was `cast Behavior.of(actor, "Name")`. `Behavior.get(actor, Ship)` finds the first of that class (or one extending it), typed, by `Std.downcast`; Asteroids and the behaviors, physics, and screens examples use it. The binding's test checks it finds the class, none of another, and any as a `Behavior`.
 
+## Sound held back, tested in a browser (2026-11-24)
+
+From the list: `wgf_audio_is_blocked` true had never been seen. The browser that runs the tests lets sound start untapped, so `wgf_audio_autoplay_web_test` stands in for the audio context's state and the page's user activation (suspended, none) until its first tap, as it stands in for a media element's `play()`: held back before audio starts and after, not after the tap.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
