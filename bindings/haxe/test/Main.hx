@@ -154,6 +154,8 @@ class Main {
 		if (frames == 1) {
 			expect(Rock.made == 2 && Behavior.count() == 4, "the behaviors made from CREATED");
 			expect(Behavior.of(a) != null && Behavior.of(a).name == "Rock", "a's behavior");
+			expect(Behavior.get(a, Rock) == Behavior.of(a, "Rock") && Behavior.get(a, Doomer) == null &&
+				Behavior.get(a, Behavior) == Behavior.of(a), "found by its class, typed: a Rock, no Doomer, any as a Behavior");
 			// a getter 100,000 times in one frame: nothing may pile up on the wasm stack
 			final v = new Vec3();
 			var sum = 0.0;

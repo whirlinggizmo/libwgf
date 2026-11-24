@@ -70,7 +70,7 @@ class Main {
 	static function publishProbes() {
 		final top = Screen.getTop();
 		Probe.setValue("screens.current", top == title ? 0 : top == play ? 1 : top == pause ? 2 : -1);
-		final game = Std.downcast(Behavior.of(play), Play);
+		final game = Behavior.get(play, Play);
 		if (game == null)
 			return; // made at the runtime's first poll of the ecs's events
 		// While play is frozen, how far its ball and its meter moved since: it should stay 0.

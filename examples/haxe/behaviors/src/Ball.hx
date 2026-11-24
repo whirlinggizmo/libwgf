@@ -46,7 +46,7 @@ class Ball extends Behavior {
 			final at = actor.getPosition(position);
 			actor.setPosition(at.x + p.x, at.y + p.y, 0);
 		}
-		final bumper:Bumper = cast Behavior.of(other, "Bumper");
+		final bumper = Behavior.get(other, Bumper);
 		(actor : Shape2d).setColor(bumper.color);
 	}
 }

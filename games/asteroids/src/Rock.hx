@@ -42,7 +42,7 @@ class Rock extends Behavior {
 			other.destroy(ActorDestroy.DESTROY_CHILDREN);
 			split();
 		} else if (layer == SHIP_LAYER) {
-			(cast Behavior.of(other, "Ship") : Ship).explode();
+			Behavior.get(other, Ship).explode();
 			split();
 		}
 	}

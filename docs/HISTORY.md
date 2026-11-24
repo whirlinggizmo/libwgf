@@ -1145,6 +1145,10 @@ From the list of what was left: a model with clips from another glTF (`wgf_model
 
 From the list of what was left. `tools/check_cli.py`'s serve step saves a shader's source changed too (`shaders/look2.glsl`), which `wgf serve` packs before the page loads it again in place, where sokol-shdc is in the user cache already (said as skipped where it isn't: nothing is fetched for a check). `tools/check_web.py` fails an example a load of which failed, naming the files: a failure is a warning, which is how every cubemap from a file failed in a page for four days with the check passing. The loader counts what ended FAILED and keeps the last 16 paths (`wgf_core_priv_load_get_failed_count`, `_log_failed`), exported for the check as the pending count is.
 
+## A behavior found by its class (2026-11-24)
+
+The examples' friction (e): reaching a behavior's object in Haxe was `cast Behavior.of(actor, "Name")`. `Behavior.get(actor, Ship)` finds the first of that class (or one extending it), typed, by `Std.downcast`; Asteroids and the behaviors, physics, and screens examples use it. The binding's test checks it finds the class, none of another, and any as a `Behavior`.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

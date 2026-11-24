@@ -129,9 +129,9 @@ class Main {
 			(piece.actor : Body3d).setVelocity(0, 0, 0);
 			(piece.actor : Body3d).setSpin(0, 0, 0);
 		}
-		final counter = Behavior.of(sensor, "Sensor");
+		final counter = Behavior.get(sensor, Sensor);
 		if (counter != null)
-			(cast counter : Sensor).count = 0;
+			counter.count = 0;
 		kicks = 0;
 		nextKick = 0;
 	}
@@ -170,7 +170,7 @@ class Main {
 			if (!(piece.actor : Body3d).isSleeping())
 				settled = false;
 		}
-		final counter:Null<Sensor> = cast Behavior.of(sensor, "Sensor");
+		final counter = Behavior.get(sensor, Sensor);
 		Probe.setValue("physics.bodies", pieces.length);
 		Probe.setValue("physics.sensed", counter != null ? counter.count : 0);
 		Probe.setValue("physics.settled", settled ? 1 : 0);
@@ -184,7 +184,7 @@ class Main {
 		stage.draw();
 
 		// The sensor has no model: its outline is drawn, bright for a moment after each entry.
-		final counter:Null<Sensor> = cast Behavior.of(sensor, "Sensor");
+		final counter = Behavior.get(sensor, Sensor);
 		final flash = counter != null && counter.sinceLast < 0.2;
 		if (Draw.begin3d(camera)) {
 			Draw.cubeWires(0, 2.6, 0, 5, 0.8, 5, flash ? Color.get(ColorStock.LIME) : Color.get(ColorStock.DARKGREEN));

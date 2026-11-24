@@ -125,6 +125,23 @@ class Behavior {
 		return null;
 	}
 
+	/**
+		The first behavior on `actor` of class `type` (or one extending it), typed, or null for
+		none: `Behavior.get(other, Ship).explode()`, where `of` finds one by its name and needs a
+		cast.
+	**/
+	public static function get<T:Behavior>(actor:Actor, type:Class<T>):Null<T> {
+		final list = live.get(actor);
+		if (list == null)
+			return null;
+		for (behavior in list) {
+			final typed = Std.downcast(behavior, type);
+			if (typed != null)
+				return typed;
+		}
+		return null;
+	}
+
 	/** Every behavior on `actor`, in the order added (empty for none). **/
 	public static function all(actor:Actor):Array<Behavior> {
 		final list = live.get(actor);

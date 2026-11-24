@@ -1037,4 +1037,4 @@ Racer (milestone 2), from step 12: the game-developer session's part 8, a rear-v
 - **Workaround:** each worked around in its example
 - **Cost:** Minor, each. Listed so none is lost.
 - **Found by:** the agents that wrote the curated Haxe and JS examples (2026-11-22), each from the docs, the headers, and the bindings alone.
-- **Triage:** (a), (b), (c), (g) said in the headers; (d) and (f) fine as they are (HISTORY.md, "The rest of the examples' list"); (e) a typed behavior lookup in Haxe and (h) the glTF file's slow load are open
+- **Triage:** (a), (b), (c), (g) said in the headers; (d) and (f) fine as they are (HISTORY.md, "The rest of the examples' list"); (e) fixed (HISTORY.md, "A behavior found by its class"); (h) the glTF file's slow load is open
