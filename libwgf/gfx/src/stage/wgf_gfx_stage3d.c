@@ -106,7 +106,7 @@ static struct {
 } seen;
 
 static struct {
-    sort_key_t *keys;
+    sort_key_t *keys, *spare; /* spare: the merge's */
     item_t *moved;
     int capacity;
 } sorting;
@@ -193,6 +193,7 @@ static void stop(void)
     free(frame.sprites);
     free(frame.texts);
     free(sorting.keys);
+    free(sorting.spare);
     free(sorting.moved);
     memset(&sorting, 0, sizeof(sorting));
     free(frame.instances);
@@ -1007,18 +1008,49 @@ static int compare_items(const void *lhs, const void *rhs)
  * swap (an item is about 200 bytes; 16,000 see-through sprites sorted whole were most of a
  * frame). */
 
-static int compare_keys(const void *lhs, const void *rhs)
+/* Whether key `a` draws before key `b`. */
+static bool key_before(const sort_key_t *a, const sort_key_t *b)
 {
-    const sort_key_t *a = (const sort_key_t *)lhs, *b = (const sort_key_t *)rhs;
-    if (a->blended != b->blended) return a->blended ? 1 : -1;
-    if (a->additive != b->additive) return a->additive ? 1 : -1;
-    if (a->blended && a->depth != b->depth) return a->depth > b->depth ? -1 : 1;
-    if (!a->blended && a->group != b->group) return a->group < b->group ? -1 : 1;
-    return (a->order > b->order) - (a->order < b->order);
+    if (a->blended != b->blended) return b->blended;
+    if (a->additive != b->additive) return b->additive;
+    if (a->blended && a->depth != b->depth) return a->depth > b->depth;
+    if (!a->blended && a->group != b->group) return a->group < b->group;
+    return a->order < b->order;
+}
+
+/* Sorts `count` keys by key_before, with `spare` as room for as many. A merge sort with its
+ * comparison inlined: qsort's call for each comparison was a tenth of drawing 400 robots.
+ * Runs of 16 are sorted by insertion first. */
+static void sort_keys(sort_key_t *keys, sort_key_t *spare, int count)
+{
+    sort_key_t *from = keys, *to = spare, *swap;
+    int width, i, j, lo;
+    for (lo = 0; lo < count; lo += 16) {
+        const int hi = lo + 16 < count ? lo + 16 : count;
+        for (i = lo + 1; i < hi; i++) {
+            const sort_key_t key = keys[i];
+            for (j = i; j > lo && key_before(&key, &keys[j - 1]); j--) keys[j] = keys[j - 1];
+            keys[j] = key;
+        }
+    }
+    for (width = 16; width < count; width *= 2) {
+        for (lo = 0; lo < count; lo += 2 * width) {
+            const int mid = lo + width < count ? lo + width : count;
+            const int hi = lo + 2 * width < count ? lo + 2 * width : count;
+            int a = lo, b = mid, k = lo;
+            while (a < mid && b < hi) to[k++] = key_before(&from[b], &from[a]) ? from[b++] : from[a++];
+            while (a < mid) to[k++] = from[a++];
+            while (b < hi) to[k++] = from[b++];
+        }
+        swap = from;
+        from = to;
+        to = swap;
+    }
+    if (from != keys) memcpy(keys, from, sizeof(sort_key_t) * (size_t)count);
 }
 
 
-/* A draw's items in drawing order (compare_keys'): opaque first, alike ones together;
+/* A draw's items in drawing order (key_before's): opaque first, alike ones together;
  * then the see-through ones, farthest first; the added ones last. */
 static void sort_items(int first, int count)
 {
@@ -1026,8 +1058,11 @@ static void sort_items(int first, int count)
     if (count < 2) return;
     if (count > sorting.capacity) {
         sort_key_t *keys = (sort_key_t *)realloc(sorting.keys, sizeof(sort_key_t) * (size_t)count);
-        item_t *moved = keys != NULL ? (item_t *)realloc(sorting.moved, sizeof(item_t) * (size_t)count) : NULL;
+        sort_key_t *spare =
+            keys != NULL ? (sort_key_t *)realloc(sorting.spare, sizeof(sort_key_t) * (size_t)count) : NULL;
+        item_t *moved = spare != NULL ? (item_t *)realloc(sorting.moved, sizeof(item_t) * (size_t)count) : NULL;
         if (keys != NULL) sorting.keys = keys;
+        if (spare != NULL) sorting.spare = spare;
         if (moved == NULL) { /* out of memory: sorted whole, slower */
             qsort(&frame.items[first], (size_t)count, sizeof(item_t), compare_items);
             return;
@@ -1045,7 +1080,7 @@ static void sort_items(int first, int count)
         key->blended = item->blended;
         key->additive = item->additive;
     }
-    qsort(sorting.keys, (size_t)count, sizeof(sort_key_t), compare_keys);
+    sort_keys(sorting.keys, sorting.spare, count);
     for (i = 0; i < count; i++) sorting.moved[i] = frame.items[sorting.keys[i].item];
     memcpy(&frame.items[first], sorting.moved, sizeof(item_t) * (size_t)count);
 }

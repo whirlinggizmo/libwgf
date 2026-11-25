@@ -62,6 +62,8 @@ struct wgf_gfx_priv_animation_t {
     int from;
     float from_time, fade, faded;
     trs_t *pose, *held, *scratch; /* a node at a time; the pose last written */
+    unsigned char *placed; /* a node at a time: its world matrix made by the last place_tree */
+    int *placed_children;  /* a node at a time: how many of its children that placed */
     int node_count;
     bool listed, posed;
     layer_t layers[WGF_MODEL_LAYERS]; /* over it, in order: each blended over what is under it */
@@ -179,6 +181,8 @@ static void free_animation(animation_t *anim)
     free(anim->pose);
     free(anim->held);
     free(anim->scratch);
+    free(anim->placed);
+    free(anim->placed_children);
     for (n = 0; n < WGF_MODEL_LAYERS; n++) {
         free(anim->layers[n].mask);
         free(anim->layers[n].layered);
@@ -236,13 +240,18 @@ static void sample(const wgf_gfx_priv_mesh_channel_t *c, float t, float out[4], 
                 }
             } else if (comp == 4) {
                 /* nlerp: between a clip's keys (a few hundredths of a second apart) it is slerp to the
-                   eye, without its trigonometry (a fifth of posing 200 robots) */
-                const wgf_quat_t q = wgf_quat_nlerp(wgf_quat_make(a[0], a[1], a[2], a[3]),
-                                                    wgf_quat_make(b[0], b[1], b[2], b[3]), u);
-                out[0] = q.x;
-                out[1] = q.y;
-                out[2] = q.z;
-                out[3] = q.w;
+                   eye, without its trigonometry. Made unit with one reciprocal, not four divides. */
+                const float sign = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3] < 0.0f ? -1.0f : 1.0f;
+                float length;
+                for (k = 0; k < 4; k++) out[k] = a[k] + (b[k] * sign - a[k]) * u;
+                length = sqrtf(out[0] * out[0] + out[1] * out[1] + out[2] * out[2] + out[3] * out[3]);
+                if (length > 0.0f) {
+                    const float inverse = 1.0f / length;
+                    for (k = 0; k < 4; k++) out[k] *= inverse;
+                } else {
+                    out[0] = out[1] = out[2] = 0.0f;
+                    out[3] = 1.0f;
+                }
                 unit = true;
             } else {
                 for (k = 0; k < comp; k++) out[k] = a[k] + (b[k] - a[k]) * u;
@@ -316,27 +325,92 @@ static float wrap(float t, float duration, bool loop)
 static bool fit(animation_t *anim, int count)
 {
     trs_t *pose, *held, *scratch;
+    unsigned char *placed;
+    int *placed_children;
     if (anim->node_count == count && anim->pose != NULL) return true;
     pose = (trs_t *)calloc((size_t)count + 1, sizeof(trs_t));
     held = (trs_t *)calloc((size_t)count + 1, sizeof(trs_t));
     scratch = (trs_t *)calloc((size_t)count + 1, sizeof(trs_t));
-    if (pose == NULL || held == NULL || scratch == NULL) {
+    placed = (unsigned char *)calloc((size_t)count + 1, 1);
+    placed_children = (int *)calloc((size_t)count + 1, sizeof(int));
+    if (pose == NULL || held == NULL || scratch == NULL || placed == NULL || placed_children == NULL) {
         free(pose);
         free(held);
         free(scratch);
+        free(placed);
+        free(placed_children);
         wgf_log_error("wgf_model: out of memory posing a file's tree");
         return false;
     }
     free(anim->pose);
     free(anim->held);
     free(anim->scratch);
+    free(anim->placed);
+    free(anim->placed_children);
     anim->pose = pose;
     anim->held = held;
     anim->scratch = scratch;
+    anim->placed = placed;
+    anim->placed_children = placed_children;
     anim->node_count = count;
     anim->posed = false;
     anim->fading = false;
     return true;
+}
+
+/* Writes the pose into the tree's actors and makes their world matrices, parents first, as a
+ * file's tree lists them. That is cheaper than marking each moved actor dirty and making its
+ * world matrix again as the stage walks it.
+ *
+ * A node is placed when its parent is the one its file gives it, and that parent is the
+ * root or was placed in this pass. Its world matrix is then its parent's times its own, kept
+ * as up to date. Any other node moved is marked dirty, as any actor moved is. A placed node
+ * with children of its own (a prop held by a bone, or a node moved under it) has all its
+ * children marked dirty too, since only its file's children are placed. */
+static void place_tree(wgf_actor_t model, animation_t *anim, const wgf_gfx_priv_model_tree_t *tree,
+                       const wgf_gfx_priv_mesh_record_t *record, const unsigned char *moved)
+{
+    const int count = record->node_count < tree->node_count ? record->node_count : tree->node_count;
+    const wgf_gfx_priv_actor_t *root_ptr;
+    int n, c;
+    (void)wgf_gfx_priv_actor_get_world_matrix(model); /* the root's, up to date first */
+    root_ptr = wgf_gfx_priv_actor_of_silently(model);
+    memset(anim->placed, 0, (size_t)count);
+    memset(anim->placed_children, 0, sizeof(int) * (size_t)count);
+    for (n = 0; n < count; n++) {
+        wgf_gfx_priv_actor_t *node_ptr = wgf_gfx_priv_actor_of_silently(tree->nodes[n]);
+        const int parent = record->nodes[n].parent;
+        const bool file_parent = parent >= 0 && parent < n;
+        const wgf_actor_t expected = file_parent ? tree->nodes[parent] : model;
+        const wgf_gfx_priv_actor_t *parent_ptr;
+        if (node_ptr == NULL) continue; /* not made, or destroyed since its tree was made */
+        if (moved[n]) {
+            node_ptr->position = anim->pose[n].position;
+            node_ptr->rotation = anim->pose[n].rotation;
+            node_ptr->scale = anim->pose[n].scale;
+        }
+        parent_ptr = file_parent ? wgf_gfx_priv_actor_of_silently(expected) : root_ptr;
+        if (parent == -1 || (file_parent && anim->placed[parent])) {
+            if (node_ptr->parent == expected && parent_ptr != NULL && !parent_ptr->world_dirty) {
+                node_ptr->world = wgf_mat4_mul(parent_ptr->world, wgf_gfx_priv_actor_get_local_matrix(node_ptr));
+                node_ptr->world_dirty = false;
+                anim->placed[n] = 1;
+                if (file_parent) anim->placed_children[parent]++;
+                continue;
+            }
+        }
+        if (moved[n]) wgf_gfx_priv_actor_transform_changed(tree->nodes[n]);
+    }
+    for (n = 0; n < count; n++) { /* children the pass didn't place, under a node it did */
+        wgf_gfx_priv_actor_t *node_ptr;
+        if (!anim->placed[n] || (node_ptr = wgf_gfx_priv_actor_of_silently(tree->nodes[n])) == NULL ||
+            node_ptr->live_children == anim->placed_children[n]) {
+            continue;
+        }
+        for (c = 0; c < node_ptr->child_count; c++) {
+            if (node_ptr->children[c] != 0) wgf_gfx_priv_actor_transform_changed(node_ptr->children[c]);
+        }
+    }
 }
 
 /* The root's tree posed where its player is, written into its actors: the clip at its time,
@@ -392,16 +466,7 @@ static void pose(wgf_actor_t model)
         }
     }
     anim->posed = true;
-    for (n = 0; n < record->node_count && n < tree->node_count; n++) {
-        wgf_gfx_priv_actor_t *node_ptr;
-        if (!moved[n] || (node_ptr = wgf_gfx_priv_actor_of_silently(tree->nodes[n])) == NULL) {
-            continue; /* not moved, or destroyed since its tree was made */
-        }
-        node_ptr->position = anim->pose[n].position;
-        node_ptr->rotation = anim->pose[n].rotation;
-        node_ptr->scale = anim->pose[n].scale;
-        wgf_gfx_priv_actor_transform_changed(tree->nodes[n]);
-    }
+    place_tree(model, anim, tree, record, moved);
 }
 
 /* `model` moved on by `dt` seconds times its speed: wrapped when looping, COMPLETE at the end

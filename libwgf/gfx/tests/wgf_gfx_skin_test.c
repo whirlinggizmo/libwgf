@@ -310,6 +310,24 @@ int main(void)
     expect(near(arm_y(root), 1.5f) && near(wgf_actor_get_rotation(hip).z, 0.0f),
            "at 0.5 s the arm 1.5 up, the hip's step not yet taken");
 
+    /* an actor the arm holds, a unit above it, follows the pose, as the joint's world does */
+    {
+        const wgf_actor_t arm = wgf_actor_find(root, "hip/arm"), held = wgf_actor_create();
+        wgf_vec3_t at;
+        wgf_actor_set_parent(held, arm);
+        wgf_actor_set_position(held, 0, 1, 0);
+        at = wgf_actor_get_world_position(held);
+        expect(near(at.x, 0.0f) && near(at.y, 2.5f), "held at 0.5 s: 2.5 up");
+        wgf_model_set_animation_time(root, 1.0f);
+        at = wgf_actor_get_world_position(held);
+        expect(near(wgf_actor_get_world_position(arm).x, -2.0f) && near(at.x, -3.0f) && near(at.y, 0.0f),
+               "held at 1 s: the hip's quarter turn takes the arm 2 left, and what it holds 3");
+        wgf_model_set_animation_time(root, 0.5f);
+        at = wgf_actor_get_world_position(held);
+        expect(near(at.x, 0.0f) && near(at.y, 2.5f), "held at 0.5 s again: 2.5 up");
+        wgf_actor_destroy(held, WGF_ACTOR_DESTROY_CHILDREN);
+    }
+
     /* drawn: the skinned part placed by the root, its joint matrices as the pose says */
     wgf_actor_set_position(root, 10, 0, 0);
     wgf_actor_set_position(camera, 10, 0, 10);
