@@ -141,10 +141,15 @@ int main(void)
            the glyphs' size; and held to 512 pixels a glyph, past which it is magnified */
         {
             wgf_vec2_t twice, stepped, most;
-            begin_frame(64, 64, 1.0f); /* measured at one pixel a pixel */
+            int frame;
+            for (frame = 0; frame < 3; frame++) { /* a 512-pixel glyph grows the atlas, at a frame's end, twice */
+                begin_frame(64, 64, 1.0f);           /* measured at one pixel a pixel */
+                most = wgf_font_measure(0, "Hello", 512);
+                wgf_gfx_priv_end_frame();
+            }
+            begin_frame(64, 64, 1.0f);
             twice = wgf_font_measure(0, "Hello", 32);
             stepped = wgf_font_measure(0, "Hello", 37);
-            most = wgf_font_measure(0, "Hello", 512);
             wgf_gfx_priv_end_frame();
             wgf_presentation_set(WGF_PRESENTATION_MODE_FIT, 100, 100);
             begin_frame(200, 200, 1.0f);

@@ -41,7 +41,7 @@
  * are, through the few calls that ask a font (use_font, span_width, vertical_metrics,
  * and the glyphs' quads). */
 
-#define ATLAS_START 1024
+#define ATLAS_START 512 /* 256 KB, and as much again for fontstash's own: most programs never grow it */
 #define ATLAS_MOST 4096 /* 16 MB of 8-bit coverage at most */
 
 typedef struct font_t {
