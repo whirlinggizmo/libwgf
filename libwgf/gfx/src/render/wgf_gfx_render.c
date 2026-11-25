@@ -931,3 +931,9 @@ float wgf_render_get_dpi_scale(void)
 {
     return frame_dpi_scale;
 }
+
+float wgf_gfx_priv_render_get_pixel_scale(void)
+{
+    const float scale = present.scale_x > present.scale_y ? present.scale_x : present.scale_y;
+    return scale > 0.0f ? scale : frame_dpi_scale;
+}

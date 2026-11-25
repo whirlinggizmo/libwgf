@@ -1157,6 +1157,10 @@ From the list: `wgf_audio_is_blocked` true had never been seen. The browser that
 
 The pages job failed when Wardens took more than the autopilot's 30 seconds to load on a slow runner. `wait <probe> <op> <number> within <s>` gives one wait its own longest, so a load that can take long says so where it is, and every other wait still fails at 30 seconds; Wardens' first wait in each of its autopilots is `within 120`. `tools/wgf/game.py`'s time for a run counts each wait's own.
 
+## Text sharp at any window size (2026-11-24)
+
+Rob's, from jagged text in helix-raylib's pages as the browser window was resized. Text was rasterized at its size times the DPI scale alone, so under a presentation (FIT, FILL, EXPAND, STRETCH) a window larger than the design magnified the design's glyphs, and a 2D stage's zoom did too. Now the scale is the frame's own, framebuffer pixels a logical pixel (`wgf_gfx_priv_render_get_pixel_scale`, the presentation's), times a 2D draw's matrix's, stepped (eighths up to 4, eight steps an octave past) so a drag makes a few sizes, and held to 512 pixels a glyph. Measured: the ui-widgets example in a browser at 1024 by 819 (EXPAND, 1.28 times its design), its labels' in-between pixels from 1.72 to 1.28 a solid one. Test: `wgf_gfx_text_test` measures under FIT at twice (drawn at twice), at 2.3 times (at 2.25), and a 400-pixel size held to 512. The zoom's part isn't tested: the dummy backend draws nothing to read. helix's own fix, after comparing notes: glyphs made lazily at the drawn size in a cache of its own, as libwgf's are; its other two causes (raylib's POINT filtering, and no high-DPI flag) libwgf hasn't. Left: documents (RmlUi) at the DPI scale, and INTEGER's pixel art is exact anyway.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

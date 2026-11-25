@@ -613,15 +613,55 @@ wgf_texture_filter_t wgf_font_get_filter(wgf_font_t font)
 /* --- layout ------------------------------------------------------------------ */
 
 /* Ported from wgrender's wgr_text.c: text is laid out at the size it is rasterized
- * at, the logical size times the frame's pixel density, and every measure is
- * divided back by that density, so what is measured is what is drawn. */
+ * at, the logical size times the framebuffer pixels a logical pixel is, and every
+ * measure is divided back by that, so what is measured is what is drawn. */
 
-/* Framebuffer pixels per logical pixel: glyphs are rasterized at size times this
- * and drawn scaled back, so they land 1:1 on the pixels. */
-static float pixel_scale(void)
+#define RASTER_MOST 512.0f /* a glyph's size in pixels at most: past it, magnified */
+
+/* A scale rounded to a step, so a window dragged larger rasterizes a few sizes, not one a
+ * frame: up to 4, eighths (the usual DPI scales, 1.25, 1.5, 2, exactly); past it, eight
+ * steps an octave. */
+static float step_scale(float scale)
 {
-    const float scale = wgf_render_get_dpi_scale();
-    return scale > 0.0f ? scale : 1.0f;
+    if (scale <= 0.0f) return 1.0f;
+    if (scale <= 4.0f) {
+        const float eighths = floorf(scale * 8.0f + 0.5f);
+        return (eighths < 1.0f ? 1.0f : eighths) / 8.0f;
+    }
+    {
+        /* 2 to the k/8, k 0 to 8: the steps within an octave */
+        static const float steps[9] = {1.0f,        1.09050773f, 1.18920712f, 1.29683955f, 1.41421356f,
+                                       1.54221083f, 1.68179283f, 1.83400809f, 2.0f};
+        float octave = 4.0f, nearest = 1.0f, ratio;
+        int k;
+        while (scale >= octave * 2.0f) octave *= 2.0f;
+        ratio = scale / octave;
+        for (k = 0; k < 9; k++) {
+            if (fabsf(steps[k] - ratio) < fabsf(nearest - ratio)) nearest = steps[k];
+        }
+        return octave * nearest;
+    }
+}
+
+/* What glyphs of `size` are rasterized at: the frame's pixels a logical pixel (the
+ * presentation's scale, the DPI scale under NONE) times `zoom` (a 2D stage's view and the
+ * actor's scale), stepped, and held to RASTER_MOST pixels a glyph. Drawn scaled back, the
+ * glyphs land 1:1 on the pixels, at any window size. */
+static float raster_scale(float size, float zoom)
+{
+    const float scale = step_scale(wgf_gfx_priv_render_get_pixel_scale() * (zoom > 0.0f ? zoom : 1.0f));
+    const float pixels = size > 0.0f ? size : WGF_GFX_PRIV_FONT_DEFAULT_SIZE;
+    return pixels * scale > RASTER_MOST ? RASTER_MOST / pixels : scale;
+}
+
+/* How much a 2D matrix (column-major) scales, its larger axis's: 0 none given. */
+static float matrix_zoom(const float *matrix)
+{
+    float x, y;
+    if (matrix == NULL) return 0.0f;
+    x = sqrtf(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+    y = sqrtf(matrix[4] * matrix[4] + matrix[5] * matrix[5]);
+    return x > y ? x : y;
 }
 
 /* Select `font` at `size` logical pixels (WGF_GFX_PRIV_FONT_DEFAULT_SIZE for 0 or
@@ -890,7 +930,7 @@ static float align_offset(float extent, int align) /* 0 start, 1 middle, 2 end *
 
 wgf_vec2_t wgf_font_measure(wgf_handle_t font, const char *text, float size)
 {
-    const float scale = pixel_scale();
+    const float scale = raster_scale(size, 0.0f);
     float widest = 0.0f, line_height = 0.0f;
     int lines;
     if (text == NULL || !use_font(font, size, scale, 0xFFFFFFFFu)) return wgf_vec2_make(0.0f, 0.0f);
@@ -919,7 +959,8 @@ bool wgf_gfx_priv_font_block_bounds(wgf_handle_t font, const char *text, float s
                                    wgf_text_halign_t halign, wgf_text_valign_t valign, float *left, float *top,
                                    float *width, float *height)
 {
-    return block_bounds_at(font, text, size, pixel_scale(), wrap_width, halign, valign, left, top, width, height);
+    return block_bounds_at(font, text, size, raster_scale(size, 0.0f), wrap_width, halign, valign, left, top, width,
+                           height);
 }
 
 bool wgf_gfx_priv_font_block_bounds_3d(wgf_handle_t font, const char *text, float size, float wrap_width,
@@ -951,7 +992,7 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
                                  float wrap_width, wgf_text_halign_t halign, wgf_text_valign_t valign,
                                  const float *matrix)
 {
-    const float scale = pixel_scale();
+    const float scale = raster_scale(size, matrix_zoom(matrix));
     float widest = 0.0f, line_height = 0.0f, width;
     block_draw_t ctx;
     int lines;
@@ -1112,7 +1153,7 @@ void wgf_gfx_priv_font_draw_block_3d(wgf_handle_t font, const char *text, float 
 bool wgf_gfx_priv_font_vertical_metrics(wgf_handle_t font, float size, float *ascender, float *descender,
                                         float *line_height)
 {
-    const float scale = pixel_scale();
+    const float scale = raster_scale(size, 0.0f);
     float a = 0.0f, d = 0.0f, h = 0.0f;
     if (!use_font(font, size, scale, 0xFFFFFFFFu)) return false;
     vertical_metrics(&a, &d, &h);
@@ -1124,7 +1165,7 @@ bool wgf_gfx_priv_font_vertical_metrics(wgf_handle_t font, float size, float *as
 
 float wgf_gfx_priv_font_span_width(wgf_handle_t font, const char *start, const char *end, float size)
 {
-    const float scale = pixel_scale();
+    const float scale = raster_scale(size, 0.0f);
     if (start == NULL || end <= start || !use_font(font, size, scale, 0xFFFFFFFFu)) return 0.0f;
     return span_width(start, end) / scale;
 }
@@ -1149,7 +1190,7 @@ static void add_quad(const float q[8], void *user)
 int wgf_gfx_priv_font_quads(wgf_handle_t font, const char *start, const char *end, float size, float x,
                             float baseline, int page, float *out, int max_quads)
 {
-    const float scale = pixel_scale();
+    const float scale = raster_scale(size, 0.0f);
     FONStextIter iter;
     FONSquad quad;
     int n = 0;

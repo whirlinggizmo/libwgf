@@ -5220,7 +5220,8 @@ export declare const Font: {
      * the lines' height together.
      *
      * - A `size` of 0 or less uses 16. A bitmap font's line is `size` high.
-     * - The text is measured at the frame's pixel density, as it is drawn.
+     * - The text is measured at the pixels a logical pixel is in the frame (the DPI scale, or a
+     *   presentation's scale), as it is drawn.
      * - A bitmap font is measured with its advances, kerning, and letter spacing, as its glyphs
      *   are placed.
      * - Newlines break lines, and nothing wraps.

@@ -29,6 +29,11 @@ void wgf_gfx_priv_begin_frame(void);
 void wgf_gfx_priv_end_frame(void);
 bool wgf_gfx_priv_is_in_frame(void);
 
+/* Framebuffer pixels per logical pixel in the frame: the presentation's scale (the DPI scale
+ * under NONE; the larger axis's under STRETCH), 1 inside a target; before a frame, the DPI
+ * scale. What text is rasterized at, so its glyphs land 1:1 on the pixels. */
+float wgf_gfx_priv_render_get_pixel_scale(void);
+
 /* Between wgf_gfx_priv_start and _stop: the GPU can be used. Drawing is recorded only
  * inside a frame, so a draw outside one can't land in the next. */
 bool wgf_gfx_priv_render_is_running(void);
