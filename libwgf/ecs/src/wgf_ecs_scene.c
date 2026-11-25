@@ -1171,10 +1171,9 @@ static void *prepare(const char *path)
     return data;
 }
 
-/* Set by wgf_scene_enable_reload: a scene's file loaded again, what it made changed to it.
- * NULL: scenes don't load again, and nothing is kept for it. */
-static void (*loaded_again)(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was,
-                            const wgf_ecs_priv_scene_data_t *now);
+/* Set by wgf_scene_enable_reload: what a scene's file loaded again changes, and what it keeps
+ * to change (wgf_ecs_scene_reload.c). NULL: scenes don't load again, and nothing is kept. */
+static const wgf_ecs_priv_scene_reload_t *scene_reload;
 
 /* The file's data the scene's, READY; in place of what it held when it loads again, what it
  * made changed to the new file (again). */
@@ -1191,7 +1190,8 @@ static wgf_core_priv_load_step_t finish(void *prepared, wgf_handle_t resource)
     was = scene_ptr->data;
     scene_ptr->data = now;
     if (was != NULL) {
-        if (loaded_again != NULL) loaded_again(resource, was, now); /* only then is its loader one that reloads */
+        /* only with scene reload is its loader one that reloads */
+        if (scene_reload != NULL) scene_reload->again(resource, was, now);
         wgf_ecs_priv_scene_data_free(was);
     }
     wgf_core_priv_resource_loaded(resource, NULL);
@@ -1216,16 +1216,14 @@ static const wgf_core_priv_loader_t reloading_loader = {"scene", prepare, finish
 static const wgf_core_priv_loader_t *loader_of(const char *path)
 {
     (void)path;
-    return loaded_again != NULL ? &reloading_loader : &loader;
+    return scene_reload != NULL ? &reloading_loader : &loader;
 }
-
-static void forget_scene(wgf_scene_t scene);
 
 static void free_scene(wgf_handle_t scene, void *record)
 {
     scene_t *scene_ptr = (scene_t *)record;
     int i;
-    forget_scene(scene);
+    if (scene_reload != NULL) scene_reload->forget(scene); /* what it made is no longer its */
     for (i = 0; scene_ptr->prefabs != NULL && scene_ptr->data != NULL && i < scene_ptr->data->count; i++) {
         if (scene_ptr->prefabs[i] != 0) wgf_core_priv_handle_pool_free(&prefab_pool, scene_ptr->prefabs[i]);
     }
@@ -1363,91 +1361,18 @@ static void resolve_tree(wgf_actor_t actor)
 
 /* ---- loading again in place ------------------------------------------------------ */
 
-/* What scenes made, kept where scene reload is enabled (wgf_scene_enable_reload), to change in
- * place when a scene's file loads again (wgf_ecs_scene_reload.c, the comparison and the
- * changes, reached through loaded_again): each actor with its block, and each parent an
- * instantiate put a scene's top actors under. */
-typedef wgf_ecs_priv_scene_made_t made_t;
-typedef wgf_ecs_priv_scene_placed_t placed_t;
-
-static struct {
-    made_t *at;
-    int count, capacity;
-} made;
-
-static struct {
-    placed_t *at;
-    int count, capacity;
-} placed;
-
-static bool changing; /* a scene's file loading again: its records walked by index, none compacted */
-
-/* The records of actors gone, and of scenes let go of, dropped. */
-static void compact(void)
-{
-    int i, kept = 0;
-    for (i = 0; i < made.count; i++) {
-        if (made.at[i].scene != 0 && wgf_handle_is_alive(made.at[i].actor)) made.at[kept++] = made.at[i];
-    }
-    made.count = kept;
-    for (i = kept = 0; i < placed.count; i++) {
-        if (placed.at[i].scene != 0 && (placed.at[i].parent == 0 || wgf_handle_is_alive(placed.at[i].parent))) {
-            placed.at[kept++] = placed.at[i];
-        }
-    }
-    placed.count = kept;
-}
-
-/* `actor`, made from block `thing` of the scene being made, kept (the hook make and overlay
- * call); nothing where reload isn't enabled. */
+/* `actor`, made from block `thing` of the scene being made, kept by scene reload to change in
+ * place when the file loads again (the hook make and overlay call); nothing where reload isn't
+ * enabled. */
 static void remember(int thing, wgf_actor_t actor, bool node)
 {
-    if (loaded_again == NULL || making == 0 || actor == 0) return;
-    if (made.count == made.capacity && !changing) compact();
-    if (made.count == made.capacity) {
-        const int capacity = made.capacity > 0 ? made.capacity * 2 : 64;
-        made_t *grown = (made_t *)realloc(made.at, sizeof(made_t) * (size_t)capacity);
-        if (grown == NULL) return; /* not changed when its file loads again: nothing else lost */
-        made.at = grown;
-        made.capacity = capacity;
-    }
-    made.at[made.count].scene = making;
-    made.at[made.count].thing = thing;
-    made.at[made.count].actor = actor;
-    made.at[made.count].node = node;
-    made.count++;
+    if (scene_reload != NULL && making != 0 && actor != 0) scene_reload->remember(making, thing, actor, node);
 }
 
-/* The parent an instantiate of the scene being made puts its top actors under, kept once. */
+/* The parent an instantiate of the scene being made puts its top actors under, kept alike. */
 static void remember_parent(wgf_actor_t parent)
 {
-    int i;
-    if (loaded_again == NULL || making == 0) return;
-    for (i = 0; i < placed.count; i++) {
-        if (placed.at[i].scene == making && placed.at[i].parent == parent) return;
-    }
-    if (placed.count == placed.capacity) {
-        const int capacity = placed.capacity > 0 ? placed.capacity * 2 : 8;
-        placed_t *grown = (placed_t *)realloc(placed.at, sizeof(placed_t) * (size_t)capacity);
-        if (grown == NULL) return;
-        placed.at = grown;
-        placed.capacity = capacity;
-    }
-    placed.at[placed.count].scene = making;
-    placed.at[placed.count].parent = parent;
-    placed.count++;
-}
-
-/* A scene let go of: what it made is no longer its. */
-static void forget_scene(wgf_scene_t scene)
-{
-    int i;
-    for (i = 0; i < made.count; i++) {
-        if (made.at[i].scene == scene) made.at[i].scene = 0;
-    }
-    for (i = 0; i < placed.count; i++) {
-        if (placed.at[i].scene == scene) placed.at[i].scene = 0;
-    }
+    if (scene_reload != NULL && making != 0) scene_reload->remember_parent(making, parent);
 }
 
 /* ---- what the scene's reload reaches (wgf_ecs_scene_priv.h) ---------------------------- */
@@ -1500,32 +1425,9 @@ wgf_scene_t wgf_ecs_priv_scene_set_making(wgf_scene_t scene)
     return before;
 }
 
-made_t *wgf_ecs_priv_scene_made(int *count)
+void wgf_ecs_priv_scene_set_reload(const wgf_ecs_priv_scene_reload_t *reload)
 {
-    *count = made.count;
-    return made.at;
-}
-
-placed_t *wgf_ecs_priv_scene_placed(int *count)
-{
-    *count = placed.count;
-    return placed.at;
-}
-
-void wgf_ecs_priv_scene_compact(void)
-{
-    compact();
-}
-
-void wgf_ecs_priv_scene_set_changing(bool on)
-{
-    changing = on;
-}
-
-void wgf_ecs_priv_scene_set_reload(void (*again)(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was,
-                                                const wgf_ecs_priv_scene_data_t *now))
-{
-    loaded_again = again;
+    scene_reload = reload;
 }
 
 /* `scene`'s file loaded again: its prefabs' handles following them by their names (one gone
@@ -1569,7 +1471,7 @@ void wgf_ecs_priv_scene_follow(wgf_scene_t scene, const wgf_ecs_priv_scene_data_
 
 bool wgf_scene_is_reload_enabled(void)
 {
-    return loaded_again != NULL;
+    return scene_reload != NULL;
 }
 
 int wgf_scene_instantiate(wgf_scene_t scene, wgf_actor_t parent)
@@ -1695,10 +1597,7 @@ void wgf_ecs_priv_scene_shutdown(void)
     free(deferred);
     deferred = NULL;
     deferred_count = deferred_capacity = 0;
-    free(made.at);
-    free(placed.at);
-    memset(&made, 0, sizeof(made));
-    memset(&placed, 0, sizeof(placed));
+    if (scene_reload != NULL) scene_reload->shutdown();
     if (!pool_ready) return;
     wgf_core_priv_resource_unregister(&scene_pool);
     wgf_core_priv_handle_pool_destroy(&scene_pool);

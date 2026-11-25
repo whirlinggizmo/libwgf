@@ -13,13 +13,114 @@
 /* A scene loaded again in place (wgf_scene.h): what changed between a block as its actors were
  * made and as the file has it now, changed on them, block by block, matched by their paths.
  * A file of its own, linked by wgf_scene_enable_reload alone, which hands the scene file its
- * entry (wgf_ecs_priv_scene_set_reload): a program that never calls it links none of this. */
+ * side (wgf_ecs_priv_scene_set_reload): a program that never calls it links none of this, the
+ * records of what scenes made among it. */
 
 typedef wgf_ecs_priv_scene_setting_t setting_t;
 typedef wgf_ecs_priv_scene_line_t line_t;
 typedef wgf_ecs_priv_scene_thing_t thing_t;
-typedef wgf_ecs_priv_scene_made_t made_t;
-typedef wgf_ecs_priv_scene_placed_t placed_t;
+
+/* ---- what scenes made ------------------------------------------------------------- */
+
+/* What scenes made, kept to change in place when a scene's file loads again: each actor with
+ * its block (an index into its scene's data, moved along as the file loads again), and each
+ * parent an instantiate put a scene's top actors under. */
+typedef struct made_t {
+    wgf_scene_t scene; /* 0: let go of */
+    int thing;
+    wgf_actor_t actor;
+    bool node; /* a glTF file's node the block's lines were put on: the file's, never removed */
+} made_t;
+
+typedef struct placed_t {
+    wgf_scene_t scene;
+    wgf_actor_t parent; /* 0: none */
+} placed_t;
+
+static struct {
+    made_t *at;
+    int count, capacity;
+} made;
+
+static struct {
+    placed_t *at;
+    int count, capacity;
+} placed;
+
+static bool changing; /* a scene's file loading again: its records walked by index, none compacted */
+
+/* The records of actors gone, and of scenes let go of, dropped. */
+static void compact(void)
+{
+    int i, kept = 0;
+    for (i = 0; i < made.count; i++) {
+        if (made.at[i].scene != 0 && wgf_handle_is_alive(made.at[i].actor)) made.at[kept++] = made.at[i];
+    }
+    made.count = kept;
+    for (i = kept = 0; i < placed.count; i++) {
+        if (placed.at[i].scene != 0 && (placed.at[i].parent == 0 || wgf_handle_is_alive(placed.at[i].parent))) {
+            placed.at[kept++] = placed.at[i];
+        }
+    }
+    placed.count = kept;
+}
+
+static void remember(wgf_scene_t scene, int thing, wgf_actor_t actor, bool node)
+{
+    if (made.count == made.capacity && !changing) compact();
+    if (made.count == made.capacity) {
+        const int capacity = made.capacity > 0 ? made.capacity * 2 : 64;
+        made_t *grown = (made_t *)realloc(made.at, sizeof(made_t) * (size_t)capacity);
+        if (grown == NULL) return; /* not changed when its file loads again: nothing else lost */
+        made.at = grown;
+        made.capacity = capacity;
+    }
+    made.at[made.count].scene = scene;
+    made.at[made.count].thing = thing;
+    made.at[made.count].actor = actor;
+    made.at[made.count].node = node;
+    made.count++;
+}
+
+/* Kept once. */
+static void remember_parent(wgf_scene_t scene, wgf_actor_t parent)
+{
+    int i;
+    for (i = 0; i < placed.count; i++) {
+        if (placed.at[i].scene == scene && placed.at[i].parent == parent) return;
+    }
+    if (placed.count == placed.capacity) {
+        const int capacity = placed.capacity > 0 ? placed.capacity * 2 : 8;
+        placed_t *grown = (placed_t *)realloc(placed.at, sizeof(placed_t) * (size_t)capacity);
+        if (grown == NULL) return;
+        placed.at = grown;
+        placed.capacity = capacity;
+    }
+    placed.at[placed.count].scene = scene;
+    placed.at[placed.count].parent = parent;
+    placed.count++;
+}
+
+static void forget(wgf_scene_t scene)
+{
+    int i;
+    for (i = 0; i < made.count; i++) {
+        if (made.at[i].scene == scene) made.at[i].scene = 0;
+    }
+    for (i = 0; i < placed.count; i++) {
+        if (placed.at[i].scene == scene) placed.at[i].scene = 0;
+    }
+}
+
+static void free_records(void)
+{
+    free(made.at);
+    free(placed.at);
+    memset(&made, 0, sizeof(made));
+    memset(&placed, 0, sizeof(placed));
+}
+
+/* ---- what changed ----------------------------------------------------------------- */
 
 /* A block's settings as an actor is made of them: its prefab's first (and that one's), then its
  * own, the last of each line kind, behavior, and key kept. A fact with no setting is a line's
@@ -172,33 +273,29 @@ static bool change_block(wgf_actor_t actor, const wgf_ecs_priv_scene_data_t *was
 static void again(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was, const wgf_ecs_priv_scene_data_t *now)
 {
     wgf_actor_t *fresh = NULL;
-    made_t *list;
-    placed_t *places;
     int i, j, count, place_count, fresh_count = 0;
     wgf_scene_t before;
     wgf_ecs_priv_scene_follow(scene, was, now);
     before = wgf_ecs_priv_scene_set_making(scene);
     /* each actor it made: changed to its block in the new file, removed with it, or made again
        for a kind that changed (its handle a new one); its record moved to the new block */
-    wgf_ecs_priv_scene_compact();
-    wgf_ecs_priv_scene_set_changing(true);
-    wgf_ecs_priv_scene_made(&count);
+    compact();
+    changing = true;
+    count = made.count;
     for (i = 0; i < count; i++) {
-        made_t m;
+        const made_t m = made.at[i]; /* by index: making an actor may move the records */
         int now_thing;
-        list = wgf_ecs_priv_scene_made(&j); /* made again: making an actor may move the records */
-        m = list[i];
         if (m.scene != scene || !wgf_handle_is_alive(m.actor)) continue;
         now_thing = wgf_ecs_priv_scene_find_path(now, was->things[m.thing].path, was->things[m.thing].prefab);
         if (now_thing < 0) {
-            list[i].scene = 0;
+            made.at[i].scene = 0;
             if (!m.node) wgf_actor_destroy(m.actor, WGF_ACTOR_DESTROY_CHILDREN);
             continue;
         }
         if (!m.node && wgf_ecs_priv_scene_kind_of(now, now_thing) != wgf_ecs_priv_scene_kind_of(was, m.thing)) {
             const wgf_actor_t parent = wgf_actor_get_parent(m.actor);
             wgf_actor_t *grown;
-            list[i].scene = 0;
+            made.at[i].scene = 0;
             wgf_actor_destroy(m.actor, WGF_ACTOR_DESTROY_CHILDREN);
             grown = (wgf_actor_t *)realloc(fresh, sizeof(wgf_actor_t) * (size_t)(fresh_count + 1));
             if (grown == NULL) continue;
@@ -208,12 +305,12 @@ static void again(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was, const
             continue;
         }
         change_block(m.actor, was, m.thing, now, now_thing);
-        list[i].thing = now_thing;
+        made.at[i].thing = now_thing;
     }
     /* each block new to the file, made under each actor of its parent's block (one new too is
        made with its parent), or, at the top, under each parent an instantiate put the scene */
-    wgf_ecs_priv_scene_made(&count);
-    wgf_ecs_priv_scene_placed(&place_count);
+    count = made.count;
+    place_count = placed.count;
     for (j = 0; j < now->count; j++) {
         const thing_t *block = &now->things[j];
         if (wgf_ecs_priv_scene_find_path(was, block->path, block->prefab) >= 0) continue;
@@ -225,17 +322,13 @@ static void again(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was, const
         for (i = 0; i < (block->parent >= 0 ? count : place_count); i++) {
             wgf_actor_t parent, actor;
             wgf_actor_t *grown;
-            int unused;
             if (block->parent >= 0) {
-                list = wgf_ecs_priv_scene_made(&unused);
-                if (list[i].scene != scene || list[i].thing != block->parent || !wgf_handle_is_alive(list[i].actor)) {
-                    continue;
-                }
-                parent = list[i].actor;
+                const made_t *m = &made.at[i];
+                if (m->scene != scene || m->thing != block->parent || !wgf_handle_is_alive(m->actor)) continue;
+                parent = m->actor;
             } else {
-                places = wgf_ecs_priv_scene_placed(&unused);
-                if (places[i].scene != scene) continue;
-                parent = places[i].parent;
+                if (placed.at[i].scene != scene) continue;
+                parent = placed.at[i].parent;
             }
             actor = wgf_ecs_priv_scene_make(now, j, parent, block->parent >= 0 ? 1 : 0);
             grown = actor != 0 ? (wgf_actor_t *)realloc(fresh, sizeof(wgf_actor_t) * (size_t)(fresh_count + 1)) : NULL;
@@ -245,7 +338,7 @@ static void again(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was, const
         }
     }
     wgf_ecs_priv_scene_set_making(before);
-    wgf_ecs_priv_scene_set_changing(false);
+    changing = false;
     for (i = 0; i < fresh_count; i++) wgf_ecs_priv_scene_resolve(fresh[i]); /* all made: each can refer to any */
     free(fresh);
 }
@@ -253,6 +346,7 @@ static void again(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was, const
 bool wgf_scene_enable_reload(void)
 {
     wgf_asset_enable_reload(); /* what loads anything again */
-    wgf_ecs_priv_scene_set_reload(again);
+    static const wgf_ecs_priv_scene_reload_t side = {again, remember, remember_parent, forget, free_records};
+    wgf_ecs_priv_scene_set_reload(&side);
     return true;
 }

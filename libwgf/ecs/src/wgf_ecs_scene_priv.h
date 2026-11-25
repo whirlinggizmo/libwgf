@@ -62,21 +62,6 @@ struct wgf_ecs_priv_scene_data_t {
     int actors, prefabs; /* at the top */
 };
 
-/* What a scene made, kept where scene reload is enabled: an actor with its block (an index
- * into its scene's data, moved along as the file loads again), and a parent an instantiate
- * put the scene's top actors under. */
-typedef struct wgf_ecs_priv_scene_made_t {
-    wgf_scene_t scene; /* 0: let go of */
-    int thing;
-    wgf_actor_t actor;
-    bool node; /* a glTF file's node the block's lines were put on: the file's, never removed */
-} wgf_ecs_priv_scene_made_t;
-
-typedef struct wgf_ecs_priv_scene_placed_t {
-    wgf_scene_t scene;
-    wgf_actor_t parent; /* 0: none */
-} wgf_ecs_priv_scene_placed_t;
-
 /* A line kind's role (WGF_ECS_PRIV_SCENE_ROLE_*) and what it is (an actor's kind, a
  * component); -1 for one that isn't. */
 int wgf_ecs_priv_scene_role(int kind);
@@ -97,17 +82,20 @@ wgf_actor_t wgf_ecs_priv_scene_make(const wgf_ecs_priv_scene_data_t *data, int t
 void wgf_ecs_priv_scene_resolve(wgf_actor_t actor);
 /* The scene whose blocks are being made, set: the one before. */
 wgf_scene_t wgf_ecs_priv_scene_set_making(wgf_scene_t scene);
-/* What scenes made, and where they were instantiated: valid until an actor is made. */
-wgf_ecs_priv_scene_made_t *wgf_ecs_priv_scene_made(int *count);
-wgf_ecs_priv_scene_placed_t *wgf_ecs_priv_scene_placed(int *count);
-/* The records of actors gone, and of scenes let go of, dropped; and while `on`, none
- * dropped, the records walked by index as a file loads again. */
-void wgf_ecs_priv_scene_compact(void);
-void wgf_ecs_priv_scene_set_changing(bool on);
-/* What a scene's file loaded again calls (wgf_scene_enable_reload sets it): until then scenes
- * don't load again, and nothing is kept for it. */
-void wgf_ecs_priv_scene_set_reload(void (*again)(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was,
-                                                const wgf_ecs_priv_scene_data_t *now));
+/* Scene reload's side (wgf_ecs_scene_reload.c), handed to the scene file by
+ * wgf_scene_enable_reload: until then scenes don't load again, nothing is kept for it, and
+ * none of it is linked. `again`: a scene's file loaded again, what it made changed to the
+ * new file. `remember`: an actor made from block `thing` of `scene` (a glTF file's node:
+ * `node`). `remember_parent`: a parent an instantiate of `scene` put its top actors under.
+ * `forget`: a scene let go of. `shutdown`: the records freed. */
+typedef struct wgf_ecs_priv_scene_reload_t {
+    void (*again)(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was, const wgf_ecs_priv_scene_data_t *now);
+    void (*remember)(wgf_scene_t scene, int thing, wgf_actor_t actor, bool node);
+    void (*remember_parent)(wgf_scene_t scene, wgf_actor_t parent);
+    void (*forget)(wgf_scene_t scene);
+    void (*shutdown)(void);
+} wgf_ecs_priv_scene_reload_t;
+void wgf_ecs_priv_scene_set_reload(const wgf_ecs_priv_scene_reload_t *reload);
 /* `scene`'s file loaded again: its prefabs' handles and what waits for a glTF file following
  * their blocks by their paths. */
 void wgf_ecs_priv_scene_follow(wgf_scene_t scene, const wgf_ecs_priv_scene_data_t *was,
