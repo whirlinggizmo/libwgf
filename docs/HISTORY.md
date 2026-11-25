@@ -1187,6 +1187,48 @@ Rob, after the reload and text work: the comparison's speed and size rows taken 
 
 helix-raylib's control: the bunnymark 0.27 and 4.63 ms at 10k and 200k (its recorded 0.26 and 4.64), the robots 2.04 and 16.34 at 50 and 400 (1.95 and 15.27, the 400 7% slower than its row). The batch and the robots are where they were, the batch natively a tenth faster. An actor a bunny is 7 to 17% slower in a page and the same natively: not chased. The batch's 150k cell still sits above its 200k one. Size, a page's code as helix counts it (the page, its JS, its wasm, gzip -9): the bunnymark 107.8 KB (110.8) and the robots 181.7 (185.9); helix-raylib's 51.5 and 86.8.
 
+## Against PixiJS and PixiJS 3D (2026-11-25)
+
+Rob's: libwgf against PixiJS 8.23.0 and @pixi/3d 0.1.0, on libwgf's own two programs.
+
+**The PixiJS programs** are in `~/projects/local/pixijs/benchmarks/`, outside the repository, since they need npm and a bundler. They are written the way PixiJS's docs write them:
+- The bunnymark draws a `Sprite` per bunny, like libwgf's actor per bunny. With `batch=1` it draws a `ParticleContainer` that uploads only positions, like libwgf's sprite batch.
+- The robots make a `Model3D` per robot from one loaded file. Each robot is posed by `gotoAndStop` and drawn with a shared `FlatMaterial`.
+- Both print the same JSON line as libwgf's programs, with the same seed, scene and timing.
+
+**How it was run:**
+- On coinspinner, at 5c366b3, with the pages built for the comparison above.
+- WebGL2 over ANGLE and Vulkan, in pages timed by helix's `tools/speed/run_page.cjs`, with helix-raylib's built pages as the control.
+- Each cell is the median of three runs taken round-robin, with the load between 1.2 and 2.0.
+
+Frame time in ms:
+
+| program | 10k | 50k | 100k | 150k | 200k | most held |
+|---|---:|---:|---:|---:|---:|---:|
+| libwgf, the sprite batch | 0.09 | 0.38 | 0.79 | 2.38 | 1.66 | |
+| PixiJS, a ParticleContainer | 0.13 | 0.59 | 1.35 | 2.24 | 3.00 | |
+| libwgf, an actor per bunny | 0.93 | 4.19 | | | | 65k (the actor limit) |
+| PixiJS, a Sprite per bunny | 0.73 | 3.58 | | | | 117k |
+
+| program | 50 robots | 200 | 400 |
+|---|---:|---:|---:|
+| libwgf | 0.88 | 3.45 | 6.95 |
+| PixiJS 3D | 0.43 | 1.43 | 2.41 |
+
+**The results:**
+- **libwgf's sprite batch** is about 1.5 to 1.8 times faster than PixiJS's particles at every count but 150k, where libwgf's cell is known to sit above its 200k one.
+- **PixiJS's sprites** are 15 to 20% faster than libwgf's actors, and PixiJS has no actor limit.
+- **PixiJS 3D's robots** are 2 to 2.9 times faster than libwgf's, and the gap grows with the count. libwgf poses each joint as an actor in the tree, while PixiJS keeps a skeleton's pose in flat arrays. That is the likely reason, not yet profiled.
+
+**Size:** each page's code (gzip -9, what the page fetched but its assets) is:
+
+| program | libwgf | PixiJS |
+|---|---:|---:|
+| bunnymark | 107.8 KB | 144.5 KB |
+| robots | 181.7 KB | 294.9 KB, which includes the WebGPU renderer, fetched even under WebGL |
+
+helix-raylib's control: the bunnymark 0.27 and 4.80 ms at 10k and 200k, the robots 2.03 and 15.57 at 50 and 400, all within 5% of its rows.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
