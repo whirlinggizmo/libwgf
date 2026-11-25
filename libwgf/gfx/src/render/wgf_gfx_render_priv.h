@@ -33,6 +33,8 @@ bool wgf_gfx_priv_is_in_frame(void);
  * under NONE; the larger axis's under STRETCH), 1 inside a target; before a frame, the DPI
  * scale. What text is rasterized at, so its glyphs land 1:1 on the pixels. */
 float wgf_gfx_priv_render_get_pixel_scale(void);
+/* Where a logical point lands on the framebuffer in the frame: offset + logical * scale. */
+void wgf_gfx_priv_render_get_presentation(float *offset_x, float *offset_y, float *scale_x, float *scale_y);
 
 /* Between wgf_gfx_priv_start and _stop: the GPU can be used. Drawing is recorded only
  * inside a frame, so a draw outside one can't land in the next. */

@@ -137,13 +137,13 @@ int main(void)
         }
         wgf_gfx_priv_end_frame();
         /* a design scaled up to the window: rasterized at the presentation's scale, so a
-           larger window isn't the design's glyphs magnified; stepped to eighths; and held
-           to 512 pixels a glyph, past which it is magnified */
+           larger window isn't the design's glyphs magnified; stepped to a whole pixel of
+           the glyphs' size; and held to 512 pixels a glyph, past which it is magnified */
         {
             wgf_vec2_t twice, stepped, most;
             begin_frame(64, 64, 1.0f); /* measured at one pixel a pixel */
             twice = wgf_font_measure(0, "Hello", 32);
-            stepped = wgf_font_measure(0, "Hello", 36);
+            stepped = wgf_font_measure(0, "Hello", 37);
             most = wgf_font_measure(0, "Hello", 512);
             wgf_gfx_priv_end_frame();
             wgf_presentation_set(WGF_PRESENTATION_MODE_FIT, 100, 100);
@@ -151,8 +151,8 @@ int main(void)
             expect(wgf_font_measure(0, "Hello", 16).x == twice.x / 2, "under FIT at twice: drawn at twice");
             wgf_gfx_priv_end_frame();
             begin_frame(230, 230, 1.0f);
-            expect(fabsf(wgf_font_measure(0, "Hello", 16).x - stepped.x / 2.25f) < 0.001f,
-                   "at 2.3 times: drawn at 2.25, the nearest eighth");
+            expect(fabsf(wgf_font_measure(0, "Hello", 16).x - stepped.x * 16.0f / 37.0f) < 0.001f,
+                   "at 2.3 times: 16 pixels drawn at 37, 36.8 to the nearest whole pixel");
             expect(fabsf(wgf_font_measure(0, "Hello", 400).x - most.x * 400.0f / 512.0f) < 0.01f,
                    "a glyph past 512 pixels: drawn at 512, magnified");
             wgf_gfx_priv_end_frame();

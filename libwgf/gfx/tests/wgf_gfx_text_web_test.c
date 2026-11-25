@@ -1,4 +1,6 @@
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <GLES3/gl3.h>
@@ -60,6 +62,26 @@ static int lit(int x0, int y0, int x1, int y1)
     return count;
 }
 
+/* The frame's pixels, into `out` (64 by 64, RGBA, bottom row first). */
+static void read_frame(unsigned char *out)
+{
+    glReadPixels(0, 0, 64, 64, GL_RGBA, GL_UNSIGNED_BYTE, out);
+}
+
+/* Whether `a` shifted `dx` pixels right is `b`, every pixel's red within one. */
+static bool shifted(const unsigned char *a, const unsigned char *b, int dx)
+{
+    int x, y;
+    for (y = 0; y < 64; y++) {
+        for (x = 0; x < 64; x++) {
+            const int from = x - dx;
+            const int was = from >= 0 && from < 64 ? a[(y * 64 + from) * 4] : 0;
+            if (abs(was - b[(y * 64 + x) * 4]) > 1) return false;
+        }
+    }
+    return true;
+}
+
 static void begin(void)
 {
     wgf_render_set_clear_color(WGF_COLOR_BLACK);
@@ -83,6 +105,26 @@ static void run_test(void)
         unsigned char rgba[4];
         glReadPixels(52, 63 - 52, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
         expect(rgba[0] == 10 && rgba[1] == 200 && rgba[2] == 30, "a shape drawn after text keeps its exact color");
+    }
+
+    /* each glyph's corner on a pixel: text a fraction of a pixel along lights the same
+       pixels as at the nearest whole one, not ones sampled between two */
+    {
+        static unsigned char whole[64 * 64 * 4], less[64 * 64 * 4], more[64 * 64 * 4];
+        begin();
+        wgf_draw_text(0, "Hi", 10, 4, 16, WGF_COLOR_WHITE);
+        wgf_gfx_priv_end_frame();
+        read_frame(whole);
+        begin();
+        wgf_draw_text(0, "Hi", 10.4f, 4.3f, 16, WGF_COLOR_WHITE);
+        wgf_gfx_priv_end_frame();
+        read_frame(less);
+        begin();
+        wgf_draw_text(0, "Hi", 10.6f, 4, 16, WGF_COLOR_WHITE);
+        wgf_gfx_priv_end_frame();
+        read_frame(more);
+        expect(shifted(whole, less, 0), "snapped: at 10.4, 4.3 the pixels at 10, 4");
+        expect(shifted(whole, more, 1), "and at 10.6 the same pixels one to the right");
     }
 
     /* text actors: centered on x 32, then right-aligned to x 60 */

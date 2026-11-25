@@ -65,6 +65,12 @@ bool wgf_gfx_priv_fontstash_render_state(struct FONScontext *context, sg_view *a
                                          sg_shader *shader);
 /* sokol_fontstash's 2D pipeline (blended; the atlas's coverage as alpha); false before it has one. */
 bool wgf_gfx_priv_fontstash_pipeline(struct FONScontext *context, sgl_pipeline *pipeline);
+/* Each glyph's quad fontstash draws snapped to a framebuffer pixel: its top left corner moved
+ * to the nearest one, where a quad's point (x, y) lands on the framebuffer at
+ * (x * ax + bx, y * ay + by) (a view that isn't turned). Installed on the context once
+ * (hook); on for a draw's glyphs alone, then off. */
+void wgf_gfx_priv_fontstash_hook_snapping(struct FONScontext *context);
+void wgf_gfx_priv_fontstash_snap(bool on, float ax, float bx, float ay, float by);
 /* The GPU's context given back: the atlas sent again from fontstash's copy at the next flush. */
 void wgf_gfx_priv_fontstash_restore(struct FONScontext *context);
 

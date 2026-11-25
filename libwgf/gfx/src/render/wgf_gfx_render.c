@@ -937,3 +937,11 @@ float wgf_gfx_priv_render_get_pixel_scale(void)
     const float scale = present.scale_x > present.scale_y ? present.scale_x : present.scale_y;
     return scale > 0.0f ? scale : frame_dpi_scale;
 }
+
+void wgf_gfx_priv_render_get_presentation(float *offset_x, float *offset_y, float *scale_x, float *scale_y)
+{
+    *offset_x = present.offset_x;
+    *offset_y = present.offset_y;
+    *scale_x = present.scale_x > 0.0f ? present.scale_x : frame_dpi_scale;
+    *scale_y = present.scale_y > 0.0f ? present.scale_y : frame_dpi_scale;
+}

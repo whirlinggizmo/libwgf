@@ -617,41 +617,23 @@ wgf_texture_filter_t wgf_font_get_filter(wgf_font_t font)
  * measure is divided back by that, so what is measured is what is drawn. */
 
 #define RASTER_MOST 512.0f /* a glyph's size in pixels at most: past it, magnified */
-
-/* A scale rounded to a step, so a window dragged larger rasterizes a few sizes, not one a
- * frame: up to 4, eighths (the usual DPI scales, 1.25, 1.5, 2, exactly); past it, eight
- * steps an octave. */
-static float step_scale(float scale)
-{
-    if (scale <= 0.0f) return 1.0f;
-    if (scale <= 4.0f) {
-        const float eighths = floorf(scale * 8.0f + 0.5f);
-        return (eighths < 1.0f ? 1.0f : eighths) / 8.0f;
-    }
-    {
-        /* 2 to the k/8, k 0 to 8: the steps within an octave */
-        static const float steps[9] = {1.0f,        1.09050773f, 1.18920712f, 1.29683955f, 1.41421356f,
-                                       1.54221083f, 1.68179283f, 1.83400809f, 2.0f};
-        float octave = 4.0f, nearest = 1.0f, ratio;
-        int k;
-        while (scale >= octave * 2.0f) octave *= 2.0f;
-        ratio = scale / octave;
-        for (k = 0; k < 9; k++) {
-            if (fabsf(steps[k] - ratio) < fabsf(nearest - ratio)) nearest = steps[k];
-        }
-        return octave * nearest;
-    }
-}
+#define RASTER_FINE 64.0f  /* whole pixels up to it, then steps of 4 (helix-raylib's) */
 
 /* What glyphs of `size` are rasterized at: the frame's pixels a logical pixel (the
  * presentation's scale, the DPI scale under NONE) times `zoom` (a 2D stage's view and the
- * actor's scale), stepped, and held to RASTER_MOST pixels a glyph. Drawn scaled back, the
- * glyphs land 1:1 on the pixels, at any window size. */
+ * actor's scale). Stepped by the glyphs' size in pixels, not the scale, so a window dragged
+ * larger rasterizes a few sizes, not one a frame, and a glyph is within half a pixel of its
+ * size: whole pixels up to 64, steps of 4 past it, held to RASTER_MOST. Drawn scaled back,
+ * the glyphs land 1:1 on the pixels, at any window size. */
 static float raster_scale(float size, float zoom)
 {
-    const float scale = step_scale(wgf_gfx_priv_render_get_pixel_scale() * (zoom > 0.0f ? zoom : 1.0f));
-    const float pixels = size > 0.0f ? size : WGF_GFX_PRIV_FONT_DEFAULT_SIZE;
-    return pixels * scale > RASTER_MOST ? RASTER_MOST / pixels : scale;
+    const float scale = wgf_gfx_priv_render_get_pixel_scale() * (zoom > 0.0f ? zoom : 1.0f);
+    const float points = size > 0.0f ? size : WGF_GFX_PRIV_FONT_DEFAULT_SIZE;
+    float pixels = points * (scale > 0.0f ? scale : 1.0f);
+    if (pixels >= RASTER_MOST) pixels = RASTER_MOST;
+    else if (pixels <= RASTER_FINE) pixels = pixels < 1.0f ? 1.0f : floorf(pixels + 0.5f);
+    else pixels = 4.0f * floorf(pixels / 4.0f + 0.5f);
+    return pixels / points;
 }
 
 /* How much a 2D matrix (column-major) scales, its larger axis's: 0 none given. */
@@ -988,6 +970,19 @@ static void draw_line(const char *start, const char *end, int index, void *user)
     else fonsDrawText(fons, x, ctx->top + (float)index * ctx->line_height, start, end);
 }
 
+/* Each glyph's corner on a framebuffer pixel, so it isn't sampled between two: where a
+ * glyph's pixel lands is the presentation's of the 2D matrix's of it scaled back by `scale`,
+ * which is a scale and an offset on each axis when the matrix doesn't turn it. */
+static void snap_glyphs(const float *matrix, float scale)
+{
+    static const float identity[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    const float *m = matrix != NULL ? matrix : identity;
+    float ox, oy, sx, sy;
+    if (fabsf(m[1]) > 1e-6f || fabsf(m[4]) > 1e-6f) return; /* turned: left as it falls */
+    wgf_gfx_priv_render_get_presentation(&ox, &oy, &sx, &sy);
+    wgf_gfx_priv_fontstash_snap(true, sx * m[0] / scale, ox + sx * m[12], sy * m[5] / scale, oy + sy * m[13]);
+}
+
 void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float size, wgf_color_t color,
                                  float wrap_width, wgf_text_halign_t halign, wgf_text_valign_t valign,
                                  const float *matrix)
@@ -1014,7 +1009,9 @@ void wgf_gfx_priv_font_draw_block(wgf_handle_t font, const char *text, float siz
     if (matrix != NULL) sgl_load_matrix(matrix);
     else sgl_load_identity();
     sgl_scale(1.0f / scale, 1.0f / scale, 1.0f);
+    snap_glyphs(matrix, scale);
     walk_lines(text, text + strlen(text), wrap_width * scale, &widest, draw_line, &ctx);
+    wgf_gfx_priv_fontstash_snap(false, 0.0f, 0.0f, 0.0f, 0.0f);
     sgl_load_identity(); /* back as the rest of the frame expects it */
 }
 
@@ -1288,6 +1285,7 @@ static void setup(void)
         return;
     }
     fonsSetErrorCallback(fons, on_fons_error, NULL);
+    wgf_gfx_priv_fontstash_hook_snapping(fons);
     builtin_id = fonsAddFontMem(fons, "builtin", (unsigned char *)jetbrains_mono_ascii_ttf,
                                 (int)sizeof(jetbrains_mono_ascii_ttf), 0);
     if (builtin_id == FONS_INVALID) wgf_log_error("wgf_gfx_font: the built-in font didn't load");
