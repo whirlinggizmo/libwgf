@@ -1169,6 +1169,24 @@ From comparing notes with helix, which made the same fix its own way (helix-rayl
 
 helix's first of its three ways to cut its glyph cache, Rob's to carry: the atlas starts at 512², not 1024², and grows only when a page fills it. It is 8 bits a pixel, so 256 KB on the GPU, and as much again in fontstash's own buffer, where it draws each glyph before it is sent (not a copy kept beside the texture, as raylib's glyph images are: helix's second way, dropping that copy, has nothing to drop here). The atlas grows at a frame's end, so a glyph that doesn't fit is missing (and measures without it) until it has: a 512-pixel glyph, the largest drawn, needs 1024², two growths, so it shows from its third frame. That was already so for a page whose glyphs fill the atlas; a smaller start reaches it sooner.
 
+## The comparison measured again, on Emscripten 7.0.1 (2026-11-25)
+
+Rob, after the reload and text work: the comparison's speed and size rows taken again as on 2026-11-22 ("The comparison measured again"), on coinspinner, at 70300ff: pages by helix's `tools/speed/run_page.cjs` (read-only) with helix-raylib's built programs as the control, natively by `measure_frames.py --native`, each cell the median of three runs taken round-robin. The machine was quiet (load 1.2 to 2.0, helix's session holding off), the display kept awake for the native runs. Frame time in ms, 2026-11-22's in brackets:
+
+| program | where | 10k | 50k | 100k | 150k | 200k | most held |
+|---|---|---:|---:|---:|---:|---:|---:|
+| libwgf, the sprite batch | page | 0.09 (0.10) | 0.41 (0.40) | 0.81 (0.79) | 2.57 (2.52) | 1.75 (1.78) | 1,606k |
+| libwgf, an actor a bunny | page | 1.02 (0.87) | 4.46 (4.18) | | | | 65k (the actor limit) |
+| libwgf, the sprite batch | native | 0.13 (0.18) | 0.41 (0.48) | 0.77 (0.86) | 1.14 (1.26) | 1.53 (1.69) | 2,090k |
+| libwgf, an actor a bunny | native | 0.83 (0.84) | 3.97 (3.87) | | | | 65k |
+
+| program | where | 50 robots | 200 | 400 |
+|---|---|---:|---:|---:|
+| libwgf | page | 1.00 (0.99) | 3.66 (3.58) | 7.40 (7.28) |
+| libwgf | native | 0.64 (0.62) | 2.45 (2.54) | 4.93 (4.85) |
+
+helix-raylib's control: the bunnymark 0.27 and 4.63 ms at 10k and 200k (its recorded 0.26 and 4.64), the robots 2.04 and 16.34 at 50 and 400 (1.95 and 15.27, the 400 7% slower than its row). The batch and the robots are where they were, the batch natively a tenth faster. An actor a bunny is 7 to 17% slower in a page and the same natively: not chased. The batch's 150k cell still sits above its 200k one. Size, a page's code as helix counts it (the page, its JS, its wasm, gzip -9): the bunnymark 107.8 KB (110.8) and the robots 181.7 (185.9); helix-raylib's 51.5 and 86.8.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

@@ -1,5 +1,9 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(xset:*)",
+      "Bash(xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/presentation-mode:*)"
+    ],
     "deny": [
       "Edit(~/projects/github/whirlinggizmo/.github/**)",
       "Edit(~/projects/github/whirlinggizmo/experiments/**)",
