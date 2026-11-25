@@ -193,24 +193,32 @@ static void free_animation(animation_t *anim)
 
 /* Channel `c` at `t` seconds into `out` (3 floats, or a rotation's 4): before its first key
  * the first, after its last the last; between, linear (a rotation the shorter way, nlerped), the key
- * before (STEP), or glTF's cubic Hermite spline through its tangents. */
-static void sample(const wgf_gfx_priv_mesh_channel_t *c, float t, float out[4])
+ * before (STEP), or glTF's cubic Hermite spline through its tangents. `hint` is a key to try
+ * before searching: the key before `t` in the channel sampled last. A clip's channels usually
+ * share their key times, so the hint mostly saves the search. It is left at this channel's key. */
+static void sample(const wgf_gfx_priv_mesh_channel_t *c, float t, float out[4], int *hint)
 {
     const int comp = c->path == WGF_GFX_PRIV_MESH_PATH_ROTATION ? 4 : 3;
     const bool cubic = c->interpolation == WGF_GFX_PRIV_MESH_LERP_CUBIC;
     const int stride = cubic ? comp * 3 : comp, at = cubic ? comp : 0; /* a key's value within its stride */
     int lo = 0, hi = c->key_count - 1, k;
+    bool unit = false; /* true once nlerp has made it unit */
     float u, dt;
     if (c->key_count == 1 || t <= c->times[0]) {
         memcpy(out, &c->values[at], sizeof(float) * (size_t)comp);
     } else if (t >= c->times[hi]) {
         memcpy(out, &c->values[(size_t)hi * (size_t)stride + (size_t)at], sizeof(float) * (size_t)comp);
     } else {
+        if (*hint >= 0 && *hint < hi && c->times[*hint] <= t && t < c->times[*hint + 1]) {
+            lo = *hint;
+            hi = lo + 1;
+        }
         while (hi - lo > 1) { /* the keys around t: times[lo] <= t < times[hi] */
             const int mid = (lo + hi) / 2;
             if (c->times[mid] <= t) lo = mid;
             else hi = mid;
         }
+        *hint = lo;
         dt = c->times[hi] - c->times[lo];
         u = dt > 0.0f ? (t - c->times[lo]) / dt : 0.0f;
         {
@@ -235,12 +243,13 @@ static void sample(const wgf_gfx_priv_mesh_channel_t *c, float t, float out[4])
                 out[1] = q.y;
                 out[2] = q.z;
                 out[3] = q.w;
+                unit = true;
             } else {
                 for (k = 0; k < comp; k++) out[k] = a[k] + (b[k] - a[k]) * u;
             }
         }
     }
-    if (comp == 4) { /* a spline's, and a file's own keys, kept unit */
+    if (comp == 4 && !unit) { /* a spline's, and a file's own keys, kept unit */
         const wgf_quat_t q = wgf_quat_normalize(wgf_quat_make(out[0], out[1], out[2], out[3]));
         out[0] = q.x;
         out[1] = q.y;
@@ -254,7 +263,7 @@ static void sample(const wgf_gfx_priv_mesh_channel_t *c, float t, float out[4])
 static void evaluate(const wgf_gfx_priv_mesh_record_t *record, const unsigned char *moved, const int *map,
                      const wgf_gfx_priv_mesh_animation_t *clip, float t, trs_t *out)
 {
-    int n, c;
+    int n, c, hint = -1;
     for (n = 0; n < record->node_count; n++) {
         if (moved == NULL || !moved[n]) continue;
         out[n].position = record->nodes[n].position;
@@ -266,7 +275,7 @@ static void evaluate(const wgf_gfx_priv_mesh_record_t *record, const unsigned ch
         const int node = map != NULL ? (channel->node >= 0 ? map[channel->node] : -1) : channel->node;
         float v[4];
         if (node < 0 || node >= record->node_count) continue;
-        sample(channel, t, v);
+        sample(channel, t, v, &hint);
         if (channel->path == WGF_GFX_PRIV_MESH_PATH_TRANSLATION) {
             out[node].position = wgf_vec3_make(v[0], v[1], v[2]);
         } else if (channel->path == WGF_GFX_PRIV_MESH_PATH_ROTATION) {

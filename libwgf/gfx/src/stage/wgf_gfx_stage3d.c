@@ -93,6 +93,18 @@ typedef struct sort_key_t {
     bool blended, additive;
 } sort_key_t;
 
+/* The actors gather found that a visitor draws, each with its world matrix, in the walk's
+ * order. Its room is kept between frames. */
+typedef struct seen_t {
+    wgf_actor_t actor;
+    wgf_mat4_t world;
+} seen_t;
+
+static struct {
+    seen_t *actors;
+    int count, capacity;
+} seen;
+
 static struct {
     sort_key_t *keys;
     item_t *moved;
@@ -176,6 +188,8 @@ static void stop(void)
     free(frame.draws);
     free(frame.lights);
     free(frame.todo);
+    free(seen.actors);
+    memset(&seen, 0, sizeof(seen));
     free(frame.sprites);
     free(frame.texts);
     free(sorting.keys);
@@ -441,21 +455,38 @@ static void place_box(const wgf_mat4_t *m, wgf_vec3_t lo, wgf_vec3_t hi, wgf_vec
     *out_hi = wgf_vec3_make(center.x + rx + pad, center.y + ry + pad, center.z + rz + pad);
 }
 
+/* Converts `color` to linear. Each channel comes from a table of all 256 values, made on first
+ * use, since three powf calls a model a frame showed in the profile. Alpha stays as it is. */
 static void linear_color(wgf_color_t color, float out[4])
 {
-    out[0] = wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_red(color) / 255.0f);
-    out[1] = wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_green(color) / 255.0f);
-    out[2] = wgf_gfx_priv_srgb_to_linear((float)wgf_color_get_blue(color) / 255.0f);
+    static float linear[256];
+    static bool made;
+    if (!made) {
+        int i;
+        for (i = 0; i < 256; i++) linear[i] = wgf_gfx_priv_srgb_to_linear((float)i / 255.0f);
+        made = true;
+    }
+    out[0] = linear[wgf_color_get_red(color)];
+    out[1] = linear[wgf_color_get_green(color)];
+    out[2] = linear[wgf_color_get_blue(color)];
     out[3] = (float)wgf_color_get_alpha(color) / 255.0f;
 }
 
-/* Every enabled actor of the tree from `root`, `root` first, depth first, as the
- * a 2D stage walks it; `visit` is given each with its world matrix. False when the walk ran
- * out of memory (what it visited stands). */
-typedef void (*visit_t)(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user);
-static void walk(wgf_actor_t root, visit_t visit, void *user)
+/* Whether a visitor draws an actor of `type`. */
+static bool drawn(int type)
+{
+    return type == WGF_ACTOR_KIND_LIGHT || type == WGF_ACTOR_KIND_MODEL || type == WGF_ACTOR_KIND_EMITTER3D ||
+           type == WGF_ACTOR_KIND_SPRITE || type == WGF_ACTOR_KIND_TEXT || type == WGF_ACTOR_KIND_SHAPE3D;
+}
+
+/* Walks the tree from `root`, depth first, as a 2D stage walks it. A disabled actor is skipped
+ * with its children. Each visible actor a visitor draws is kept in `seen`, with its world
+ * matrix. One walk serves every visitor, because an animated model's tree is mostly joints,
+ * which none draws. If memory runs out, what it found stays. */
+static void gather(wgf_actor_t root)
 {
     int count = 0;
+    seen.count = 0;
     if (!grow((void **)&frame.todo, &frame.todo_capacity, 64, sizeof(wgf_actor_t))) return;
     frame.todo[count++] = root;
     while (count > 0) {
@@ -466,10 +497,26 @@ static void walk(wgf_actor_t root, visit_t visit, void *user)
         wgf_mat4_t world;
         if (actor_ptr == NULL || !actor_ptr->enabled) continue; /* with its children */
         world = wgf_gfx_priv_actor_world_of(next, actor_ptr);
-        if (actor_ptr->visible) visit(next, actor_ptr, &world, user);
+        if (actor_ptr->visible && drawn(actor_ptr->type)) {
+            if (!grow((void **)&seen.actors, &seen.capacity, seen.count + 1, sizeof(seen_t))) return;
+            seen.actors[seen.count].actor = next;
+            seen.actors[seen.count].world = world;
+            seen.count++;
+        }
         children = wgf_gfx_priv_actor_children_of(actor_ptr, &child_count);
         if (!grow((void **)&frame.todo, &frame.todo_capacity, count + child_count, sizeof(wgf_actor_t))) return;
         for (i = child_count - 1; i >= 0; i--) frame.todo[count++] = children[i];
+    }
+}
+
+/* Calls `visit` for each actor gather kept, in order, with its world matrix. */
+typedef void (*visit_t)(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user);
+static void visit_each(visit_t visit, void *user)
+{
+    int i;
+    for (i = 0; i < seen.count; i++) {
+        const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(seen.actors[i].actor);
+        if (actor_ptr != NULL) visit(seen.actors[i].actor, actor_ptr, &seen.actors[i].world, user);
     }
 }
 
@@ -593,14 +640,20 @@ static bool same_group(const item_t *a, const item_t *b)
     return memcmp(&ka, &kb, sizeof(ka)) == 0;
 }
 
-/* FNV-1a over the key's bytes. */
+/* Hashes the key with FNV-1a, eight bytes at a time, then folds the high bits down. A byte at
+ * a time was a tenth of drawing 400 robots. The hash only orders items, so a weak one costs a
+ * split draw at worst. */
 static uint64_t key_hash(const group_key_t *key)
 {
     const unsigned char *bytes = (const unsigned char *)key;
-    uint64_t h = 1469598103934665603ULL;
+    uint64_t h = 1469598103934665603ULL, word;
     size_t i;
-    for (i = 0; i < sizeof(*key); i++) h = (h ^ bytes[i]) * 1099511628211ULL;
-    return h;
+    for (i = 0; i + sizeof(word) <= sizeof(*key); i += sizeof(word)) {
+        memcpy(&word, bytes + i, sizeof(word));
+        h = (h ^ word) * 1099511628211ULL;
+    }
+    for (; i < sizeof(*key); i++) h = (h ^ bytes[i]) * 1099511628211ULL;
+    return h ^ (h >> 32);
 }
 
 /* The joint matrices of skin `skin` of the file root `root` for this frame (placed by
@@ -1126,29 +1179,30 @@ static void draw_through(wgf_actor_t stage, wgf_actor_t camera)
 
     /* its lights first, every model lit by the same list; then its models */
     draw->first_light = frame.light_count;
-    walk(stage, visit_light, NULL);
+    gather(stage);
+    visit_each(visit_light, NULL);
     draw = &frame.draws[frame.draw_count];
     draw->light_count = frame.light_count - draw->first_light;
     draw->first = frame.item_count;
-    walk(stage, visit_model, &w);
-    walk(stage, visit_emitter, &w);
+    visit_each(visit_model, &w);
+    visit_each(visit_emitter, &w);
     /* its sprites: the depth-tested ones grouped into one item, the added ones into another,
        each blended one an item of its own until the sort has placed it */
     w.sprite_view = wgf_gfx_priv_sprite_view_of(camera_world);
     w.sprite_camera = -1;
     frame.sprite_count = 0;
-    walk(stage, visit_sprite, &w);
+    visit_each(visit_sprite, &w);
     if (frame.sprite_count > 0) {
         sprite_pass_item(false, w.sprite_camera);
         sprite_pass_item(true, w.sprite_camera);
     }
     frame.text_count = 0;
-    walk(stage, visit_text, &w);
+    visit_each(visit_text, &w);
     draw = &frame.draws[frame.draw_count];
     draw->count = frame.item_count - draw->first;
     sort_items(draw->first, draw->count);
     if (frame.sprite_count > 0) record_sprites(draw, w.sprite_camera);
-    walk(stage, visit_shape, NULL); /* immediate mode: they move nothing in the pool */
+    visit_each(visit_shape, NULL); /* immediate mode: they move nothing in the pool */
     draw = &frame.draws[frame.draw_count];
     if (draw->shapes >= 0) wgf_gfx_priv_render_end_side_layer();
     if (frame.text_count > 0) record_texts(draw);
@@ -1533,13 +1587,26 @@ static void replay(int index)
  * handedness. */
 static void write_instance(float *r, const item_t *item)
 {
-    const wgf_mat4_t normal = wgf_mat4_transpose(wgf_mat4_invert(item->world));
+    /* The normals' matrix is the placement's 3 x 3 inverted and transposed. That is its columns'
+       cross products over its determinant, the same as a 4 x 4 inverse of an affine matrix and
+       far cheaper. With no inverse it is the identity, as wgf_mat4_invert's is. Its fourth
+       column is zero, as an affine matrix's is. */
+    const float *m = item->world.m;
+    const wgf_vec3_t a = wgf_vec3_make(m[0], m[1], m[2]), b = wgf_vec3_make(m[4], m[5], m[6]);
+    const wgf_vec3_t c = wgf_vec3_make(m[8], m[9], m[10]);
+    const wgf_vec3_t bc = wgf_vec3_cross(b, c), ca = wgf_vec3_cross(c, a), ab = wgf_vec3_cross(a, b);
+    const float det = wgf_vec3_dot(a, bc);
+    const bool none = det > -1e-12f && det < 1e-12f;
+    const float k = none ? 0.0f : 1.0f / det;
+    const float normal[3][3] = { /* [column][row] */
+        {none ? 1.0f : bc.x * k, none ? 0.0f : bc.y * k, none ? 0.0f : bc.z * k},
+        {none ? 0.0f : ca.x * k, none ? 1.0f : ca.y * k, none ? 0.0f : ca.z * k},
+        {none ? 0.0f : ab.x * k, none ? 0.0f : ab.y * k, none ? 1.0f : ab.z * k}};
     int row, col;
     for (row = 0; row < 3; row++) {
-        for (col = 0; col < 4; col++) {
-            r[row * 4 + col] = item->world.m[col * 4 + row];
-            r[12 + row * 4 + col] = normal.m[col * 4 + row];
-        }
+        for (col = 0; col < 4; col++) r[row * 4 + col] = m[col * 4 + row];
+        for (col = 0; col < 3; col++) r[12 + row * 4 + col] = normal[col][row];
+        r[12 + row * 4 + 3] = 0.0f;
     }
     memcpy(&r[24], item->tint, sizeof(item->tint)); /* linear already */
     r[28] = item->skinned ? (float)item->joint_base : 0.0f; /* its skin's first joint matrix */
