@@ -3,7 +3,7 @@
 on the wrong backend, reports an error, or is still loading when its time is up; save a
 screenshot of each.
 
-    tools/check_web.py [--variant NAME] [--startup MS] [--settle MS] [--quiet MS]
+    tools/check_web.py [--variant NAME] [--startup MS] [--settle MS] [--limit MS] [--quiet MS]
                        [--jobs N] [--headed] [--out DIR] [--browser PATH] [--verbose]
                        [example ...]
 
@@ -17,9 +17,12 @@ the screen).
 An example has started when gfx logs its backend ("wgf_gfx: ..."), within --startup ms
 (default 30000), and must have started on the variant's (else the build is stale). It
 is then checked once nothing is loading -- the loader has no request pending and the
-page no request in flight -- and nothing has changed for --quiet ms (default 1500), or
---settle ms after it started (default 20000), whichever is first; one still loading
-then fails, and the loader names what is stuck and where. One a load of which failed
+page no request in flight -- and nothing has changed for --quiet ms (default 1500). One
+whose loads make no progress for --settle ms (default 20000: the pending count the same,
+no request begun or ended) fails, and so does one still loading --limit ms after it
+started (default 60000); the loader names what is stuck and where. A slow machine (CI's
+software WebGL, 4 pages at once) still loads a heavy scene in time, where a load that is
+stuck fails as soon as before. One a load of which failed
 fails too (a failure is a warning), the loader naming the files. It fails if, from loading
 until then, it throws, logs a console error (but core's log lines below error level,
 which arrive as console errors), logs an [ERROR] or [FATAL] line or a sokol panic, or
@@ -122,9 +125,10 @@ def check(browser_session, debug_base, url, opts, shot_path):
         while result['started'] is None and time.monotonic() < startup_deadline:
             time.sleep(0.1)  # nothing is asked of the page before it runs: an exported call before then aborts it
         if result['started'] is not None:
-            settle_deadline = state['loaded'] + result['started'] + opts.settle / 1000
+            limit_deadline = state['loaded'] + result['started'] + opts.limit / 1000
             pending = -1
-            while time.monotonic() < settle_deadline:
+            # until nothing has moved for --settle ms (stuck), or --limit ms in all
+            while time.monotonic() < limit_deadline and time.monotonic() - state['activity'] < opts.settle / 1000:
                 value = session.send('Runtime.evaluate', {'expression': PENDING, 'returnByValue': True})['result'].get('value')
                 with lock:
                     if value != pending:
@@ -134,6 +138,7 @@ def check(browser_session, debug_base, url, opts, shot_path):
                         break
                 time.sleep(0.1)
             result['pending'] = pending
+            result['stalled'] = time.monotonic() < limit_deadline
             if pending and pending > 0:  # out of time: the loader names what is stuck, and where
                 session.try_send('Runtime.evaluate', {'expression': LOG_PENDING})
                 time.sleep(0.3)  # its warnings arrive as console events
@@ -163,7 +168,10 @@ def problems_of(result, opts, backend):
     elif result['pending'] is None or result['pending'] < 0:
         problems.append('never answered how many loads are pending (built without WGF_CHECK_EXPORTS?)')
     elif result['pending'] > 0:
-        problems.append(f'still loading {opts.settle} ms after starting ({result["pending"]} pending):')
+        if result.get('stalled'):
+            problems.append(f'still loading, nothing moving for {opts.settle} ms ({result["pending"]} pending):')
+        else:
+            problems.append(f'still loading {opts.limit} ms after starting ({result["pending"]} pending):')
         stuck = [line for line in result['console'] if 'wgf_core_load: pending:' in line]
         problems += [f'  | {line}' for line in (stuck or result['console'][-6:])]
     if result['started'] is not None and result['failed'] is not None and result['failed'] > 0:
@@ -177,6 +185,7 @@ def main():
     parser.add_argument('--variant', help='default: wasm32-debug')
     parser.add_argument('--startup', type=int, default=30000)
     parser.add_argument('--settle', type=int, default=20000)
+    parser.add_argument('--limit', type=int, default=60000)
     parser.add_argument('--quiet', type=int, default=1500)
     parser.add_argument('--jobs', type=int, default=4)
     parser.add_argument('--headed', action='store_true', help='show the browser on the screen')
