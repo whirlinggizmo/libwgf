@@ -13,7 +13,7 @@
  * instanced quads whose corners the GPU builds (wgf_gfx_sprite.glsl). Consecutive sprites
  * with the same texture, pipeline, and camera share one draw: a batch, which belongs to the
  * 3D stage draw that recorded it, replayed in its place. Without lit sprites (milestone
- * 2.5); 2D sprites are immediate mode's. */
+ * 2.5); 2D sprites are drawn in runs (wgf_gfx_sprite_run.c). */
 
 /* One sprite, as the shader reads it (per-instance vertex data). */
 typedef struct wgf_gfx_priv_sprite_quad_t {

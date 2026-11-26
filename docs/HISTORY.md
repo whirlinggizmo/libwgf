@@ -1229,6 +1229,29 @@ Frame time in ms:
 
 helix-raylib's control: the bunnymark 0.27 and 4.80 ms at 10k and 200k, the robots 2.03 and 15.57 at 50 and 400, all within 5% of its rows.
 
+## 2D sprites drawn in runs (2026-11-25)
+
+Rob's, after the PixiJS comparison: PixiJS's sprites were 15 to 20% faster than libwgf's actors. A profile of the actor bunnymark at 50k showed why. About 30% of the frame was immediate mode, about 14 sokol_gl calls a sprite. About 22% was lookups and getters a sprite: its texture's binding and size, and its tint's four channels.
+
+**What changed:** a sprite on a 2D stage is now a 48-byte record in a run, one instanced draw (ARCHITECTURE.md, "Sprites on a 2D stage"), as PixiJS's batcher draws.
+- A run holds up to 8 textures, so a game needs no atlas for sprites to share a draw.
+- A run ends where anything else is drawn, or the alpha mode changes, so the order is the stage's.
+- Whether a sprite joins the last run is cheap. A clip, viewport, or pass each record an immediate mode command, so "the frame's last command, and nothing recorded since" covers them.
+- A nine-slice stays immediate mode's.
+
+This reverses "spritebench, and 2D sprites kept on immediate mode" (2026-10-11). That batch drew each texture's sprites as a batch of their own, so 4 textures alternating was slower, and the frame was libwgf's own work a sprite more than its draws. Here a run takes any texture order, and the work a sprite is smaller.
+
+**Checked:** `wgf_gfx_sprite_run_window_test` (and `_web_test`, on WebGL2) draws overlapping see-through sprites over 4 textures and 4 alpha modes into a target, and checks each pixel against the blend worked out in their order. The old immediate mode path passes its pixel checks. Two mutations fail it: every sprite drawn with the run's first texture, and a run's sprites drawn in reverse.
+
+**Measured** on coinspinner, the actor bunnymark, the old and new builds and PixiJS round-robin, with the load under 2. The median of 5 native runs and 3 page runs, ms a frame:
+
+| bunnies | native, before | native, after | page, before | page, after | PixiJS's sprites |
+|---|---:|---:|---:|---:|---:|
+| 10k | 0.81 | 0.55 | 0.96 | 0.65 | 0.68 |
+| 50k | 3.87 | 2.62 | 4.15 | 2.91 | 3.76 |
+
+libwgf's actors are now faster than PixiJS's sprites. The bunnymark page is 109.3 KB gzip (107.4); a program that draws no 2D sprite links none of it. The first version checked the clip, viewport, and projection for each sprite: 0.65 and 3.39 ms in the page. Dropping those checks gave the rows above.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

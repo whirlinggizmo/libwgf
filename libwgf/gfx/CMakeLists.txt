@@ -52,6 +52,7 @@ wgf_layer(gfx
         src/sprite/wgf_gfx_sprite_material.c
         src/sprite/wgf_gfx_sprite_batch.c
         src/sprite/wgf_gfx_sprite_batch2d.c
+        src/sprite/wgf_gfx_sprite_run.c
         src/sprite/wgf_gfx_sheet.c
         src/stage/wgf_gfx_animation.c
         src/stage/wgf_gfx_light.c
@@ -165,6 +166,7 @@ if(WGF_TESTS)
     wgf_window_test(gfx wgf_gfx_shader_window_test)
     wgf_window_test(gfx wgf_gfx_effect_window_test)
     wgf_window_test(gfx wgf_gfx_texture_read_window_test)
+    wgf_window_test(gfx wgf_gfx_sprite_run_window_test)
     wgf_window_test(gfx wgf_gfx_font_bitmap_window_test)
     wgf_window_test(gfx wgf_gfx_mesh_window_test)
     wgf_window_test(gfx wgf_gfx_cubemap_window_test)
@@ -183,6 +185,7 @@ if(WGF_TESTS)
     wgf_web_test(gfx wgf_gfx_shadow_web_test 1)
     wgf_web_test(gfx wgf_gfx_target_web_test 1)
     wgf_web_test(gfx wgf_gfx_texture_read_web_test 1)
+    wgf_web_test(gfx wgf_gfx_sprite_run_web_test 1)
     wgf_web_test(gfx wgf_gfx_shader_web_test 1)
     if(TARGET wgf_gfx_shader_web_test)
         target_link_options(wgf_gfx_shader_web_test PRIVATE

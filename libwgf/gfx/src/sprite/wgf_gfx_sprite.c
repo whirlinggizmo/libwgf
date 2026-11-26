@@ -5,6 +5,7 @@
 #include "actor/wgf_gfx_actor_priv.h"
 #include "draw/wgf_gfx_nine_slice_priv.h"
 #include "render/wgf_gfx_render_priv.h"
+#include "sprite/wgf_gfx_sprite_run_priv.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
 #include "texture/wgf_gfx_texture_priv.h"
 #include "util/sokol_gl.h"
@@ -23,10 +24,9 @@ static wgf_gfx_priv_sprite_t *sprite_of_at(wgf_actor_t sprite, const char *calle
 }
 #define sprite_of(...) sprite_of_at(__VA_ARGS__, WGF_CORE_PRIV_CALLER)
 
-/* The region shown, and the size drawn: what was set, or the texture's. */
-static void region_of(const wgf_gfx_priv_sprite_t *sprite, float region[4], float size[2])
+/* The region shown, and the size drawn: what was set, or the texture's, `tw` by `th`. */
+static void region_in(const wgf_gfx_priv_sprite_t *sprite, float tw, float th, float region[4], float size[2])
 {
-    const float tw = (float)wgf_texture_get_width(sprite->texture), th = (float)wgf_texture_get_height(sprite->texture);
     const bool whole = sprite->source[2] <= 0.0f || sprite->source[3] <= 0.0f;
     region[0] = whole ? 0.0f : sprite->source[0];
     region[1] = whole ? 0.0f : sprite->source[1];
@@ -39,6 +39,12 @@ static void region_of(const wgf_gfx_priv_sprite_t *sprite, float region[4], floa
         size[1] = sprite->size[0] > 0.0f && sprite->size[1] > 0.0f ? sprite->size[1]
                                                                    : (trimmed ? sprite->trim[3] : region[3]);
     }
+}
+
+static void region_of(const wgf_gfx_priv_sprite_t *sprite, float region[4], float size[2])
+{
+    region_in(sprite, (float)wgf_texture_get_width(sprite->texture), (float)wgf_texture_get_height(sprite->texture),
+              region, size);
 }
 
 void wgf_gfx_priv_sprite_set_trim(wgf_actor_t sprite, float x, float y, float w, float h)
@@ -65,10 +71,12 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     int tw, th;
     bool placeholder;
     float region[4], size[2], pivot[2], u0 = 0.0f, v0 = 0.0f, u1 = 1.0f, v1 = 1.0f, x0, y0, x1, y1;
+    bool nine;
     (void)actor;
     (void)view;
     if (!wgf_gfx_priv_texture_get_binding(sprite->texture, &image, &sampler, &tw, &th, &placeholder)) return;
-    region_of(sprite, region, size);
+    if (placeholder) region_of(sprite, region, size);
+    else region_in(sprite, (float)tw, (float)th, region, size); /* the binding's size is the texture's */
     if (placeholder && (size[0] <= 0.0f || size[1] <= 0.0f)) { /* a failed texture with no size: the checker's */
         size[0] = (float)tw;
         size[1] = (float)th;
@@ -86,6 +94,16 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     y0 = -pivot[1] * size[1];
     x1 = x0 + size[0];
     y1 = y0 + size[1];
+    nine = !placeholder && (sprite->nine[0] > 0.0f || sprite->nine[1] > 0.0f || sprite->nine[2] > 0.0f ||
+                            sprite->nine[3] > 0.0f);
+    if (!nine) { /* one quad, in the stage's run of sprites (wgf_gfx_sprite_run.c) */
+        const float rect[4] = {x0, y0, x1, y1}, uv[4] = {u0, v0, u1, v1};
+        wgf_gfx_priv_sprite_run_add(placed, rect, uv, sprite->tint,
+                                    sprite->alpha_mode == WGF_ALPHA_MODE_MASK ? WGF_ALPHA_MODE_BLEND
+                                                                              : sprite->alpha_mode,
+                                    image, sampler);
+        return;
+    }
     sgl_push_pipeline(); /* its own mode, whatever immediate mode's is (MASK drawn as BLEND) */
     sgl_load_pipeline(wgf_gfx_priv_render_pipeline_2d(sprite->alpha_mode == WGF_ALPHA_MODE_MASK ? WGF_ALPHA_MODE_BLEND
                                                                                                 : sprite->alpha_mode));
@@ -94,8 +112,7 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     sgl_begin_triangles();
     sgl_c4b((uint8_t)wgf_color_get_red(sprite->tint), (uint8_t)wgf_color_get_green(sprite->tint),
             (uint8_t)wgf_color_get_blue(sprite->tint), (uint8_t)wgf_color_get_alpha(sprite->tint));
-    if (!placeholder && (sprite->nine[0] > 0.0f || sprite->nine[1] > 0.0f || sprite->nine[2] > 0.0f ||
-                         sprite->nine[3] > 0.0f)) { /* a nine-slice: its corners at their texels, the rest stretched */
+    { /* a nine-slice: its corners at their texels, the rest stretched */
         float xs[4], ys[4], us[4], vs[4];
         int i, j;
         wgf_gfx_priv_nine_slice(x0, y0, x1, y1, u0, v0, u1, v1, region[2], region[3], sprite->nine, xs, ys, us, vs);
@@ -109,13 +126,6 @@ static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
                 vertex(placed, xs[i], ys[j + 1], us[i], vs[j + 1]);
             }
         }
-    } else {
-        vertex(placed, x0, y0, u0, v0);
-        vertex(placed, x1, y0, u1, v0);
-        vertex(placed, x1, y1, u1, v1);
-        vertex(placed, x0, y0, u0, v0);
-        vertex(placed, x1, y1, u1, v1);
-        vertex(placed, x0, y1, u0, v1);
     }
     sgl_end();
     sgl_disable_texture();

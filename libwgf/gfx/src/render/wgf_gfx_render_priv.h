@@ -79,6 +79,10 @@ void wgf_gfx_priv_render_end_3d(void);
  * under the clip it was made under, in the open pass. False outside a frame, or out of
  * memory. */
 bool wgf_gfx_priv_render_add_command(void (*replay)(int index), int index);
+/* Whether a draw can join command `replay(index)`: it is the frame's last, and no immediate
+ * mode was recorded since, so the pass, clip, viewport, and 2D projection are the ones it was
+ * made under. Drawn by that command, the draw lands where a command of its own would. */
+bool wgf_gfx_priv_render_is_last_command(void (*replay)(int index), int index);
 /* A target's pass, its layers and commands, into the open sokol pass (the targets'
  * drawing; the screen's is the frame's own). */
 void wgf_gfx_priv_render_draw_pass(int pass);

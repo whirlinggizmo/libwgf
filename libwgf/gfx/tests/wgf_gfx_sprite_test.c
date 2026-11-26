@@ -4,6 +4,7 @@
 #include "draw/wgf_gfx_nine_slice_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sprite/wgf_gfx_sprite_batch_priv.h"
+#include "sprite/wgf_gfx_sprite_run_priv.h"
 #include "wgf_camera3d.h"
 #include "wgf_stage3d.h"
 #include "sokol_gfx.h" /* sokol_gl needs it first */
@@ -55,7 +56,9 @@ static int drawn_3d(wgf_actor_t stage, int *draws)
     return wgf_gfx_priv_sprite_batch_get_drawn();
 }
 
-static int drawn(wgf_actor_t stage)
+/* The quads a 2D stage draws in a frame: immediate mode's (6 vertices a quad) and its runs'
+ * (wgf_gfx_sprite_run.c), and the runs' draws. */
+static int drawn_runs(wgf_actor_t stage, int *draws)
 {
     int before;
     wgf_platform_priv_set_size(320, 240);
@@ -65,7 +68,13 @@ static int drawn(wgf_actor_t stage)
     wgf_stage2d_draw(stage);
     before = sgl_num_vertices() - before;
     wgf_gfx_priv_end_frame();
-    return before;
+    if (draws != NULL) *draws = wgf_gfx_priv_sprite_run_get_draw_calls();
+    return before / 6 + wgf_gfx_priv_sprite_run_get_drawn();
+}
+
+static int drawn(wgf_actor_t stage)
+{
+    return drawn_runs(stage, NULL);
 }
 
 static void settle(wgf_texture_t texture)
@@ -103,7 +112,31 @@ int main(void)
     expect(drawn(stage) == 0, "and nothing drawn");
     settle(texture);
     expect(wgf_sprite_get_size(sprite).x == 2.0f && wgf_sprite_get_size(sprite).y == 2.0f, "READY: the texture's size");
-    expect(drawn(stage) == 6, "drawn: one quad");
+    expect(drawn(stage) == 1, "drawn: one quad");
+    { /* a stage's sprites in runs: one draw over 8 textures in any order, a new one past them,
+         or for another alpha mode, or after anything immediate mode draws between */
+        wgf_actor_t runs = wgf_stage2d_create(), sprites[12];
+        wgf_texture_t textures[9];
+        int k, draws;
+        for (k = 0; k < 9; k++) textures[k] = wgf_texture_create_blank(2, 2);
+        for (k = 0; k < 12; k++) {
+            sprites[k] = wgf_sprite_create(textures[k % 2]);
+            wgf_actor_set_parent(sprites[k], runs);
+        }
+        expect(drawn_runs(runs, &draws) == 12 && draws == 1, "12 sprites over 2 textures, alternating: one draw");
+        for (k = 0; k < 9; k++) wgf_sprite_set_texture(sprites[k], textures[k]);
+        expect(drawn_runs(runs, &draws) == 12 && draws == 2, "over 9 textures: two");
+        for (k = 0; k < 12; k++) wgf_sprite_set_texture(sprites[k], textures[0]);
+        wgf_sprite_set_alpha_mode(sprites[5], WGF_ALPHA_MODE_ADD, 0.5f);
+        expect(drawn_runs(runs, &draws) == 12 && draws == 3, "one added among them: before it, it, and after");
+        wgf_sprite_set_alpha_mode(sprites[5], WGF_ALPHA_MODE_MASK, 0.5f);
+        expect(drawn_runs(runs, &draws) == 12 && draws == 1, "masked, drawn blended as immediate mode does: one");
+        wgf_sprite_set_nine_slice(sprites[5], 0.5f, 0.5f, 0.5f, 0.5f);
+        expect(drawn_runs(runs, &draws) == 11 + 9 && draws == 2,
+               "a nine-slice among them, immediate mode's 9 quads: the run ends before it and begins after");
+        wgf_actor_destroy(runs, WGF_ACTOR_DESTROY_CHILDREN);
+        for (k = 0; k < 9; k++) wgf_resource_release(textures[k]);
+    }
 
     expect(wgf_sprite_set_source(sprite, 1, 0, 1, 2) && wgf_sprite_get_source(sprite).x == 1.0f &&
                wgf_sprite_get_source(sprite).w == 2.0f && wgf_sprite_get_size(sprite).x == 1.0f,
@@ -169,7 +202,7 @@ int main(void)
     expect(wgf_sprite_set_texture(sprite, missing) && wgf_sprite_get_texture(sprite) == missing, "another texture");
     wgf_resource_release(missing);
     settle(missing);
-    expect(drawn(stage) == 6, "a FAILED texture: the checker, drawn");
+    expect(drawn(stage) == 1, "a FAILED texture: the checker, drawn");
     expect(wgf_sprite_set_texture(sprite, 0) && drawn(stage) == 0, "no texture: nothing");
     expect(!wgf_sprite_set_texture(sprite, stage) && !wgf_sprite_set_texture(sprite, 12345),
            "a handle that isn't a texture is refused");

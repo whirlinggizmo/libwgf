@@ -63,6 +63,19 @@ void wgf_gfx_priv_render_draw_pass(int pass)
     draw_commands(pass);
 }
 
+/* Cheap, as it is asked once a sprite: a clip, a viewport, or a pass entered each record a
+ * sokol_gl command (render.c's apply_clip, sgl_viewport), and the 2D projection changes only
+ * with the pass or the frame, so none of them changed while no command was recorded. */
+bool wgf_gfx_priv_render_is_last_command(void (*replay)(int index), int index)
+{
+    const command_t *c;
+    if (command_count == 0 || commands_frame != wgf_gfx_priv_render_get_frame()) return false;
+    c = &commands[command_count - 1];
+    if (c->replay != replay || c->index != index) return false;
+    sgl_set_context(wgf_gfx_priv_render_get_context());
+    return sgl_num_commands() == c->first;
+}
+
 /* Side layers: immediate mode recorded for a command to draw itself (a stage's 3D
  * shapes), numbered past every layer the frame's commands can open. */
 #define SIDE_LAYER_BASE (1 << 20)
