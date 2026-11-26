@@ -151,6 +151,45 @@ static void test_transforms(void)
     wgf_actor_destroy(parent, WGF_ACTOR_DESTROY_CHILDREN);
 }
 
+/* An unturned actor's world matrix is its parent's columns scaled and moved, not a full
+ * product: the product's values exactly (a zero's sign may differ), whether read or made by
+ * a 2D stage's walk. */
+static int same_matrix(const wgf_mat4_t *a, const wgf_mat4_t *b)
+{
+    int i;
+    for (i = 0; i < 16; i++) {
+        if (a->m[i] != b->m[i]) return 0;
+    }
+    return 1;
+}
+
+static void test_unturned(void)
+{
+    const wgf_handle_t stage = wgf_stage2d_create(), parent = wgf_actor_create(), child = wgf_actor_create();
+    wgf_mat4_t want;
+    wgf_actor_set_parent(parent, stage);
+    wgf_actor_set_parent(child, parent);
+    wgf_actor_set_transform(parent, 5.25f, -6.5f, 0.75f, 0.3f, -0.2f, 0.7f, 2.0f, 3.0f, 0.5f);
+    wgf_actor_set_transform(child, 3.1f, 4.7f, -1.3f, 0, 0, 0, 1.5f, -2.0f, 1.25f);
+    want = wgf_mat4_mul(wgf_gfx_priv_actor_get_world_matrix(parent),
+                        wgf_mat4_from_trs(wgf_vec3_make(3.1f, 4.7f, -1.3f), wgf_quat_identity(),
+                                          wgf_vec3_make(1.5f, -2.0f, 1.25f)));
+    {
+        const wgf_mat4_t read = wgf_gfx_priv_actor_get_world_matrix(child);
+        expect(same_matrix(&read, &want), "an unturned child's world: the product's values, read");
+    }
+    wgf_actor_set_position(child, 3.1f, 4.7f, -1.3f); /* dirty again, for the walk to make */
+    begin_frame(64, 64, 1.0f);
+    wgf_stage2d_draw(stage);
+    wgf_gfx_priv_end_frame();
+    {
+        const wgf_gfx_priv_actor_t *child_ptr = wgf_gfx_priv_actor_of(child);
+        expect(child_ptr != NULL && !child_ptr->world_dirty && same_matrix(&child_ptr->world, &want),
+               "and made by a 2D stage's walk");
+    }
+    wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
+}
+
 /* World matrices are kept between reads: whatever moves, every read below must
  * see it, however deep, and however the move was made. */
 static void test_cached_transforms(void)
@@ -478,6 +517,7 @@ int main(void)
     expect(wgf_gfx_priv_start(), "setup");
     test_tree();
     test_transforms();
+    test_unturned();
     test_cached_transforms();
     test_keep_children();
     test_sprites_and_references();

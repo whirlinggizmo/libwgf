@@ -1,6 +1,7 @@
 #include "wgf_stage2d.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
@@ -74,27 +75,46 @@ static wgf_mat4_t view_now(wgf_actor_t stage)
     return view_in(stage, visible.x, visible.y, visible.z, visible.w);
 }
 
+/* An actor the walk has still to draw, and its parent's record, whose world the walk has
+ * made clean (NULL for the stage). */
+typedef struct todo_t {
+    wgf_actor_t actor;
+    wgf_gfx_priv_actor_t *parent;
+} todo_t;
+
+/* Kept from draw to draw, as a frame's stages walk the same trees. */
+static todo_t *todo;
+static int todo_capacity;
+
 void wgf_stage2d_draw(wgf_actor_t stage)
 {
     wgf_gfx_priv_actor_t *stage_ptr = wgf_gfx_priv_actor_of(stage);
-    wgf_actor_t *todo;
     wgf_mat4_t view;
-    int count = 0, capacity = 64;
+    bool viewed;
+    int count = 0;
 
     if (stage_ptr == NULL || stage_ptr->type != WGF_ACTOR_KIND_STAGE2D || !wgf_gfx_priv_is_in_frame()) return;
-    todo = (wgf_actor_t *)malloc(sizeof(wgf_actor_t) * (size_t)capacity);
     if (todo == NULL) {
-        wgf_log_error("wgf_gfx_stage2d: out of memory drawing a stage");
-        return;
+        todo = (todo_t *)malloc(sizeof(todo_t) * 64);
+        if (todo == NULL) {
+            wgf_log_error("wgf_gfx_stage2d: out of memory drawing a stage");
+            return;
+        }
+        todo_capacity = 64;
     }
     wgf_gfx_priv_render_set_2d(); /* vertices go in already placed */
     wgf_gfx_priv_render_note_drawn(&stage_ptr->as.stage2d.drawn_frame, &stage_ptr->as.stage2d.drawn_order);
     view = view_of(stage);
-    todo[count++] = stage;
+    { /* no camera: an actor is placed by its world matrix alone */
+        const wgf_mat4_t identity = wgf_mat4_identity();
+        viewed = memcmp(&view, &identity, sizeof(view)) != 0;
+    }
+    todo[count].actor = stage;
+    todo[count++].parent = NULL;
     while (count > 0) {
-        const wgf_actor_t next = todo[--count];
+        const todo_t next = todo[--count];
         /* looked up once: drawing creates no actor, so the record stays where it is */
-        wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(next);
+        wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(next.actor);
         const wgf_gfx_priv_actor_kind_t *kind;
         const wgf_actor_t *dense;
         int i, dense_count;
@@ -103,26 +123,43 @@ void wgf_stage2d_draw(wgf_actor_t stage)
            was just made clean, so this rebuilds one matrix at most. A hidden actor still
            carries its children. */
         {
-            const wgf_mat4_t world = wgf_gfx_priv_actor_world_of(next, actor_ptr);
+            wgf_mat4_t world_of_stage;
+            const wgf_mat4_t *world;
+            if (next.parent != NULL) {
+                world = wgf_gfx_priv_actor_world_under(actor_ptr, next.parent);
+            } else {
+                world_of_stage = wgf_gfx_priv_actor_world_of(next.actor, actor_ptr);
+                world = &world_of_stage;
+            }
             kind = actor_ptr->visible ? wgf_gfx_priv_actor_get_kind(actor_ptr->type) : NULL;
             if (kind != NULL && kind->draw != NULL) {
-                const wgf_mat4_t placed = wgf_mat4_mul(view, world);
-                kind->draw(next, actor_ptr, &placed, &view);
+                if (viewed) {
+                    const wgf_mat4_t placed = wgf_mat4_mul(view, *world);
+                    kind->draw(next.actor, actor_ptr, &placed, &view);
+                } else {
+                    kind->draw(next.actor, actor_ptr, world, &view);
+                }
             }
         }
         /* children last first onto the list, so the first comes off first */
         dense = wgf_gfx_priv_actor_children_of(actor_ptr, &dense_count); /* holes closed */
-        for (i = dense_count - 1; i >= 0; i--) {
-            if (count == capacity) {
-                wgf_actor_t *grown = (wgf_actor_t *)realloc(todo, sizeof(wgf_actor_t) * (size_t)(capacity * 2));
-                if (grown == NULL) break;
-                todo = grown;
-                capacity *= 2;
+        if (count + dense_count > todo_capacity) {
+            int capacity = todo_capacity;
+            todo_t *grown;
+            while (capacity < count + dense_count) capacity *= 2;
+            grown = (todo_t *)realloc(todo, sizeof(todo_t) * (size_t)capacity);
+            if (grown == NULL) {
+                wgf_log_error("wgf_gfx_stage2d: out of memory drawing a stage");
+                continue; /* its children aren't drawn */
             }
-            todo[count++] = dense[i];
+            todo = grown;
+            todo_capacity = capacity;
+        }
+        for (i = dense_count - 1; i >= 0; i--) {
+            todo[count].actor = dense[i];
+            todo[count++].parent = actor_ptr;
         }
     }
-    free(todo);
 }
 
 wgf_actor_t wgf_stage2d_find(wgf_actor_t stage, const char *name)

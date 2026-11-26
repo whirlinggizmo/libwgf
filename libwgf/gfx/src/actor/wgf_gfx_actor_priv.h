@@ -258,6 +258,10 @@ wgf_mat4_t wgf_gfx_priv_actor_get_world_matrix(wgf_actor_t actor);
  * Its world, when its parent's is clean (a walk top down has made it so), is one
  * composing; otherwise as get_world_matrix. */
 wgf_mat4_t wgf_gfx_priv_actor_world_of(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr);
+/* As world_of, for a child whose parent's record is in hand with its world clean: a walk
+ * top down, which made the parent clean just before. No lookup. */
+const wgf_mat4_t *wgf_gfx_priv_actor_world_under(wgf_gfx_priv_actor_t *actor_ptr,
+                                                 const wgf_gfx_priv_actor_t *parent_ptr);
 const wgf_actor_t *wgf_gfx_priv_actor_children_of(wgf_gfx_priv_actor_t *actor_ptr, int *count);
 
 /* The actor's own transform changed: its world matrix, and everything under it, are

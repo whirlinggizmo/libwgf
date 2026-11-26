@@ -95,6 +95,28 @@ static wgf_mat4_t trs(wgf_vec3_t p, wgf_quat_t q, wgf_vec3_t k)
     return wgf_mat4_from_trs(p, q, k);
 }
 
+/* `parent` (a world matrix) times the actor's local matrix. Unturned, as most 2D actors
+ * are, the local matrix only scales and moves, so the product is the parent's first three
+ * columns scaled and its fourth moved: what wgf_mat4_mul gives, in its order, for a third
+ * of the work. */
+static wgf_mat4_t placed_in(const wgf_mat4_t *parent, const wgf_gfx_priv_actor_t *actor_ptr)
+{
+    const float *a = parent->m;
+    wgf_vec3_t p, k;
+    wgf_quat_t q;
+    wgf_mat4_t r;
+    int row;
+    drawn_transform(actor_ptr, &p, &q, &k);
+    if (q.x != 0.0f || q.y != 0.0f || q.z != 0.0f) return wgf_mat4_mul(*parent, trs(p, q, k));
+    for (row = 0; row < 4; row++) {
+        r.m[row] = a[row] * k.x;
+        r.m[4 + row] = a[4 + row] * k.y;
+        r.m[8 + row] = a[8 + row] * k.z;
+        r.m[12 + row] = a[row] * p.x + a[4 + row] * p.y + a[8 + row] * p.z + a[12 + row];
+    }
+    return r;
+}
+
 /* Worked each time, not kept: it is read as the world matrix is made again, which is kept. */
 wgf_mat4_t wgf_gfx_priv_actor_get_local_matrix(const wgf_gfx_priv_actor_t *actor_ptr)
 {
@@ -180,11 +202,20 @@ wgf_mat4_t wgf_gfx_priv_actor_world_of(wgf_actor_t actor, wgf_gfx_priv_actor_t *
     if (!actor_ptr->world_dirty) return actor_ptr->world;
     parent_ptr = actor_ptr->parent != 0 ? wgf_gfx_priv_actor_of(actor_ptr->parent) : NULL;
     if (parent_ptr != NULL && parent_ptr->world_dirty) return wgf_gfx_priv_actor_get_world_matrix(actor);
-    actor_ptr->world = parent_ptr != NULL
-                           ? wgf_mat4_mul(parent_ptr->world, wgf_gfx_priv_actor_get_local_matrix(actor_ptr))
-                           : wgf_gfx_priv_actor_get_local_matrix(actor_ptr);
+    actor_ptr->world = parent_ptr != NULL ? placed_in(&parent_ptr->world, actor_ptr)
+                                          : wgf_gfx_priv_actor_get_local_matrix(actor_ptr);
     actor_ptr->world_dirty = false;
     return actor_ptr->world;
+}
+
+const wgf_mat4_t *wgf_gfx_priv_actor_world_under(wgf_gfx_priv_actor_t *actor_ptr,
+                                                 const wgf_gfx_priv_actor_t *parent_ptr)
+{
+    if (actor_ptr->world_dirty) {
+        actor_ptr->world = placed_in(&parent_ptr->world, actor_ptr);
+        actor_ptr->world_dirty = false;
+    }
+    return &actor_ptr->world;
 }
 
 wgf_mat4_t wgf_gfx_priv_actor_get_world_matrix(wgf_actor_t actor)
@@ -215,8 +246,7 @@ wgf_mat4_t wgf_gfx_priv_actor_get_world_matrix(wgf_actor_t actor)
     world = actor_ptr != NULL ? actor_ptr->world : wgf_mat4_identity();
     while (count > 0) {
         wgf_gfx_priv_actor_t *next_ptr = wgf_gfx_priv_actor_of(chain[--count]);
-        const wgf_mat4_t local = wgf_gfx_priv_actor_get_local_matrix(next_ptr);
-        world = wgf_mat4_mul(world, local);
+        world = placed_in(&world, next_ptr);
         next_ptr->world = world;
         next_ptr->world_dirty = false;
     }

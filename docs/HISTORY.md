@@ -1252,6 +1252,25 @@ This reverses "spritebench, and 2D sprites kept on immediate mode" (2026-10-11).
 
 libwgf's actors are now faster than PixiJS's sprites. The bunnymark page is 109.3 KB gzip (107.4); a program that draws no 2D sprite links none of it. The first version checked the clip, viewport, and projection for each sprite: 0.65 and 3.39 ms in the page. Dropping those checks gave the rows above.
 
+## 2D actors placed for less (2026-11-25)
+
+Rob's, next from the same profile. About 19% of the actor bunnymark's frame was making moved actors' world matrices, and about 10% the 2D stage's walk.
+- **An unturned actor** (most 2D actors) gets its world matrix from its parent's columns, scaled and moved, not a full 4 x 4 product. It is the product's values exactly; only a zero's sign may differ.
+- **The 2D stage's walk** passes each child its parent's record, already clean, so a child's parent isn't looked up again.
+- **A stage with no camera** places each actor by its world matrix alone, with no multiply by the identity view.
+- **The walk's list** is kept between draws, not allocated each one.
+
+`wgf_gfx_actor_test` checks an unturned child under a turned, scaled parent against the full product, read and made by the walk. Dropping a column's scale fails both.
+
+**Measured** as before, the last commit's builds and this one's round-robin, with the load under 2; PixiJS's sprites run beside them. Ms a frame:
+
+| bunnies | native, before | native, after | page, before | page, after | PixiJS's sprites |
+|---|---:|---:|---:|---:|---:|
+| 10k | 0.53 | 0.42 | 0.64 | 0.45 | 0.67 |
+| 50k | 2.54 | 1.95 | 2.96 | 1.98 | 3.75 |
+
+Over the two changes, the actor bunnymark in a page went from 0.96 to 0.45 ms at 10k, and from 4.15 to 1.98 at 50k. helix's three.js row, a `Sprite` a bunny in a page, is 10.57 and 55.26.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
