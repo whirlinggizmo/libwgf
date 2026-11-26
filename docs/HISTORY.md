@@ -1271,6 +1271,16 @@ Rob's, next from the same profile. About 19% of the actor bunnymark's frame was 
 
 Over the two changes, the actor bunnymark in a page went from 0.96 to 0.45 ms at 10k, and from 4.15 to 1.98 at 50k. helix's three.js row, a `Sprite` a bunny in a page, is 10.57 and 55.26.
 
+## A Zen-C binding (2026-11-25)
+
+Rob's: a third binding, for Zen C, where Rob is building hot reload on his fork of zc. The Asteroids port's friction log (Zen C's `spikes/zenc_asteroids/FRICTION.md`) had two items about C: zc can't see C types, so `let at: wgf_vec3_t` warned, and it can't see C names.
+
+**What it is:** `bindings/zenc/wgf.zc`, generated with the others (`tools/zencbinding.py`), declaring every exported call, type, enum, and number or color `#define` to zc, with each header comment. It includes the headers, and declares only in forms zc emits nothing for (an opaque `extern struct`, a bare `extern`, a typed `extern let`), or emits what C takes again (a handle's `alias`, each `extern fn`'s prototype). So the C compiler checks all 1,471 prototypes against the headers: a type the generator mapped wrong fails the build (a `float` written `f64` did, in gcc and tcc).
+
+**What it doesn't do:** catch a misspelled `wgf_` name in zc. zc lets any unknown name through to C once a program includes a C header, and never checks a name in capitals; the C compiler catches it, at its `.zc` line. A stricter zc is Zen C's to decide.
+
+**Checked:** `tools/check_binding.py`'s new `zenc` step transpiles `bindings/zenc/test/main.zc`, builds it against the staged headless archive with the C compiler and with tcc, and runs it: handles, a math value, an enum, a color, a `static inline` call, and a log macro. Without zc on PATH, as on CI, it is skipped and says so; the binding being current is checked everywhere, by `gen_binding.py --check`.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

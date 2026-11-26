@@ -265,7 +265,7 @@ The runtime: it opens the window, starts and drives the layers below it, and run
 
 ## The bindings
 
-Games are Haxe (`bindings/haxe/`, haxelib `wgf`); JS and TypeScript programs use the JS binding (`bindings/js/`), which Haxe's JS target is built on. How each maps each kind of C call is [BINDINGS.md](BINDINGS.md). `tools/gen_binding.py` generates both from clang's parse of the headers (`tools/headers.py`), with `hosts/web/exports.json`, the full host's exports; a header change is a regeneration, checked by `--check`.
+Games are Haxe (`bindings/haxe/`, haxelib `wgf`); JS and TypeScript programs use the JS binding (`bindings/js/`), which Haxe's JS target is built on. A Zen-C program imports `bindings/zenc/wgf.zc`, the C API declared to `zc`, and calls C directly. How each maps each kind of C call is [BINDINGS.md](BINDINGS.md). `tools/gen_binding.py` generates all three from clang's parse of the headers (`tools/headers.py`), with `hosts/web/exports.json`, the full host's exports; a header change is a regeneration, checked by `--check`.
 
 **The JS binding** is one ES module, `wgf.js` (written by `tools/jsbinding.py`), and its declarations, `wgf.d.ts`:
 

@@ -14,6 +14,11 @@ The steps, in order (docs/BINDINGS.md):
               host (wasm32-debug-headless, tools/webhost.py)
   browser     the test on the full web host (wasm32-debug) in its page
               (hosts/web/page.html), in a headless Chromium-based browser
+  zenc        the Zen-C binding (bindings/zenc/wgf.zc): its test (bindings/zenc/test/main.zc)
+              transpiled by zc, then built against this machine's staged headless variant
+              and run, by the C compiler and by tcc when there is one. Each compiler
+              checks every call's prototype zc emits against the header's. Linux only for
+              now
 A step that can't run here (no haxe, no hxcpp, no Emscripten, node, or browser) says
 `check_binding: SKIPPING <step> (<why>)`, and the last line repeats every skip. Exits 0
 when every step that ran passed. Standard library only.
@@ -27,13 +32,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import binding as places  # noqa: E402
 import browser  # noqa: E402
+import examples  # noqa: E402
 import headers  # noqa: E402
 import variants  # noqa: E402
 import webhost  # noqa: E402
 
 ROOT = places.ROOT
 BINDING = places.BINDING
-STEPS = ('generated', 'coverage', 'hxcpp', 'node', 'browser')
+STEPS = ('generated', 'coverage', 'hxcpp', 'node', 'browser', 'zenc')
 VERDICT = 'binding test: '
 TEST = BINDING / 'test'
 
@@ -125,6 +131,47 @@ def step_browser(browser_path_option):
     return report(f'browser ({variants.web()})', passed, output)
 
 
+def step_zenc():
+    """The Zen-C binding's test, built by each C compiler there is and run."""
+    zc = shutil.which('zc')
+    if zc is None:
+        return 'no zc on PATH'
+    if not sys.platform.startswith('linux'):
+        return 'Linux only for now'
+    compilers = [c for c in (shutil.which('cc') or shutil.which('gcc'), shutil.which('tcc')) if c]
+    if not compilers:
+        return 'no C compiler on PATH'
+    variant = variants.native('debug-headless')
+    examples.prepare(variant)
+    out = variants.out(variant)
+    work = variants.work(variant) / 'zenc_binding'
+    work.mkdir(parents=True, exist_ok=True)
+    source = work / 'main.c'
+    done = subprocess.run([zc, 'transpile', '-I', str(out / 'include'), str(ROOT / 'bindings' / 'zenc' / 'test' / 'main.zc'),
+                           '-o', str(source)], cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    if done.returncode != 0:
+        return report('zenc (zc)', False, done.stdout)
+    # libwgf.a holds C++ (RmlUi, Jolt): its runtime, by path, as tcc doesn't search for it
+    cxx = shutil.which('g++') or shutil.which('c++')
+    runtime = subprocess.run([cxx, '-print-file-name=libstdc++.so'], capture_output=True, text=True).stdout.strip() \
+        if cxx else '-lstdc++'
+    passed = True
+    for compiler in compilers:
+        name = Path(compiler).name
+        program = work / f'test_{name}'
+        built = subprocess.run([compiler, '-I', str(out / 'include'), str(source), str(out / 'lib' / 'libwgf.a'),
+                                runtime, '-lpthread', '-ldl', '-lm', '-o', str(program)],
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        if built.returncode != 0:
+            passed = report(f'zenc ({name}, built)', False, built.stdout) and passed
+            continue
+        ran = subprocess.run([str(program)], cwd=work, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                             timeout=120)
+        passed = report(f'zenc ({name}, {variant})', ran.returncode == 0 and 'zenc binding test: PASS' in ran.stdout,
+                        ran.stdout.replace('zenc binding test: ', VERDICT)) and passed
+    return passed
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--only', help='comma-separated steps: ' + ', '.join(STEPS))
@@ -146,6 +193,8 @@ def main():
             outcome = step_hxcpp()
         elif step == 'node':
             outcome = step_node()
+        elif step == 'zenc':
+            outcome = step_zenc()
         else:
             outcome = step_browser(args.browser)
         if isinstance(outcome, str):

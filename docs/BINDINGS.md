@@ -1,9 +1,10 @@
 # How a binding maps libwgf
 
-The rules a binding follows to carry libwgf's C calls into another language, stated here only (CONVENTIONS.md, "Bindings"). libwgf has two bindings, both generated from the headers by `tools/gen_binding.py`:
+The rules a binding follows to carry libwgf's C calls into another language, stated here only (CONVENTIONS.md, "Bindings"). libwgf has three bindings, all generated from the headers by `tools/gen_binding.py`:
 
 - **The JS binding** (`bindings/js/`): an ES module, `wgf.js`, with TypeScript's declarations beside it, `wgf.d.ts`. It is the one way JS reaches the wasm host, libwgf linked for the web with no `main` (`hosts/web/`), and a public API of its own, for JS and TypeScript programs.
 - **The Haxe binding** (`bindings/haxe/`, haxelib `wgf`): on the web a Haxe program compiles to JS and calls the JS binding, so every Haxe program, test, and autopilot run exercises it; natively it compiles through hxcpp and links libwgf's staged archive, calling C itself.
+- **The Zen-C binding** (`bindings/zenc/wgf.zc`, written by `tools/zencbinding.py`): the C API declared to `zc`. Zen C compiles to C, so it calls libwgf's C as C does, and most of this file's rules (names, crossings, the runtime) don't apply to it; its README says what it declares and how.
 
 How each piece works is ARCHITECTURE.md's ("The bindings"); why, HISTORY.md's.
 
@@ -57,11 +58,12 @@ On the web the JS binding does the crossing, for a JS program and a Haxe one ali
 
 ## Checks
 
-`tools/check_binding.py` (the Haxe binding) and `tools/check_js_binding.py` (the JS binding) run them all, each step skipped, and said so, where this machine can't:
+`tools/check_binding.py` (the Haxe binding, and the Zen-C binding's step) and `tools/check_js_binding.py` (the JS binding) run them all, each step skipped, and said so, where this machine can't:
 
 - **generated:** `tools/gen_binding.py --check` -- nothing generated is stale against the headers.
 - **coverage:** every exported call reached exactly once; no member calls C twice.
 - **hxcpp**, **node**, **browser:** the Haxe binding's test (`bindings/haxe/test/Main.hx`) on hxcpp against the staged headless archive, under node on the headless web host, and in a browser on the full host in its page, through the JS binding. Verification runs hxcpp on Windows too (MSVC).
 - **types:** the JS binding's declarations under TypeScript `--strict` (`bindings/js/tests/types.ts`): what a program should write compiles, and each mistake marked as one is caught.
 - **examples:** each JS example (`examples/js/<name>/`) in a browser, flown by its autopilot to a PASS: hello, and Asteroids ported from the Haxe game, flying the game's own playthrough.
+- **zenc:** the Zen-C binding's test (`bindings/zenc/test/main.zc`), transpiled by `zc` and built against the staged headless archive by the C compiler and tcc, then run. Each compiler checks every prototype `zc` emits against the header's.
 - **The cost:** `tools/bench/measure_calls.py` times a call from Haxe and from JS (both through the JS binding), and the size table gives the binding's share of each program (`docs/benchmarks.md`).

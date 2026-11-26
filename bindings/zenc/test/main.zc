@@ -1,0 +1,45 @@
+// The Zen-C binding's test (tools/check_binding.py, the zenc step): a program that imports
+// bindings/zenc/wgf.zc and calls libwgf through it, one of each kind the binding declares --
+// handles, a math value, an enum, a color constant, a static inline call, and a log macro --
+// in a frame of the headless variant, then prints its verdict.
+
+import "../wgf.zc";
+
+let failures: i32 = 0;
+
+fn expect(ok: bool, what: const char*) {
+    if !ok {
+        println "FAIL: {what}";
+        failures = failures + 1;
+    }
+}
+
+fn frame(_user: void*) {
+    let stage: wgf_actor_t = wgf_stage2d_create();
+    let sprite: wgf_actor_t = wgf_sprite_create(0);
+    expect(stage != 0 && sprite != 0, "a stage and a sprite: handles");
+    expect(wgf_actor_set_parent(sprite, stage), "set_parent");
+    expect(wgf_actor_set_position(sprite, 10.0, 20.0, 0.0), "set_position");
+    let at: wgf_vec3_t = wgf_actor_get_position(sprite);
+    expect(at.x == 10.0 && at.y == 20.0, "get_position: a math value by value");
+    let moved: wgf_vec3_t = wgf_vec3_add(at, wgf_vec3_make(1.0, 2.0, 3.0));
+    expect(moved.x == 11.0 && moved.z == 3.0, "wgf_vec3_add: a static inline call");
+    expect(wgf_sprite_set_alpha_mode(sprite, WGF_ALPHA_MODE_ADD, 0.5), "set_alpha_mode: an enum value");
+    expect(wgf_sprite_get_alpha_mode(sprite) == WGF_ALPHA_MODE_ADD, "get_alpha_mode");
+    expect(wgf_sprite_set_tint(sprite, WGF_COLOR_RED), "set_tint: a color constant");
+    expect(wgf_sprite_get_tint(sprite) == WGF_COLOR_RED, "get_tint");
+    wgf_log_info("zenc binding: a log macro, %d", 1);
+    wgf_actor_destroy(stage, WGF_ACTOR_DESTROY_CHILDREN);
+    expect(wgf_actor_get_kind(sprite) == WGF_ACTOR_KIND_NONE, "destroyed with its stage");
+    if failures == 0 {
+        println "zenc binding test: PASS";
+    } else {
+        println "zenc binding test: FAIL ({failures})";
+    }
+    wgf_app_quit();
+}
+
+fn main() -> i32 {
+    wgf_app_run(NULL, NULL, frame, NULL, NULL);
+    return 0;
+}

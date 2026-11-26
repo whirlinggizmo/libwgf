@@ -14,8 +14,9 @@ bindings/haxe/src/wgf/:
                      methods; an abstract over a kind for each section whose calls take
                      that kind first (a shape is a node); an enum abstract per enum; and
                      the other calls as statics of their header's class
-bindings/js/wgf.js and wgf.d.ts, the JS binding (tools/jsbinding.py), and
-hosts/web/exports.json, the full host's exports. One name per C call: every exported
+bindings/js/wgf.js and wgf.d.ts, the JS binding (tools/jsbinding.py); bindings/zenc/wgf.zc,
+the Zen-C binding (tools/zencbinding.py); and hosts/web/exports.json, the full host's
+exports. One name per C call: every exported
 call is exactly one member of the typed API, or listed in SKIPPED (tools/mapping.py, the model the
 generator writes from) with its reason
 (docs/BINDINGS.md). Every generated file says so at its top; --check writes nothing and
@@ -32,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (
 import binding as places  # noqa: E402
 import headers  # noqa: E402
 import jsbinding  # noqa: E402
+import zencbinding  # noqa: E402
 from mapping import (MEMBER_NAMES, SKIPPED, TYPE_NAMES, VECTORS, Binding, MapError, camel, enum_members,  # noqa: E402,F401
                      haxe_params, haxe_result, haxe_signature, pascal, spelled)
 
@@ -325,6 +327,7 @@ def outputs(api):
         '\t\treturn i < 0 ? -1 : counts[i];\n\t}\n\n'
         '\t/** The calls never made. **/\n\tpublic static function missing():Array<String>\n'
         '\t\treturn [for (i in 0...NAMES.length) if (counts[i] == 0) NAMES[i]];\n}\n')
+    files[zencbinding.OUT] = zencbinding.write(binding.api, MARK)
     emitter = jsbinding.Emitter(binding)
     js = ''.join(js_raw(binding, f, emitter) for f in funcs if f.name not in SKIPPED)
     cpp = ''.join(cpp_raw(binding, f) for f in funcs if f.name not in SKIPPED)
@@ -367,7 +370,7 @@ def main():
         return 1
     try:
         files = outputs(api)
-    except MapError as e:
+    except (MapError, zencbinding.ZencError) as e:
         print(f'gen_binding: {e}', file=sys.stderr)
         return 1
     stale = []
