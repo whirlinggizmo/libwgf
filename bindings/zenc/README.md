@@ -43,7 +43,14 @@ A headless variant needs only `-lstdc++ -lpthread -ldl -lm` (the archive holds C
 
 ## What zc checks, and what the C compiler does
 
-Once a program includes any C header, `zc` lets a name it doesn't know through to C, and it never checks a name in capitals (it takes it for a macro). So a misspelled `wgf_` call, constant, or field is caught by the C compiler, at its `.zc` line, not by `zc`. What the binding adds is that `zc` knows every libwgf type, so `let at: wgf_vec3_t` and typed handles need no workaround, and every declaration carries its documentation.
+Rob's fork of zc (v0.4.4-766 and later) reads the C headers a program includes and knows every name they declare. So a misspelled `wgf_` call or `WGF_` constant is a zc error at its `.zc` line, with a suggestion:
+
+```
+error: Undefined function 'wgf_actor_set_postion'; did you mean 'wgf_actor_set_position'?
+error: Undefined name 'WGF_ACTOR_DESTORY_CHILDREN'; did you mean 'WGF_ACTOR_DESTROY_CHILDREN'?
+```
+
+Upstream zc lets any unknown name through to C once a program includes a C header, and the C compiler catches it instead, also at its `.zc` line. Either way, a field of a math value (`at.x`) is checked by the C compiler, and the binding means zc knows every libwgf type, so `let at: wgf_vec3_t` and typed handles need no workaround.
 
 ## Checks
 
