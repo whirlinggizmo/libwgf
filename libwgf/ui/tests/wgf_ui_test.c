@@ -337,9 +337,17 @@ static void on_frame(void *user)
                    wgf_ui_get_style_texture(WGF_UI_COLOR_BUTTON) == 0 &&
                    wgf_resource_get_status(art) == WGF_RESOURCE_STATUS_NONE,
                "reset: the art let go");
-        wgf_app_quit();
+        /* code that crashed partway through its UI (a host recovering from a crash in
+           reloaded code): begun, a box open, never ended */
+        expect(wgf_ui_begin() && wgf_ui_begin_box("abandoned", WGF_UI_DIRECTION_ROW),
+               "a UI begun and a box opened, never ended");
         break;
     }
+    case 19: /* the frame's end dropped it, logged: the next frame's UI is whole */
+        expect(wgf_ui_begin() && wgf_ui_label("after", 0) && wgf_ui_end(),
+               "after a UI left unended, the next frame's begins and ends balanced");
+        wgf_app_quit();
+        break;
     default: break;
     }
 }
