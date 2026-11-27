@@ -60,9 +60,13 @@ function init() {
     });
     const calls = Math.trunc(N / BULK) * 10;
     report("bulk", calls, () => {
-        for (let k = 0; k < calls; k++) Main.sink += wgf.wgf_actor_get_positions(actors, out);
+        for (let k = 0; k < calls; k++) Main.sink += wgf.wgf_actor_get_transforms(actors, out, null, null);
     });
     console.log(`calls: bulk-actor ${Math.round(best / BULK * 1000) / 1000}`);
+    report("bulk-set", calls, () => {
+        for (let k = 0; k < calls; k++) if (wgf.wgf_actor_set_transforms(actors, out, null, null)) Main.sink += 1;
+    });
+    console.log(`calls: bulk-set-actor ${Math.round(best / BULK * 1000) / 1000}`);
 }
 
 const frames = [], viewFrames = [];

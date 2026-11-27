@@ -2195,14 +2195,14 @@ class Raw {
 	}
 	public static function wgf_actor_set_rotation(actor:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(68);
+		Reach.hit(67);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_actor_set_rotation((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
 		return value;
 	}
 	public static function wgf_actor_get_rotation(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(44);
+		Reach.hit(43);
 		#end
 		final value:CVec3 = untyped __cpp__("::wgf_actor_get_rotation((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
@@ -2213,14 +2213,14 @@ class Raw {
 	}
 	public static function wgf_actor_set_scale(actor:Int, x:Float, y:Float, z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(69);
+		Reach.hit(68);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_actor_set_scale((wgf_actor_t){0}, (float){1}, (float){2}, (float){3})", actor, x, y, z);
 		return value;
 	}
 	public static function wgf_actor_get_scale(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {
 		#if wgf_reach
-		Reach.hit(45);
+		Reach.hit(44);
 		#end
 		final value:CVec3 = untyped __cpp__("::wgf_actor_get_scale((wgf_actor_t){0})", actor);
 		final out = into != null ? into : new wgf.Vec3();
@@ -2231,7 +2231,7 @@ class Raw {
 	}
 	public static function wgf_actor_set_transform(actor:Int, position_x:Float, position_y:Float, position_z:Float, rotation_x:Float, rotation_y:Float, rotation_z:Float, scale_x:Float, scale_y:Float, scale_z:Float):Bool {
 		#if wgf_reach
-		Reach.hit(70);
+		Reach.hit(69);
 		#end
 		final value:Bool = untyped __cpp__("(bool)::wgf_actor_set_transform((wgf_actor_t){0}, (float){1}, (float){2}, (float){3}, (float){4}, (float){5}, (float){6}, (float){7}, (float){8}, (float){9})", actor, position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, scale_x, scale_y, scale_z);
 		return value;
@@ -2243,25 +2243,35 @@ class Raw {
 		final value:Bool = untyped __cpp__("(bool)::wgf_actor_snap((wgf_actor_t){0})", actor);
 		return value;
 	}
-	public static function wgf_actor_get_positions(actors:Array<Int>, out:Array<Float>):Int {
+	public static function wgf_actor_set_transforms(actors:Array<Int>, positions:Array<Float>, rotations:Array<Float>, scales:Array<Float>):Bool {
 		#if wgf_reach
-		Reach.hit(43);
-		#end
-		final outFloats = Host.floats(out, false);
-		final arg1 = actors == null ? 0 : actors.length;
-		final arg3 = out == null ? 0 : out.length;
-		final value:Int = untyped __cpp__("(int)::wgf_actor_get_positions(({0}.mPtr ? (const wgf_actor_t *){0}->getBase() : (const wgf_actor_t *)0), (int){1}, ({2}.mPtr ? (float *){2}->getBase() : (float *)0), (int){3})", actors, arg1, outFloats, arg3);
-		Host.floatsBack(outFloats, out);
-		return value;
-	}
-	public static function wgf_actor_set_positions(actors:Array<Int>, positions:Array<Float>):Bool {
-		#if wgf_reach
-		Reach.hit(67);
+		Reach.hit(70);
 		#end
 		final positionsFloats = Host.floats(positions, true);
+		final rotationsFloats = Host.floats(rotations, true);
+		final scalesFloats = Host.floats(scales, true);
 		final arg1 = actors == null ? 0 : actors.length;
 		final arg3 = positions == null ? 0 : positions.length;
-		final value:Bool = untyped __cpp__("(bool)::wgf_actor_set_positions(({0}.mPtr ? (const wgf_actor_t *){0}->getBase() : (const wgf_actor_t *)0), (int){1}, ({2}.mPtr ? (const float *){2}->getBase() : (const float *)0), (int){3})", actors, arg1, positionsFloats, arg3);
+		final arg5 = rotations == null ? 0 : rotations.length;
+		final arg7 = scales == null ? 0 : scales.length;
+		final value:Bool = untyped __cpp__("(bool)::wgf_actor_set_transforms(({0}.mPtr ? (const wgf_actor_t *){0}->getBase() : (const wgf_actor_t *)0), (int){1}, ({2}.mPtr ? (const float *){2}->getBase() : (const float *)0), (int){3}, ({4}.mPtr ? (const float *){4}->getBase() : (const float *)0), (int){5}, ({6}.mPtr ? (const float *){6}->getBase() : (const float *)0), (int){7})", actors, arg1, positionsFloats, arg3, rotationsFloats, arg5, scalesFloats, arg7);
+		return value;
+	}
+	public static function wgf_actor_get_transforms(actors:Array<Int>, positions:Array<Float>, rotations:Array<Float>, scales:Array<Float>):Int {
+		#if wgf_reach
+		Reach.hit(45);
+		#end
+		final positionsFloats = Host.floats(positions, false);
+		final rotationsFloats = Host.floats(rotations, false);
+		final scalesFloats = Host.floats(scales, false);
+		final arg1 = actors == null ? 0 : actors.length;
+		final arg3 = positions == null ? 0 : positions.length;
+		final arg5 = rotations == null ? 0 : rotations.length;
+		final arg7 = scales == null ? 0 : scales.length;
+		final value:Int = untyped __cpp__("(int)::wgf_actor_get_transforms(({0}.mPtr ? (const wgf_actor_t *){0}->getBase() : (const wgf_actor_t *)0), (int){1}, ({2}.mPtr ? (float *){2}->getBase() : (float *)0), (int){3}, ({4}.mPtr ? (float *){4}->getBase() : (float *)0), (int){5}, ({6}.mPtr ? (float *){6}->getBase() : (float *)0), (int){7})", actors, arg1, positionsFloats, arg3, rotationsFloats, arg5, scalesFloats, arg7);
+		Host.floatsBack(positionsFloats, positions);
+		Host.floatsBack(rotationsFloats, rotations);
+		Host.floatsBack(scalesFloats, scales);
 		return value;
 	}
 	public static function wgf_actor_get_world_position(actor:Int, into:Null<wgf.Vec3>):wgf.Vec3 {

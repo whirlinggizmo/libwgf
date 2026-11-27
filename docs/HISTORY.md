@@ -1317,6 +1317,16 @@ Rob's, from the open list: the robots' remaining gap to PixiJS 3D. A profile at 
 
 The page gained less. The profile was taken natively, and the page at 400 is within its runs' spread.
 
+## Bulk transforms, in place of bulk positions (2026-11-26)
+
+Rob's: `wgf_actor_set_positions` moved many actors in one call, but a game that also turns or scales them had a call an actor again. Scale changes seldom and rotation often, so three more bulk calls, or one with parts that can be left out. Rob chose the one.
+
+**What changed:** `wgf_actor_set_transforms` and `wgf_actor_get_transforms` take three arrays, positions, rotations (three angles, as `wgf_actor_set_rotation`), and scales, each x, y, z an actor. Any may be NULL with a count of 0: that part is left as it is, or not read. Each actor is looked up and marked changed once, whatever is set. `wgf_actor_set_positions` and `wgf_actor_get_positions` are removed: they were set_transforms with positions alone, and two ways to do one thing. In the bindings, `Actor.setTransforms` and `getTransforms`, a left-out array `null`.
+
+**The rule it adds** (CONVENTIONS, "Public API"): an array may be NULL, with a count of 0, only where its header says what that means. Both bindings already passed a null array as NULL and 0, so the generator is unchanged.
+
+**Checked:** the ecs actor test sets and reads each combination, with a handle that isn't an actor, too few floats in any array (refused, nothing set), and arrays of different room. Both bindings' tests and the feature test call them with an array left out. `measure_calls.py` gains `bulk-set`, set_transforms over 1,000 actors, beside `set`, a call each.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

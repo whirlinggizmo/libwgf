@@ -131,18 +131,24 @@ WGF_API bool wgf_actor_set_transform(wgf_actor_t actor, float position_x, float 
  * isn't simulated. */
 WGF_API bool wgf_actor_snap(wgf_actor_t actor);
 
-/* Gets or sets the positions of many actors at once.
+/* Sets or gets the positions, rotations, and scales of many actors at once: one call for all
+ * of `actors` (`count` of them), where a call each would cross into the library once an actor.
  *
- * get_positions reads each of `actors` (`count` of them) into `out`, as x, y, z in turn. It
- * reads as many as fit in `out_count` floats, and returns how many floats it filled. A handle
- * that isn't an actor reads as 0, 0, 0.
+ * Each array holds x, y, z for each actor in turn, as the one-actor calls above take and give
+ * them: a rotation as three angles in radians. Any of the three may be NULL, with a count of
+ * 0: set_transforms leaves that part of each actor as it is, and get_transforms fills nothing
+ * there. So moving many actors is set_transforms with positions alone.
  *
- * set_positions sets each from `positions`: x, y, z in turn, `positions_count` floats. It
- * skips a handle that isn't an actor. It returns false if there aren't three floats for each
- * actor. */
-WGF_API int wgf_actor_get_positions(const wgf_actor_t *actors, int count, float *out, int out_count);
-WGF_API bool wgf_actor_set_positions(const wgf_actor_t *actors, int count, const float *positions,
-                                    int positions_count);
+ * set_transforms skips a handle that isn't an actor. It returns false, and sets nothing, if
+ * an array that isn't NULL hasn't three floats for each actor, or a count is below 0.
+ *
+ * get_transforms reads as many actors as fit in every array given, and returns how many floats
+ * it filled in each: three an actor. A handle that isn't an actor reads as 0, 0, 0. */
+WGF_API bool wgf_actor_set_transforms(const wgf_actor_t *actors, int count, const float *positions,
+                                      int positions_count, const float *rotations, int rotations_count,
+                                      const float *scales, int scales_count);
+WGF_API int wgf_actor_get_transforms(const wgf_actor_t *actors, int count, float *positions, int positions_count,
+                                     float *rotations, int rotations_count, float *scales, int scales_count);
 
 /* Returns where the actor is in its tree's root's space. On a 2D stage, that is stage units.
  *

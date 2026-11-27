@@ -889,8 +889,10 @@ class Main {
 		expect(ship.setName("probe ship") && world.find("probe ship") == ship, "named");
 		expect(ship.setTransform(100, 100, 0, 0, 0, 0, 1, 1, 1) && ship.snap(), "a transform, snapped");
 		final out = [0.0, 0, 0];
-		expect(Actor.setPositions([ship], [130.0, 100, 0]) && Actor.getPositions([ship], out) == 3 && near(out[0], 130),
-			"positions in bulk");
+		final turned = [0.0, 0, 0];
+		expect(Actor.setTransforms([ship], [130.0, 100, 0], [0.0, 0, 0], null)
+			&& Actor.getTransforms([ship], out, turned, null) == 3 && near(out[0], 130) && near(turned[2], 0),
+			"transforms in bulk");
 		for (c in [Component.MOTION, Component.BOUNDS, Component.LIFETIME, Component.COLLIDER, Component.VOICE])
 			expect(ship.addComponent(c) && ship.hasComponent(c), 'a component: $c');
 		expect(Actor.getCount() >= 1 && !ship.getVoice().isNone(), "counted, and its voice");

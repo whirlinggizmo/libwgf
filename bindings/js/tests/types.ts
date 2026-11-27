@@ -23,8 +23,8 @@ export function frame(): void {
     // bulk calls take arrays or typed arrays, and fill the ones C writes
     const actors = [parentless];
     const positions = new Float32Array(3);
-    const filled: number = wgf.wgf_actor_get_positions(actors, positions);
-    const set: boolean = wgf.wgf_actor_set_positions(new Uint32Array(1), [1, 2, 3]);
+    const filled: number = wgf.wgf_actor_get_transforms(actors, positions, null, null);
+    const set: boolean = wgf.wgf_actor_set_transforms(new Uint32Array(1), [1, 2, 3], null, [1, 1, 1]);
 
     // enums are their values; a color is a number
     const status: wgf.wgf_resource_status_t = wgf.wgf_resource_get_status(texture);
@@ -45,7 +45,7 @@ export function frame(): void {
     // @ts-expect-error a vector has no w
     where.w;
     // @ts-expect-error an array of strings is not one of actors
-    wgf.wgf_actor_get_positions(['a'], positions);
+    wgf.wgf_actor_get_transforms(['a'], positions, null, null);
 
     void [moved, kind, sum, filled, set, ready, bytes, wrong];
 }

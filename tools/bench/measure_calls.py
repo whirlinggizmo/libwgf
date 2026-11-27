@@ -15,8 +15,10 @@ binding alone.
   transform  wgf_actor_set_transform: nine floats
   string     wgf_actor_set_name: a string in (copied, no search), a bool out
   string-80  the same with a chat line of 80 characters: what one costs to cross
-  bulk       wgf_actor_get_positions over 1,000 actors (an array in, one out);
-             bulk-actor is the same per actor
+  bulk       wgf_actor_get_transforms over 1,000 actors, positions alone (an array in, one
+             out); bulk-actor is the same per actor
+  bulk-set   wgf_actor_set_transforms over the same 1,000, positions alone: set's work for
+             1,000 actors in one call; bulk-set-actor is the same per actor
   chat       a whole UI frame, ns per frame: a scroll area of 200 such lines, given
              again (wgf_ui_label each), laid out, and drawn. 200 times string-80 is
              its lines' crossing; the rest is the UI's own work
@@ -41,7 +43,8 @@ import webhost  # noqa: E402
 PROGRAM = Path(__file__).resolve().parent / 'calls'
 MARK = 'calls: '
 VERDICT = 'calls done: '
-SHAPES = ('set', 'get', 'transform', 'string', 'string-80', 'bulk', 'bulk-actor', 'chat', 'chat-view')
+SHAPES = ('set', 'get', 'transform', 'string', 'string-80', 'bulk', 'bulk-actor', 'bulk-set', 'bulk-set-actor', 'chat',
+          'chat-view')
 
 
 def numbers(output):

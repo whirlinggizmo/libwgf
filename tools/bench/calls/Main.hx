@@ -42,8 +42,10 @@ class Main {
 		report("string", N, () -> for (_ in 0...N) if (first.setName("first")) sink += 1);
 		report("string-80", N, () -> for (_ in 0...N) if (first.setName(LINE)) sink += 1);
 		final calls = Std.int(N / BULK) * 10;
-		report("bulk", calls, () -> for (_ in 0...calls) sink += Actor.getPositions(actors, out));
+		report("bulk", calls, () -> for (_ in 0...calls) sink += Actor.getTransforms(actors, out, null, null));
 		Log.message(LogLevel.INFO, 'calls: bulk-actor ${Math.round(best / BULK * 1000) / 1000}');
+		report("bulk-set", calls, () -> for (_ in 0...calls) if (Actor.setTransforms(actors, out, null, null)) sink += 1);
+		Log.message(LogLevel.INFO, 'calls: bulk-set-actor ${Math.round(best / BULK * 1000) / 1000}');
 	}
 
 	static final frames:Array<Float> = [];

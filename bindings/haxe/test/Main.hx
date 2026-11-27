@@ -83,9 +83,11 @@ class Main {
 		// arrays: in, and filled
 		b = Actor.create();
 		b.setParent(world);
-		expect(Actor.setPositions([a, b], [10.0, 11, 12, 20, 21, 22]), "an array of handles and one of floats in");
+		expect(Actor.setTransforms([a, b], [10.0, 11, 12, 20, 21, 22], null, null), "an array of handles and one of floats in");
 		final out = [for (_ in 0...6) 0.0];
-		expect(Actor.getPositions([a, b], out) == 6 && near(out[3], 20) && near(out[5], 22), "an array filled");
+		expect(Actor.getTransforms([a, b], out, null, null) == 6 && near(out[3], 20) && near(out[5], 22), "an array filled");
+		expect(Actor.setTransforms([a, b], null, null, [2.0, 2, 2, 3, 3, 3]) && near(b.getScale().x, 3)
+			&& near(b.getPosition().x, 20), "an array left out: null, that part left as it is");
 		final shape = Shape2d.create();
 		expect(shape.setPolygon([0.0, 0, 10, 0, 10, 10]) && shape.getPointCount() == 3, "a section over a kind");
 		final points = [for (_ in 0...6) 0.0];
