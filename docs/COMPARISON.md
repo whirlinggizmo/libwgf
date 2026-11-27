@@ -1,0 +1,118 @@
+# libwgf and helix compared
+
+For a game developer choosing between them, and for Rob deciding which to carry on with. It says how the two are now; where a number is still to be measured, it says so. helix's side was read from its own docs (`../helix`: engines/raylib/README.md and api/, libs/*/README.md, docs/PLATFORM.md, docs/benchmarks.md) on 2026-11-27, and is helix's to correct.
+
+## What each is
+
+- **libwgf** is a game framework in C, retained mode: a program makes actors (sprites, models, text, lights, cameras) in trees under stages, and the library keeps them, places them, culls them, and draws them each frame. Games are written in Haxe through its binding (on the JS target in a page, hxcpp natively), in JS or TypeScript, in C, or in Zen-C. One wasm module in a page; sokol underneath.
+- **helix-raylib** is raylib 5.5's API in Haxe, immediate mode: a program draws what it wants each frame (`DrawTexture`, `DrawModel`) and keeps its own structure. In a page it is JS on WebGL2, no wasm; natively, hxcpp on SDL3 with sokol (GL 4.1) or SDL_GPU (Vulkan, D3D12, Metal). It is one engine over helix's libraries (platform, services, formats, math, geometry, tweens, Jolt, Box2D).
+- **A retained engine on helix** would be a second helix engine beside helix-raylib, over the same libraries and adapters. It doesn't exist. helix-legacy was retained (a `Sprite2D` an object, its bunnymark the slow row), and helix-render, the drawing library such an engine would likely want, is set aside: helix-raylib's rebuild on it failed its size and speed gates. Its column below is what it would need building.
+
+## What it comes with
+
+Yes, partial, or none, a line each. "Libraries" is what helix offers beside helix-raylib, not through raylib's API.
+
+| | libwgf | helix-raylib | a retained engine on helix |
+|---|---|---|---|
+| **Targets** | web (wasm, WebGL2), Linux, Windows (MSVC, MinGW); a headless build for tests | web (JS, WebGL2), native on SDL3 (GL 4.1, or SDL_GPU: Vulkan, D3D12, Metal) | helix-raylib's |
+| **Languages** | Haxe, JS and TypeScript, C, Zen-C | Haxe | Haxe |
+| **Window and display** | title, size, fullscreen, monitors, DPI; a design resolution with five fit modes; safe areas, orientation | raylib's window calls; the Screen extra's Godot-style stretch modes; the Device extra's safe area and orientation lock | helix-raylib's |
+| **Input** | keyboard, mouse, 4 pads (rumble, SDL mappings), touch with gestures, tilt, an on-screen stick; actions bound across keys, pads, axes, and touch | keyboard, mouse, pads (vibration, SDL mappings), touch, raylib's gestures, the VirtualGamepad extra, tilt (web only); actions in helix-services, not raylib's API | helix-services' actions |
+| **2D drawing** | immediate shapes and textures; sprites as actors (size, pivot, tint, alpha modes, nine-slice, trimmed atlas frames); sprite batches; 2D cameras; render targets; clip regions | raylib's shapes, splines, textures, `Camera2D`, render textures, blend modes; the Sprites extra's instanced draw; the Textures extra's fills, tiled draws, nine-patches; a bulk sprite batch in progress | to build |
+| **Text and fonts** | TTF and OTF, bitmap fonts; text actors with wrapping and alignment, in 2D and 3D; a text buffer and view | TTF and OTF, BMFont, image fonts, SDF; raylib's measuring; no layout beyond it | to build (helix-render's `TextLayout2D`, set aside) |
+| **Textures and images** | PNG, JPEG, BMP, TGA, GIF, and KTX (compressed, the variant the GPU samples); CPU images (raylib's Image calls); cubemaps; sprite sheets from a grid or TexturePacker or Aseprite JSON | PNG, JPEG, BMP, TGA, QOI, GIF (animated); raylib's CPU image editing; cubemaps; atlases from TexturePacker JSON and Starling XML; no compressed formats | helix-raylib's readers |
+| **3D drawing** | models from glTF as actor trees; generated meshes; metallic-roughness materials and unlit; custom shaders; directional, point, and spot lights; shadows; environments (image-based light, a sky); instancing; frustum culling; 3D sprites and text | meshes, par_shapes, heightmaps; glTF and OBJ models; the Lighting extra's Phong and PBR shaders; shadows for up to 4 lights; skybox from a cubemap; instanced meshes; VR stereo; no fog or frustum culling (libwgf has no fog either) | to build |
+| **Animation** | glTF skeletal on the GPU, layers, blends, shared clips; sprite sheet clips; tweens on the tick clock | glTF skeletal on the GPU, a two-clip blend and per-bone masks; the tweens extra; no sprite clip system | to build |
+| **Particles** | 2D and 3D emitters on the GPU | the Particles extra: 3D on the GPU (lit), 2D on the CPU | helix-raylib's extra |
+| **Audio** | WAV, MP3, Ogg, whole or streamed; voices with pitch and pan; buses (master, music, effects); spatial voices and a listener | WAV, Ogg, MP3, QOA; sounds, music, procedural streams; groups with fades in helix-services; no 3D audio | helix-services' |
+| **UI** | an immediate UI on Clay with widgets (buttons, sliders, tabs, lists, dropdowns, modals, tooltips, a text field), skins, focus by keys and pads; RmlUi documents | raygui 4.5 and its styles; the GuiSkins extra; no key or pad focus documented | to build |
+| **Physics and collision** | Jolt as components (bodies, sensors, characters, a vehicle); a 2D arcade body; 2D and 3D collision math; Box2D vendored, its calls in progress | raylib's collision checks; Jolt and Box2D as libraries, deterministic, each its own wasm in a page | the libraries |
+| **Assets and saves** | resources loaded on create, on workers natively; an asset host with a cache, manifests, groups; `user:` saves; reload of changed files | the Assets extra's hosts and cache, async loads; saves per company and product | helix-services' |
+| **Scene and game structure** | actors in trees, enabled, visible, paused; components and their systems (motion, bounds, lifetime, colliders); behaviors (a game's code on actors, by name); scene files and prefabs; a screen stack; follow and fly cameras | none: a game keeps its own structure, as in raylib | to build: the reason it would exist |
+| **Tilemaps** | Tiled maps whole: four grids, infinite maps, terrain painting, objects, image layers, reload | none | to build |
+| **Picking** | the topmost actor at a point (2D, texel-accurate), a ray against a 3D stage; the pointer's hover and press on actors | raylib's screen-to-world ray and ray tests; physics queries | to build |
+| **Debug and testing** | a frame-rate overlay; probes; input recorded and replayed; autopilot runs (inputs and expectations, headless or in a browser) | the Debug extra's frame stats and recording, skeleton drawing; raylib's automation events; parity suites against raylib's C | helix-raylib's, plus its own |
+| **Hot reload** | Haxe with hotreload-hx in a page (`wgf serve --hot`); Zen-C natively through tcc, its heap rule | hotreload-hx wired in a page's dev build (helix-services); shaders and assets swapped when changed; no code reload in helix-raylib itself | as helix-raylib |
+| **Platform layer** | sokol (app, gfx, audio); a new backend is whatever sokol has | adapters: an interface each for graphics, window, events, input, audio, decoders, fonts, http, sockets, files, export, each with a web and a native adapter; a program names one per interface | the same adapters |
+
+## Size
+
+A page's code gzipped (the page, its JS, its wasm), as helix counts it, no assets.
+
+| | libwgf | helix-raylib |
+|---|---:|---:|
+| the smallest program (a window cleared) | 70.6 KB (app-skeleton) | 35.5 KB (1-window) |
+| a game's features, one of each | **to measure:** helix's game rung written on libwgf | 142.0 KB (10-game) |
+| everything linked | not measured | 363.8 KB (11-everything) |
+| Asteroids (2D, UI, sound, particles) | 222.7 KB | not written |
+| Wardens (the same spec on both) | 268.5 KB | **to measure** |
+| the racer (3D, Jolt) | 565.5 KB | not written |
+
+Physics weighs differently: libwgf links Jolt into its one module (about 264 KB gzip), helix's page fetches `jolt.wasm` (260.8 KB) or `box2d.wasm` (119.4 KB) beside the game.
+
+## Speed
+
+On coinspinner (i9-13900HX, RTX 4080 laptop), pages with helix's `run_page.cjs`, frame to frame in ms.
+
+| | libwgf | helix-raylib |
+|---|---:|---:|
+| bunnymark 50k, an actor a bunny (libwgf) or `DrawTexture` a bunny (helix) | 1.74 | 1.04 |
+| bunnymark 50k, libwgf's sprite batch (2026-11-20) | 0.43 | |
+| bunnymark, batch against batch | **to measure** once helix's bulk sprite batch extra lands | |
+| robots 400, one session | 2.76 | 2.52 |
+| natively | about level | about level |
+
+An actor a bunny isn't helix's `DrawTexture` a bunny: the actor is kept, placed in its tree, culled, and pickable, and costs that each frame. libwgf's like of `DrawTexture` is the sprite batch.
+
+## Limits
+
+- **libwgf:** 65,535 live objects of each kind (actors, textures, voices); emitters, batches, and tile layers hold their many things inside one. One graphics layer, sokol's. The page is the larger.
+- **helix-raylib:** no structure but what the game writes. Unsupported: IQM, VOX, and M3D models, morph targets, compressed images, loads from memory, shaders from GLSL at run time (they are compiled ahead), FLAC; 87 rlgl calls (raw GL handles and buffers). Calls that wait (`EndDrawing`, file reads) can't be made in callbacks, constructors, or initial values.
+
+## Worked examples
+
+The same small task on each, in Haxe.
+
+### An actor on a moving platform
+
+**libwgf:** the platform is the rider's parent. Moved, turned, or scaled, the platform carries the rider and everything under it (a held item, a name tag); the world position is the library's to work out, so picking, culling, and collisions see the rider where it is.
+
+```haxe
+// landing: under the platform, where it was (today worked out by hand,
+// for a platform that doesn't turn or scale; a call for it is on the ROADMAP)
+final at = player.getWorldPosition(), base = platform.getWorldPosition();
+player.setParent(platform);
+player.setPosition(at.x - base.x, at.y - base.y, at.z - base.z);
+
+// each frame: move only the platform
+platform.setPosition(x, y, 0);
+
+// leaving: back on the stage, where it is
+final now = player.getWorldPosition();
+player.setParent(stage);
+player.setPosition(now.x, now.y, now.z);
+```
+
+**helix-raylib:** no tree, so the game carries its riders itself, each frame.
+
+```haxe
+// each frame: move the platform, and every rider by as much
+final dx = platform.x - platform.lastX, dy = platform.y - platform.lastY;
+for (rider in platform.riders) {
+	rider.x += dx;
+	rider.y += dy;
+}
+// a turning platform also turns each rider's offset about its center;
+// a rider's own children (a held item) are the game's to carry too
+DrawTexture(platformTexture, Std.int(platform.x), Std.int(platform.y), WHITE);
+for (rider in platform.riders) DrawTexture(rider.texture, Std.int(rider.x), Std.int(rider.y), WHITE);
+```
+
+Or draw the riders under `rlPushMatrix` with the platform's transform: that moves what is drawn, not where the game thinks the rider is.
+
+## Still to measure
+
+1. helix's game rung (`engines/raylib/tests/sizes/10-game`) written feature for feature on libwgf, its page's size.
+2. Wardens' page on helix-raylib, beside libwgf's 268.5 KB.
+3. The bunnymark batch against batch, once helix's bulk extra lands; and the robots again, one session.
+4. More worked examples: a menu with pad focus, a Tiled level, a skinned character with a blended run, a save.
