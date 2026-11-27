@@ -74,7 +74,7 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True, type
                f'-sEXPORTED_FUNCTIONS=@{(work / "exports.txt").as_posix()}',
                # a headless host's storage is the wasm's own: node's runner copies files in (FS)
                '-sEXPORTED_RUNTIME_METHODS=' + ','.join(RUNTIME + (['FS'] if headless else [])),
-               '-sALLOW_TABLE_GROWTH=1', '-sALLOW_MEMORY_GROWTH=1',
+               '-sALLOW_TABLE_GROWTH=1', '-sALLOW_MEMORY_GROWTH=1', '-msimd128',  # wasm SIMD, as the library's C
                '-sSTACK_SIZE=524288',  # physics3d's Jolt (libwgf/physics3d/CMakeLists.txt)
                OPTIMIZE if release else '-O0', *(['-flto'] if release else ['-g']), *EXTRA]
     if headless:

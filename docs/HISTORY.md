@@ -1349,6 +1349,20 @@ Over the size baseline (`measure_sizes.py`, re-recorded): 59 programs smaller, 5
 
 **What it costs:** the library and its tests build clean in 36 s against 29 (32 cores); a program's link takes 1 to 6 s longer, physics3d-vehicle's the longest, 8.6 s against 3.0, Jolt's C++ optimized at the link. The staged release archive holds bitcode, so a program links it with the pinned Emscripten, which every web preset already requires.
 
+## Wasm SIMD (2026-11-26)
+
+Rob's, after helix's robots page came out ahead of libwgf's in one session (2.52 ms against 3.14 at 400), though the two are level natively (2.51 and 2.58). A profile of the page in Chrome gave the frame's shares, close to native's: the browser's own work and WebGL about 28%, a skin's joint matrices about 24%, the 3D stage's walk and visits 22%, animation 22%. The same math, run slower. (The first profiles blamed one 31 KB `frame`: wasm-opt, after the link, had inlined the stage's draw into the benchmark's frame. A profile linked at `-O0`, the objects still `-O3`, names each function.)
+
+**What changed:** every web build's C is compiled and linked with `-msimd128`, and the examples and the web host link with it, so LLVM vectorizes the matrix and vector math. The C++ isn't: with it Jolt takes its SSE code, which needs more than the flag. A page now needs a browser of 2023 or later (Safari 16.4, Chrome 91, Firefox 89); one without wasm SIMD fails to load it. Rob accepted that.
+
+**Measured** on coinspinner, the release build as pushed and the same with SIMD, round-robin with helix's `run_page.cjs`, the median of 5 runs, the load 6 to 8 throughout:
+
+| | without | with SIMD |
+|---|---:|---:|
+| robots at 400, page | 3.01 ms | 2.78 ms |
+| actor bunnymark at 50k, page | 1.87 ms | 1.70 ms |
+| robots' wasm, gzip | 149.7 KB | 149.2 KB |
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

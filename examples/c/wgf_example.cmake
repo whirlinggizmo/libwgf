@@ -78,7 +78,8 @@ function(wgf_example name)
             file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${name}_exports.txt" "${exports}\n")
             target_link_options(${name} PRIVATE "-sEXPORTED_FUNCTIONS=@${CMAKE_CURRENT_BINARY_DIR}/${name}_exports.txt")
         endif()
-        target_link_options(${name} PRIVATE -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1
+        target_compile_options(${name} PRIVATE -msimd128) # wasm SIMD, as the library is built with
+        target_link_options(${name} PRIVATE -msimd128 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sALLOW_MEMORY_GROWTH=1
                                             -sSTACK_SIZE=524288) # physics3d's Jolt (libwgf/physics3d/CMakeLists.txt)
         # a release page, as wgrender's: Closure minifies the JS, and only a browser's
         # environments (a page, a worker) are kept

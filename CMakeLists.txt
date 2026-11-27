@@ -89,6 +89,13 @@ if(EMSCRIPTEN AND CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_options(-flto)
     add_link_options(-flto)
 endif()
+# Every web build's C uses wasm SIMD (docs/HISTORY.md, "Wasm SIMD"): a page 8 to 9% faster,
+# for a browser of 2023 or later (Safari 16.4, Chrome 91, Firefox 89). Not the C++: with it,
+# Jolt takes its SSE code, which needs more than the flag.
+if(EMSCRIPTEN)
+    add_compile_options($<$<COMPILE_LANGUAGE:C>:-msimd128>)
+    add_link_options(-msimd128)
+endif()
 if(WGF_HEADLESS)
     add_compile_definitions(SOKOL_DUMMY_BACKEND)
 elseif(EMSCRIPTEN)

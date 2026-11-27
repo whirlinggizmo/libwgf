@@ -40,7 +40,7 @@ Every build is a preset in `CMakePresets.json`, named `<platform>-<config>[-<fea
 | | `linux-x64-debug-tsan`, `-asan`, `-ubsan` | the headless tests under ThreadSanitizer, AddressSanitizer with LeakSanitizer, and UndefinedBehaviorSanitizer |
 | Linux, Windows | `windows-x64-mingw-debug`, `-debug-headless`, `-release` | Windows with MinGW-w64: cross-built on Linux, tests under Wine |
 | Windows | `windows-x64-msvc-debug`, `-debug-headless`, `-release` | Windows with MSVC, through Visual Studio's generator |
-| Linux, Windows | `wasm32-debug`, `wasm32-release` | the web, WebGL2; tests under node, and in a browser where they need one |
+| Linux, Windows | `wasm32-debug`, `wasm32-release` | the web, WebGL2 and wasm SIMD (a browser of 2023 or later: Safari 16.4, Chrome 91, Firefox 89); tests under node, and in a browser where they need one |
 | Linux, Windows | `wasm32-debug-headless` | the web with no canvas, Web Audio, or fetch: the native mixer (no device), asset layer, and file storage, in the wasm's own file system; every headless test, the binding's, and the feature test, under node |
 
 A preset's CMake work goes to `build/<preset>/`. What it makes for others goes to `out/<platform>/<config>[-<feature>]/` when it is staged (`python3 tools/stage_variant.py <preset>`): the public headers in `include/`, the archive in `lib/` (`libwgf.a`; MSVC's `wgf.lib`), and libwgf's LICENSE and THIRD_PARTY_NOTICES.md in `share/wgf/`. A program builds against `out/`, never `build/`.
