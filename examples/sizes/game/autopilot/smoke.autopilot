@@ -1,0 +1,10 @@
+wgf-autopilot 1
+# A smoke run: its files loaded, the hero run right and back, a jump, the pointer over the ground and pressed there.
+at 0 wait core.loading == 0
+at 10 key down right
+at 70 key up right
+at 80 key tap space
+at 90 mouse move 300 300
+at 100 mouse down left
+at 130 mouse up left
+at 160 end

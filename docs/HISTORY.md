@@ -1439,6 +1439,12 @@ Without the kept quad, the walk alone: 50k natively 1.62 ms, 10k in a page no ga
 
 **Not explained yet:** in a page, the gain fades past about 10,000 sprites. Timed inside the frame, the stage's draw costs about 20 ns a sprite at 10k and 26 at 20k to 50k, while the old walk cost about 25 at every count. Natively the gain holds at 50k. It isn't the core the page runs on (pinned to the performance cores, the same) or huge pages (native uses none here either); the profiles at 10k and 50k have the same shape.
 
+## The game rung (2026-11-27)
+
+Rob's, for the comparison with helix: size at a game's scale, not the bunnymark's or a window cleared. helix-raylib's size ladder has a game rung (`engines/raylib/tests/sizes/10-game`): a program with what a real game uses, a file format of each kind, built and measured. libwgf's is the same program in Haxe (`examples/sizes/game/`), feature for feature as a libwgf game writes it: a skinned glTF model, lit, its idle and run crossfaded; PNG textures and a sprite sheet's clip; a TTF font and the built-in one; 2D and 3D cameras; a custom shader as a screen effect over the world drawn into a render target; WAV sound effects and Ogg music streamed; keyboard, mouse, pad, and touch, with a ray from the pointer to the ground; a save kept and read back; collisions; fullscreen and the window's size. Two WAV sounds were added to the examples' assets for it (`sounds/jump.wav`, `coin.wav`, tones made by a script).
+
+`measure_sizes.py` measures it as a game's web export (`game:game-rung`: its trimmed host, 100 calls, the binding, the program), smoke-tested by its autopilot; fitted to helix's 800 by 450 with bars (the presentation). A page of 249.7 KB gzip, as helix counts one (its wasm 207.6, the host's JS 24.9, the binding 4.2, the program 9.5, the page 3.4), against helix-raylib's 142.0 on its main: 1.76 times. The bunnymark's page was 2 times helix's, a window cleared 2 times (70.6 against 35.5).
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

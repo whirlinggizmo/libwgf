@@ -6,7 +6,8 @@ baseline.
     tools/measure_sizes.py [--references] [--write] [--check] [--render] [--only NAME[,NAME...] | --shard K/N]
 
 libwgf's programs are built in wasm32-release, as a page ships them: each C example
-(tools/examples.py), each game's web export (wgf export --web: its trimmed host, its
+(tools/examples.py), each game's web export and the game rung's (examples/sizes/game/,
+helix-raylib's 10-game in Haxe) (wgf export --web: its trimmed host, its
 page, its program), and each JS example (examples/js/, its host and JS binding trimmed
 alike: js:<name>). For each, the wasm and the JS, raw, gzip -9, and brotli -q 11 (when
 the brotli tool or module is there); a game's JS is its host's, the JS binding's, and
@@ -187,10 +188,18 @@ def libwgf_examples(only):
     return out
 
 
+def game_dirs():
+    """Every program measured as a game's web export is: each game, and the game rung
+    (examples/sizes/game/, helix-raylib's game rung written on libwgf in Haxe)."""
+    found = []
+    for parent in (ROOT / 'games', LADDER_DIR):
+        found += [d for d in parent.iterdir() if (d / 'wgf.json').exists()] if parent.is_dir() else []
+    return sorted(found)
+
+
 def libwgf_games(only):
     out = {}
-    games = ROOT / 'games'
-    for game in sorted(d for d in games.iterdir() if (d / 'wgf.json').exists()) if games.is_dir() else []:
+    for game in game_dirs():
         name = json.loads((game / 'wgf.json').read_text())['name']
         if only and f'game:{name}' not in only and name not in only:
             continue
@@ -222,8 +231,7 @@ def program_names():
     example, by the names their rows have."""
     names = list(examples.names())
     names += [d.name for d in LADDER_DIR.iterdir() if (d / 'CMakeLists.txt').exists()] if LADDER_DIR.is_dir() else []
-    games = ROOT / 'games'
-    names += [f'game:{json.loads(g.read_text())["name"]}' for g in games.glob('*/wgf.json')] if games.is_dir() else []
+    names += [f'game:{json.loads((g / "wgf.json").read_text())["name"]}' for g in game_dirs()]
     names += [f'js:{p.name}' for p in webhost.JS_EXAMPLES.iterdir() if (p / 'main.js').is_file()]
     return sorted(names)
 

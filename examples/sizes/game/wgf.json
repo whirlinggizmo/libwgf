@@ -1,0 +1,8 @@
+{
+	"name": "game-rung",
+	"title": "libwgf game rung",
+	"main": "Main",
+	"source": "src",
+	"assets": "../../assets",
+	"autopilot": "autopilot"
+}
