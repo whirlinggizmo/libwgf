@@ -69,6 +69,24 @@ An actor a bunny isn't helix's `DrawTexture` a bunny: the actor is kept, placed 
 - **libwgf:** 65,535 live objects of each kind (actors, textures, voices); emitters, batches, and tile layers hold their many things inside one. One graphics layer, sokol's. The page is the larger.
 - **helix-raylib:** no structure but what the game writes. Unsupported: IQM, VOX, and M3D models, morph targets, compressed images, loads from memory, shaders from GLSL at run time (they are compiled ahead), FLAC; 87 rlgl calls (raw GL handles and buffers). A call that waits (`EndDrawing`, a file read) is refused in a function used as a value (a lambda), pointing to its `...Async` call.
 
+## An agent's learning cost
+
+helix-raylib's API is raylib 5.5's, which a model already knows; libwgf's is learned from its headers and docs. The Wardens trial (2026-11-20, HISTORY.md, "The comparison") gave the same spec to fresh agents under the same conditions:
+
+| | cost a run | cache read | failed builds | items met, of 37 |
+|---|---:|---:|---:|---:|
+| raylib C | $2.40 | | | 36.7 |
+| helix-raylib | $2.51 | 7.3M | 4 to 5 | 35.0 |
+| libwgf (Haxe) | $2.87 | 11.3M | 1 to 2 | 36 |
+
+- **The known API saved reading:** helix-raylib's runs read about a third less and cost about 13% less.
+- **It didn't save mistakes:** its runs failed to build most often and met the fewest items. Where helix-raylib differs from the raylib a model remembers (`...Async` loads, a waiting call refused in a lambda, shaders compiled ahead), what the model knows points the wrong way.
+- **The extras went unmeasured.** Agents that needed an extra built their own, since nothing told them it existed; libwgf's did the same with what libwgf had (bars over actors, skinned menus, a model's nodes walked by hand). So the trial measured plain raylib against libwgf, not raylib with its extras: what reading the extras costs, and whether a known core API still saves anything once they are read, is open.
+
+**To measure it:** a spec that needs the extras (lit 3D, particles, skinned UI, an on-screen pad), built by fresh agents on each engine with two briefs: none, as Wardens'; and the engine's index of what exists, as a developer's agent would be given. The first prices doing without; the second prices reading the extras, and answers whether the known API still pays.
+
+**The model for that index is PixiJS's** ([pixijs.com/llms](https://pixijs.com/llms)), better laid out than either engine's docs: `llms.txt`, an index of every page by group with a line on what each is for, loaded first; a medium file of the guides without the reference; the full reference; and skills for coding agents, its preferred route, installed in one command. Its site puts core concepts first, opens each area with an overview and then a page a class, and keeps guides, tutorials, examples, a playground, and the API apart. libwgf's own is on its ROADMAP (jam-ready's "Docs for agents", and Distribution's docs site).
+
 ## Worked examples
 
 The same small task on each, in Haxe.
@@ -116,3 +134,4 @@ Or draw the riders under `rlPushMatrix` with the platform's transform: that move
 2. Wardens' page on helix-raylib, beside libwgf's 268.5 KB.
 3. The bunnymark batch against batch, once helix's bulk extra lands; and the robots again, one session.
 4. More worked examples: a menu with pad focus, a Tiled level, a skinned character with a blended run, a save.
+5. The learning cost with the extras: the spec above, two briefs, on each engine.
