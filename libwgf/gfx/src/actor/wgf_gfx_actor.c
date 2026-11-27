@@ -669,7 +669,7 @@ bool wgf_actor_set_transforms(const wgf_actor_t *actors, int count, const float 
         if (positions != NULL) actor_ptr->position = read3(positions, i);
         if (rotations != NULL) actor_ptr->rotation = wgf_quat_from_euler(read3(rotations, i));
         if (scales != NULL) actor_ptr->scale = read3(scales, i);
-        wgf_gfx_priv_actor_transform_changed(actors[i]);
+        moved(actors[i], actor_ptr);
     }
     return true;
 }

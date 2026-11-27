@@ -1369,6 +1369,23 @@ Rob's, from the Zen-C binding's checks: a texture passed where an actor goes com
 
 **What changed:** the generator declares each kind of handle as `opaque alias X = u32;`. `wgf_handle_t`, any handle, and `wgf_color_t` stay plain aliases. With zc at 6c2403aa, one kind for another, `5` for an actor, a handle into a `u32` without a cast, and another enum's value are zc errors. `0`, `!= 0`, any kind where any handle goes, and `(u32)a` compile. The binding's test passes with the C compiler and tcc. A zc older than 6c2403aa refuses `0` as a handle (bindings/zenc/README.md).
 
+## The bunnymark's bulk row (2026-11-27)
+
+Rob's, from the open list. `bulk=1` draws the bunnies as actors, as the default does, and moves them all with one `wgf_actor_set_transforms` a frame, positions alone, in place of a `wgf_actor_set_position` each. `measure_frames.py` runs it at 10k and 50k.
+
+**Fixed with it:** set_transforms looked each actor up twice, once to set it and again to mark it changed. It now looks it up once, as set_position does.
+
+**Measured** on coinspinner, round-robin, the median of 5 runs natively and 3 in a page with helix's `run_page.cjs`, the load 5 to 9 from other work:
+
+| | a call each | bulk |
+|---|---:|---:|
+| 10k, native | 0.48 ms | 0.46 ms |
+| 50k, native | 1.83 ms | 1.91 ms |
+| 10k, page | 0.37 ms | 0.42 ms |
+| 50k, page | 1.72 ms | 1.83 ms |
+
+**Bulk is no faster from C.** A C program calls the library inside the same wasm, so a call each costs little. Bulk adds a second walk over the bunnies and a 600 KB array of positions. What it saves is a crossing from JS into the wasm, about 8 ns a call (`measure_calls.py`'s `set` and `bulk-set`), so it is for the bindings. The row stays to show that.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

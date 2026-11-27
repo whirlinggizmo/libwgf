@@ -42,13 +42,15 @@
  * libwgf game would write it (helix-legacy's row, a Sprite2D each, is the like of it).
  *
  * The bunny is raylib's wabbit_alpha.png, as helix's is (examples/assets/CREDITS.md).
- * Two ways to draw them: a sprite actor a bunny (the default), of which there are at most
- * 65535, so past about 65000 bunnies the program says so in its line ("limit") instead of
- * drawing them; or, with batch=1, one sprite batch (wgf_sprite_batch.h) holding every bunny
- * as a quad, its positions written as one array a frame, with no limit but memory's.
+ * Three ways to draw them: a sprite actor a bunny (the default), each moved with a call of
+ * its own, of which there are at most 65535, so past about 65000 bunnies the program says so
+ * in its line ("limit") instead of drawing them; with bulk=1, the same actors, all moved
+ * with one wgf_actor_set_transforms a frame; or, with batch=1, one sprite batch
+ * (wgf_sprite_batch.h) holding every bunny as a quad, its positions written as one array a
+ * frame, with no limit but memory's.
  *
  * Options, from the page's query (natively, --count=N and so on): count=N, or
- * incrementCount=N with startCount=M, and batch=1. A count run draws 120 frames to warm up, then
+ * incrementCount=N with startCount=M, and bulk=1 or batch=1. A count run draws 120 frames to warm up, then
  * times 600 frame to frame, and prints helix's JSON line (mean_ms, median_ms, p95_ms); a
  * ramp starts at M bunnies (N without it), adds N each 60 frames while those averaged 59
  * frames a second or better, and prints the largest count that held (max_count). Then it
@@ -70,9 +72,9 @@ static struct {
     wgf_texture_t texture;
     wgf_actor_t sprites[MAX_SPRITES];
     bunny_t *bunnies;
-    float *positions; /* the batch's, x and y in turn */
+    float *positions; /* the batch's, x and y in turn; bulk's, x, y, and z */
     int count, capacity; /* bunnies made, and room for */
-    bool batched;
+    bool batched, bulk;
     wgf_actor_t batch;
     bool limit; /* a sprite refused: no room for another actor */
     int asked, increment, start; /* the options */
@@ -115,7 +117,7 @@ static void spawn(int n)
         while (capacity < b.count + n) capacity *= 2;
         bunnies = (bunny_t *)realloc(b.bunnies, sizeof(bunny_t) * (size_t)capacity);
         if (bunnies != NULL) b.bunnies = bunnies;
-        positions = (float *)realloc(b.positions, sizeof(float) * 2 * (size_t)capacity);
+        positions = (float *)realloc(b.positions, sizeof(float) * 3 * (size_t)capacity);
         if (positions != NULL) b.positions = positions;
         if (bunnies == NULL || positions == NULL) {
             b.limit = true;
@@ -155,6 +157,9 @@ static void spawn(int n)
         b.count++;
     }
 }
+
+/* the draw in its JSON line */
+#define DRAW (b.batched ? "batch" : b.bulk ? "bulk" : "actors")
 
 static int compare(const void *x, const void *y)
 {
@@ -209,11 +214,16 @@ static void frame(void *user)
         if (b.batched) {
             b.positions[2 * i] = (float)(int)bunny->x;
             b.positions[2 * i + 1] = (float)(int)bunny->y;
+        } else if (b.bulk) {
+            b.positions[3 * i] = (float)(int)bunny->x;
+            b.positions[3 * i + 1] = (float)(int)bunny->y;
+            b.positions[3 * i + 2] = 0;
         } else {
             wgf_actor_set_position(b.sprites[i], (float)(int)bunny->x, (float)(int)bunny->y, 0);
         }
     }
     if (b.batched) wgf_sprite_batch_set_positions(b.batch, 0, b.positions, 2 * b.count);
+    if (b.bulk) wgf_actor_set_transforms(b.sprites, b.count, b.positions, 3 * b.count, NULL, 0, NULL, 0);
     wgf_stage2d_draw(b.stage);
 
     if (!b.increment) {
@@ -228,7 +238,7 @@ static void frame(void *user)
                    "\"count\":%d,\"asked\":%d,"
                    "\"limit\":%s,\"mean_ms\":%.6f,\"median_ms\":%.6f,\"p95_ms\":%.6f,"
                    "\"fps\":%.3f}\n",
-                   b.batched ? "batch" : "actors", b.count, b.asked, b.limit ? "true" : "false", mean,
+                   DRAW, b.count, b.asked, b.limit ? "true" : "false", mean,
                    sorted[TIMED / 2], sorted[TIMED * 95 / 100], 1000.0 / mean);
             fflush(stdout);
             finish();
@@ -243,7 +253,7 @@ static void frame(void *user)
                 printf("{\"contender\":\"libwgf\",\"draw\":\"%s\",\"target\":\"" TARGET "\",\"mode\":\"ramp\","
                        "\"max_count\":%d,"
                        "\"limit\":%s,\"last_fps\":%.3f}\n",
-                       b.batched ? "batch" : "actors", b.max_count, b.limit ? "true" : "false", fps);
+                       DRAW, b.max_count, b.limit ? "true" : "false", fps);
                 fflush(stdout);
                 finish();
             }
@@ -260,6 +270,7 @@ int main(void)
     b.start = wgf_app_get_option_int("startCount", 0);
     if (b.increment) b.asked = b.start > 0 ? b.start : b.increment;
     b.batched = wgf_app_get_option_int("batch", 0) != 0;
+    b.bulk = !b.batched && wgf_app_get_option_int("bulk", 0) != 0;
     wgf_window_set_title("libwgf bunnymark");
     wgf_window_set_size(SCREEN_W, SCREEN_H);
     wgf_window_set_flags(WGF_WINDOW_FLAG_VSYNC_OFF | WGF_WINDOW_FLAG_LOW_DPI);

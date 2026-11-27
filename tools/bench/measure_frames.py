@@ -78,6 +78,7 @@ BENCHES = ('shadowbench', 'spritebench')
 # query a page run of its own, unthrottled, its frame rate cap lifted, untraced, the
 # program timing its frames itself and printing helix's JSON line ("contender").
 SPEED_BENCHES = {'bunnymark': ('count=10000', 'count=50000', 'incrementCount=1000',
+                               'bulk=1&count=10000', 'bulk=1&count=50000',
                                'batch=1&count=10000', 'batch=1&count=50000', 'batch=1&count=100000',
                                'batch=1&count=150000', 'batch=1&count=200000', 'batch=1&incrementCount=10000'),
                  'robots': ('count=50', 'count=200', 'count=400')}
