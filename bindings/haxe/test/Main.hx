@@ -83,13 +83,11 @@ class Main {
 		// arrays: in, and filled
 		b = Actor.create();
 		b.setParent(world);
-		expect(Actor.setTransforms([a, b], [10.0, 11, 12, 20, 21, 22], null, null), "an array of handles and one of floats in");
-		final out = [for (_ in 0...6) 0.0];
-		expect(Actor.getTransforms([a, b], out, null, null) == 6 && near(out[3], 20) && near(out[5], 22), "an array filled");
-		expect(Actor.setTransforms([a, b], null, null, [2.0, 2, 2, 3, 3, 3]) && near(b.getScale().x, 3)
-			&& near(b.getPosition().x, 20), "an array left out: null, that part left as it is");
+		a.setPosition(10, 11, 12);
 		final shape = Shape2d.create();
-		expect(shape.setPolygon([0.0, 0, 10, 0, 10, 10]) && shape.getPointCount() == 3, "a section over a kind");
+		expect(shape.setPolygon([0.0, 0, 10, 0, 10, 10]) && shape.getPointCount() == 3, "an array of floats in, on a section over a kind");
+		final points = [for (_ in 0...6) 0.0];
+		expect(shape.getPoints(points) == 6 && near(points[2], 10) && near(points[5], 10), "an array of floats filled");
 		final points = [for (_ in 0...6) 0.0];
 		expect(shape.getPoints(points) == 6 && near(points[4], 10), "floats filled");
 		expect(shape.setParent(world) && shape.getParent() == world, "a Shape2d is an Actor");
@@ -116,6 +114,9 @@ class Main {
 			expect(e.addBehavior("Rock") == 1, "a behavior");
 			expect(e.addComponent(Component.COLLIDER) && (e : Collider).setRadius(5), "a collider");
 		}
+		final found:Array<Actor> = [for (_ in 0...4) 0];
+		expect(Actor.findWithComponent(Component.COLLIDER, found) == 2 && found.contains(a) && found.contains(b),
+			"an array of handles filled");
 		b.setPosition(13, 11, 12); // within a's reach
 		Behavior.register("Doomer", Doomer.new);
 		for (x in [500.0, 503.0]) { // two that meet, far from a and b

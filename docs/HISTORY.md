@@ -1407,6 +1407,14 @@ Rob's, after the bulk row: every benchmark compared was C, and C's calls stay in
 - **Bulk is slower from Haxe too, and by more.** The JS binding copies a Haxe array into the wasm an element at a time, each call: 50,000 handles and 150,000 floats a frame, about 10 ns an actor. `measure_calls.py`'s 1,000 actors, hot in the cache, hid that.
 - **helix-raylib's page is 40% faster than libwgf's C at 50k.** It has no actors: a `DrawTexture` a bunny into one batch. The gap is libwgf's actors and stage walk in wasm against plain JS, not the crossing.
 
+## Bulk transforms removed (2026-11-27)
+
+Rob's, after the bunnymark in Haxe: if the bulk call saves nothing crossing, remove it. `wgf_actor_set_transforms` and `wgf_actor_get_transforms` are gone, with their tests, their uses in the bindings' tests and the feature test, the bunnymark's `bulk=1` (C and Haxe), and `measure_calls.py`'s `bulk`, `bulk-actor`, `bulk-set`, and `bulk-set-actor`.
+
+**Why:** a call each crosses from JS for about 3.6 ns. The bulk call was slower from both languages: from C, a second walk over the actors and an array; from Haxe, the binding also copied 50,000 handles and 150,000 floats into the wasm each frame. A shared area in the wasm that JS writes into directly would remove the copy, but at best match C's bulk, which was slower than a call each. SPEC's bulk calls for hot paths stand where an array is the data itself: the sprite batch's positions and tints, and a tile layer's cells.
+
+**What stays:** the rule that an array may be NULL, with a count of 0, only where its header says so. No call now says so.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

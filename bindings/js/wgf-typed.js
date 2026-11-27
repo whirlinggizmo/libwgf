@@ -89,10 +89,6 @@ export const Actor = Object.freeze({
     setTransform: raw.wgf_actor_set_transform,
     // wgf: call wgf_actor_snap
     snap: raw.wgf_actor_snap,
-    // wgf: call wgf_actor_set_transforms
-    setTransforms: raw.wgf_actor_set_transforms,
-    // wgf: call wgf_actor_get_transforms
-    getTransforms: raw.wgf_actor_get_transforms,
     // wgf: call wgf_actor_get_world_position
     getWorldPosition: raw.wgf_actor_get_world_position,
     // wgf: call wgf_actor_get_drawn_position

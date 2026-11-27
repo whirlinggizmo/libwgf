@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "9a174ee0f1dc18d1" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "c063f7a7dbf14cde" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -5896,56 +5896,6 @@ export function wgf_actor_set_transform(actor, position_x, position_y, position_
 export function wgf_actor_snap(actor) {
     const value = host["_wgf_actor_snap"](actor);
     return value !== 0;
-}
-
-// wgf: call wgf_actor_set_transforms
-/**
- * Sets or gets the positions, rotations, and scales of many actors at once: one call for all
- * of `actors` (`count` of them), where a call each would cross into the library once an actor.
- *
- * Each array holds x, y, z for each actor in turn, as the one-actor calls above take and give
- * them: a rotation as three angles in radians. Any of the three may be NULL, with a count of
- * 0: set_transforms leaves that part of each actor as it is, and get_transforms fills nothing
- * there. So moving many actors is set_transforms with positions alone.
- *
- * set_transforms skips a handle that isn't an actor. It returns false, and sets nothing, if
- * an array that isn't NULL hasn't three floats for each actor, or a count is below 0.
- *
- * get_transforms reads as many actors as fit in every array given, and returns how many floats
- * it filled in each: three an actor. A handle that isn't an actor reads as 0, 0, 0.
- */
-export function wgf_actor_set_transforms(actors, positions, rotations, scales) {
-    const actorsPointer = arrayIn(actors, 0, "HEAPU32");
-    const positionsPointer = arrayIn(positions, 1, "HEAPF32");
-    const rotationsPointer = arrayIn(rotations, 2, "HEAPF32");
-    const scalesPointer = arrayIn(scales, 3, "HEAPF32");
-    const value = host["_wgf_actor_set_transforms"](actorsPointer, lengthOf(actors), positionsPointer, lengthOf(positions), rotationsPointer, lengthOf(rotations), scalesPointer, lengthOf(scales));
-    return value !== 0;
-}
-
-// wgf: call wgf_actor_get_transforms
-/**
- * Sets or gets the positions, rotations, and scales of many actors at once: one call for all
- * of `actors` (`count` of them), where a call each would cross into the library once an actor.
- *
- * See wgf_actor_set_transforms for the rest.
- *
- * Here `positions` is an array, and its length is the count: size it first. An empty array is filled with nothing.
- *
- * Here `rotations` is an array, and its length is the count: size it first. An empty array is filled with nothing.
- *
- * Here `scales` is an array, and its length is the count: size it first. An empty array is filled with nothing.
- */
-export function wgf_actor_get_transforms(actors, positions, rotations, scales) {
-    const actorsPointer = arrayIn(actors, 0, "HEAPU32");
-    const positionsPointer = arrayOut(positions, 1);
-    const rotationsPointer = arrayOut(rotations, 2);
-    const scalesPointer = arrayOut(scales, 3);
-    const value = host["_wgf_actor_get_transforms"](actorsPointer, lengthOf(actors), positionsPointer, lengthOf(positions), rotationsPointer, lengthOf(rotations), scalesPointer, lengthOf(scales));
-    arrayBack(positionsPointer, positions, "HEAPF32");
-    arrayBack(rotationsPointer, rotations, "HEAPF32");
-    arrayBack(scalesPointer, scales, "HEAPF32");
-    return value;
 }
 
 // wgf: call wgf_actor_get_world_position

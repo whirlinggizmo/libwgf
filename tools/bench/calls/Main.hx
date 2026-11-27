@@ -7,13 +7,12 @@ import wgf.Vec3;
 /**
 	What a call from Haxe into libwgf costs on the JS target (tools/bench/measure_calls.py
 	runs it under node and in a browser): each shape, the median of REPS runs of N calls,
-	in ns per call; the bulk one also per actor. One line each, `calls: <shape> <ns>`,
+	in ns per call. One line each, `calls: <shape> <ns>`,
 	then `calls done: PASS`. The same calls as main.js makes through the JS binding.
 **/
 class Main {
 	static inline final N = 200000;
 	static inline final REPS = 7;
-	static inline final BULK = 1000;
 	// The chat: a scroll area of LINES lines of 80 characters, as a chat or a log shows them,
 	// given again each frame, timed over FRAMES frames after WARM.
 	static inline final LINES = 200;
@@ -27,25 +26,14 @@ class Main {
 		Runtime.run(init, null, frame, null);
 
 	static function init() {
-		final root = Actor.create();
-		final actors = [for (i in 0...BULK) {
-			final actor = Actor.create();
-			actor.setParent(root);
-			actor;
-		}];
-		final first = actors[0];
+		final first = Actor.create();
+		first.setParent(Actor.create());
 		final kept = new Vec3();
-		final out = [for (_ in 0...BULK * 3) 0.0];
 		report("set", N, () -> for (k in 0...N) if (first.setPosition(k, 2, 3)) sink += 1);
 		report("get", N, () -> for (_ in 0...N) sink += first.getPosition(kept).x);
 		report("transform", N, () -> for (k in 0...N) if (first.setTransform(k, 2, 3, 0, 0, 1, 1, 1, 1)) sink += 1);
 		report("string", N, () -> for (_ in 0...N) if (first.setName("first")) sink += 1);
 		report("string-80", N, () -> for (_ in 0...N) if (first.setName(LINE)) sink += 1);
-		final calls = Std.int(N / BULK) * 10;
-		report("bulk", calls, () -> for (_ in 0...calls) sink += Actor.getTransforms(actors, out, null, null));
-		Log.message(LogLevel.INFO, 'calls: bulk-actor ${Math.round(best / BULK * 1000) / 1000}');
-		report("bulk-set", calls, () -> for (_ in 0...calls) if (Actor.setTransforms(actors, out, null, null)) sink += 1);
-		Log.message(LogLevel.INFO, 'calls: bulk-set-actor ${Math.round(best / BULK * 1000) / 1000}');
 	}
 
 	static final frames:Array<Float> = [];

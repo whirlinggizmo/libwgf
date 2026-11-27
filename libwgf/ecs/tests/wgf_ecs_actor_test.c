@@ -23,7 +23,7 @@
 /* Components and behaviors on actors, headless: every component added with its defaults
  * and removed, on a plain actor and on a shape; several behaviors on an actor, their ids and
  * parameters; the actor simulated once it has one (drawn between its ticks, snapped);
- * positions in bulk; the refusals; and the lifecycle's events, an actor's going included. */
+ * the refusals; and the lifecycle's events, an actor's going included. */
 
 static int failures;
 
@@ -141,34 +141,6 @@ int main(void)
         world = wgf_gfx_priv_actor_get_world_matrix(shape);
         expect(fabsf(world.m[13] - 5.0f) < 1e-4f, "snapped: drawn where it is");
         wgf_core_priv_part_set_fraction(1.0f);
-    }
-    {
-        const wgf_actor_t both[3] = {ship, shape, 12345};
-        const float positions[9] = {10, 11, 12, 20, 21, 22, 30, 31, 32};
-        const float rotations[9] = {0, 0, 0.5f, 0, 0, 0.25f, 0, 0, 0};
-        const float scales[9] = {2, 2, 2, 3, 3, 3, 4, 4, 4};
-        float out[9] = {0}, turned[9] = {0}, sized[9] = {0};
-        expect(wgf_actor_set_transforms(both, 3, positions, 9, NULL, 0, NULL, 0) &&
-                   near3(wgf_actor_get_position(shape), 20, 21, 22) && near3(wgf_actor_get_scale(shape), 1, 1, 1),
-               "positions set in bulk, the rest left, a handle that isn't an actor skipped");
-        expect(wgf_actor_get_transforms(both, 3, out, 9, NULL, 0, NULL, 0) == 9 && out[0] == 10 && out[5] == 22 &&
-                   out[6] == 0,
-               "read in bulk, a handle that isn't an actor as 0, 0, 0");
-        expect(wgf_actor_get_transforms(both, 3, out, 7, NULL, 0, NULL, 0) == 6, "as many whole positions as fit");
-        expect(!wgf_actor_set_transforms(both, 3, positions, 8, NULL, 0, NULL, 0) &&
-                   !wgf_actor_set_transforms(both, 3, positions, 9, rotations, 6, NULL, 0) &&
-                   near3(wgf_actor_get_position(shape), 20, 21, 22),
-               "too few floats in any array refused, and nothing set");
-        expect(wgf_actor_set_transforms(both, 2, NULL, 0, rotations, 6, scales, 6) &&
-                   near3(wgf_actor_get_position(shape), 20, 21, 22) &&
-                   near3(wgf_actor_get_rotation(shape), 0, 0, 0.25f) && near3(wgf_actor_get_scale(ship), 2, 2, 2),
-               "rotations and scales without positions");
-        expect(wgf_actor_get_transforms(both, 2, NULL, 0, turned, 9, sized, 3) == 3 &&
-                   fabsf(turned[2] - 0.5f) < 1e-4f && turned[5] == 0 && sized[0] == 2,
-               "read into the arrays given, as many actors as fit in each");
-        expect(!wgf_actor_set_transforms(both, 2, NULL, 0, NULL, 0, scales + 6, 3) &&
-                   near3(wgf_actor_get_scale(ship), 2, 2, 2),
-               "a scale for one actor of two refused");
     }
 
     /* behaviors: several, two of one name, each its own parameters */

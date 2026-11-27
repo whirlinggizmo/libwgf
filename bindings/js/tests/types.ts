@@ -20,11 +20,12 @@ export function frame(): void {
     const flat: Float32Array = wgf.wgf_actor_get_position(sprite, new Float32Array(3));
     const sum: number = where.x + again.y + flat[2];
 
-    // bulk calls take arrays or typed arrays, and fill the ones C writes
-    const actors = [parentless];
-    const positions = new Float32Array(3);
-    const filled: number = wgf.wgf_actor_get_transforms(actors, positions, null, null);
-    const set: boolean = wgf.wgf_actor_set_transforms(new Uint32Array(1), [1, 2, 3], null, [1, 1, 1]);
+    // array calls take arrays or typed arrays, and fill the ones C writes
+    const found = [parentless];
+    const filled: number = wgf.wgf_actor_find_with_component(wgf.WGF_COMPONENT_MOTION, found);
+    const points = new Float32Array(6);
+    const set: boolean = wgf.wgf_shape2d_set_polygon(wgf.wgf_shape2d_create(), [0, 0, 10, 0, 10, 10]);
+    const read: number = wgf.wgf_shape2d_get_points(wgf.wgf_shape2d_create(), points);
 
     // enums are their values; a color is a number
     const status: wgf.wgf_resource_status_t = wgf.wgf_resource_get_status(texture);
@@ -45,9 +46,9 @@ export function frame(): void {
     // @ts-expect-error a vector has no w
     where.w;
     // @ts-expect-error an array of strings is not one of actors
-    wgf.wgf_actor_get_transforms(['a'], positions, null, null);
+    wgf.wgf_actor_find_with_component(wgf.WGF_COMPONENT_MOTION, ['a']);
 
-    void [moved, kind, sum, filled, set, ready, bytes, wrong];
+    void [moved, kind, sum, filled, set, read, ready, bytes, wrong];
 }
 
 // the run takes JS functions, any of them null

@@ -34,9 +34,8 @@ class Bunny {
 	call crossing from JS into libwgf's wasm. helix-raylib's row is Haxe too
 	(../helix's tools/speed/contenders/helix-raylib/bunnymark/Main.hx), its Bunny the same.
 
-	Each bunny is a sprite actor, moved with a setPosition each, or with bulk=1, all moved
-	with one Actor.setTransforms a frame. Options from the page's query: count=N, or
-	incrementCount=N with startCount=M, and bulk=1. It prints main.c's JSON line, with
+	Each bunny is a sprite actor, moved with a setPosition each. Options from the page's
+	query: count=N, or incrementCount=N with startCount=M. It prints main.c's JSON line, with
 	"lang":"haxe", then logs "bunnymark-hx: done" (measure_frames.py's bench:bunnymark-hx).
 **/
 class Main {
@@ -52,8 +51,6 @@ class Main {
 	static var texture:Texture;
 	static final bunnies:Array<Bunny> = [];
 	static final sprites:Array<Actor> = [];
-	static final positions:Array<Float> = []; // bulk's: x, y, and z an actor
-	static var bulk = false;
 	static var limit = false;
 	static var asked = 1000;
 	static var increment = 0;
@@ -96,17 +93,11 @@ class Main {
 			sprite.setTint((red << 24) | (green << 16) | (blue << 8) | 0xFF);
 			sprite.setParent(stage);
 			sprites.push(sprite);
-			positions.push(0);
-			positions.push(0);
-			positions.push(0);
 		}
 	}
 
 	static function now():Float
 		return js.Browser.window.performance.now();
-
-	static function draw():String
-		return bulk ? "bulk" : "actors";
 
 	static function finish() {
 		done = true;
@@ -121,7 +112,6 @@ class Main {
 		final start = App.getOptionInt("startCount", 0);
 		if (increment != 0)
 			asked = start > 0 ? start : increment;
-		bulk = App.getOptionInt("bulk", 0) != 0;
 		Window.setTitle("libwgf bunnymark (Haxe)");
 		Window.setSize(SCREEN_W, SCREEN_H);
 		Window.setFlags(WindowFlag.VSYNC_OFF | WindowFlag.LOW_DPI);
@@ -154,15 +144,8 @@ class Main {
 				b.vx *= -1;
 			if (b.y + BUNNY / 2 > SCREEN_H || b.y + BUNNY / 2 - 40 < 0)
 				b.vy *= -1;
-			if (bulk) {
-				positions[3 * i] = Std.int(b.x);
-				positions[3 * i + 1] = Std.int(b.y);
-			} else {
-				sprites[i].setPosition(Std.int(b.x), Std.int(b.y), 0);
-			}
+			sprites[i].setPosition(Std.int(b.x), Std.int(b.y), 0);
 		}
-		if (bulk)
-			Actor.setTransforms(sprites, positions, null, null);
 		stage.draw();
 
 		if (increment == 0) {
@@ -174,7 +157,7 @@ class Main {
 				for (d in timed)
 					sum += d;
 				final mean = sum / TIMED;
-				js.Browser.console.log('{"contender":"libwgf","lang":"haxe","draw":"${draw()}","target":"page","mode":"count",'
+				js.Browser.console.log('{"contender":"libwgf","lang":"haxe","draw":"actors","target":"page","mode":"count",'
 					+ '"count":${sprites.length},"asked":$asked,"limit":$limit,"mean_ms":$mean,'
 					+ '"median_ms":${sorted[TIMED >> 1]},"p95_ms":${sorted[Std.int(TIMED * 95 / 100)]},"fps":${1000 / mean}}');
 				finish();
@@ -186,7 +169,7 @@ class Main {
 					maxCount = sprites.length;
 					spawn(increment);
 				} else {
-					js.Browser.console.log('{"contender":"libwgf","lang":"haxe","draw":"${draw()}","target":"page","mode":"ramp",'
+					js.Browser.console.log('{"contender":"libwgf","lang":"haxe","draw":"actors","target":"page","mode":"ramp",'
 						+ '"max_count":$maxCount,"limit":$limit,"last_fps":$fps}');
 					finish();
 				}

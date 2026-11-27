@@ -230,39 +230,6 @@ abstract Actor(Int) from Int to Int to wgf.Handle {
 		return Raw.wgf_actor_snap(this);
 
 	/**
-	    Sets or gets the positions, rotations, and scales of many actors at once: one call for all
-	    of `actors` (`count` of them), where a call each would cross into the library once an actor.
-
-	    Each array holds x, y, z for each actor in turn, as the one-actor calls above take and give
-	    them: a rotation as three angles in radians. Any of the three may be NULL, with a count of
-	    0: set_transforms leaves that part of each actor as it is, and get_transforms fills nothing
-	    there. So moving many actors is set_transforms with positions alone.
-
-	    set_transforms skips a handle that isn't an actor. It returns false, and sets nothing, if
-	    an array that isn't NULL hasn't three floats for each actor, or a count is below 0.
-
-	    get_transforms reads as many actors as fit in every array given, and returns how many floats
-	    it filled in each: three an actor. A handle that isn't an actor reads as 0, 0, 0.
-	**/
-	public static inline function setTransforms(actors:Array<Actor>, positions:Array<Float>, rotations:Array<Float>, scales:Array<Float>):Bool
-		return Raw.wgf_actor_set_transforms(cast actors, positions, rotations, scales);
-
-	/**
-	    Sets or gets the positions, rotations, and scales of many actors at once: one call for all
-	    of `actors` (`count` of them), where a call each would cross into the library once an actor.
-
-	    See Actor.setTransforms for the rest.
-
-	    Here `positions` is an array, and its length is the count: size it first. An empty array is filled with nothing.
-
-	    Here `rotations` is an array, and its length is the count: size it first. An empty array is filled with nothing.
-
-	    Here `scales` is an array, and its length is the count: size it first. An empty array is filled with nothing.
-	**/
-	public static inline function getTransforms(actors:Array<Actor>, positions:Array<Float>, rotations:Array<Float>, scales:Array<Float>):Int
-		return Raw.wgf_actor_get_transforms(cast actors, positions, rotations, scales);
-
-	/**
 	    Returns where the actor is in its tree's root's space. On a 2D stage, that is stage units.
 
 	    - The world position is the simulation's, as the transform is (see wgf_actor_snap). It is

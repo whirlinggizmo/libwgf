@@ -5,7 +5,7 @@
 import createWgfHost from "./wgf-host.js";
 import * as wgf from "./wgf.js";
 
-const N = 200000, REPS = 7, BULK = 1000;
+const N = 200000, REPS = 7;
 // The chat: a scroll area of LINES lines of 80 characters, as a chat or a log shows them,
 // given again each frame, timed over FRAMES frames after WARM.
 const LINES = 200, WARM = 30, FRAMES = 31;
@@ -36,15 +36,9 @@ function report(shape, calls, body) {
 }
 
 function init() {
-    const root = wgf.wgf_actor_create();
-    const actors = [];
-    for (let i = 0; i < BULK; i++) {
-        actors.push(wgf.wgf_actor_create());
-        wgf.wgf_actor_set_parent(actors[i], root);
-    }
-    const first = actors[0];
+    const first = wgf.wgf_actor_create();
+    wgf.wgf_actor_set_parent(first, wgf.wgf_actor_create());
     const kept = { x: 0, y: 0, z: 0 };
-    const out = new Array(BULK * 3).fill(0);
     report("set", N, () => {
         for (let k = 0; k < N; k++) if (wgf.wgf_actor_set_position(first, k, 2, 3)) Main.sink += 1;
     });
@@ -58,15 +52,6 @@ function init() {
     report("string-80", N, () => {
         for (let k = 0; k < N; k++) if (wgf.wgf_actor_set_name(first, LINE)) Main.sink += 1;
     });
-    const calls = Math.trunc(N / BULK) * 10;
-    report("bulk", calls, () => {
-        for (let k = 0; k < calls; k++) Main.sink += wgf.wgf_actor_get_transforms(actors, out, null, null);
-    });
-    console.log(`calls: bulk-actor ${Math.round(best / BULK * 1000) / 1000}`);
-    report("bulk-set", calls, () => {
-        for (let k = 0; k < calls; k++) if (wgf.wgf_actor_set_transforms(actors, out, null, null)) Main.sink += 1;
-    });
-    console.log(`calls: bulk-set-actor ${Math.round(best / BULK * 1000) / 1000}`);
 }
 
 const frames = [], viewFrames = [];

@@ -635,63 +635,6 @@ bool wgf_actor_snap(wgf_actor_t actor)
     return true;
 }
 
-/* Whether a bulk call's array of x, y, z an actor is NULL with no count, or has room for
- * `count` actors. */
-static bool fits(const float *values, int values_count, int count)
-{
-    return values == NULL ? values_count == 0 : values_count >= 0 && values_count / 3 >= count;
-}
-
-static void put(float *out, int i, wgf_vec3_t v)
-{
-    out[3 * i] = v.x;
-    out[3 * i + 1] = v.y;
-    out[3 * i + 2] = v.z;
-}
-
-static wgf_vec3_t read3(const float *values, int i)
-{
-    return wgf_vec3_make(values[3 * i], values[3 * i + 1], values[3 * i + 2]);
-}
-
-bool wgf_actor_set_transforms(const wgf_actor_t *actors, int count, const float *positions, int positions_count,
-                              const float *rotations, int rotations_count, const float *scales, int scales_count)
-{
-    int i;
-    if (count < 0 || (actors == NULL && count > 0) || !fits(positions, positions_count, count) ||
-        !fits(rotations, rotations_count, count) || !fits(scales, scales_count, count)) {
-        return false;
-    }
-    if (positions == NULL && rotations == NULL && scales == NULL) return true; /* nothing to set */
-    for (i = 0; i < count; i++) {
-        wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actors[i]);
-        if (actor_ptr == NULL) continue;
-        if (positions != NULL) actor_ptr->position = read3(positions, i);
-        if (rotations != NULL) actor_ptr->rotation = wgf_quat_from_euler(read3(rotations, i));
-        if (scales != NULL) actor_ptr->scale = read3(scales, i);
-        moved(actors[i], actor_ptr);
-    }
-    return true;
-}
-
-int wgf_actor_get_transforms(const wgf_actor_t *actors, int count, float *positions, int positions_count,
-                             float *rotations, int rotations_count, float *scales, int scales_count)
-{
-    const wgf_vec3_t zero = wgf_vec3_make(0.0f, 0.0f, 0.0f);
-    int i, n = count;
-    if (actors == NULL || count <= 0 || (positions == NULL && rotations == NULL && scales == NULL)) return 0;
-    if (positions != NULL && positions_count / 3 < n) n = positions_count / 3;
-    if (rotations != NULL && rotations_count / 3 < n) n = rotations_count / 3;
-    if (scales != NULL && scales_count / 3 < n) n = scales_count / 3;
-    for (i = 0; i < n; i++) {
-        const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actors[i]);
-        if (positions != NULL) put(positions, i, actor_ptr != NULL ? actor_ptr->position : zero);
-        if (rotations != NULL) put(rotations, i, actor_ptr != NULL ? wgf_quat_to_euler(actor_ptr->rotation) : zero);
-        if (scales != NULL) put(scales, i, actor_ptr != NULL ? actor_ptr->scale : zero);
-    }
-    return n > 0 ? 3 * n : 0;
-}
-
 wgf_vec3_t wgf_actor_get_position(wgf_actor_t actor)
 {
     const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(actor);
