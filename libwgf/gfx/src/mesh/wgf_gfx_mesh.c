@@ -842,6 +842,16 @@ bool wgf_gfx_priv_mesh_get_bounds(wgf_mesh_t mesh, wgf_vec3_t *min, wgf_vec3_t *
     return true;
 }
 
+int wgf_gfx_priv_mesh_get_drawable(wgf_mesh_t mesh, wgf_resource_status_t *status, wgf_vec3_t *min, wgf_vec3_t *max)
+{
+    const mesh_t *mesh_ptr = record_of(mesh);
+    *status = mesh_ptr != NULL ? mesh_ptr->resource.status : WGF_RESOURCE_STATUS_NONE;
+    if (*status != WGF_RESOURCE_STATUS_READY) return 0;
+    *min = mesh_ptr->bounds_min;
+    *max = mesh_ptr->bounds_max;
+    return mesh_ptr->primitive_count;
+}
+
 int wgf_gfx_priv_mesh_get_primitive_count(wgf_mesh_t mesh)
 {
     const mesh_t *mesh_ptr = record_of(mesh);
@@ -916,7 +926,8 @@ bool wgf_gfx_priv_mesh_get_primitive(wgf_mesh_t mesh, int index, wgf_gfx_priv_me
 {
     mesh_t *mesh_ptr = record_of(mesh);
     primitive_t *p;
-    if (index < 0 || index >= wgf_gfx_priv_mesh_get_primitive_count(mesh) || !wgf_gfx_priv_render_is_running()) {
+    if (mesh_ptr == NULL || mesh_ptr->resource.status != WGF_RESOURCE_STATUS_READY || index < 0 ||
+        index >= mesh_ptr->primitive_count || !wgf_gfx_priv_render_is_running()) {
         return false;
     }
     p = &mesh_ptr->primitives[index];

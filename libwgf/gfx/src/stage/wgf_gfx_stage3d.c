@@ -93,10 +93,12 @@ typedef struct sort_key_t {
     bool blended, additive;
 } sort_key_t;
 
-/* The actors gather found that a visitor draws, each with its world matrix, in the walk's
- * order. Its room is kept between frames. */
+/* The actors gather found that a visitor draws, each with its record and its world matrix,
+ * in the walk's order. Its room is kept between frames. Drawing creates no actor, so a
+ * record stays where gather found it until the draw ends. */
 typedef struct seen_t {
     wgf_actor_t actor;
+    const wgf_gfx_priv_actor_t *actor_ptr;
     wgf_mat4_t world;
 } seen_t;
 
@@ -501,6 +503,7 @@ static void gather(wgf_actor_t root)
         if (actor_ptr->visible && drawn(actor_ptr->type)) {
             if (!grow((void **)&seen.actors, &seen.capacity, seen.count + 1, sizeof(seen_t))) return;
             seen.actors[seen.count].actor = next;
+            seen.actors[seen.count].actor_ptr = actor_ptr;
             seen.actors[seen.count].world = world;
             seen.count++;
         }
@@ -515,10 +518,7 @@ typedef void (*visit_t)(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
 static void visit_each(visit_t visit, void *user)
 {
     int i;
-    for (i = 0; i < seen.count; i++) {
-        const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of(seen.actors[i].actor);
-        if (actor_ptr != NULL) visit(seen.actors[i].actor, actor_ptr, &seen.actors[i].world, user);
-    }
+    for (i = 0; i < seen.count; i++) visit(seen.actors[i].actor, seen.actors[i].actor_ptr, &seen.actors[i].world, user);
 }
 
 static void visit_light(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
@@ -606,14 +606,15 @@ typedef struct group_key_t {
 
 static void item_key(const item_t *item, group_key_t *key)
 {
-    const wgf_gfx_priv_material_t *material = wgf_gfx_priv_material_get(item->material);
+    const wgf_gfx_priv_material_t *material = item->sided_known ? NULL : wgf_gfx_priv_material_get(item->material);
     int i;
     memset(key, 0, sizeof(*key)); /* the padding too: keys are compared and hashed as bytes */
     key->material = item->material;
     key->mesh = item->mesh;
     key->primitive = item->primitive;
     key->blended = item->blended;
-    key->double_sided = item->material_sprite || (material != NULL && material->double_sided);
+    key->double_sided = item->material_sprite || (item->sided_known ? item->double_sided
+                                                                     : material != NULL && material->double_sided);
     key->mirrored = item->mirrored;
     key->material_sprite = item->material_sprite;
     if (item->material_sprite) {
@@ -716,6 +717,17 @@ static bool place_skin(wgf_actor_t root, int skin, wgf_mat4_t *root_world, int *
     return true;
 }
 
+/* wgf_model_get_material's, from the record the walk has: the model's own material for
+ * the slot, else its mesh's. */
+static wgf_material_t material_of(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mesh_t mesh, int slot)
+{
+    if (slot < 0 || slot >= WGF_GFX_PRIV_MODEL_MATERIAL_SLOTS) return 0;
+    if (actor_ptr->as.model.materials != NULL && actor_ptr->as.model.materials[slot] != 0) {
+        return actor_ptr->as.model.materials[slot];
+    }
+    return wgf_mesh_get_material(mesh, slot);
+}
+
 static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *world, void *user)
 {
     const walk_models_t *w = (const walk_models_t *)user;
@@ -728,16 +740,16 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
     wgf_color_t tint_color = actor_ptr->as.model.tint;
     int count = 0, p, joint_base = -1;
     bool shadow_only = false, skinned = false, has_skin = false;
+    wgf_resource_status_t status;
     if (mesh == 0 || !wgf_gfx_priv_model_file_shown(actor_ptr, &tint_color)) return; /* its file's root hidden */
-    if (wgf_resource_get_status(mesh) == WGF_RESOURCE_STATUS_FAILED) {
+    count = wgf_gfx_priv_mesh_get_drawable(mesh, &status, &lo, &hi);
+    if (status == WGF_RESOURCE_STATUS_FAILED) {
         if (!wgf_gfx_priv_model_placeholder(&mesh, &forced)) return; /* the file part's: only a file's mesh fails */
         count = 1;
         lo = wgf_vec3_make(-0.5f, -0.5f, -0.5f);
         hi = wgf_vec3_make(0.5f, 0.5f, 0.5f);
-    } else if (actor_ptr->as.model.file_root || !wgf_gfx_priv_mesh_get_bounds(mesh, &lo, &hi)) {
+    } else if (actor_ptr->as.model.file_root || status != WGF_RESOURCE_STATUS_READY) {
         return; /* a file's root (its nodes draw), or pending: nothing */
-    } else {
-        count = wgf_gfx_priv_mesh_get_primitive_count(mesh);
     }
     place_box(world, lo, hi, &box_lo, &box_hi);
     if (forced == 0 && actor_ptr->as.model.skin_root != 0) { /* a file's node showing a skinned mesh */
@@ -773,9 +785,11 @@ static void visit_model(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr
         if (has_skin && primitive.skin.id != SG_INVALID_ID && !skinned) continue; /* its joints had no room */
         if (!grow((void **)&frame.items, &frame.item_capacity, frame.item_count + 1, sizeof(item_t))) return;
         item = &frame.items[frame.item_count];
-        item->material = forced != 0 ? forced : wgf_model_get_material(actor, primitive.material);
+        item->material = forced != 0 ? forced : material_of(actor_ptr, mesh, primitive.material);
         material = wgf_gfx_priv_material_get(item->material);
         if (material == NULL) continue; /* a slot with none draws nothing */
+        item->sided_known = true;
+        item->double_sided = material->double_sided;
         /* a skinned part is placed by its root, posed by its joints (glTF ignores its node's own
            placement); a static one by its node */
         item->skinned = skinned && primitive.skin.id != SG_INVALID_ID;

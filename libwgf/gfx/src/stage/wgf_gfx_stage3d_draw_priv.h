@@ -31,6 +31,7 @@ typedef struct wgf_gfx_priv_stage3d_item_t {
     int text;        /* a text's: its index into the draw's texts until recorded, then its side layer; -1 none */
     int record;      /* a model part's, in the instance texture: model parts numbered in drawing order */
     bool mirrored;   /* its placement turns its triangles' winding (a negative determinant) */
+    bool sided_known, double_sided; /* its material's, read as a model's part is made; else looked up */
     bool skinned;    /* posed by its skin's joints (`world` its file root's placement) */
     int joint_base;  /* a skinned one's first joint matrix among the frame's */
     float depth;     /* along the camera's view, for the sort */

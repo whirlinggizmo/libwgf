@@ -1298,6 +1298,25 @@ Rob's, from the open list. A profile of the actor bunnymark at 50k had the textu
 | 10k | 0.40 | 0.40 | 0.49 | 0.42 |
 | 50k | 2.04 | 1.77 | 2.10 | 2.05 |
 
+## Fewer lookups in a 3D stage's draw (2026-11-26)
+
+Rob's, from the open list: the robots' remaining gap to PixiJS 3D. A profile at 400 robots had handle lookups at about 14% of the frame (`wgf_gfx_priv_actor_of`, `wgf_resource_get_status`). Each model looked its mesh up 3 times and its actor 2 or 3 times. Each part looked its mesh up 2 more times, and its actor and its material again, and the sort looked the material up again on every comparison.
+
+**What changed:**
+- The walk keeps each actor's record with it (`seen_t`), so the visitors don't look it up again. Drawing creates no actor, so a record stays put until the draw ends, as the 2D stage's walk already holds.
+- A model reads its mesh's status, bounds, and part count in one lookup (`wgf_gfx_priv_mesh_get_drawable`).
+- `wgf_gfx_priv_mesh_get_primitive` looks its mesh up once, not twice.
+- A part's material comes from the model's record (`wgf_model_get_material`'s rule, without the actor's lookup), and the part keeps whether it is double-sided, so the sort's key reads no material.
+
+**Measured** on coinspinner, the last commit's builds and this one's round-robin, with the load under 1.7: ms a frame, the median of 5 runs natively and of 3 (at 50) and 5 (at 400) in a page.
+
+| robots | native, before | native, after | page, before | page, after |
+|---|---:|---:|---:|---:|
+| 50 | 0.36 | 0.35 | 0.45 | 0.42 |
+| 400 | 2.85 | 2.58 | 3.21 | 3.15 |
+
+The page gained less. The profile was taken natively, and the page at 400 is within its runs' spread.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

@@ -40,6 +40,9 @@ bool wgf_gfx_priv_mesh_get_bounds(wgf_mesh_t mesh, wgf_vec3_t *min, wgf_vec3_t *
  * `index`, its buffers uploaded: false when it hasn't that one, gfx isn't running, or
  * the GPU didn't take them. */
 int wgf_gfx_priv_mesh_get_primitive_count(wgf_mesh_t mesh);
+/* What a stage drawing it reads first, in one lookup: its status, and, READY, its bounds
+ * (as get_bounds gives them) and how many primitives it has, returned; 0 otherwise. */
+int wgf_gfx_priv_mesh_get_drawable(wgf_mesh_t mesh, wgf_resource_status_t *status, wgf_vec3_t *min, wgf_vec3_t *max);
 bool wgf_gfx_priv_mesh_get_primitive(wgf_mesh_t mesh, int index, wgf_gfx_priv_mesh_primitive_t *primitive);
 
 /* Tangents (4 floats a vertex) from positions, normals, and texture coordinates, in
