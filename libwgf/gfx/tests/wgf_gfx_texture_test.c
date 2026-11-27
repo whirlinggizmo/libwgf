@@ -310,6 +310,28 @@ int main(void)
                "a size of 0 or too large");
         wgf_resource_release(blank);
     }
+    { /* held while a 2D stage walks: the same answer given again, and never a stale one */
+        const wgf_texture_t a = wgf_texture_create_blank(4, 2), b = wgf_texture_create_blank(8, 8);
+        sg_view view;
+        sg_sampler linear, nearest, again;
+        int w = 0, h = 0;
+        bool placeholder = true;
+        wgf_gfx_priv_texture_hold_bindings(true);
+        expect(wgf_gfx_priv_texture_get_binding(a, &view, &linear, &w, &h, &placeholder) && w == 4 &&
+                   wgf_gfx_priv_texture_get_binding(b, &view, &again, &w, &h, &placeholder) && w == 8 &&
+                   wgf_gfx_priv_texture_get_binding(a, &view, &again, &w, &h, &placeholder) && w == 4 &&
+                   again.id == linear.id,
+               "held: each texture's own binding, one after another");
+        expect(wgf_texture_set_sampling(a, WGF_TEXTURE_WRAP_CLAMP, WGF_TEXTURE_WRAP_CLAMP,
+                                        WGF_TEXTURE_FILTER_NEAREST) &&
+                   wgf_gfx_priv_texture_get_binding(a, &view, &nearest, &w, &h, &placeholder) &&
+                   nearest.id != linear.id,
+               "held: its sampling changed, the new sampler");
+        wgf_resource_release(a);
+        expect(!wgf_gfx_priv_texture_get_binding(a, &view, &again, &w, &h, &placeholder), "held: released, none");
+        wgf_gfx_priv_texture_hold_bindings(false);
+        wgf_resource_release(b);
+    }
     { /* released in the frame that draws it: its GPU image kept until the frame is drawn */
         const wgf_texture_t drawn = wgf_texture_create_blank(4, 4);
         int i, errors = 0;

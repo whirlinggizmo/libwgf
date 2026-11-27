@@ -241,10 +241,35 @@ static void *prepare(const char *path)
     return decoded;
 }
 
+/* The binding last given while a 2D stage walks its actors (wgf_gfx_priv_texture_hold_bindings):
+ * neighbouring sprites mostly share a texture, and nothing in a walk loads or changes one,
+ * so the same answer is given again without its lookups. Anything here that changes what a
+ * texture binds forgets it. */
+static struct {
+    bool on;
+    wgf_texture_t texture; /* 0: none held */
+    bool ok, placeholder;
+    sg_view view;
+    sg_sampler sampler;
+    int width, height;
+} held;
+
+static void forget_binding(void)
+{
+    held.texture = 0;
+}
+
+void wgf_gfx_priv_texture_hold_bindings(bool on)
+{
+    held.on = on;
+    held.texture = 0;
+}
+
 /* A texture's new image, READY: loaded again (wgf_asset_reload), the old image goes
  * only now the new one is made. */
 static void loaded(wgf_handle_t resource, texture_t *texture_ptr, sg_image image, sg_view view, int width, int height)
 {
+    forget_binding();
     wgf_gfx_priv_destroy_later(texture_ptr->view, texture_ptr->image);
     texture_ptr->image = image;
     texture_ptr->view = view;
@@ -570,6 +595,7 @@ wgf_texture_t wgf_gfx_priv_texture_create_ktx(const wgf_gfx_priv_ktx_t *ktx, con
  * given back): the old image and view go once the new are made. */
 static bool refill(texture_t *texture_ptr, sg_image image, sg_view view, int width, int height)
 {
+    forget_binding();
     wgf_gfx_priv_destroy_later(texture_ptr->view, texture_ptr->image);
     texture_ptr->image = image;
     texture_ptr->view = view;
@@ -638,6 +664,7 @@ static void free_texture(wgf_handle_t texture, void *record)
 {
     texture_t *texture_ptr = (texture_t *)record;
     (void)texture;
+    forget_binding();
     wgf_gfx_priv_destroy_later(texture_ptr->view, texture_ptr->image);
     if (free_target != NULL) free_target(texture_ptr);
     free(texture_ptr->kept);
@@ -966,6 +993,7 @@ bool wgf_texture_set_sampling(wgf_texture_t texture, wgf_texture_wrap_t wrap_u, 
         wrap_v > WGF_TEXTURE_WRAP_MIRROR || (int)filter < 0 || filter > WGF_TEXTURE_FILTER_LINEAR_NO_MIPMAPS) {
         return false;
     }
+    forget_binding();
     texture_ptr->wrap_u = wrap_u;
     texture_ptr->wrap_v = wrap_v;
     texture_ptr->filter = filter;
@@ -992,8 +1020,8 @@ wgf_texture_filter_t wgf_texture_get_filter(wgf_texture_t texture)
 
 /* --- for gfx's drawing ------------------------------------------------------ */
 
-bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_sampler *sampler, int *width,
-                                      int *height, bool *is_placeholder)
+static bool binding_of(wgf_texture_t texture, sg_view *view, sg_sampler *sampler, int *width, int *height,
+                       bool *is_placeholder)
 {
     const texture_t *texture_ptr = texture_of(texture);
     if (texture_ptr == NULL || !wgf_gfx_priv_render_is_running()) return false;
@@ -1022,6 +1050,36 @@ bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_s
     *width = CHECKER_SIZE;
     *height = CHECKER_SIZE;
     *is_placeholder = true;
+    return true;
+}
+
+bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_sampler *sampler, int *width,
+                                      int *height, bool *is_placeholder)
+{
+    if (held.on && texture != 0 && texture == held.texture) {
+        *view = held.view;
+        *sampler = held.sampler;
+        *width = held.width;
+        *height = held.height;
+        *is_placeholder = held.placeholder;
+        return held.ok;
+    }
+    if (!binding_of(texture, view, sampler, width, height, is_placeholder)) {
+        if (held.on) {
+            held.texture = texture;
+            held.ok = false;
+        }
+        return false;
+    }
+    if (held.on) {
+        held.texture = texture;
+        held.ok = true;
+        held.view = *view;
+        held.sampler = *sampler;
+        held.width = *width;
+        held.height = *height;
+        held.placeholder = *is_placeholder;
+    }
     return true;
 }
 

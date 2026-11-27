@@ -23,6 +23,11 @@ sg_sampler wgf_gfx_priv_texture_sampler(wgf_texture_wrap_t wrap_u, wgf_texture_w
 bool wgf_gfx_priv_texture_get_binding(wgf_texture_t texture, sg_view *view, sg_sampler *sampler, int *width,
                                       int *height, bool *is_placeholder);
 
+/* On while a 2D stage walks its actors, which loads and changes no texture: get_binding
+ * gives the binding it gave last again, for the same texture, without its lookups. Off
+ * again when the walk ends. */
+void wgf_gfx_priv_texture_hold_bindings(bool on);
+
 /* A render target's (wgf_texture_create_target): what a pass into it draws into, and its
  * size; false for a texture that isn't one. And what a pass into it starts cleared to
  * (wgf_render_set_target_clear_color), kept with it: transparent black unset, and read

@@ -5,6 +5,7 @@
 
 #include "actor/wgf_gfx_actor_priv.h"
 #include "render/wgf_gfx_render_priv.h"
+#include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_camera2d.h"
 #include "wgf_presentation.h"
 #include "wgf_log.h"
@@ -111,6 +112,7 @@ void wgf_stage2d_draw(wgf_actor_t stage)
     }
     todo[count].actor = stage;
     todo[count++].parent = NULL;
+    wgf_gfx_priv_texture_hold_bindings(true); /* neighbouring sprites mostly share a texture */
     while (count > 0) {
         const todo_t next = todo[--count];
         /* looked up once: drawing creates no actor, so the record stays where it is */
@@ -160,6 +162,7 @@ void wgf_stage2d_draw(wgf_actor_t stage)
             todo[count++].parent = actor_ptr;
         }
     }
+    wgf_gfx_priv_texture_hold_bindings(false);
 }
 
 wgf_actor_t wgf_stage2d_find(wgf_actor_t stage, const char *name)

@@ -1285,6 +1285,19 @@ Rob's: a third binding, for Zen C, where Rob is building hot reload on his fork 
 
 Found while timing a Haxe bunnymark beside the C one: helix's `run_page.cjs` serves the page's folder alone. The page asks for `../assets/textures/wabbit_alpha.png`, which is `/assets/...` there, and got a 404. So every bunnymark page row taken with it ("The comparison" and each time it was measured again, and the two entries above) timed sprites drawing the missing texture's checker. The checker is drawn at the same size by the same path, and the rows hold: the actor bunnymark at 50k in a page is 2.04 ms with the texture, 1.98 in "2D actors placed for less". `measure_frames.py` serves the site, where it was found; it now links the examples' files into a benchmark's folder too, as `assets/`, so both find them.
 
+## A sprite's texture binding held through a walk (2026-11-26)
+
+Rob's, from the open list. A profile of the actor bunnymark at 50k had the texture binding a sprite asks for at about 10% of the frame, with its sampler: the handle checked, the render target compared, the sampler looked up, for every sprite, though neighbouring sprites mostly share a texture.
+
+**What changed:** while a 2D stage walks its actors, `wgf_gfx_priv_texture_get_binding` keeps the last answer and gives it again for the same texture. A walk loads no texture and changes none. A texture made during one (a tilemap's, a font's page) is a new handle. texture.c forgets the held answer wherever it changes what a texture binds: loaded again, made again after a lost context, freed, its sampling set. The texture test checks both textures held in turn, a sampling change, and a release while held. Taking out the forget in `wgf_texture_set_sampling` fails it.
+
+**Measured** on coinspinner, the last commit's builds and this one's round-robin, with the load under 1.5: the median of 5 native runs and 3 page runs, ms a frame.
+
+| bunnies | native, before | native, after | page, before | page, after |
+|---|---:|---:|---:|---:|
+| 10k | 0.40 | 0.40 | 0.49 | 0.42 |
+| 50k | 2.04 | 1.77 | 2.10 | 2.05 |
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
