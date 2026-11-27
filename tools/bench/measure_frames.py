@@ -122,8 +122,13 @@ def build_scene(name):
 
 
 def build_bench(name):
-    """The benchmark's page, built fresh in wasm32-release; its folder, the site."""
-    return examples.build_at('wasm32-release', name, ROOT / 'tools' / 'bench' / name).parent
+    """The benchmark's page, built fresh in wasm32-release; its folder, the site. The
+    examples' files are linked into the folder too, as assets/: helix's run_page.cjs serves
+    the folder alone, where the page's "../assets" is /assets, and without them it times
+    the bunnymark drawing the missing texture's checker."""
+    site = examples.build_at('wasm32-release', name, ROOT / 'tools' / 'bench' / name).parent
+    examples.link_assets(site / 'assets')
+    return site
 
 
 def build_native_bench(name):

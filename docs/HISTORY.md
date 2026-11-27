@@ -1281,6 +1281,10 @@ Rob's: a third binding, for Zen C, where Rob is building hot reload on his fork 
 
 **Checked:** `tools/check_binding.py`'s new `zenc` step transpiles `bindings/zenc/test/main.zc`, builds it against the staged headless archive with the C compiler and with tcc, and runs it: handles, a math value, an enum, a color, a `static inline` call, and a log macro. Without zc on PATH, as on CI, it is skipped and says so; the binding being current is checked everywhere, by `gen_binding.py --check`.
 
+## The benchmarks' pages timed with their files (2026-11-26)
+
+Found while timing a Haxe bunnymark beside the C one: helix's `run_page.cjs` serves the page's folder alone. The page asks for `../assets/textures/wabbit_alpha.png`, which is `/assets/...` there, and got a 404. So every bunnymark page row taken with it ("The comparison" and each time it was measured again, and the two entries above) timed sprites drawing the missing texture's checker. The checker is drawn at the same size by the same path, and the rows hold: the actor bunnymark at 50k in a page is 2.04 ms with the texture, 1.98 in "2D actors placed for less". `measure_frames.py` serves the site, where it was found; it now links the examples' files into a benchmark's folder too, as `assets/`, so both find them.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.
