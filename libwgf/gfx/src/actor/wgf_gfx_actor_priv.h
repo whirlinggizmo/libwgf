@@ -19,12 +19,13 @@
  * the shared ones, and the transforms as matrices. libwgt's, with its 2D types. */
 
 typedef struct wgf_gfx_priv_sprite_t {
+    /* what a 2D stage's walk reads first (wgf_gfx_priv_actor_t's) */
     wgf_texture_t texture;
+    wgf_color_t tint;
+    int alpha_mode; /* wgf_alpha_mode_t */
     float source[4]; /* x, y, width, height; width or height <= 0: the whole texture */
     float size[2];   /* <= 0: the source's size */
     float pivot[2];
-    wgf_color_t tint;
-    int alpha_mode;     /* wgf_alpha_mode_t */
     float alpha_cutoff; /* MASK's */
     int facing;         /* wgf_sprite_facing_t: on a 3D stage */
     /* a frame trimmed when packed (a sheet's atlas): its texels' offset into the whole
@@ -159,39 +160,24 @@ typedef struct wgf_gfx_priv_previous_t {
 } wgf_gfx_priv_previous_t;
 
 typedef struct wgf_gfx_priv_actor_t {
+    /* first what a 2D stage's walk reads of each actor, together, then the rest: drawing
+       50,000 sprites in a page was bound by the cache lines each record touched */
     wgf_actor_kind_t type;
-    char *name; /* malloc'd; NULL for none */
-    wgf_actor_t parent;
-    int slot; /* where it is in its parent's children */
-    /* Its children, in drawing order. A child that leaves leaves a hole (0), so leaving
-     * costs nothing however many siblings it has; the holes are closed in one pass when
-     * the array is next read whole (wgf_gfx_priv_actor_children). */
-    wgf_actor_t *children;
-    int child_count;    /* slots in use, holes included */
-    int child_capacity;
-    int live_children;  /* children, holes not counted */
-    bool child_holes;
-    wgf_vec3_t position;
-    wgf_quat_t rotation; /* a quaternion; the public calls give and take angles */
-    wgf_vec3_t scale;
-    /* Its world transform as a matrix, kept until it or anything above it changes. An
-     * actor whose world is dirty has every actor under it dirty too. Its local one isn't
-     * kept: it is only read to make this one (64 bytes an actor). */
-    wgf_mat4_t world;
-    bool world_dirty;
+    int live_children; /* children, holes not counted */
     bool enabled;
     bool visible;
-    bool paused; /* it and everything under it frozen: drawn, not moved on */
-    bool pickable; /* hit by a pick (wgf_stage2d_pick, wgf_stage3d_pick); off, a pick passes through it */
-    bool from_file; /* made from a glTF file's nodes, under its root: the root's path makes it again */
+    bool world_dirty;
+    bool child_holes;
     /* Simulated (it has a component the ticks move, ecs/): `position`, `rotation`, and
      * `scale` are the simulation's, at the tick rate, and the actor is drawn between
      * `previous`, kept as the last tick began, and them, at the frame's tick fraction.
      * malloc'd; NULL for an actor nothing simulates, so it carries none of it (the actor
      * benchmark's: 40 bytes an actor, and its pool's slack). */
     wgf_gfx_priv_previous_t *previous;
-    wgf_handle_t components; /* the ecs's record of its components and behaviors; 0 for none */
-    union {
+    wgf_vec3_t position;
+    wgf_quat_t rotation; /* a quaternion; the public calls give and take angles */
+    wgf_vec3_t scale;
+    union { /* a sprite's hot fields first (wgf_gfx_priv_sprite_t) */
         wgf_gfx_priv_sprite_t sprite;
         wgf_gfx_priv_text_t text;
         float camera2d_zoom;
@@ -206,6 +192,23 @@ typedef struct wgf_gfx_priv_actor_t {
         struct wgf_gfx_priv_sprite_batch_t *sprite_batch; /* malloc'd (sprite/wgf_gfx_sprite_batch2d.c) */
         struct wgf_gfx_priv_tilemap_layer_t *tilemap_layer; /* malloc'd (tilemap/wgf_gfx_tilemap_layer.c) */
     } as;
+    char *name; /* malloc'd; NULL for none */
+    wgf_actor_t parent;
+    int slot; /* where it is in its parent's children */
+    /* Its children, in drawing order. A child that leaves leaves a hole (0), so leaving
+     * costs nothing however many siblings it has; the holes are closed in one pass when
+     * the array is next read whole (wgf_gfx_priv_actor_children). */
+    wgf_actor_t *children;
+    int child_count;    /* slots in use, holes included */
+    int child_capacity;
+    /* Its world transform as a matrix, kept until it or anything above it changes. An
+     * actor whose world is dirty has every actor under it dirty too. Its local one isn't
+     * kept: it is only read to make this one (64 bytes an actor). */
+    wgf_mat4_t world;
+    bool paused; /* it and everything under it frozen: drawn, not moved on */
+    bool pickable; /* hit by a pick (wgf_stage2d_pick, wgf_stage3d_pick); off, a pick passes through it */
+    bool from_file; /* made from a glTF file's nodes, under its root: the root's path makes it again */
+    wgf_handle_t components; /* the ecs's record of its components and behaviors; 0 for none */
 } wgf_gfx_priv_actor_t;
 
 /* A 2D sprite's quad as it is drawn, in its own units (x0, y0, x1, y1), and the texels it
@@ -221,6 +224,9 @@ const wgf_actor_t *wgf_gfx_priv_actor_children(wgf_actor_t actor, int *count);
 /* A new actor of `type`, with the shared fields at their defaults and the rest
  * zeroed; 0 when there is no room. */
 wgf_actor_t wgf_gfx_priv_actor_create(wgf_actor_kind_t type);
+
+/* Its slot in the actors' pool: what a part keeping something for some actors indexes by. */
+int wgf_gfx_priv_actor_index_of(const wgf_gfx_priv_actor_t *actor_ptr);
 
 /* The one actor named `name` on the tree whose root is `stage`, the stage itself not
  * counted, found by the names' index; 0 for none, and 0 (warned) for two or more. */
@@ -297,6 +303,11 @@ typedef struct wgf_gfx_priv_actor_kind_t {
                      wgf_mat4_t *plane, wgf_vec3_t corners[4]);
     /* drawn on a 3D stage through `plane`, into the immediate-mode layer current */
     void (*draw_3d)(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *plane);
+    /* a 2D stage's fast way for one with no children (a sprite's): drawn as `draw` would
+       draw it, placed in its parent, `parent` the parent's world matrix through the view,
+       without making its own world matrix. False, having drawn nothing, when it can't
+       (turned, simulated, its quad not kept): the walk then draws it the usual way. */
+    bool (*draw_leaf_2d)(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *parent);
 } wgf_gfx_priv_actor_kind_t;
 void wgf_gfx_priv_actor_set_kind(wgf_actor_kind_t type, const wgf_gfx_priv_actor_kind_t *kind);
 const wgf_gfx_priv_actor_kind_t *wgf_gfx_priv_actor_get_kind(wgf_actor_kind_t type); /* NULL when unset */

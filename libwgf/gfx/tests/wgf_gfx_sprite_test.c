@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "actor/wgf_gfx_actor_priv.h"
 #include "draw/wgf_gfx_nine_slice_priv.h"
 #include "render/wgf_gfx_render_priv.h"
 #include "sprite/wgf_gfx_sprite_batch_priv.h"
@@ -22,8 +23,9 @@
 /* Sprites on sokol's dummy backend (a headless build): the defaults, each setting read
  * back, sizes before and after the texture is READY, what is refused, and what a
  * stage draws: nothing while the texture is PENDING, the checker once it FAILED, the
- * texture once READY; and on a 3D stage, its facing and alpha modes, and the instanced
- * batch: alike sprites one draw, see-through ones sorted, culled out of view. References
+ * texture once READY, its quad kept between draws until a setter changes it; and on a 3D
+ * stage, its facing and alpha modes, and the instanced batch: alike sprites one draw,
+ * see-through ones sorted, culled out of view. References
  * are wgf_gfx_actor_test's. Pixels:
  * wgf_gfx_stage2d_web_test. */
 
@@ -113,6 +115,29 @@ int main(void)
     settle(texture);
     expect(wgf_sprite_get_size(sprite).x == 2.0f && wgf_sprite_get_size(sprite).y == 2.0f, "READY: the texture's size");
     expect(drawn(stage) == 1, "drawn: one quad");
+    { /* its quad kept from draw to draw, forgotten by a setter, and not a new sprite's in its slot */
+        const int slot = wgf_gfx_priv_actor_index_of(wgf_gfx_priv_actor_of(sprite));
+        const wgf_gfx_priv_kept_quad_t *quad = wgf_gfx_priv_sprite_run_quad(slot, false);
+        wgf_actor_t other;
+        expect(quad != NULL && quad->kept && quad->rect[2] - quad->rect[0] == 2.0f, "drawn: its quad kept");
+        wgf_sprite_set_size(sprite, 8, 4);
+        quad = wgf_gfx_priv_sprite_run_quad(slot, false);
+        expect(quad != NULL && !quad->kept, "a size set: forgotten");
+        expect(drawn(stage) == 1, "drawn again");
+        quad = wgf_gfx_priv_sprite_run_quad(slot, false);
+        expect(quad != NULL && quad->kept && quad->rect[2] - quad->rect[0] == 8.0f &&
+                   quad->rect[3] - quad->rect[1] == 4.0f,
+               "kept again, at its new size");
+        wgf_sprite_set_size(sprite, 0, 0);
+        other = wgf_sprite_create(texture);
+        wgf_actor_set_parent(other, stage);
+        expect(drawn(stage) == 2, "two drawn");
+        wgf_actor_destroy(other, WGF_ACTOR_DESTROY_CHILDREN);
+        other = wgf_sprite_create(texture);
+        quad = wgf_gfx_priv_sprite_run_quad(wgf_gfx_priv_actor_index_of(wgf_gfx_priv_actor_of(other)), false);
+        expect(quad == NULL || !quad->kept, "a new sprite: no quad kept for it yet");
+        wgf_actor_destroy(other, WGF_ACTOR_DESTROY_CHILDREN);
+    }
     { /* a stage's sprites in runs: one draw over 8 textures in any order, a new one past them,
          or for another alpha mode, or after anything immediate mode draws between */
         wgf_actor_t runs = wgf_stage2d_create(), sprites[12];

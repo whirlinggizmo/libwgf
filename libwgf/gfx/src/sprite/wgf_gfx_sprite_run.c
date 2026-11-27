@@ -61,6 +61,8 @@ static struct {
     unsigned frame;    /* the frame the runs were made in */
     unsigned uploaded; /* the frame the records went up in, + 1 */
     int draw_calls, drawn, last_draw_calls, last_drawn;
+    wgf_gfx_priv_kept_quad_t *quads; /* sprites' kept quads, by actor slot */
+    int quad_capacity;
 } sr;
 
 static bool grow(void **items, int *capacity, int needed, size_t size, int initial)
@@ -203,6 +205,7 @@ static void stop(void)
     }
     free(sr.records);
     free(sr.runs);
+    free(sr.quads);
     memset(&sr, 0, sizeof(sr));
 }
 
@@ -256,11 +259,11 @@ static run_t *begin_run(int pipeline)
     return r;
 }
 
-void wgf_gfx_priv_sprite_run_add(const wgf_mat4_t *placed, const float rect[4], const float uv[4], uint32_t tint,
-                                 int mode, sg_view view, sg_sampler sampler)
+void wgf_gfx_priv_sprite_run_add(const float placed[6], const float rect[4], const float uv[4], uint32_t tint, int mode,
+                                 sg_view view, sg_sampler sampler)
 {
     const int pipeline = pipeline_of(mode);
-    const float *m = placed->m, w = rect[2] - rect[0], h = rect[3] - rect[1];
+    const float *m = placed, w = rect[2] - rect[0], h = rect[3] - rect[1];
     run_t *r = NULL;
     record_t *record;
     int slot = -1;
@@ -281,18 +284,35 @@ void wgf_gfx_priv_sprite_run_add(const wgf_mat4_t *placed, const float rect[4], 
     }
     record = &sr.records[sr.record_count++];
     r->count++;
-    record->origin[0] = m[0] * rect[0] + m[4] * rect[1] + m[12];
-    record->origin[1] = m[1] * rect[0] + m[5] * rect[1] + m[13];
+    record->origin[0] = m[0] * rect[0] + m[2] * rect[1] + m[4];
+    record->origin[1] = m[1] * rect[0] + m[3] * rect[1] + m[5];
     record->edges[0] = m[0] * w;
     record->edges[1] = m[1] * w;
-    record->edges[2] = m[4] * h;
-    record->edges[3] = m[5] * h;
+    record->edges[2] = m[2] * h;
+    record->edges[3] = m[3] * h;
     memcpy(record->uv, uv, sizeof(record->uv));
     record->color[0] = (uint8_t)(tint >> 24);
     record->color[1] = (uint8_t)(tint >> 16);
     record->color[2] = (uint8_t)(tint >> 8);
     record->color[3] = (uint8_t)tint;
     record->slot = (float)slot;
+}
+
+wgf_gfx_priv_kept_quad_t *wgf_gfx_priv_sprite_run_quad(int index, bool make)
+{
+    if (index < 0) return NULL;
+    if (index >= sr.quad_capacity) {
+        const int old = sr.quad_capacity;
+        if (!make || !grow((void **)&sr.quads, &sr.quad_capacity, index + 1, sizeof(wgf_gfx_priv_kept_quad_t), 1024)) {
+            return NULL;
+        }
+        memset(sr.quads + old, 0, sizeof(wgf_gfx_priv_kept_quad_t) * (size_t)(sr.quad_capacity - old));
+        if (!sr.installed) { /* freed at the part's stop */
+            wgf_core_priv_part_install(&part);
+            sr.installed = true;
+        }
+    }
+    return &sr.quads[index];
 }
 
 int wgf_gfx_priv_sprite_run_get_draw_calls(void)

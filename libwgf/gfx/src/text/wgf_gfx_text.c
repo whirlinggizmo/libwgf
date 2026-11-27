@@ -34,7 +34,7 @@ static void text_draw(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, 
 static bool text_place_3d(const wgf_gfx_priv_actor_t *actor_ptr, wgf_mat4_t world,
                           const wgf_gfx_priv_sprite_view_t *view, wgf_mat4_t *plane, wgf_vec3_t corners[4]);
 static void text_draw_3d(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *plane);
-static const wgf_gfx_priv_actor_kind_t kind = {text_free, text_draw, text_place_3d, text_draw_3d};
+static const wgf_gfx_priv_actor_kind_t kind = {text_free, text_draw, text_place_3d, text_draw_3d, NULL};
 
 /* Its size unset: 16 logical pixels on a 2D stage, 1 world unit on a 3D one (libwgt's). */
 #define TEXT_STAGE3D_SIZE 1.0f

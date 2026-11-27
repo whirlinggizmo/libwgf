@@ -36,6 +36,11 @@ wgf_gfx_priv_actor_t *wgf_gfx_priv_actor_of_at(wgf_actor_t actor, const char *ca
     return &records[index];
 }
 
+int wgf_gfx_priv_actor_index_of(const wgf_gfx_priv_actor_t *actor_ptr)
+{
+    return (int)(actor_ptr - records);
+}
+
 wgf_actor_t wgf_gfx_priv_actor_create(wgf_actor_kind_t type)
 {
     wgf_actor_t handle;

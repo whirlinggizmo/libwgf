@@ -47,6 +47,16 @@ static void region_of(const wgf_gfx_priv_sprite_t *sprite, float region[4], floa
               region, size);
 }
 
+/* Its kept quad (wgf_gfx_sprite_run_priv.h) forgotten: a setter changed what it is made
+ * from, or its slot holds a new sprite. */
+static void forget_quad(wgf_actor_t sprite)
+{
+    const wgf_gfx_priv_actor_t *actor_ptr = wgf_gfx_priv_actor_of_silently(sprite);
+    wgf_gfx_priv_kept_quad_t *quad =
+        actor_ptr != NULL ? wgf_gfx_priv_sprite_run_quad(wgf_gfx_priv_actor_index_of(actor_ptr), false) : NULL;
+    if (quad != NULL) quad->kept = false;
+}
+
 void wgf_gfx_priv_sprite_set_trim(wgf_actor_t sprite, float x, float y, float w, float h)
 {
     wgf_gfx_priv_sprite_t *sprite_ptr = sprite_of(sprite);
@@ -55,6 +65,7 @@ void wgf_gfx_priv_sprite_set_trim(wgf_actor_t sprite, float x, float y, float w,
     sprite_ptr->trim[1] = y;
     sprite_ptr->trim[2] = w > 0.0f && h > 0.0f ? w : 0.0f;
     sprite_ptr->trim[3] = w > 0.0f && h > 0.0f ? h : 0.0f;
+    forget_quad(sprite);
 }
 
 static void vertex(const wgf_mat4_t *m, float x, float y, float u, float v)
@@ -62,48 +73,105 @@ static void vertex(const wgf_mat4_t *m, float x, float y, float u, float v)
     sgl_v2f_t2f(m->m[0] * x + m->m[4] * y + m->m[12], m->m[1] * x + m->m[5] * y + m->m[13], u, v);
 }
 
-static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *placed,
-                        const wgf_mat4_t *view)
+/* Its quad for a texture of `tw` by `th` (`placeholder`: the checker's): `rect` x0, y0, x1,
+ * y1 in its own units, `uv` u0, v0, u1, v1, and the region shown; whether it is a
+ * nine-slice, drawn as nine quads. */
+static bool quad_in(const wgf_gfx_priv_sprite_t *sprite, int tw, int th, bool placeholder, float rect[4], float uv[4],
+                    float region[4])
 {
-    const wgf_gfx_priv_sprite_t *sprite = &actor_ptr->as.sprite;
-    sg_view image;
-    sg_sampler sampler;
-    int tw, th;
-    bool placeholder;
-    float region[4], size[2], pivot[2], u0 = 0.0f, v0 = 0.0f, u1 = 1.0f, v1 = 1.0f, x0, y0, x1, y1;
-    bool nine;
-    (void)actor;
-    (void)view;
-    if (!wgf_gfx_priv_texture_get_binding(sprite->texture, &image, &sampler, &tw, &th, &placeholder)) return;
+    float size[2], pivot[2];
     if (placeholder) region_of(sprite, region, size);
     else region_in(sprite, (float)tw, (float)th, region, size); /* the binding's size is the texture's */
     if (placeholder && (size[0] <= 0.0f || size[1] <= 0.0f)) { /* a failed texture with no size: the checker's */
         size[0] = (float)tw;
         size[1] = (float)th;
     }
+    uv[0] = uv[1] = 0.0f;
+    uv[2] = uv[3] = 1.0f;
     if (!placeholder && tw > 0 && th > 0) {
-        u0 = region[0] / (float)tw;
-        v0 = region[1] / (float)th;
-        u1 = (region[0] + region[2]) / (float)tw;
-        v1 = (region[1] + region[3]) / (float)th;
+        uv[0] = region[0] / (float)tw;
+        uv[1] = region[1] / (float)th;
+        uv[2] = (region[0] + region[2]) / (float)tw;
+        uv[3] = (region[1] + region[3]) / (float)th;
     }
     pivot[0] = sprite->pivot[0];
     pivot[1] = sprite->pivot[1];
     if (!placeholder) wgf_gfx_priv_sprite_trimmed(sprite, region[2], region[3], size, pivot);
-    x0 = -pivot[0] * size[0];
-    y0 = -pivot[1] * size[1];
-    x1 = x0 + size[0];
-    y1 = y0 + size[1];
-    nine = !placeholder && (sprite->nine[0] > 0.0f || sprite->nine[1] > 0.0f || sprite->nine[2] > 0.0f ||
-                            sprite->nine[3] > 0.0f);
-    if (!nine) { /* one quad, in the stage's run of sprites (wgf_gfx_sprite_run.c) */
-        const float rect[4] = {x0, y0, x1, y1}, uv[4] = {u0, v0, u1, v1};
-        wgf_gfx_priv_sprite_run_add(placed, rect, uv, sprite->tint,
-                                    sprite->alpha_mode == WGF_ALPHA_MODE_MASK ? WGF_ALPHA_MODE_BLEND
-                                                                              : sprite->alpha_mode,
-                                    image, sampler);
-        return;
+    rect[0] = -pivot[0] * size[0];
+    rect[1] = -pivot[1] * size[1];
+    rect[2] = rect[0] + size[0];
+    rect[3] = rect[1] + size[1];
+    return !placeholder &&
+           (sprite->nine[0] > 0.0f || sprite->nine[1] > 0.0f || sprite->nine[2] > 0.0f || sprite->nine[3] > 0.0f);
+}
+
+/* Its quad for a texture of `tw` by `th`: the one kept, or one made and kept (not a
+ * placeholder's); whether it is a nine-slice, which is neither. */
+static bool kept_quad_in(const wgf_gfx_priv_actor_t *actor_ptr, int tw, int th, bool placeholder, float rect[4],
+                         float uv[4], float region[4])
+{
+    const wgf_gfx_priv_sprite_t *sprite = &actor_ptr->as.sprite;
+    wgf_gfx_priv_kept_quad_t *quad;
+    if (placeholder) return quad_in(sprite, tw, th, placeholder, rect, uv, region);
+    quad = wgf_gfx_priv_sprite_run_quad(wgf_gfx_priv_actor_index_of(actor_ptr), true);
+    if (quad != NULL && quad->kept && quad->width == tw && quad->height == th) {
+        memcpy(rect, quad->rect, sizeof(quad->rect));
+        memcpy(uv, quad->uv, sizeof(quad->uv));
+        return false;
     }
+    if (quad_in(sprite, tw, th, placeholder, rect, uv, region)) return true;
+    if (quad != NULL) {
+        memcpy(quad->rect, rect, sizeof(quad->rect));
+        memcpy(quad->uv, uv, sizeof(quad->uv));
+        quad->width = tw;
+        quad->height = th;
+        quad->kept = true;
+    }
+    return false;
+}
+
+/* Its alpha mode as a run or immediate mode draws it: MASK as BLEND. */
+static int drawn_mode(const wgf_gfx_priv_sprite_t *sprite)
+{
+    return sprite->alpha_mode == WGF_ALPHA_MODE_MASK ? WGF_ALPHA_MODE_BLEND : sprite->alpha_mode;
+}
+
+/* Its one quad added to the stage's run (wgf_gfx_sprite_run.c), through `placed`, the six
+ * numbers of its matrix a 2D quad reads: both ways a stage draws a sprite come here. True
+ * when that is done, or nothing is to be drawn; false for a nine-slice, drawn in nine. */
+static bool add_quad(const wgf_gfx_priv_actor_t *actor_ptr, const float placed[6])
+{
+    const wgf_gfx_priv_sprite_t *sprite = &actor_ptr->as.sprite;
+    sg_view image;
+    sg_sampler sampler;
+    int tw, th;
+    bool placeholder;
+    float rect[4], uv[4], region[4];
+    if (!wgf_gfx_priv_texture_get_binding(sprite->texture, &image, &sampler, &tw, &th, &placeholder)) return true;
+    if (kept_quad_in(actor_ptr, tw, th, placeholder, rect, uv, region)) return false;
+    wgf_gfx_priv_sprite_run_add(placed, rect, uv, sprite->tint, drawn_mode(sprite), image, sampler);
+    return true;
+}
+
+static void draw_sprite(wgf_actor_t actor, const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *placed,
+                        const wgf_mat4_t *view)
+{
+    const wgf_gfx_priv_sprite_t *sprite = &actor_ptr->as.sprite;
+    const float *m = placed->m;
+    const float affine[6] = {m[0], m[1], m[4], m[5], m[12], m[13]};
+    sg_view image;
+    sg_sampler sampler;
+    int tw, th;
+    bool placeholder;
+    float rect[4], uv[4], region[4], x0, y0, x1, y1, u0, v0, u1, v1;
+    (void)actor;
+    (void)view;
+    if (add_quad(actor_ptr, affine)) return;
+    /* a nine-slice */
+    if (!wgf_gfx_priv_texture_get_binding(sprite->texture, &image, &sampler, &tw, &th, &placeholder)) return;
+    quad_in(sprite, tw, th, placeholder, rect, uv, region);
+    x0 = rect[0], y0 = rect[1], x1 = rect[2], y1 = rect[3];
+    u0 = uv[0], v0 = uv[1], u1 = uv[2], v1 = uv[3];
     sgl_push_pipeline(); /* its own mode, whatever immediate mode's is (MASK drawn as BLEND) */
     sgl_load_pipeline(wgf_gfx_priv_render_pipeline_2d(sprite->alpha_mode == WGF_ALPHA_MODE_MASK ? WGF_ALPHA_MODE_BLEND
                                                                                                 : sprite->alpha_mode));
@@ -184,7 +252,26 @@ static void free_sprite(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
     actor_ptr->as.sprite.material = 0;
 }
 
-static const wgf_gfx_priv_actor_kind_t kind = {free_sprite, draw_sprite, NULL, NULL};
+/* Its quad through its parent's matrix and its own position and scale: draw_sprite's, with
+ * the product of the two matrices worked only as far as a 2D quad reads it. */
+static bool draw_leaf_sprite(const wgf_gfx_priv_actor_t *actor_ptr, const wgf_mat4_t *parent)
+{
+    const wgf_quat_t q = actor_ptr->rotation;
+    const wgf_vec3_t p = actor_ptr->position, k = actor_ptr->scale;
+    const float *a = parent->m;
+    if (actor_ptr->previous != NULL || q.x != 0.0f || q.y != 0.0f || q.z != 0.0f) return false;
+    {
+        const float placed[6] = {a[0] * k.x,
+                                 a[1] * k.x,
+                                 a[4] * k.y,
+                                 a[5] * k.y,
+                                 a[0] * p.x + a[4] * p.y + a[8] * p.z + a[12],
+                                 a[1] * p.x + a[5] * p.y + a[9] * p.z + a[13]};
+        return add_quad(actor_ptr, placed); /* a nine-slice: the usual way */
+    }
+}
+
+static const wgf_gfx_priv_actor_kind_t kind = {free_sprite, draw_sprite, NULL, NULL, draw_leaf_sprite};
 
 static bool is_texture(wgf_texture_t texture)
 {
@@ -200,6 +287,7 @@ wgf_actor_t wgf_sprite_create(wgf_texture_t texture)
     sprite = wgf_gfx_priv_actor_create(WGF_ACTOR_KIND_SPRITE);
     sprite_ptr = sprite_of(sprite);
     if (sprite_ptr == NULL) return 0;
+    forget_quad(sprite); /* a slot used before */
     sprite_ptr->tint = 0xFFFFFFFFu;
     sprite_ptr->pivot[0] = sprite_ptr->pivot[1] = 0.5f;
     sprite_ptr->alpha_mode = WGF_ALPHA_MODE_BLEND;
@@ -219,7 +307,8 @@ bool wgf_sprite_set_texture(wgf_actor_t sprite, wgf_texture_t texture)
     if (texture == sprite_ptr->texture) return true;
     if (texture != 0) wgf_gfx_priv_texture_retain(texture);
     if (sprite_ptr->texture != 0) wgf_resource_release(sprite_ptr->texture);
-    sprite_of(sprite)->texture = texture;
+    sprite_ptr->texture = texture;
+    forget_quad(sprite);
     return true;
 }
 
@@ -237,6 +326,7 @@ bool wgf_sprite_set_source(wgf_actor_t sprite, float x, float y, float width, fl
     sprite_ptr->source[1] = y;
     sprite_ptr->source[2] = width;
     sprite_ptr->source[3] = height;
+    forget_quad(sprite);
     return true;
 }
 
@@ -253,6 +343,7 @@ bool wgf_sprite_set_size(wgf_actor_t sprite, float width, float height)
     if (sprite_ptr == NULL) return false;
     sprite_ptr->size[0] = width;
     sprite_ptr->size[1] = height;
+    forget_quad(sprite);
     return true;
 }
 
@@ -271,6 +362,7 @@ bool wgf_sprite_set_pivot(wgf_actor_t sprite, float x, float y)
     if (sprite_ptr == NULL) return false;
     sprite_ptr->pivot[0] = x;
     sprite_ptr->pivot[1] = y;
+    forget_quad(sprite);
     return true;
 }
 
@@ -288,6 +380,7 @@ bool wgf_sprite_set_nine_slice(wgf_actor_t sprite, float left, float top, float 
     sprite_ptr->nine[1] = top > 0.0f ? top : 0.0f;
     sprite_ptr->nine[2] = right > 0.0f ? right : 0.0f;
     sprite_ptr->nine[3] = bottom > 0.0f ? bottom : 0.0f;
+    forget_quad(sprite);
     return true;
 }
 

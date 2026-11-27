@@ -310,7 +310,7 @@ static void free_batch(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
     actor_ptr->as.sprite_batch = NULL;
 }
 
-static const wgf_gfx_priv_actor_kind_t kind = {free_batch, draw_batch, NULL, NULL};
+static const wgf_gfx_priv_actor_kind_t kind = {free_batch, draw_batch, NULL, NULL, NULL};
 
 static bool is_texture(wgf_texture_t texture)
 {

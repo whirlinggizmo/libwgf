@@ -684,7 +684,7 @@ static void free_layer(wgf_actor_t actor, wgf_gfx_priv_actor_t *actor_ptr)
     actor_ptr->as.tilemap_layer = NULL;
 }
 
-static const wgf_gfx_priv_actor_kind_t kind = {free_layer, NULL, NULL, NULL};
+static const wgf_gfx_priv_actor_kind_t kind = {free_layer, NULL, NULL, NULL, NULL};
 
 /* Layer `index` of the map placed under `root`: its actor and its record, what it draws made.
  * Its actor, 0 when it can't be made. */

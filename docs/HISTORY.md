@@ -1415,6 +1415,30 @@ Rob's, after the bunnymark in Haxe: if the bulk call saves nothing crossing, rem
 
 **What stays:** the rule that an array may be NULL, with a count of 0, only where its header says so. No call now says so.
 
+## A 2D stage's leaf sprites drawn the short way (2026-11-27)
+
+Rob's, after the Haxe bunnymark: helix-raylib's page drew 50,000 bunnies in 1.04 ms, libwgf's in 1.77, and the crossing wasn't why.
+
+**Where the time went**, timed inside the frame of the C bunnymark at 50k in a page (each part cut out in turn): the bunnies' update and their `set_position`s 0.27 ms; the stage's walk itself (each actor looked up, its children, the walk's stack) 0.24; each actor's kind looked up and its draw called 0.10; the world matrices 0.37; each sprite's quad and its record in the run 0.53; the upload and GL about 0.17. Frame to frame, the browser's pacing hid what light frames cost, so the parts were timed with a clock around the update and around `wgf_stage2d_draw`.
+
+**What changed:**
+- **The walk.** `wgf_stage2d_draw` goes through each actor's children in order, each drawn before the next. An actor with no children is drawn by its kind's fast way when it has one (`draw_leaf_2d`, a sprite's): placed in its parent through the six numbers of the matrix a 2D quad reads, without making its own world matrix. That matrix is made when something asks for it, as every reader already checks. A turned or simulated sprite, a nine-slice, and anything else take the usual way. The order drawn is the same.
+- **A sprite's quad kept.** Its corners and UVs, worked out from its source, size, pivot, trim, and the texture's size, are kept from draw to draw, and forgotten by each setter and by a new sprite in the same slot. They are kept by the sprite runs, by the actor's slot in the pool, so only sprites drawn carry them: kept in the actor record, they made every actor 40 bytes larger.
+- **The actor record** puts first what the walk reads: its kind, children, flags, simulation, and transform, then the kind's own part, a sprite's texture, tint, and alpha mode first. The record is 248 bytes (252). `set_position` touches fewer lines: the update at 50k 0.24 ms (0.29).
+
+**Measured** on coinspinner, the bunnymark before and after, round-robin, the median of 5 runs natively and 3 in a page with helix's `run_page.cjs`, the load 3 to 5:
+
+| | before | after |
+|---|---:|---:|
+| 10k, native | 0.44 ms | 0.41 ms |
+| 50k, native | 1.86 ms | 1.49 ms |
+| 10k, page | 0.37 ms | 0.31 ms |
+| 50k, page | 1.70 ms | 1.74 ms |
+
+Without the kept quad, the walk alone: 50k natively 1.62 ms, 10k in a page no gain. **Size:** a program drawing 2D sprites 0.7 to 1.0 KB larger, gzip (ladder-3-sprites 92.8 to 93.6 KB, gfx-stage2d 127.0 to 127.8), built from the commit before and this one; both ways a stage draws a sprite share one quad path (`add_quad`), and the run takes the six numbers of a matrix a 2D quad reads. The size baseline re-recorded, with 5c9430b's removal in it too.
+
+**Not explained yet:** in a page, the gain fades past about 10,000 sprites. Timed inside the frame, the stage's draw costs about 20 ns a sprite at 10k and 26 at 20k to 50k, while the old walk cost about 25 at every count. Natively the gain holds at 50k. It isn't the core the page runs on (pinned to the performance cores, the same) or huge pages (native uses none here either); the profiles at 10k and 50k have the same shape.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

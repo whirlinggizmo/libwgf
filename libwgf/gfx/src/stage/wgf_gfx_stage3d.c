@@ -254,7 +254,7 @@ static void stage_free(wgf_actor_t stage, wgf_gfx_priv_actor_t *actor_ptr)
     if (actor_ptr->as.stage3d.background != 0) wgf_resource_release(actor_ptr->as.stage3d.background);
 }
 
-static const wgf_gfx_priv_actor_kind_t actor_kind = {stage_free, NULL, NULL, NULL};
+static const wgf_gfx_priv_actor_kind_t actor_kind = {stage_free, NULL, NULL, NULL, NULL};
 
 wgf_actor_t wgf_stage3d_create(void)
 {
