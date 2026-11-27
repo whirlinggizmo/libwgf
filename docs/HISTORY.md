@@ -1327,6 +1327,28 @@ Rob's: `wgf_actor_set_positions` moved many actors in one call, but a game that 
 
 **Checked:** the ecs actor test sets and reads each combination, with a handle that isn't an actor, too few floats in any array (refused, nothing set), and arrays of different room. Both bindings' tests and the feature test call them with an array left out. `measure_calls.py` gains `bulk-set`, set_transforms over 1,000 actors, beside `set`, a call each.
 
+## Link-time optimization for release pages (2026-11-26)
+
+Rob's, from the open list. A release web build (`wasm32-release`) compiles the library for link-time optimization, and the examples and the web host link with `-flto`. Its cold files are compiled for size (`-Os`), the rest at `-O3`, as before. Debug web builds and native builds are unchanged.
+
+**Why the cold files.** LTO alone made the pages 5 to 7% faster, but 12 of the size baseline's 57 programs larger, the games' exports by 3 to 4% (Asteroids 218.5 to 227.2 KB gzip, the racer 563.5 to 582.1). Their link maps showed why: LTO inlines across files, into code that runs once as much as into code that runs each frame. sokol's pipeline and shader makers, the world dump, the scene and tilemap readers, the autopilot's start, and a program's `init` grew by kilobytes each. The link's own level (`-O2`, `-Os`) moved sizes by under 1%. A function compiled `-Os` takes little inlined into it, so the lever is the compile.
+- **The whole library at `-Os`** was 15% smaller than plain, and the robots page took 5.10 ms against 3.00: posing and the 3D draw need `-O3`.
+- **The cold files at `-Os`** (`WGF_SIZE_SOURCES` in `cmake/wgf_library.cmake`, by file name): sokol's implementation (its setup and validation; the per-frame calls are thin), glTF's reading, the image and sound decoders, fontstash's glyph making, the tilemap, scene, and dump readers, the asset manifest and load steps, and the autopilot and recorder. `wgf_compile_for_size` appends `-Os` to each once every layer is added, after the layers' own per-file options.
+
+**Measured** on coinspinner, the library built three ways from the same tree, each benchmark page built against each, timed round-robin with helix's `run_page.cjs`, the median of 5 runs:
+
+| | plain | LTO | LTO, cold files `-Os` |
+|---|---:|---:|---:|
+| actor bunnymark at 50k, page | 2.13 ms | 1.86 ms | 1.86 ms |
+| robots at 400, page | 3.15 ms | 3.01 ms | 3.09 ms |
+| bunnymark's wasm, gzip | 89.6 KB | 84.7 KB | 80.7 KB |
+| robots' wasm, gzip | 163.9 KB | 161.1 KB | 149.9 KB |
+| gfx-tilemap's wasm, gzip | 183.1 KB | 189.0 KB | 179.0 KB |
+
+Over the size baseline (`measure_sizes.py`, re-recorded): 59 programs smaller, 539 KB in all (gfx-text3d, gfx-particles, and gfx-sprite3d by 14%, the small examples by about 10%); 2 larger, Asteroids' exports, the Haxe one 218.5 to 221.7 KB and the JS one 222.3 to 224.5, from inlining in its per-frame code (the UI's begin and end, the ecs tick, the drawing calls); the racer the same, 569.1 against 563.5 within the check's 1%. The page timings ran at a load of 4 to 6, from the browser runs themselves.
+
+**What it costs:** the library and its tests build clean in 36 s against 29 (32 cores); a program's link takes 1 to 6 s longer, physics3d-vehicle's the longest, 8.6 s against 3.0, Jolt's C++ optimized at the link. The staged release archive holds bitcode, so a program links it with the pinned Emscripten, which every web preset already requires.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

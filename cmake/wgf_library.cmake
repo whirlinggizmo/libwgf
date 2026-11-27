@@ -8,6 +8,43 @@
 # include path: the layers above it and its own tests link that to use its private
 # headers. Each public header is compiled on its own, with only the public include
 # dirs of this layer and its DEPS on the path.
+# A release web build's sources compiled for size (-Os), the rest at -O3 (docs/HISTORY.md,
+# "Link-time optimization for release pages"): code that runs while loading, once, or seldom,
+# where link-time optimization's inlining only adds bytes. Measured: a hot path here (the
+# robots' posing) made a page much slower, so only what is cold, by its file's name.
+set(WGF_SIZE_SOURCES
+    wgf_platform_sokol_impl.c   # sokol: setup and validation, the per-frame calls thin
+    wgf_gfx_cgltf_impl.c wgf_gfx_mesh_gltf.c   # glTF read
+    wgf_gfx_decode_stb.c wgf_gfx_png.c wgf_gfx_ktx.c wgf_audio_decoders_impl.c   # files decoded
+    wgf_gfx_fontstash_impl.c   # a font's glyphs made
+    wgf_gfx_tilemap.c wgf_ecs_scene.c wgf_ecs_dump.c wgf_asset_manifest_reader.c wgf_core_load.c
+    wgf_asset_task.c   # a load's steps
+    wgf_app_autopilot.c wgf_app_autopilot_web.c wgf_app_record.c)   # an autopilot run, a recording
+
+# Gives each of the layers' WGF_SIZE_SOURCES -Os, in a release web build. Called once every
+# layer is added: a layer's own per-file options (its vendored code's warnings off) are set
+# after it is made, and replace what was there, so -Os is appended last.
+function(wgf_compile_for_size)
+    if(NOT (EMSCRIPTEN AND CMAKE_BUILD_TYPE STREQUAL "Release"))
+        return()
+    endif()
+    foreach(layer IN LISTS ARGN)
+        get_target_property(type wgf_${layer} TYPE)
+        if(NOT type STREQUAL "OBJECT_LIBRARY")
+            continue()
+        endif()
+        get_target_property(sources wgf_${layer} SOURCES)
+        get_target_property(dir wgf_${layer} SOURCE_DIR)
+        foreach(source IN LISTS sources)
+            get_filename_component(name "${source}" NAME)
+            if(name IN_LIST WGF_SIZE_SOURCES)
+                get_filename_component(path "${source}" ABSOLUTE BASE_DIR "${dir}") # not this directory's
+                set_property(SOURCE "${path}" TARGET_DIRECTORY wgf_${layer} APPEND PROPERTY COMPILE_OPTIONS -Os)
+            endif()
+        endforeach()
+    endforeach()
+endfunction()
+
 function(wgf_layer layer)
     cmake_parse_arguments(PARSE_ARGV 1 arg "" "" "SOURCES;DEPS")
     set(target wgf_${layer})

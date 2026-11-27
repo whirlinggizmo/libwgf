@@ -80,6 +80,15 @@ endif()
 if(WGF_EXACT_DRAW_TRIG AND NOT WGF_STANDARD_TRIG)
     add_compile_definitions(WGF_PRIV_EXACT_DRAW_TRIG)
 endif()
+# A release web build is compiled for link-time optimization (docs/HISTORY.md, "Link-time
+# optimization for release pages"), its cold files for size (cmake/wgf_library.cmake's
+# WGF_SIZE_SOURCES): its pages 2 to 13% faster and most programs smaller, for a program's
+# link taking 1 to 6 s longer. The archive then holds LLVM bitcode, which only the pinned
+# Emscripten links. Native builds and debug web builds are compiled as before.
+if(EMSCRIPTEN AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-flto)
+    add_link_options(-flto)
+endif()
 if(WGF_HEADLESS)
     add_compile_definitions(SOKOL_DUMMY_BACKEND)
 elseif(EMSCRIPTEN)
@@ -113,6 +122,7 @@ add_subdirectory(libwgf/ecs)
 add_subdirectory(libwgf/physics3d)
 add_subdirectory(libwgf/ui)
 add_subdirectory(libwgf/app)
+wgf_compile_for_size(core platform asset gfx audio ecs physics3d ui app)
 install(TARGETS wgf ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES include/wgf_api.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 # libwgf's license and the vendored code's, staged with the variant: a program built

@@ -76,7 +76,7 @@ def build(variant, exports_file=None, out=None, stage=True, constants=True, type
                '-sEXPORTED_RUNTIME_METHODS=' + ','.join(RUNTIME + (['FS'] if headless else [])),
                '-sALLOW_TABLE_GROWTH=1', '-sALLOW_MEMORY_GROWTH=1',
                '-sSTACK_SIZE=524288',  # physics3d's Jolt (libwgf/physics3d/CMakeLists.txt)
-               OPTIMIZE if release else '-O0', *([] if release else ['-g']), *EXTRA]
+               OPTIMIZE if release else '-O0', *(['-flto'] if release else ['-g']), *EXTRA]
     if headless:
         command += ['-sENVIRONMENT=node']
     else:

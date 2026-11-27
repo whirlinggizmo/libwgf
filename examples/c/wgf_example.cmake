@@ -83,6 +83,8 @@ function(wgf_example name)
         # a release page, as wgrender's: Closure minifies the JS, and only a browser's
         # environments (a page, a worker) are kept
         target_link_options(${name} PRIVATE $<$<CONFIG:Release>:--closure=1 -sENVIRONMENT=web,worker>)
+        # and linked with link-time optimization, as the release library is compiled for
+        target_link_options(${name} PRIVATE $<$<CONFIG:Release>:-flto>)
     elseif(WGF_HEADLESS)
         find_package(Threads REQUIRED)
         target_link_libraries(${name} PRIVATE Threads::Threads ${CMAKE_DL_LIBS} $<$<NOT:$<PLATFORM_ID:Windows>>:m>)

@@ -78,7 +78,7 @@ A program flies an autopilot -- a file of inputs and expectations ("Autopilot fi
 
 ## The web
 
-Configuring a web preset finds Emscripten through `$EMSDK` or the `emcc` on PATH, and fails unless it is exactly the pinned version, naming the command that installs it: its patch releases change behavior and output, so a size means something only from the same compiler. `LIBWGF_EMSCRIPTEN_VERSION=<version>` allows another on purpose, said at every configure.
+Configuring a web preset finds Emscripten through `$EMSDK` or the `emcc` on PATH, and fails unless it is exactly the pinned version, naming the command that installs it: its patch releases change behavior and output, so a size means something only from the same compiler. `LIBWGF_EMSCRIPTEN_VERSION=<version>` allows another on purpose, said at every configure. The release web preset (`wasm32-release`) compiles for link-time optimization, so its staged archive holds LLVM bitcode: a program links it with the pinned Emscripten, and its link takes a few seconds longer (the examples and the web host link with `-flto`).
 
 ```sh
 cmake --preset wasm32-debug && cmake --build --preset wasm32-debug && ctest --preset wasm32-debug
