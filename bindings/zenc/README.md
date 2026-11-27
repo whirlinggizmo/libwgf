@@ -7,7 +7,7 @@ Zen C compiles to C, so the binding calls libwgf's C directly: no boundary, noth
 ## What it declares
 
 - **Every exported call,** as `extern fn`, with its header comment above it (`///`). The C compiler checks each prototype `zc` emits against the header's, so a call's types can't drift.
-- **Handle types and `wgf_color_t`,** as `alias`es of `u32`: `wgf_actor_t`, `wgf_texture_t`, and the rest.
+- **Each kind of handle as a type of its own:** `wgf_actor_t`, `wgf_texture_t`, and the rest are `opaque alias`es of `u32`. zc refuses a texture where an actor goes, and takes `0` for "none" (`wgf_sprite_create(0)`, `if a != 0`). A call taking any handle (`wgf_resource_release`) takes every kind, and `(u32)a` gives the number. `wgf_handle_t` and `wgf_color_t` are plain aliases of `u32`.
 - **The math values** (`wgf_vec3_t`, `wgf_quat_t`, `wgf_mat4_t`, ...), opaque to `zc`. Their fields work, and the C compiler checks them.
 - **Every enum and its values,** and the `#define`s of numbers and colors (`WGF_COLOR_RED`), each typed.
 - **The math helpers** (`wgf_vec3_add`, `wgf_mat4_mul`, ...), which the headers define `static inline`, and the log macros (`wgf_log_info`), declared by name: callable as C defines them.
@@ -43,14 +43,19 @@ A headless variant needs only `-lstdc++ -lpthread -ldl -lm` (the archive holds C
 
 ## What zc checks, and what the C compiler does
 
-Rob's fork of zc (v0.4.4-766 and later) reads the C headers a program includes and knows every name they declare. So a misspelled `wgf_` call or `WGF_` constant is a zc error at its `.zc` line, with a suggestion:
+The binding needs Rob's fork of zc at 6c2403aa or later (`feat/reload-harness`, v0.5.0): an older zc refuses `0` as a handle. That zc reads the C headers a program includes and knows every name and type they declare. So a misspelled `wgf_` call or `WGF_` constant, a field that isn't there, a wrong number of arguments, another enum's value, and one kind of handle for another are zc errors at their `.zc` line, the first with a suggestion:
 
 ```
 error: Undefined function 'wgf_actor_set_postion'; did you mean 'wgf_actor_set_position'?
 error: Undefined name 'WGF_ACTOR_DESTORY_CHILDREN'; did you mean 'WGF_ACTOR_DESTROY_CHILDREN'?
 ```
 
-Upstream zc lets any unknown name through to C once a program includes a C header, and the C compiler catches it instead, also at its `.zc` line. Either way, a field of a math value (`at.x`) is checked by the C compiler, and the binding means zc knows every libwgf type, so `let at: wgf_vec3_t` and typed handles need no workaround.
+```
+error: Type validation failed. Expected 'wgf_actor_t', but got 'wgf_texture_t'
+error: Argument 1 of 'wgf_draw_set_blend_mode' is a 'enum wgf_easing_t', but the parameter is a 'enum wgf_alpha_mode_t'
+```
+
+What zc still lets through, the C compiler catches at the `.zc` line: a string where a number goes, and a struct put into a number (Zen C's task 35).
 
 ## Checks
 

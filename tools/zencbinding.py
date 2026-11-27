@@ -5,8 +5,10 @@ the headers' model (tools/headers.py). Standard library only.
 A Zen-C program imports it (`import "wgf.zc"`) and builds against a staged variant's
 include/ and library. The file includes every public header, so the C compiler sees the
 real declarations, and declares to zc what they hold, emitting nothing that could clash:
-  - a handle type, and wgf_color_t, as an alias of u32 (a typedef the C compiler takes
-    again, being the same);
+  - each kind of handle (wgf_actor_t, wgf_texture_t, ...) as an opaque alias of u32, so zc
+    refuses one kind where another goes, and takes a literal 0 for "none"; wgf_handle_t (any
+    handle) and wgf_color_t as plain aliases. Each is a typedef the C compiler takes again,
+    being the same;
   - a struct (the math values) as `extern struct`, opaque to zc: the C compiler checks
     its fields;
   - an enum's or a callback's type as a bare `extern`, and each enum value, and each
@@ -86,10 +88,12 @@ def write(api, mark):
            "// built against a staged variant's include/ and library (bindings/zenc/README.md).\n\n"]
     for header in api.headers:
         out.append(f'include <{Path(header).name}>\n')
-    out.append('\n// Types: handles are numbers; the math values and every enum are C\'s own.\n')
+    out.append('\n// Types: each kind of handle a type of its own, 0 for none; the math values and enums C\'s.\n')
     for name, (target, header) in api.typedefs.items():
         if '(' in target:  # a function pointer (wgf_app_callback_t): C's own, named for zc
             out.append(f'extern {name};\n')
+        elif target == 'wgf_handle_t':  # a kind of handle: its own type to zc, 0 for none
+            out.append(f'opaque alias {name} = u32;\n')
         else:
             out.append(f'alias {name} = {alias_target(target, api, name)};\n')
     for name in api.structs:

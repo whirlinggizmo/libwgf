@@ -1363,6 +1363,12 @@ Rob's, after helix's robots page came out ahead of libwgf's in one session (2.52
 | actor bunnymark at 50k, page | 1.87 ms | 1.70 ms |
 | robots' wasm, gzip | 149.7 KB | 149.2 KB |
 
+## Zen-C handles typed by kind (2026-11-27)
+
+Rob's, from the Zen-C binding's checks: a texture passed where an actor goes compiled, as the handles were plain aliases of `u32`. Tried first as `opaque alias`es, each kind became its own type to zc, but the everyday `0` for "none" was refused (`wgf_sprite_create(0)`, `if a != 0`). Rob chose a rule in zc over helpers in the binding: Zen C's tasks 33 and 34, in Rob's fork at 6c2403aa. A literal `0` converts to an opaque alias of an integer type outside its module (an argument, an initializer, an assignment, a return, `==` and `!=`), and a call to an `extern fn` checks its C enum parameters as phase 2 checks a scanned C function. Before, the binding's own declaration of a call hid that check.
+
+**What changed:** the generator declares each kind of handle as `opaque alias X = u32;`. `wgf_handle_t`, any handle, and `wgf_color_t` stay plain aliases. With zc at 6c2403aa, one kind for another, `5` for an actor, a handle into a `u32` without a cast, and another enum's value are zc errors. `0`, `!= 0`, any kind where any handle goes, and `(u32)a` compile. The binding's test passes with the C compiler and tcc. A zc older than 6c2403aa refuses `0` as a handle (bindings/zenc/README.md).
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

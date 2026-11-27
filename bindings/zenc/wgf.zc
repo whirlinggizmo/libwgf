@@ -91,33 +91,33 @@ include <wgf_debug.h>
 include <wgf_loop.h>
 include <wgf_replay.h>
 
-// Types: handles are numbers; the math values and every enum are C's own.
+// Types: each kind of handle a type of its own, 0 for none; the math values and enums C's.
 alias wgf_handle_t = u32;
-alias wgf_fs_task_t = wgf_handle_t;
-alias wgf_generator_t = wgf_handle_t;
-alias wgf_asset_task_t = wgf_handle_t;
-alias wgf_text_buffer_t = wgf_handle_t;
-alias wgf_actor_t = wgf_handle_t;
+opaque alias wgf_fs_task_t = u32;
+opaque alias wgf_generator_t = u32;
+opaque alias wgf_asset_task_t = u32;
+opaque alias wgf_text_buffer_t = u32;
+opaque alias wgf_actor_t = u32;
 alias wgf_color_t = u32;
-alias wgf_cubemap_t = wgf_handle_t;
-alias wgf_texture_t = wgf_handle_t;
-alias wgf_texture_read_t = wgf_handle_t;
-alias wgf_font_t = wgf_handle_t;
-alias wgf_shader_t = wgf_handle_t;
-alias wgf_material_t = wgf_handle_t;
-alias wgf_sheet_t = wgf_handle_t;
-alias wgf_environment_t = wgf_handle_t;
-alias wgf_image_t = wgf_handle_t;
-alias wgf_mesh_t = wgf_handle_t;
-alias wgf_tilemap_t = wgf_handle_t;
-alias wgf_bus_t = wgf_handle_t;
-alias wgf_sound_t = wgf_handle_t;
-alias wgf_voice_t = wgf_handle_t;
-alias wgf_scene_t = wgf_handle_t;
-alias wgf_prefab_t = wgf_handle_t;
-alias wgf_tween_t = wgf_handle_t;
-alias wgf_document_t = wgf_handle_t;
-alias wgf_element_t = wgf_handle_t;
+opaque alias wgf_cubemap_t = u32;
+opaque alias wgf_texture_t = u32;
+opaque alias wgf_texture_read_t = u32;
+opaque alias wgf_font_t = u32;
+opaque alias wgf_shader_t = u32;
+opaque alias wgf_material_t = u32;
+opaque alias wgf_sheet_t = u32;
+opaque alias wgf_environment_t = u32;
+opaque alias wgf_image_t = u32;
+opaque alias wgf_mesh_t = u32;
+opaque alias wgf_tilemap_t = u32;
+opaque alias wgf_bus_t = u32;
+opaque alias wgf_sound_t = u32;
+opaque alias wgf_voice_t = u32;
+opaque alias wgf_scene_t = u32;
+opaque alias wgf_prefab_t = u32;
+opaque alias wgf_tween_t = u32;
+opaque alias wgf_document_t = u32;
+opaque alias wgf_element_t = u32;
 extern wgf_app_callback_t;
 extern struct wgf_vec2_t;
 extern struct wgf_vec3_t;
