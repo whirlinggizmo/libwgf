@@ -81,9 +81,9 @@ helix-raylib's API is raylib 5.5's, which a model already knows; libwgf's is lea
 
 - **The known API saved reading:** helix-raylib's runs read about a third less and cost about 13% less.
 - **It didn't save mistakes:** its runs failed to build most often and met the fewest items. Where helix-raylib differs from the raylib a model remembers (`...Async` loads, a waiting call refused in a lambda, shaders compiled ahead), what the model knows points the wrong way.
-- **The extras went unmeasured.** Agents that needed an extra built their own, since nothing told them it existed; libwgf's did the same with what libwgf had (bars over actors, skinned menus, a model's nodes walked by hand). So the trial measured plain raylib against libwgf, not raylib with its extras: what reading the extras costs, and whether a known core API still saves anything once they are read, is open.
+- **Told where the extras are, helix-raylib's agents were cheaper still.** helix's own trial (2026-11-13, `docs/trials/results/2026-11-13-wardens-extras.md`, its findings in helix's commit `65a19b02`): Wardens built natively by 18 fresh agents, 3 on raylib's docs alone and 15 with one line pointing at the extras and their API page. With the extras: $2.17 a run against $2.61, 18.4 minutes against 22.1, 66 turns against 77, every run using them (`Models`, `Lighting`, `GuiSkins`, `VirtualGamepad`, `Device`), all 18 built natively and in a page. Without the pointer, agents built their own; libwgf's did the same with libwgf's parts (bars over actors, skinned menus, a model's nodes walked by hand).
 
-**To measure it:** a spec that needs the extras (lit 3D, particles, skinned UI, an on-screen pad), built by fresh agents on each engine with two briefs: none, as Wardens'; and the engine's index of what exists, as a developer's agent would be given. The first prices doing without; the second prices reading the extras, and answers whether the known API still pays.
+**The comparison still missing** is libwgf's under the same terms: its Wardens entrants given an index of what libwgf has, beside helix's $2.17. libwgf's three runs (2026-11-20) had its docs but no index, nearer helix's blind runs than its runs with the extras.
 
 **The model for that index is PixiJS's** ([pixijs.com/llms](https://pixijs.com/llms)), better laid out than either engine's docs: `llms.txt`, an index of every page by group with a line on what each is for, loaded first; a medium file of the guides without the reference; the full reference; and skills for coding agents, its preferred route, installed in one command. Its site puts core concepts first, opens each area with an overview and then a page a class, and keeps guides, tutorials, examples, a playground, and the API apart. libwgf's own is on its ROADMAP (jam-ready's "Docs for agents", and Distribution's docs site).
 
@@ -134,4 +134,4 @@ Or draw the riders under `rlPushMatrix` with the platform's transform: that move
 2. Wardens' page on helix-raylib, beside libwgf's 268.5 KB.
 3. The bunnymark batch against batch, once helix's bulk extra lands; and the robots again, one session.
 4. More worked examples: a menu with pad focus, a Tiled level, a skinned character with a blended run, a save.
-5. The learning cost with the extras: the spec above, two briefs, on each engine.
+5. libwgf's Wardens entrants with an index of what libwgf has, as helix's had the extras' page (its 2026-11-13 trial), beside its $2.17 a run.
