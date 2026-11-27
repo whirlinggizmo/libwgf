@@ -1386,6 +1386,27 @@ Rob's, from the open list. `bulk=1` draws the bunnies as actors, as the default 
 
 **Bulk is no faster from C.** A C program calls the library inside the same wasm, so a call each costs little. Bulk adds a second walk over the bunnies and a 600 KB array of positions. What it saves is a crossing from JS into the wasm, about 8 ns a call (`measure_calls.py`'s `set` and `bulk-set`), so it is for the bindings. The row stays to show that.
 
+## The bunnymark in Haxe (2026-11-27)
+
+Rob's, after the bulk row: every benchmark compared was C, and C's calls stay inside the wasm. A libwgf game is Haxe on JS, each call crossing into the wasm. And helix-raylib's page is Haxe compiled to JS with no wasm at all, drawing through WebGL itself, so it crosses nothing either.
+
+**What was built:** `tools/bench/bunnymark/Main.hx`, main.c's program in Haxe through the binding, its Bunny helix-raylib's. A sprite actor a bunny, a `setPosition` each, or with `bulk=1` one `Actor.setTransforms` a frame. `measure_frames.py`'s `bench:bunnymark-hx` builds it as `wgf export --web` builds a game, its host trimmed to the 30 calls it makes, and times it in a page.
+
+**Measured** on coinspinner, round-robin with helix's `run_page.cjs`, the median of 3 runs, the load under 1.2. helix-raylib's page is the one helix built on 2026-11-13:
+
+| | 10k | 50k |
+|---|---:|---:|
+| libwgf, Haxe, a call each | 0.42 ms | 1.95 ms |
+| libwgf, Haxe, bulk | 0.49 ms | 2.45 ms |
+| libwgf, C, a call each | 0.36 ms | 1.77 ms |
+| libwgf, C, bulk | 0.41 ms | 1.94 ms |
+| helix-raylib (Haxe to JS) | 0.28 ms | 1.04 ms |
+
+**What it says:**
+- **The crossing is cheap.** Haxe's call each costs 0.18 ms over C's at 50k, about 3.6 ns a call.
+- **Bulk is slower from Haxe too, and by more.** The JS binding copies a Haxe array into the wasm an element at a time, each call: 50,000 handles and 150,000 floats a frame, about 10 ns an actor. `measure_calls.py`'s 1,000 actors, hot in the cache, hid that.
+- **helix-raylib's page is 40% faster than libwgf's C at 50k.** It has no actors: a `DrawTexture` a bunny into one batch. The gap is libwgf's actors and stage walk in wasm against plain JS, not the crossing.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

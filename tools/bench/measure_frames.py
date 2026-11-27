@@ -20,7 +20,9 @@ run with no autopilot until it logs "<name>: done": it marks each case in the tr
 rest" as they end), and each case is the frames between, a frame a mark falls in left
 out. A speed benchmark with --native is built in linux-x64-release instead and run
 in a window on this display, vsync off, as helix's native rows are, each query's options
-its --name=value arguments. A speed benchmark's page here reads slower than helix's
+its --name=value arguments. bench:bunnymark-hx is the bunnymark in Haxe (HAXE_BENCHES:
+tools/bench/bunnymark/Main.hx), built as a game's web export is, its host trimmed to its
+calls: a page alone. A speed benchmark's page here reads slower than helix's
 own runner reads it (Xvfb's display and the devtools session: the bunnymark's 200,000
 batched, 8.8 ms against 1.8): the comparison's page rows were taken with helix's
 tools/speed/run_page.cjs (HISTORY.md, "The comparison"). A benchmark is never part of
@@ -67,6 +69,10 @@ import browser  # noqa: E402
 import examples  # noqa: E402
 import server  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'wgf'))
+import cli as wgf_cli  # noqa: E402  (the wgf tool's: a host trimmed to a program's calls)
+import game as wgf_game  # noqa: E402  (the wgf tool's: a game's web build)
+
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = ROOT / 'docs' / 'benchmarks.json'
 PASS, FAIL = 'wgf_autopilot: PASS', 'wgf_autopilot: FAIL'
@@ -81,7 +87,11 @@ SPEED_BENCHES = {'bunnymark': ('count=10000', 'count=50000', 'incrementCount=100
                                'bulk=1&count=10000', 'bulk=1&count=50000',
                                'batch=1&count=10000', 'batch=1&count=50000', 'batch=1&count=100000',
                                'batch=1&count=150000', 'batch=1&count=200000', 'batch=1&incrementCount=10000'),
-                 'robots': ('count=50', 'count=200', 'count=400')}
+                 'robots': ('count=50', 'count=200', 'count=400'),
+                 'bunnymark-hx': ('count=10000', 'count=50000', 'bulk=1&count=10000', 'bulk=1&count=50000')}
+# A speed benchmark in Haxe: its folder in tools/bench/, whose Main.hx it is, built as a game's
+# web export is (on the JS target, its host trimmed to what it calls), not as C
+HAXE_BENCHES = {'bunnymark-hx': 'bunnymark'}
 SPEED_VIEWPORTS = {'robots': (1280, 720)}  # each program's window as helix's runs it; 800 x 450 otherwise
 NO_ROOM = 'no room for another actor'  # what a sprite past the actor limit logs
 UNCAPPED = ('--disable-gpu-vsync', '--disable-frame-rate-limit')
@@ -130,6 +140,25 @@ def build_bench(name):
     site = examples.build_at('wasm32-release', name, ROOT / 'tools' / 'bench' / name).parent
     examples.link_assets(site / 'assets')
     return site
+
+
+def build_haxe_bench(name):
+    """A Haxe benchmark's page, built fresh as `wgf export --web` builds a game's (a release
+    build, then its host and JS binding trimmed to the calls it makes), with the examples'
+    files linked in as assets/; its folder, the site."""
+    work = ROOT / 'build' / 'frames' / name
+    work.mkdir(parents=True, exist_ok=True)
+    (work / 'wgf.json').write_text(json.dumps({'name': HAXE_BENCHES[name], 'main': 'Main',
+                                               'source': str(ROOT / 'tools' / 'bench' / HAXE_BENCHES[name]),
+                                               'assets': str(server.ASSETS)}), encoding='utf-8')
+    game = wgf_game.Game(work)
+    try:
+        wgf_game.build_web(game, release=True, out=work / 'first')
+        listing = work / 'exports.json'
+        wgf_cli.trimmed_exports(work / 'first' / f'{game.name}.js', listing)
+        return wgf_game.build_web(game, release=True, out=work / 'site', exports=listing)
+    except wgf_game.GameError as e:
+        raise RuntimeError(str(e))
 
 
 def build_native_bench(name):
@@ -289,7 +318,10 @@ def run_speed_bench(name, args, found):
     number the runs' median, printed; the exit code. Unthrottled whatever --throttle says,
     as helix's are; recorded nowhere yet."""
     try:
-        site = build_native_bench(name) if args.native else build_bench(name)
+        if name in HAXE_BENCHES and args.native:
+            raise RuntimeError('a Haxe benchmark runs in a page alone')
+        site = (build_native_bench(name) if args.native else build_haxe_bench(name) if name in HAXE_BENCHES
+                else build_bench(name))
         runs, gpu = {q: [] for q in SPEED_BENCHES[name]}, ''
         for _ in range(max(args.runs, 1)):
             for query in SPEED_BENCHES[name]:
