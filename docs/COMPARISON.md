@@ -52,17 +52,16 @@ Physics weighs differently: libwgf links Jolt into its one module (about 264 KB 
 
 ## Speed
 
-On coinspinner (i9-13900HX, RTX 4080 laptop), pages with helix's `run_page.cjs`, frame to frame in ms.
+On coinspinner (i9-13900HX, RTX 4080 laptop), pages with helix's `run_page.cjs`, frame to frame in ms. The bunnymark rows were taken in one session on 2026-11-27, round-robin, the median of 3 runs: libwgf at 9378f49, helix-raylib on its robots-perf branch at 9bf08391, not yet pushed (its bulk sprite batch, `SetSpriteBatchPositions` and one `DrawSpriteBatch` a frame); the load 3.4 to 4.1, not a quiet window.
 
 | | libwgf | helix-raylib |
 |---|---:|---:|
-| bunnymark 50k, an actor a bunny (libwgf) or `DrawTexture` a bunny (helix) | 1.74 | 1.04 |
-| bunnymark 50k, libwgf's sprite batch (2026-11-20) | 0.43 | |
-| bunnymark 50k, batch against batch | **to measure** in one session | helix's bulk sprite batch, uncommitted: 0.44, one run on a busy machine |
+| bunnymark, a sprite batch on each, 10k / 50k / 200k | 0.09 / 0.39 / 1.77 | 0.17 / 0.43 / 2.17 |
+| bunnymark, a call a bunny: an actor each (libwgf) or `DrawTexture` each (helix), 10k / 50k / 200k | 0.31 / 1.79 / stops at 65k actors | 0.26 / 1.12 / 4.62 |
 | robots 400, one session | 2.76 | 2.52 (before helix's culling, which is landing: 2.70 with every robot in view) |
 | natively | about level | about level |
 
-An actor a bunny isn't helix's `DrawTexture` a bunny: the actor is kept, placed in its tree, culled, and pickable, and costs that each frame. libwgf's like of `DrawTexture` is the sprite batch.
+Batch against batch, libwgf's is 10 to 45% faster. A call a bunny, helix-raylib's immediate `DrawTexture` is 1.2 to 1.6 times faster than libwgf's actors: an actor is kept, placed in its tree, culled, and pickable, and costs that each frame.
 
 ## Limits
 
@@ -132,6 +131,6 @@ Or draw the riders under `rlPushMatrix` with the platform's transform: that move
 
 1. What the game rung's 207.6 KB of wasm is, part by part, against helix's 142.0 KB for the whole page.
 2. Wardens' page on helix-raylib, beside libwgf's 268.5 KB.
-3. The bunnymark batch against batch, once helix's bulk extra lands; and the robots again, one session.
+3. The robots again, in one session, once helix's culling is on its main.
 4. More worked examples: a menu with pad focus, a Tiled level, a skinned character with a blended run, a save.
 5. libwgf's Wardens entrants with an index of what libwgf has, as helix's had the extras' page (its 2026-11-13 trial), beside its $2.17 a run.
