@@ -52,16 +52,16 @@ Physics weighs differently: libwgf links Jolt into its one module (about 264 KB 
 
 ## Speed
 
-On coinspinner (i9-13900HX, RTX 4080 laptop), pages with helix's `run_page.cjs`, frame to frame in ms. The bunnymark rows were taken in one session on 2026-11-27, round-robin, the median of 3 runs: libwgf at 9378f49, helix-raylib on its robots-perf branch at 9bf08391, not yet pushed (its bulk sprite batch, `SetSpriteBatchPositions` and one `DrawSpriteBatch` a frame); the load 3.4 to 4.1, not a quiet window.
+On coinspinner (i9-13900HX, RTX 4080 laptop), pages with helix's `run_page.cjs`, frame to frame in ms. The bunnymark rows were taken in one session on 2026-11-27, round-robin, the median of 3 runs: libwgf at 9378f49, helix-raylib on its robots-perf branch at 9bf08391, not yet pushed (its bulk sprite batch, `SetSpriteBatchPositions` and one `DrawSpriteBatch` a frame); the load 1.1 to 1.4, helix and Zen-C holding their work (a first run, under another session's tests at a load of 3.4 to 4.1, came within 10% of it).
 
 | | libwgf | helix-raylib |
 |---|---:|---:|
-| bunnymark, a sprite batch on each, 10k / 50k / 200k | 0.09 / 0.39 / 1.77 | 0.17 / 0.43 / 2.17 |
-| bunnymark, a call a bunny: an actor each (libwgf) or `DrawTexture` each (helix), 10k / 50k / 200k | 0.31 / 1.79 / stops at 65k actors | 0.26 / 1.12 / 4.62 |
+| bunnymark, a sprite batch on each, 10k / 50k / 200k | 0.09 / 0.39 / 1.80 | 0.16 / 0.44 / 1.98 |
+| bunnymark, a call a bunny: an actor each (libwgf) or `DrawTexture` each (helix), 10k / 50k / 200k | 0.31 / 1.75 / stops at 65k actors | 0.29 / 1.11 / 4.45 |
 | robots 400, one session | 2.76 | 2.52 (before helix's culling, which is landing: 2.70 with every robot in view) |
 | natively | about level | about level |
 
-Batch against batch, libwgf's is 10 to 45% faster. A call a bunny, helix-raylib's immediate `DrawTexture` is 1.2 to 1.6 times faster than libwgf's actors: an actor is kept, placed in its tree, culled, and pickable, and costs that each frame.
+Batch against batch, libwgf's is 9 to 42% faster. A call a bunny, helix-raylib's immediate `DrawTexture` is 1.1 to 1.6 times faster than libwgf's actors: an actor is kept, placed in its tree, culled, and pickable, and costs that each frame.
 
 ## Limits
 
