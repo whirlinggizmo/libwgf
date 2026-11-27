@@ -1,6 +1,6 @@
 # libwgf and helix compared
 
-For a game developer choosing between them, and for Rob deciding which to carry on with. It says how the two are now; where a number is still to be measured, it says so. helix's side was read from its own docs (`../helix`: engines/raylib/README.md and api/, libs/*/README.md, docs/PLATFORM.md, docs/benchmarks.md) on 2026-11-27, and is helix's to correct.
+For a game developer choosing between them, and for Rob deciding which to carry on with. It says how the two are now; where a number is still to be measured, it says so. helix's side was read from its own docs (`../helix`: engines/raylib/README.md and api/, libs/*/README.md, docs/PLATFORM.md, docs/benchmarks.md) on 2026-11-27 and checked by helix's session; it is helix's pushed main unless a line says otherwise.
 
 ## What each is
 
@@ -24,7 +24,7 @@ Yes, partial, or none, a line each. "Libraries" is what helix offers beside heli
 | **3D drawing** | models from glTF as actor trees; generated meshes; metallic-roughness materials and unlit; custom shaders; directional, point, and spot lights; shadows; environments (image-based light, a sky); instancing; frustum culling; 3D sprites and text | meshes, par_shapes, heightmaps; glTF and OBJ models; the Lighting extra's Phong and PBR shaders; shadows for up to 4 lights; skybox from a cubemap; instanced meshes; VR stereo; no fog or frustum culling (libwgf has no fog either) | to build |
 | **Animation** | glTF skeletal on the GPU, layers, blends, shared clips; sprite sheet clips; tweens on the tick clock | glTF skeletal on the GPU, a two-clip blend and per-bone masks; the tweens extra; no sprite clip system | to build |
 | **Particles** | 2D and 3D emitters on the GPU | the Particles extra: 3D on the GPU (lit), 2D on the CPU | helix-raylib's extra |
-| **Audio** | WAV, MP3, Ogg, whole or streamed; voices with pitch and pan; buses (master, music, effects); spatial voices and a listener | WAV, Ogg, MP3, QOA; sounds, music, procedural streams; groups with fades in helix-services; no 3D audio | helix-services' |
+| **Audio** | WAV, MP3, Ogg, whole or streamed; voices with pitch and pan; buses (master, music, effects); spatial voices and a listener | WAV, Ogg, MP3, QOA; sounds, music, procedural streams; groups with fades in helix-services; no 3D audio; effects specified, their adapters not built | helix-services' |
 | **UI** | an immediate UI on Clay with widgets (buttons, sliders, tabs, lists, dropdowns, modals, tooltips, a text field), skins, focus by keys and pads; RmlUi documents | raygui 4.5 and its styles; the GuiSkins extra; no key or pad focus documented | to build |
 | **Physics and collision** | Jolt as components (bodies, sensors, characters, a vehicle); a 2D arcade body; 2D and 3D collision math; Box2D vendored, its calls in progress | raylib's collision checks; Jolt and Box2D as libraries, deterministic, each its own wasm in a page | the libraries |
 | **Assets and saves** | resources loaded on create, on workers natively; an asset host with a cache, manifests, groups; `user:` saves; reload of changed files | the Assets extra's hosts and cache, async loads; saves per company and product | helix-services' |
@@ -32,7 +32,7 @@ Yes, partial, or none, a line each. "Libraries" is what helix offers beside heli
 | **Tilemaps** | Tiled maps whole: four grids, infinite maps, terrain painting, objects, image layers, reload | none | to build |
 | **Picking** | the topmost actor at a point (2D, texel-accurate), a ray against a 3D stage; the pointer's hover and press on actors | raylib's screen-to-world ray and ray tests; physics queries | to build |
 | **Debug and testing** | a frame-rate overlay; probes; input recorded and replayed; autopilot runs (inputs and expectations, headless or in a browser) | the Debug extra's frame stats and recording, skeleton drawing; raylib's automation events; parity suites against raylib's C | helix-raylib's, plus its own |
-| **Hot reload** | Haxe with hotreload-hx in a page (`wgf serve --hot`); Zen-C natively through tcc, its heap rule | hotreload-hx wired in a page's dev build (helix-services); shaders and assets swapped when changed; no code reload in helix-raylib itself | as helix-raylib |
+| **Hot reload** | Haxe with hotreload-hx in a page (`wgf serve --hot`); Zen-C natively through tcc, its heap rule | helix-services' assets and shaders swapped in a page's dev build through hotreload-hx; none in helix-raylib's own API; none natively | as helix-raylib |
 | **Platform layer** | sokol (app, gfx, audio); a new backend is whatever sokol has | adapters: an interface each for graphics, window, events, input, audio, decoders, fonts, http, sockets, files, export, each with a web and a native adapter; a program names one per interface | the same adapters |
 
 ## Size
@@ -41,14 +41,14 @@ A page's code gzipped (the page, its JS, its wasm), as helix counts it, no asset
 
 | | libwgf | helix-raylib |
 |---|---:|---:|
-| the smallest program (a window cleared) | 70.6 KB (app-skeleton) | 35.5 KB (1-window) |
-| a game's features, one of each | **to measure:** helix's game rung written on libwgf | 142.0 KB (10-game) |
-| everything linked | not measured | 363.8 KB (11-everything) |
+| the smallest program (a window cleared) | 70.6 KB (app-skeleton) | 35.5 KB (1-window, main, 2026-11-25) |
+| a game's features, one of each | **to measure:** helix's game rung written on libwgf | 142.0 KB (10-game, main) |
+| everything linked | not measured | 363.8 KB (11-everything, main) |
 | Asteroids (2D, UI, sound, particles) | 222.7 KB | not written |
 | Wardens (the same spec on both) | 268.5 KB | **to measure** |
 | the racer (3D, Jolt) | 565.5 KB | not written |
 
-Physics weighs differently: libwgf links Jolt into its one module (about 264 KB gzip), helix's page fetches `jolt.wasm` (260.8 KB) or `box2d.wasm` (119.4 KB) beside the game.
+Physics weighs differently: libwgf links Jolt into its one module (about 264 KB gzip), helix's page fetches `jolt.wasm` (260.8 KB) or `box2d.wasm` (119.1 KB) beside the game.
 
 ## Speed
 
@@ -58,8 +58,8 @@ On coinspinner (i9-13900HX, RTX 4080 laptop), pages with helix's `run_page.cjs`,
 |---|---:|---:|
 | bunnymark 50k, an actor a bunny (libwgf) or `DrawTexture` a bunny (helix) | 1.74 | 1.04 |
 | bunnymark 50k, libwgf's sprite batch (2026-11-20) | 0.43 | |
-| bunnymark, batch against batch | **to measure** once helix's bulk sprite batch extra lands | |
-| robots 400, one session | 2.76 | 2.52 |
+| bunnymark 50k, batch against batch | **to measure** in one session | helix's bulk sprite batch, uncommitted: 0.44, one run on a busy machine |
+| robots 400, one session | 2.76 | 2.52 (before helix's culling, which is landing: 2.70 with every robot in view) |
 | natively | about level | about level |
 
 An actor a bunny isn't helix's `DrawTexture` a bunny: the actor is kept, placed in its tree, culled, and pickable, and costs that each frame. libwgf's like of `DrawTexture` is the sprite batch.
@@ -67,7 +67,7 @@ An actor a bunny isn't helix's `DrawTexture` a bunny: the actor is kept, placed 
 ## Limits
 
 - **libwgf:** 65,535 live objects of each kind (actors, textures, voices); emitters, batches, and tile layers hold their many things inside one. One graphics layer, sokol's. The page is the larger.
-- **helix-raylib:** no structure but what the game writes. Unsupported: IQM, VOX, and M3D models, morph targets, compressed images, loads from memory, shaders from GLSL at run time (they are compiled ahead), FLAC; 87 rlgl calls (raw GL handles and buffers). Calls that wait (`EndDrawing`, file reads) can't be made in callbacks, constructors, or initial values.
+- **helix-raylib:** no structure but what the game writes. Unsupported: IQM, VOX, and M3D models, morph targets, compressed images, loads from memory, shaders from GLSL at run time (they are compiled ahead), FLAC; 87 rlgl calls (raw GL handles and buffers). A call that waits (`EndDrawing`, a file read) is refused in a function used as a value (a lambda), pointing to its `...Async` call.
 
 ## Worked examples
 
