@@ -15,6 +15,7 @@
 #include "wgf_physics3d_jolt_priv.h"
 #include "wgf_physics3d_priv.h"
 #include "wgf_quat.h"
+#include "wgf_core_format_priv.h"
 
 /* Vehicles (wgf_vehicle.h): the vehicle component, a file of its own linked on purpose
  * (wgf_physics3d_enable_vehicles, or a game's "vehicles" feature), so a program with physics and
@@ -74,7 +75,7 @@ static void put(char *out, size_t size, const char *format, ...)
     const size_t used = strlen(out);
     if (used >= size) return;
     va_start(args, format);
-    vsnprintf(out + used, size - used, format, args);
+    wgf_core_priv_vformat(out + used, size - used, format, args);
     va_end(args);
 }
 
@@ -207,7 +208,7 @@ static void vehicle_set(wgf_actor_t actor, const char *key, const char *text)
     if (v == NULL || count < 0) return;
     v->dirty = true;
     if (strcmp(key, "wheels") == 0) {
-        snprintf(v->names, sizeof(v->names), "%s", text);
+        wgf_core_priv_format(v->names, sizeof(v->names), "%s", text);
     } else if (strcmp(key, "radius") == 0) v->radius = x > 0.01f ? x : 0.01f;
     else if (strcmp(key, "width") == 0) v->width = x > 0.01f ? x : 0.01f;
     else if (strcmp(key, "suspension") == 0) v->travel = x > 0.0f ? x : 0.0f;

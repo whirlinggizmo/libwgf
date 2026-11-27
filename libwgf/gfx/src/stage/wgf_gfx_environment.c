@@ -25,6 +25,7 @@
 #endif
 #include "shaders/wgf_gfx_background.glsl.h"
 #include "wgf_math_draw_trig_priv.h"
+#include "wgf_core_format_priv.h"
 
 /* Environments, libwgt's wgt_gfx_environment.c (wgrender's wgr_environment): an
  * equirectangular image prepared on a worker -- spherical harmonics for diffuse light, a
@@ -505,7 +506,8 @@ static bool hdr_header(const unsigned char *bytes, int size, int *width, int *he
         if (pos >= size) return false;
         pos++;
         line[n] = '\0';
-        if (sscanf(line, "-Y %d +X %d", &h, &w) != 2 || w <= 0 || h <= 0 || w > 32768 || h > 32768) return false;
+        if (wgf_core_priv_scan(line, "-Y %d +X %d", &h,
+                               &w) != 2 || w <= 0 || h <= 0 || w > 32768 || h > 32768) return false;
     }
     *width = w;
     *height = h;
@@ -808,7 +810,7 @@ static void *prepare(const char *path)
     prepared_t *prepared = (prepared_t *)calloc(1, sizeof(prepared_t));
     int size = 0;
     if (prepared == NULL) return NULL;
-    snprintf(prepared->path, sizeof(prepared->path), "%s", path);
+    wgf_core_priv_format(prepared->path, sizeof(prepared->path), "%s", path);
     if (!wgf_core_priv_fs_read(path, &prepared->bytes, &size) ||
         !image_begin(prepared->bytes, size, path, &prepared->image, &prepared->reader, &prepared->pending)) {
         wgf_log_warn("wgf_gfx_environment: %s: not an image it can read", path);

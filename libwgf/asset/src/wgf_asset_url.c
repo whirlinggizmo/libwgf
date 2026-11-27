@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Paths, URLs, and redirects, ported from wgrender's wgr_asset.c: what a reference
  * names against the host, as a browser reads one (RFC 3986), and where a file is looked
@@ -170,7 +171,7 @@ wgf_asset_priv_source_t wgf_asset_priv_resolve_source(const char *host, wgf_asse
 
     /* a URL: "\" is "/" in its path, as the browser reads an http(s) one */
     if (strlen(ref) >= sizeof(r)) return WGF_ASSET_PRIV_SOURCE_REFUSED;
-    snprintf(r, sizeof(r), "%s", ref);
+    wgf_core_priv_format(r, sizeof(r), "%s", ref);
     for (size_t i = 0; i < path_len; i++) {
         if (r[i] == '\\') r[i] = '/';
     }
@@ -187,12 +188,12 @@ wgf_asset_priv_source_t wgf_asset_priv_resolve_source(const char *host, wgf_asse
     }
     if (!append(out, out_size, &pos, host, prefix_len)) return WGF_ASSET_PRIV_SOURCE_REFUSED;
     if (r[0] == '/') {
-        snprintf(merged, sizeof(merged), "%.*s", (int)path_len, r);
+        wgf_core_priv_format(merged, sizeof(merged), "%.*s", (int)path_len, r);
     } else { /* under the host's path, or on it for a bare query or fragment */
         const size_t base = host_len - prefix_len;
         const size_t kept = r[0] == '?' || r[0] == '#' ? 0 : path_len;
         if (base + kept + 2 >= sizeof(merged)) return WGF_ASSET_PRIV_SOURCE_REFUSED;
-        snprintf(merged, sizeof(merged), "%.*s%s%.*s", (int)base, host + prefix_len,
+        wgf_core_priv_format(merged, sizeof(merged), "%.*s%s%.*s", (int)base, host + prefix_len,
                  base > 0 || prefix_len > 0 ? "/" : "", (int)kept, r);
     }
     if (!remove_dots(merged, strlen(merged), out, out_size, &pos)) return WGF_ASSET_PRIV_SOURCE_REFUSED;
@@ -234,7 +235,7 @@ bool wgf_asset_priv_url_key(const char *url, char *key, size_t key_size)
     wgf_asset_priv_sha256_text((const unsigned char *)url, strlen(url), hash);
     /* "sha256:" + hex: the first 16 hex digits tell URLs apart; the name keeps the
        extension a loader is chosen by */
-    return snprintf(key, key_size, ".url/%.16s/%s", hash + 7, name) < (int)key_size;
+    return wgf_core_priv_format(key, key_size, ".url/%.16s/%s", hash + 7, name) < (int)key_size;
 }
 
 bool wgf_asset_priv_is_relative_uri(const char *uri)
@@ -333,7 +334,7 @@ bool wgf_asset_add_redirect(const char *prefix, const char *target)
         wgf_log_warn("wgf_asset_add_redirect: %s -> %s: a path that isn't under the host", prefix, target);
         return false;
     }
-    if (url) snprintf(redirects[redirect_count].target, sizeof(redirects[0].target), "%s", target);
+    if (url) wgf_core_priv_format(redirects[redirect_count].target, sizeof(redirects[0].target), "%s", target);
     redirects[redirect_count].url = url;
     redirect_count++;
     return true;
@@ -363,18 +364,18 @@ wgf_asset_priv_candidate_t *wgf_asset_priv_plan(const char *path, int *count)
             wgf_asset_priv_candidate_t *c = &list[n];
             if (pass == 0 && (r < 0 || redirects[r].url || !starts_with(path, redirects[r].prefix))) continue;
             if (pass == 0) {
-                if (snprintf(c->path, sizeof(c->path), "%s%s", redirects[r].target,
+                if (wgf_core_priv_format(c->path, sizeof(c->path), "%s%s", redirects[r].target,
                              path + strlen(redirects[r].prefix)) >= (int)sizeof(c->path)) {
                     continue;
                 }
             } else {
-                snprintf(c->path, sizeof(c->path), "%s", path);
+                wgf_core_priv_format(c->path, sizeof(c->path), "%s", path);
             }
             c->overlay = pass == 0;
             c->url[0] = '\0';
             for (int u = redirect_count - 1; u >= 0; u--) { /* the newest download rule matching it */
                 if (redirects[u].url && starts_with(c->path, redirects[u].prefix)) {
-                    snprintf(c->url, sizeof(c->url), "%s%s", redirects[u].target,
+                    wgf_core_priv_format(c->url, sizeof(c->url), "%s%s", redirects[u].target,
                              c->path + strlen(redirects[u].prefix));
                     break;
                 }

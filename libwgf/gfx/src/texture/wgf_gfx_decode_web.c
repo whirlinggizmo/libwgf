@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Images decoded by the browser (wgf_gfx_decode_priv.h), in a page: createImageBitmap, with no
  * premultiplying and no color conversion, so its pixels are the file's; read back through a
@@ -104,7 +105,7 @@ wgf_gfx_priv_decode_t *wgf_gfx_priv_decode_start(const unsigned char *bytes, int
     wgf_gfx_priv_decode_t *decode = (wgf_gfx_priv_decode_t *)calloc(1, sizeof(*decode));
     if (decode == NULL) return NULL;
     decode->id = next_id++;
-    snprintf(decode->what, sizeof(decode->what), "%s", what != NULL ? what : "");
+    wgf_core_priv_format(decode->what, sizeof(decode->what), "%s", what != NULL ? what : "");
     wgf_gfx_js_decode_start(decode->id, bytes, size);
     return decode;
 }

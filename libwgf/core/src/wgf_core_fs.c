@@ -10,6 +10,7 @@
 #include "wgf_log.h"
 #include "wgf_core_os_priv.h"
 #include "wgf_core_priv.h"
+#include "wgf_core_format_priv.h"
 
 /* The part of fs that is the same everywhere: roots, paths, reading and writing
  * through stdio (real files natively, MEMFS on the web), and the public API's
@@ -29,7 +30,7 @@ static const char *user_root(void)
     if (fs_user_root[0] == '\0') {
         char dir[sizeof(fs_user_root)];
         if (wgf_core_priv_fs_platform_user_root(fs_root, dir, sizeof(dir))) {
-            snprintf(fs_user_root, sizeof(fs_user_root), "%s", dir);
+            wgf_core_priv_format(fs_user_root, sizeof(fs_user_root), "%s", dir);
             wgf_log_info("wgf_core_fs: the program's own files (user:) under %s", fs_user_root);
         }
     }
@@ -55,7 +56,7 @@ static const char *root_of(const char **path)
 static void set_trimmed(char *out, size_t out_size, const char *root)
 {
     size_t n;
-    snprintf(out, out_size, "%s", root != NULL ? root : "");
+    wgf_core_priv_format(out, out_size, "%s", root != NULL ? root : "");
     n = strlen(out);
     while (n > 1 && out[n - 1] == '/') out[--n] = '\0';
 }
@@ -65,7 +66,7 @@ static void mkdir_parents(const char *full)
 {
     char tmp[1104]; /* as large as a path with its slash (wgf_core_priv_fs_mkdir) */
     size_t i;
-    snprintf(tmp, sizeof(tmp), "%s", full);
+    wgf_core_priv_format(tmp, sizeof(tmp), "%s", full);
     for (i = 1; tmp[i] != '\0'; i++) {
         if (tmp[i] == '/') {
             tmp[i] = '\0';
@@ -102,9 +103,9 @@ void wgf_core_priv_fs_resolve(const char *path, char *out, size_t out_size)
     }
     root = root_of(&path);
     if (root[0] != '\0' && path[0] != '/') {
-        snprintf(out, out_size, "%s/%s", root, path);
+        wgf_core_priv_format(out, out_size, "%s/%s", root, path);
     } else {
-        snprintf(out, out_size, "%s", path);
+        wgf_core_priv_format(out, out_size, "%s", path);
     }
 }
 
@@ -145,7 +146,7 @@ bool wgf_core_priv_fs_mkdir(const char *path)
     char full[1100], with_slash[1104];
     wgf_core_priv_fs_resolve(path, full, sizeof(full));
     if (full[0] == '\0') return false;
-    snprintf(with_slash, sizeof(with_slash), "%s/", full); /* so the last part is made too */
+    wgf_core_priv_format(with_slash, sizeof(with_slash), "%s/", full); /* so the last part is made too */
     mkdir_parents(with_slash);
     return wgf_core_priv_os_is_dir(full);
 }
@@ -263,7 +264,8 @@ bool wgf_core_priv_fs_partial_path(const char *path, char *out, size_t out_size)
         path != NULL && strncmp(path, WGF_CORE_PRIV_FS_CACHE, sizeof(WGF_CORE_PRIV_FS_CACHE) - 1) == 0;
     if (cached) path += sizeof(WGF_CORE_PRIV_FS_CACHE) - 1;
     if (path == NULL || path[0] == '\0' || path[0] == '/') return false;
-    return (size_t)snprintf(out, out_size, "%s.part/%s", cached ? WGF_CORE_PRIV_FS_CACHE : "", path) < out_size;
+    return (size_t)wgf_core_priv_format(out, out_size, "%s.part/%s", cached ? WGF_CORE_PRIV_FS_CACHE : "",
+                                        path) < out_size;
 }
 
 bool wgf_core_priv_fs_replace(const char *from, const char *to)
@@ -443,7 +445,7 @@ static wgf_handle_t new_task(op_t op, const char *path)
     memset(task_ptr, 0, sizeof(*task_ptr));
     task_ptr->op = op;
     task_ptr->status = WGF_FS_TASK_STATUS_PENDING;
-    snprintf(task_ptr->path, sizeof(task_ptr->path), "%s", normalized);
+    wgf_core_priv_format(task_ptr->path, sizeof(task_ptr->path), "%s", normalized);
     return task;
 }
 

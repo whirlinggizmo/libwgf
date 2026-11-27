@@ -14,6 +14,7 @@
 #include "wgf_core_fs_priv.h"
 #include "wgf_core_load_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 typedef struct prepared_t {
     wgf_audio_priv_format_t format;
@@ -335,7 +336,7 @@ void wgf_audio_priv_sound_arrive(wgf_handle_t sound, wgf_audio_priv_sound_t *rec
         return;
     }
     arriving->arrival = arrival;
-    snprintf(arriving->path, sizeof(arriving->path), "%s", path);
+    wgf_core_priv_format(arriving->path, sizeof(arriving->path), "%s", path);
     wgf_audio_priv_lock();
     record->arriving = arriving;
     record->reader.blocks = blocks;

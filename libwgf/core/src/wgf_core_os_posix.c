@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include "wgf_core_format_priv.h"
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h> /* _NSGetExecutablePath */
@@ -78,7 +79,7 @@ bool wgf_core_priv_os_remove_tree(const char *path)
     while ((entry = readdir(dir)) != NULL) {
         char child[1100];
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
-        if ((size_t)snprintf(child, sizeof(child), "%s/%s", path, entry->d_name) >= sizeof(child)) {
+        if ((size_t)wgf_core_priv_format(child, sizeof(child), "%s/%s", path, entry->d_name) >= sizeof(child)) {
             ok = false;
             continue;
         }
@@ -101,7 +102,7 @@ bool wgf_core_priv_os_list(const char *path, wgf_core_priv_names_t *names)
     while ((entry = readdir(dir)) != NULL) {
         char child[1100];
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
-        snprintf(child, sizeof(child), "%s/%s", path, entry->d_name);
+        wgf_core_priv_format(child, sizeof(child), "%s/%s", path, entry->d_name);
         ok = wgf_core_priv_names_add(names, entry->d_name, strlen(entry->d_name), wgf_core_priv_os_is_dir(child)) && ok;
     }
     closedir(dir);
@@ -121,11 +122,12 @@ bool wgf_core_priv_os_user_cache_dir(char *out, size_t out_size)
     return false; /* the browser caches */
 #elif defined(__APPLE__)
     const char *home = getenv("HOME");
-    return home != NULL && home[0] != '\0' && snprintf(out, out_size, "%s/Library/Caches", home) < (int)out_size;
+    return home != NULL && home[0] != '\0' && wgf_core_priv_format(out, out_size, "%s/Library/Caches",
+                                                                   home) < (int)out_size;
 #else
     const char *xdg = getenv("XDG_CACHE_HOME"), *home = getenv("HOME");
-    if (xdg != NULL && xdg[0] == '/') return snprintf(out, out_size, "%s", xdg) < (int)out_size;
-    return home != NULL && home[0] != '\0' && snprintf(out, out_size, "%s/.cache", home) < (int)out_size;
+    if (xdg != NULL && xdg[0] == '/') return wgf_core_priv_format(out, out_size, "%s", xdg) < (int)out_size;
+    return home != NULL && home[0] != '\0' && wgf_core_priv_format(out, out_size, "%s/.cache", home) < (int)out_size;
 #endif
 }
 
@@ -138,11 +140,12 @@ bool wgf_core_priv_os_user_data_dir(char *out, size_t out_size)
 #elif defined(__APPLE__)
     const char *home = getenv("HOME");
     return home != NULL && home[0] != '\0' &&
-           snprintf(out, out_size, "%s/Library/Application Support", home) < (int)out_size;
+           wgf_core_priv_format(out, out_size, "%s/Library/Application Support", home) < (int)out_size;
 #else
     const char *xdg = getenv("XDG_DATA_HOME"), *home = getenv("HOME");
-    if (xdg != NULL && xdg[0] == '/') return snprintf(out, out_size, "%s", xdg) < (int)out_size;
-    return home != NULL && home[0] != '\0' && snprintf(out, out_size, "%s/.local/share", home) < (int)out_size;
+    if (xdg != NULL && xdg[0] == '/') return wgf_core_priv_format(out, out_size, "%s", xdg) < (int)out_size;
+    return home != NULL && home[0] != '\0' && wgf_core_priv_format(out, out_size, "%s/.local/share",
+                                                                   home) < (int)out_size;
 #endif
 }
 
@@ -171,7 +174,7 @@ bool wgf_core_priv_os_executable_dir(char *out, size_t out_size)
     if (!executable_path(path, sizeof(path))) return false;
     slash = strrchr(path, '/');
     if (slash == NULL) return false;
-    return snprintf(out, out_size, "%.*s", slash == path ? 1 : (int)(slash - path), path) < (int)out_size;
+    return wgf_core_priv_format(out, out_size, "%.*s", slash == path ? 1 : (int)(slash - path), path) < (int)out_size;
 }
 
 bool wgf_core_priv_os_chdir(const char *path)
@@ -188,7 +191,8 @@ bool wgf_core_priv_os_executable_name(char *out, size_t out_size)
     name = name != NULL ? name + 1 : path;
     dot = strrchr(name, '.');
     if (name[0] == '\0') return false;
-    return snprintf(out, out_size, "%.*s", dot != NULL && dot != name ? (int)(dot - name) : (int)strlen(name), name) <
+    return wgf_core_priv_format(out, out_size, "%.*s",
+                                dot != NULL && dot != name ? (int)(dot - name) : (int)strlen(name), name) <
            (int)out_size;
 }
 

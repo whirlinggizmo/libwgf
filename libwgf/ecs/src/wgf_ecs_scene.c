@@ -30,6 +30,7 @@
 #include "wgf_text.h"
 #include "wgf_texture.h"
 #include "wgf_voice.h"
+#include "wgf_core_format_priv.h"
 
 /* Scenes (wgf_scene.h): a resource whose file is read and parsed whole on a worker, every
  * line checked against the table of kinds, components, and keys below, kept as each
@@ -232,7 +233,7 @@ static bool parse_number(const char *text, size_t length, double *out)
     memcpy(buffer, text, length);
     buffer[length] = '\0';
     errno = 0;
-    *out = strtod(buffer, &end);
+    *out = wgf_core_priv_parse_double(buffer, &end);
     return errno == 0 && *end == '\0' && isfinite(*out);
 }
 
@@ -380,7 +381,7 @@ static bool parse_value(int type, const char *text, value_t *v)
             return a >= 0 && d >= 0;
         }
         default: /* V_TEXT */
-            snprintf(v->text, sizeof(v->text), "%s", text);
+            wgf_core_priv_format(v->text, sizeof(v->text), "%s", text);
             return true;
     }
 }
@@ -549,7 +550,7 @@ static bool add_line(parser_t *parser, thing_t *thing, int kind, char **words)
             fail(parser, "a value of the wrong shape for its key", words[i]);
             return true;
         }
-        snprintf(line->settings[i].key, sizeof(line->settings[i].key), "%s", words[i]);
+        wgf_core_priv_format(line->settings[i].key, sizeof(line->settings[i].key), "%s", words[i]);
         line->settings[i].value = (char *)malloc(strlen(eq + 1) + 1);
         if (line->settings[i].value == NULL) return false;
         memcpy(line->settings[i].value, eq + 1, strlen(eq + 1) + 1);
@@ -650,7 +651,7 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
             if (slash != NULL) { /* a part: its parent a block above, at that path */
                 char above[PATH_MAX_BYTES];
                 const char *c;
-                snprintf(above, sizeof(above), "%.*s", (int)(slash - words[1]), words[1]);
+                wgf_core_priv_format(above, sizeof(above), "%.*s", (int)(slash - words[1]), words[1]);
                 parent = find_path(data, above, prefab);
                 for (c = words[1]; *c != '\0'; c++) depth += *c == '/';
                 if (parent < 0) {
@@ -681,8 +682,8 @@ wgf_ecs_priv_scene_data_t *wgf_ecs_priv_scene_parse(const char *text, size_t siz
             thing->from = -1;
             thing->kind = -1;
             if (words[1] != NULL) {
-                snprintf(thing->name, sizeof(thing->name), "%s", name);
-                snprintf(thing->path, sizeof(thing->path), "%s", words[1]);
+                wgf_core_priv_format(thing->name, sizeof(thing->name), "%s", name);
+                wgf_core_priv_format(thing->path, sizeof(thing->path), "%s", words[1]);
             }
             if (parent < 0 && prefab) data->prefabs++;
             else if (parent < 0) data->actors++;

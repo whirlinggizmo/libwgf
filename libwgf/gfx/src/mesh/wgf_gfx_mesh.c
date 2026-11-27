@@ -15,6 +15,7 @@
 #include "wgf_core_part_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Meshes, libwgt's generated half: primitives made on the CPU, uploaded to the GPU the
  * first time they are drawn (so one can be made before gfx starts), reference counted,
@@ -329,7 +330,7 @@ static wgf_mesh_t create_generated(const char *key, wgf_gfx_priv_mesh_shape_t *s
         hi = wgf_vec3_make(fmaxf(hi.x, p[0]), fmaxf(hi.y, p[1]), fmaxf(hi.z, p[2]));
     }
     free(tangents);
-    snprintf(mesh_ptr->key, sizeof(mesh_ptr->key), "%s", key);
+    wgf_core_priv_format(mesh_ptr->key, sizeof(mesh_ptr->key), "%s", key);
     primitive->vertices = vertices;
     primitive->vertex_count = count;
     primitive->indices = shape->indices; /* the mesh's now */
@@ -548,7 +549,7 @@ wgf_mesh_t wgf_mesh_create_plane(float width, float length, int subdivisions)
     char key[KEY_MAX];
     wgf_gfx_priv_mesh_shape_t shape;
     subdivisions = clamp_count(subdivisions, 0, WGF_GFX_PRIV_MESH_MAX_SUBDIVISIONS);
-    snprintf(key, sizeof(key), "plane %x %x %d", bits_of(width), bits_of(length), subdivisions);
+    wgf_core_priv_format(key, sizeof(key), "plane %x %x %d", bits_of(width), bits_of(length), subdivisions);
     const float params[4] = {width, length, (float)subdivisions};
     const bool made = wgf_gfx_priv_mesh_shape_plane(width, length, subdivisions, &shape);
     return generate(key, made, &shape, "plane", params, 3);
@@ -558,7 +559,7 @@ wgf_mesh_t wgf_mesh_create_cube(float width, float height, float length)
 {
     char key[KEY_MAX];
     wgf_gfx_priv_mesh_shape_t shape;
-    snprintf(key, sizeof(key), "cube %x %x %x", bits_of(width), bits_of(height), bits_of(length));
+    wgf_core_priv_format(key, sizeof(key), "cube %x %x %x", bits_of(width), bits_of(height), bits_of(length));
     const float params[4] = {width, height, length};
     return generate(key, wgf_gfx_priv_mesh_shape_cube(width, height, length, &shape), &shape, "cube", params, 3);
 }
@@ -569,7 +570,7 @@ wgf_mesh_t wgf_mesh_create_sphere(float radius, int rings, int segments)
     wgf_gfx_priv_mesh_shape_t shape;
     rings = clamp_count(rings, WGF_GFX_PRIV_MESH_MIN_RINGS, WGF_GFX_PRIV_MESH_MAX_RINGS);
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
-    snprintf(key, sizeof(key), "sphere %x %d %d", bits_of(radius), rings, segments);
+    wgf_core_priv_format(key, sizeof(key), "sphere %x %d %d", bits_of(radius), rings, segments);
     const float params[4] = {radius, (float)rings, (float)segments};
     return generate(key, wgf_gfx_priv_mesh_shape_sphere(radius, rings, segments, &shape), &shape, "sphere", params, 3);
 }
@@ -579,7 +580,7 @@ wgf_mesh_t wgf_mesh_create_cylinder(float radius, float height, int segments)
     char key[KEY_MAX];
     wgf_gfx_priv_mesh_shape_t shape;
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
-    snprintf(key, sizeof(key), "cylinder %x %x %d", bits_of(radius), bits_of(height), segments);
+    wgf_core_priv_format(key, sizeof(key), "cylinder %x %x %d", bits_of(radius), bits_of(height), segments);
     const float params[4] = {radius, height, (float)segments};
     const bool made = wgf_gfx_priv_mesh_shape_cylinder(radius, height, segments, &shape);
     return generate(key, made, &shape, "cylinder", params, 3);
@@ -590,7 +591,7 @@ wgf_mesh_t wgf_mesh_create_cone(float radius, float height, int segments)
     char key[KEY_MAX];
     wgf_gfx_priv_mesh_shape_t shape;
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
-    snprintf(key, sizeof(key), "cone %x %x %d", bits_of(radius), bits_of(height), segments);
+    wgf_core_priv_format(key, sizeof(key), "cone %x %x %d", bits_of(radius), bits_of(height), segments);
     const float params[4] = {radius, height, (float)segments};
     return generate(key, wgf_gfx_priv_mesh_shape_cone(radius, height, segments, &shape), &shape, "cone", params, 3);
 }
@@ -601,7 +602,7 @@ wgf_mesh_t wgf_mesh_create_capsule(float radius, float height, int rings, int se
     wgf_gfx_priv_mesh_shape_t shape;
     rings = clamp_count(rings, WGF_GFX_PRIV_MESH_MIN_RINGS, WGF_GFX_PRIV_MESH_MAX_RINGS);
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
-    snprintf(key, sizeof(key), "capsule %x %x %d %d", bits_of(radius), bits_of(height), rings, segments);
+    wgf_core_priv_format(key, sizeof(key), "capsule %x %x %d %d", bits_of(radius), bits_of(height), rings, segments);
     const float params[4] = {radius, height, (float)rings, (float)segments};
     const bool made = wgf_gfx_priv_mesh_shape_capsule(radius, height, rings, segments, &shape);
     return generate(key, made, &shape, "capsule", params, 4);
@@ -613,7 +614,7 @@ wgf_mesh_t wgf_mesh_create_torus(float radius, float thickness, int rings, int s
     wgf_gfx_priv_mesh_shape_t shape;
     rings = clamp_count(rings, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
     segments = clamp_count(segments, WGF_GFX_PRIV_MESH_MIN_SEGMENTS, WGF_GFX_PRIV_MESH_MAX_SEGMENTS);
-    snprintf(key, sizeof(key), "torus %x %x %d %d", bits_of(radius), bits_of(thickness), rings, segments);
+    wgf_core_priv_format(key, sizeof(key), "torus %x %x %d %d", bits_of(radius), bits_of(thickness), rings, segments);
     const float params[4] = {radius, thickness, (float)rings, (float)segments};
     const bool made = wgf_gfx_priv_mesh_shape_torus(radius, thickness, rings, segments, &shape);
     return generate(key, made, &shape, "torus", params, 4);

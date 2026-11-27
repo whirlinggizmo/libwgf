@@ -7,6 +7,7 @@
 #include "wgf_log.h"
 #include "wgf_core_os_priv.h"
 #include "wgf_core_priv.h"
+#include "wgf_core_format_priv.h"
 
 /* Native storage: files are files under the root, by default the program's own
  * directory (the executable's; Rob, 2026-10-04: a double-clicked program finds its
@@ -49,7 +50,8 @@ static bool meta_path(const char *path, char *out, size_t out_size)
         path != NULL && strncmp(path, WGF_CORE_PRIV_FS_CACHE, sizeof(WGF_CORE_PRIV_FS_CACHE) - 1) == 0;
     if (cached) path += sizeof(WGF_CORE_PRIV_FS_CACHE) - 1; /* the sidecar is under the file's own root */
     if (path == NULL || path[0] == '\0' || path[0] == '/') return false;
-    return (size_t)snprintf(out, out_size, "%s" META_DIR "/%s", cached ? WGF_CORE_PRIV_FS_CACHE : "", path) <
+    return (size_t)wgf_core_priv_format(out, out_size, "%s" META_DIR "/%s", cached ? WGF_CORE_PRIV_FS_CACHE : "",
+                                        path) <
            out_size;
 }
 
@@ -80,7 +82,7 @@ static bool meta_write(const char *path, const wgf_core_priv_fs_meta_t *meta)
 /* Copy a sidecar value into a field; too long for it and it stays empty (never cut). */
 static void meta_field(char *out, size_t out_size, const char *value)
 {
-    if (strlen(value) < out_size) snprintf(out, out_size, "%s", value);
+    if (strlen(value) < out_size) wgf_core_priv_format(out, out_size, "%s", value);
 }
 
 static bool meta_read(const char *path, wgf_core_priv_fs_meta_t *out)
@@ -106,7 +108,7 @@ static bool meta_read(const char *path, wgf_core_priv_fs_meta_t *out)
         else if (strncmp(line, "etag ", 5) == 0) meta_field(out->etag, sizeof(out->etag), line + 5);
         else if (strncmp(line, "last-modified ", 14) == 0)
             meta_field(out->last_modified, sizeof(out->last_modified), line + 14);
-        else if (strncmp(line, "fresh-until ", 12) == 0) out->fresh_until = strtod(line + 12, NULL);
+        else if (strncmp(line, "fresh-until ", 12) == 0) out->fresh_until = wgf_core_priv_parse_double(line + 12, NULL);
         else if (strncmp(line, "hash ", 5) == 0) meta_field(out->hash, sizeof(out->hash), line + 5);
         else if (strncmp(line, "source ", 7) == 0) meta_field(out->source, sizeof(out->source), line + 7);
     }

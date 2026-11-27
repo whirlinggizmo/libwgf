@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "wgf_core_probe_priv.h"
+#include "wgf_core_format_priv.h"
 
 /* The probes (wgf_probe.h): a table in the order they were first set, found by name
  * through a small open-addressed index of their name's hash. */
@@ -56,7 +57,7 @@ static int find(const char *name, bool add)
         at = (at + 1) & (INDEX_SIZE - 1);
     }
     if (!add || count == WGF_CORE_PRIV_PROBE_MAX) return -1;
-    snprintf(probes[count].name, sizeof(probes[count].name), "%s", name);
+    wgf_core_priv_format(probes[count].name, sizeof(probes[count].name), "%s", name);
     probes[count].value = 0.0;
     probes[count].text = NULL;
     index_of[at] = (short)(count + 1);

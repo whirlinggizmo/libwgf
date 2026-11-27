@@ -59,6 +59,9 @@ function(wgf_layer layer)
                 $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
             PRIVATE
                 ${dir}/src)
+        # the library's own sources: wgf_log.h's formatting through core's formatter
+        # (libwgf/core/src/wgf_core_format_priv.h), not the C library's printf
+        target_compile_definitions(${target} PRIVATE WGF_LIBRARY)
         foreach(dep IN LISTS arg_DEPS)
             target_link_libraries(${target} PUBLIC wgf_${dep} PRIVATE wgf_${dep}_priv)
         endforeach()

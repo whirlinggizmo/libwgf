@@ -23,6 +23,7 @@
 #include "wgf_voice.h"
 #include "wgf_audio.h"
 #include "wgf_handle.h"
+#include "wgf_core_format_priv.h"
 
 /* The ecs (wgf_world.h): the store (wgf_ecs_store_priv.h) made with the first actor given
  * a component or a behavior, the records of those actors, the systems run each tick over
@@ -662,7 +663,7 @@ static void publish(void)
     }
     for (p = 0; p < ecs.probe_name_count; p++) {
         n = wgf_actor_count_with_behavior(ecs.probe_names[p]);
-        snprintf(probe, sizeof(probe), "ecs.behavior.%s", ecs.probe_names[p]);
+        wgf_core_priv_format(probe, sizeof(probe), "ecs.behavior.%s", ecs.probe_names[p]);
         wgf_probe_set_value(probe, n); /* a name too long for a probe is simply not published */
     }
 }

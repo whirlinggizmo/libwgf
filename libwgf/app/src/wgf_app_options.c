@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "wgf_app_priv.h"
+#include "wgf_core_format_priv.h"
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten.h>
@@ -182,6 +183,6 @@ float wgf_app_get_option_float(const char *name, float otherwise)
     char *end;
     float value;
     if (i < 0 || opts.values[i][0] == '\0') return otherwise;
-    value = strtof(opts.values[i], &end);
+    value = (float)wgf_core_priv_parse_double(opts.values[i], &end);
     return *end == '\0' ? value : otherwise;
 }

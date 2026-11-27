@@ -7,6 +7,7 @@
 #include "wgf_core_os_priv.h"
 #include "wgf_core_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* The program's identity for what libwgf keeps for it on the desktop (wgf.h): the
  * company and the app, each one safe path component, and the directory they name under
@@ -53,7 +54,8 @@ bool wgf_core_priv_app_clean_name(const char *name, char *out, size_t out_size)
                          (char)toupper((unsigned char)kept[start + 2]), '\0'};
         device = device || strcmp(three, "COM") == 0 || strcmp(three, "LPT") == 0;
     }
-    return snprintf(out, out_size, "%s%.*s", device ? "_" : "", (int)(end - start), kept + start) < (int)out_size;
+    return wgf_core_priv_format(out, out_size, "%s%.*s", device ? "_" : "", (int)(end - start),
+                                kept + start) < (int)out_size;
 }
 
 /* `name` cleaned into `kept` (NULL or "": the default, cleared); false, `kept` as it
@@ -66,7 +68,7 @@ static bool take_name(const char *name, char *kept, size_t size)
         return true;
     }
     if (!wgf_core_priv_app_clean_name(name, cleaned, sizeof(cleaned))) return false;
-    snprintf(kept, size, "%s", cleaned);
+    wgf_core_priv_format(kept, size, "%s", cleaned);
     return true;
 }
 
@@ -104,7 +106,7 @@ const char *wgf_identity_get_product(void)
         char exe[NAME_SIZE] = "";
         wgf_core_priv_os_executable_name(exe, sizeof(exe));
         if (!wgf_core_priv_app_clean_name(exe, app_default_name, sizeof(app_default_name))) {
-            snprintf(app_default_name, sizeof(app_default_name), "DefaultApp");
+            wgf_core_priv_format(app_default_name, sizeof(app_default_name), "DefaultApp");
         }
     }
     return app_default_name;
@@ -117,9 +119,10 @@ bool wgf_core_priv_app_cache_dir(char *out, size_t out_size)
     if (!wgf_core_priv_os_user_cache_dir(base, sizeof(base))) return false;
 #if defined(_WIN32)
     /* LOCALAPPDATA\<company>\<app> is the app's own, not only its cache */
-    n = snprintf(out, out_size, "%s/%s/%s/cache", base, wgf_identity_get_company(), wgf_identity_get_product());
+    n = wgf_core_priv_format(out, out_size, "%s/%s/%s/cache", base, wgf_identity_get_company(),
+                             wgf_identity_get_product());
 #else
-    n = snprintf(out, out_size, "%s/%s/%s", base, wgf_identity_get_company(), wgf_identity_get_product());
+    n = wgf_core_priv_format(out, out_size, "%s/%s/%s", base, wgf_identity_get_company(), wgf_identity_get_product());
 #endif
     if (n < 0 || n >= (int)out_size) return false;
     for (char *c = out; *c != '\0'; c++) {
@@ -133,7 +136,7 @@ bool wgf_core_priv_app_data_dir(char *out, size_t out_size)
     char base[512];
     int n;
     if (!wgf_core_priv_os_user_data_dir(base, sizeof(base))) return false;
-    n = snprintf(out, out_size, "%s/%s/%s", base, wgf_identity_get_company(), wgf_identity_get_product());
+    n = wgf_core_priv_format(out, out_size, "%s/%s/%s", base, wgf_identity_get_company(), wgf_identity_get_product());
     if (n < 0 || n >= (int)out_size) return false;
     for (char *c = out; *c != '\0'; c++) {
         if (*c == '\\') *c = '/'; /* Windows takes either, and fs makes directories at "/" */

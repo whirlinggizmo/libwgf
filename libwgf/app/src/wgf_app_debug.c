@@ -4,6 +4,7 @@
 #include "wgf_debug.h"
 #include "wgf_draw.h"
 #include "wgf_loop.h"
+#include "wgf_core_format_priv.h"
 
 /* The frame-rate overlay (wgf_debug.h): libwgt's wgt_loop_draw_fps and wgrender-c's
  * wgr_debug_enable_fps, as a setting the runtime draws, with the frame's cost beside
@@ -22,7 +23,8 @@ static void draw_fps(void)
     int tenths;
     cost = cost > 0.0f ? cost + 0.05f * (wgf_loop_get_frame_cost() - cost) : wgf_loop_get_frame_cost();
     tenths = (int)(cost * 10000.0f + 0.5f); /* integers: no float formatting linked */
-    snprintf(text, sizeof(text), "%d FPS %d.%d ms", (int)(wgf_loop_get_fps() + 0.5f), tenths / 10, tenths % 10);
+    wgf_core_priv_format(text, sizeof(text), "%d FPS %d.%d ms", (int)(wgf_loop_get_fps() + 0.5f), tenths / 10,
+                         tenths % 10);
     wgf_draw_text(fps.font, text, fps.x, fps.y, fps.size, fps.color);
 }
 

@@ -7,6 +7,7 @@
 #include "emitter/wgf_gfx_emitter_priv.h"
 #include "wgf_core_load_priv.h"
 #include "wgf_resource.h"
+#include "wgf_core_format_priv.h"
 
 /* An emitter's scene line (BUILDING.md, "Scene files": emitter2d, emitter3d): its keys
  * applied and its line written, on the emitter core's own record, reached by the scene
@@ -143,7 +144,7 @@ static void put(const char *format, ...)
     int wrote;
     if (out.length >= sizeof(out.text)) return;
     va_start(args, format);
-    wrote = vsnprintf(out.text + out.length, sizeof(out.text) - out.length, format, args);
+    wrote = wgf_core_priv_vformat(out.text + out.length, sizeof(out.text) - out.length, format, args);
     va_end(args);
     if (wrote > 0) out.length += (size_t)wrote;
 }

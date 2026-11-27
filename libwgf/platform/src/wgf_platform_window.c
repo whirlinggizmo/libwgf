@@ -6,6 +6,7 @@
 #include "wgf_platform_window_priv.h"
 #include "wgf_mouse.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 #define TITLE_SIZE 256
 
@@ -117,7 +118,7 @@ bool wgf_window_set_icon(const unsigned char *rgba, int size, int width, int hei
 
 void wgf_window_set_title(const char *title)
 {
-    snprintf(window.title, sizeof(window.title), "%s", title != NULL ? title : "");
+    wgf_core_priv_format(window.title, sizeof(window.title), "%s", title != NULL ? title : "");
     if (window.open) wgf_platform_priv_set_title(window.title);
 }
 

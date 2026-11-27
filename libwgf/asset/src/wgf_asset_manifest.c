@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* The manifest tree (wgf_asset_set_manifest), wgrender's: a manifest.json in a
  * directory gives the hash of every file beside it and of each subdirectory's own
@@ -45,7 +46,7 @@ bool wgf_asset_set_manifest(const char *path)
         return false;
     }
     wgf_asset_priv_manifests_forget();
-    snprintf(root_path, sizeof(root_path), "%s", path);
+    wgf_core_priv_format(root_path, sizeof(root_path), "%s", path);
     slash = strrchr(root_path, '/');
     base_len = slash != NULL ? (size_t)(slash - root_path) + 1 : 0;
     return true;
@@ -79,9 +80,10 @@ static manifest_dir_t *want(const char *dir, const char *hash)
     }
     record = &dirs[dir_count++];
     memset(record, 0, sizeof(*record));
-    snprintf(record->dir, sizeof(record->dir), "%s", dir);
-    written = dir[0] == '\0' ? snprintf(path, sizeof(path), "%s", root_path)
-                             : snprintf(path, sizeof(path), "%.*s%s/manifest.json", (int)base_len, root_path, dir);
+    wgf_core_priv_format(record->dir, sizeof(record->dir), "%s", dir);
+    written = dir[0] == '\0' ? wgf_core_priv_format(path, sizeof(path), "%s", root_path)
+                             : wgf_core_priv_format(path, sizeof(path), "%.*s%s/manifest.json", (int)base_len,
+                                                    root_path, dir);
     slot = written > 0 && (size_t)written < sizeof(path) ? wgf_asset_priv_task_new_direct(path) : 0;
     task_ptr = wgf_asset_priv_task_at(slot);
     if (task_ptr == NULL) {
@@ -89,7 +91,7 @@ static manifest_dir_t *want(const char *dir, const char *hash)
         return &dirs[dir_count - 1];
     }
     task_ptr->manifest_checked = true;
-    snprintf(task_ptr->expect_hash, sizeof(task_ptr->expect_hash), "%s", hash);
+    wgf_core_priv_format(task_ptr->expect_hash, sizeof(task_ptr->expect_hash), "%s", hash);
     task_ptr->manifest_dir = dir_count;
     task_ptr->manifest_generation = generation;
     task_ptr->manifest_root = dir[0] == '\0';
@@ -107,7 +109,7 @@ int wgf_asset_priv_manifest_lookup(uint16_t slot, char hash[WGF_ASSET_PRIV_SHA25
         strncmp(task_ptr->path, root_path, base_len) != 0 || !wgf_asset_priv_platform_lists()) {
         return WGF_ASSET_PRIV_NOT_LISTED;
     }
-    snprintf(rest, sizeof(rest), "%s", task_ptr->path + base_len);
+    wgf_core_priv_format(rest, sizeof(rest), "%s", task_ptr->path + base_len);
     record = want("", "");
     while (record != NULL && record->state == MANIFEST_READY) {
         char *slash = strchr(name, '/');

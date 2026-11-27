@@ -60,6 +60,15 @@ WGF_API void wgf_log_message_source(wgf_log_level_t level, const char *file, int
  * than the buffer is cut, and the cut never splits a UTF-8 character. */
 #define WGF_LOG_FORMAT_MAX 2048
 
+/* What formats it: a program's vsnprintf; inside libwgf (WGF_LIBRARY, defined for its own
+ * sources alone) core's small formatter, so a page links no printf for libwgf's log lines. */
+#ifdef WGF_LIBRARY
+int wgf_core_priv_vformat(char *out, size_t size, const char *format, va_list args);
+#define WGF_LOG_VFORMAT wgf_core_priv_vformat
+#else
+#define WGF_LOG_VFORMAT vsnprintf
+#endif
+
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((format(printf, 4, 5)))
 #endif
@@ -70,7 +79,7 @@ static inline void wgf_log_format(wgf_log_level_t level, const char *file, int l
     va_list args;
     if (level < wgf_log_get_level()) return; /* skip formatting what would be dropped */
     va_start(args, format);
-    vsnprintf(text, sizeof(text), format, args);
+    WGF_LOG_VFORMAT(text, sizeof(text), format, args);
     va_end(args);
     wgf_log_message_source(level, file, line, text);
 }

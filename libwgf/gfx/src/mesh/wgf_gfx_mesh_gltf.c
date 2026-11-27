@@ -25,6 +25,7 @@
 #include "wgf_material.h"
 #include "wgf_resource.h"
 #include "wgf_texture.h"
+#include "wgf_core_format_priv.h"
 
 /* A mesh from a glTF file (`.gltf` with its buffers and images, or `.glb`), read by cgltf:
  * its loader (prepare on a worker, finish on the main thread a step at a time), the files
@@ -72,7 +73,7 @@ static bool join_relative(const char *path, const char *uri, char *out, size_t o
     const char *slash = strrchr(path, '/');
     const int dir = slash != NULL ? (int)(slash - path) + 1 : 0;
     if (uri[0] == '/' || uri[0] == '\\' || strchr(uri, ':') != NULL) return false;
-    if (snprintf(joined, sizeof(joined), "%.*s%s", dir, path, uri) >= (int)sizeof(joined)) return false;
+    if (wgf_core_priv_format(joined, sizeof(joined), "%.*s%s", dir, path, uri) >= (int)sizeof(joined)) return false;
     cgltf_decode_uri(joined + dir); /* "%20" and the like, as cgltf does for buffers */
     return wgf_core_priv_fs_normalize_path(joined, out, out_size);
 }
@@ -245,7 +246,7 @@ static void set_texture(prepared_t *prepared, wgf_material_t material, const cha
     wgf_material_set_texture(material, name, texture);
 
     texcoord = view->has_transform && view->transform.has_texcoord ? view->transform.texcoord : view->texcoord;
-    snprintf(param, sizeof(param), "%s_texcoord", name);
+    wgf_core_priv_format(param, sizeof(param), "%s_texcoord", name);
     if (texcoord > 1) {
         if (!prepared->texcoord_warned) {
             wgf_log_warn("wgf_gfx_mesh: %s: texture coordinate set %d isn't supported (0 and 1 are); set 0 is used",
@@ -257,11 +258,11 @@ static void set_texture(prepared_t *prepared, wgf_material_t material, const cha
     wgf_material_set_int(material, param, texcoord);
 
     if (view->has_transform) {
-        snprintf(param, sizeof(param), "%s_offset", name);
+        wgf_core_priv_format(param, sizeof(param), "%s_offset", name);
         wgf_material_set_vec2(material, param, view->transform.offset[0], view->transform.offset[1]);
-        snprintf(param, sizeof(param), "%s_rotation", name);
+        wgf_core_priv_format(param, sizeof(param), "%s_rotation", name);
         wgf_material_set_float(material, param, view->transform.rotation);
-        snprintf(param, sizeof(param), "%s_scale", name);
+        wgf_core_priv_format(param, sizeof(param), "%s_scale", name);
         wgf_material_set_vec2(material, param, view->transform.scale[0], view->transform.scale[1]);
     }
 
@@ -872,7 +873,7 @@ static void *prepare(const char *path)
     cgltf_size t;
 
     if (prepared == NULL) return NULL;
-    snprintf(prepared->path, sizeof(prepared->path), "%s", path);
+    wgf_core_priv_format(prepared->path, sizeof(prepared->path), "%s", path);
     if (!wgf_core_priv_fs_read(path, &prepared->file, &size)) {
         wgf_log_warn("wgf_gfx_mesh: %s: couldn't be read", path);
         discard(prepared);

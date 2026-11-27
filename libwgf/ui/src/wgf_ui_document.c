@@ -32,6 +32,7 @@
 #include "wgf_ui_document_priv.h"
 #include "wgf_ui_priv.h"
 #include "wgf_ui_rmlui_priv.h"
+#include "wgf_core_format_priv.h"
 
 /* Documents (wgf_document.h): RmlUi's documents as libwgf's resources, their elements as
  * handles, and what RmlUi asks of libwgf (wgf_ui_rmlui_priv.h's C side): files read through
@@ -226,7 +227,7 @@ static void *prepare(const char *path)
         free(loaded);
         return NULL;
     }
-    snprintf(loaded->path, sizeof(loaded->path), "%s", path);
+    wgf_core_priv_format(loaded->path, sizeof(loaded->path), "%s", path);
     return loaded;
 }
 
@@ -263,7 +264,7 @@ static wgf_core_priv_load_step_t finish_again(const loaded_t *loaded, wgf_docume
 {
     char focus[256] = "";
     const wgf_element_t focused = wgf_ui_priv_rml_get_focus(number);
-    if (focused != 0) snprintf(focus, sizeof(focus), "%s", wgf_element_get_id(focused));
+    if (focused != 0) wgf_core_priv_format(focus, sizeof(focus), "%s", wgf_element_get_id(focused));
     if (!has_rml(loaded->bytes, loaded->size) ||
         !wgf_ui_priv_rml_reload(number, (const char *)loaded->bytes, loaded->size, loaded->path)) {
         wgf_log_warn("wgf_document: %s: not a document RmlUi can read", loaded->path);
@@ -1033,7 +1034,7 @@ bool wgf_ui_set_document_font_face(const char *family, int weight, bool italic, 
             return false;
         }
         at = doc.family_count++;
-        snprintf(doc.families[at].name, sizeof(doc.families[at].name), "%s", name);
+        wgf_core_priv_format(doc.families[at].name, sizeof(doc.families[at].name), "%s", name);
         doc.families[at].weight = weight;
         doc.families[at].italic = italic;
         doc.families[at].font = 0;
@@ -1114,7 +1115,7 @@ int wgf_ui_priv_doc_font_face(const char *family, int size, int weight, bool ita
         doc.faces = grown;
         doc.face_capacity = capacity;
     }
-    snprintf(doc.faces[doc.face_count].family, FAMILY_MAX, "%s", name);
+    wgf_core_priv_format(doc.faces[doc.face_count].family, FAMILY_MAX, "%s", name);
     doc.faces[doc.face_count].size = size;
     doc.faces[doc.face_count].weight = weight;
     doc.faces[doc.face_count].italic = italic;

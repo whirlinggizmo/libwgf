@@ -15,6 +15,7 @@
 #include "wgf_core_load_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Textures: a resource, loaded on create through core's load pipeline. A worker reads
  * and decodes the file (stb_image) and builds its mipmaps, or reads a compressed (KTX)
@@ -365,14 +366,16 @@ bool wgf_gfx_priv_texture_ktx_path(const char *path, char *out, size_t out_size)
         }
     }
     mask = ktx_override >= 0 ? ktx_override : ktx_supported > 0 ? ktx_supported : 0;
-    if (variant_of(path) >= 0) return snprintf(out, out_size, "%s", path) < (int)out_size;
+    if (variant_of(path) >= 0) return wgf_core_priv_format(out, out_size, "%s", path) < (int)out_size;
     stem = strlen(path) - 4;
     for (i = 0; i < KTX_VARIANT_COUNT; i++) {
         if ((mask >> i) & 1) {
-            return snprintf(out, out_size, "%.*s%s", (int)stem, path, KTX_VARIANTS[i].suffix) < (int)out_size;
+            return wgf_core_priv_format(out, out_size, "%.*s%s", (int)stem, path,
+                                        KTX_VARIANTS[i].suffix) < (int)out_size;
         }
     }
-    return snprintf(out, out_size, "%.*s.png", (int)stem, path) < (int)out_size; /* no compressed format here */
+    return wgf_core_priv_format(out, out_size, "%.*s.png", (int)stem,
+                                path) < (int)out_size; /* no compressed format here */
 }
 
 typedef struct ktx_file_t {
@@ -460,10 +463,10 @@ static void fail_ktx(wgf_handle_t resource)
     char png[WGF_CORE_PRIV_FS_PATH_MAX];
     if (texture_ptr != NULL && ends_with(texture_ptr->resource.path, ".ktx") &&
         variant_of(texture_ptr->resource.path) < 0 &&
-        snprintf(png, sizeof(png), "%.*s.png", (int)(strlen(texture_ptr->resource.path) - 4),
+        wgf_core_priv_format(png, sizeof(png), "%.*s.png", (int)(strlen(texture_ptr->resource.path) - 4),
                  texture_ptr->resource.path) < (int)sizeof(png)) {
         wgf_log_warn("wgf_gfx_texture: %s not loaded; using %s instead", texture_ptr->resource.found, png);
-        snprintf(texture_ptr->resource.found, sizeof(texture_ptr->resource.found), "%s", png);
+        wgf_core_priv_format(texture_ptr->resource.found, sizeof(texture_ptr->resource.found), "%s", png);
         if (wgf_core_priv_load_request(&loader, png, resource)) return;
     }
     fail(resource);
@@ -639,7 +642,7 @@ wgf_texture_t wgf_gfx_priv_texture_get_placeholder(void)
  * when it has none. */
 static void map_path(const char *path, char *out, size_t out_size)
 {
-    if (!wgf_gfx_priv_texture_ktx_path(path, out, out_size)) snprintf(out, out_size, "%s", path);
+    if (!wgf_gfx_priv_texture_ktx_path(path, out, out_size)) wgf_core_priv_format(out, out_size, "%s", path);
 }
 
 static const wgf_core_priv_loader_t *loader_of(const char *path)

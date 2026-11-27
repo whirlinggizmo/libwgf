@@ -7,6 +7,7 @@
 #include <emscripten.h>
 
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Web storage: files are read and written in MEMFS under the root (default "/wgf"),
  * and kept between visits in an IndexedDB store, one record per file: init reads
@@ -373,7 +374,7 @@ bool wgf_core_priv_fs_is_settled(void)
 bool wgf_core_priv_fs_platform_has_stored_dir(const char *full)
 {
     char prefix[1104];
-    snprintf(prefix, sizeof(prefix), "%s/", full);
+    wgf_core_priv_format(prefix, sizeof(prefix), "%s/", full);
     return wgf_core_priv_fs_js_has_prefix(prefix) != 0;
 }
 
@@ -381,7 +382,7 @@ void wgf_core_priv_fs_platform_list_stored(const char *full, struct wgf_core_pri
 {
     char prefix[1104];
     char *text, *line;
-    snprintf(prefix, sizeof(prefix), "%s/", full);
+    wgf_core_priv_format(prefix, sizeof(prefix), "%s/", full);
     text = wgf_core_priv_fs_js_list_prefix(prefix);
     for (line = text; line != NULL && *line != '\0';) {
         char *end = strchr(line, '\n');
@@ -404,7 +405,7 @@ void wgf_core_priv_fs_platform_removed_dir(const char *path, const char *full)
 {
     char prefix[1104];
     (void)path;
-    snprintf(prefix, sizeof(prefix), "%s/", full);
+    wgf_core_priv_format(prefix, sizeof(prefix), "%s/", full);
     wgf_core_priv_fs_js_delete_prefix(prefix);
 }
 
@@ -499,5 +500,5 @@ int wgf_core_priv_fs_cache_read_poll(int id)
  * rest of the store. */
 bool wgf_core_priv_fs_platform_user_root(const char *root, char *out, size_t out_size)
 {
-    return snprintf(out, out_size, "%s/.user", root) < (int)out_size;
+    return wgf_core_priv_format(out, out_size, "%s/.user", root) < (int)out_size;
 }

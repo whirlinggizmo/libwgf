@@ -20,6 +20,7 @@
 #include "wgf_sprite.h"
 #include "wgf_text.h"
 #include "wgf_voice.h"
+#include "wgf_core_format_priv.h"
 
 /* The simulated actors written as a scene (wgf_world_dump): each top one, oldest first, and
  * everything under it, every setting each has, in the format wgf_scene.h reads, numbers to
@@ -42,7 +43,7 @@ static void put(out_t *out, const char *format, ...)
     if (out->failed) return;
     for (;;) {
         va_start(args, format);
-        n = vsnprintf(out->text + out->length, out->capacity - out->length, format, args);
+        n = wgf_core_priv_vformat(out->text + out->length, out->capacity - out->length, format, args);
         va_end(args);
         if (n < 0) {
             out->failed = true;
@@ -381,10 +382,10 @@ static void dump_actor(out_t *out, wgf_actor_t e, const char *path)
         char below[PATH_BYTES];
         if (child_ptr != NULL && child_ptr->from_file && !node_written(child, 0)) continue;
         if (wgf_actor_get_name(child)[0] == '\0') {
-            snprintf(below, sizeof(below), "_%d", i);
+            wgf_core_priv_format(below, sizeof(below), "_%d", i);
             wgf_actor_set_name(child, below);
         }
-        snprintf(below, sizeof(below), "%s/%s", path, wgf_actor_get_name(child));
+        wgf_core_priv_format(below, sizeof(below), "%s/%s", path, wgf_actor_get_name(child));
         dump_actor(out, child, below);
     }
 }
@@ -435,10 +436,10 @@ const char *wgf_world_dump(void)
         if (j < top_count) continue;
         tops[top_count++] = top;
         if (wgf_actor_get_name(top)[0] == '\0' && wgf_actor_get_child_count(top) > 0) {
-            snprintf(path, sizeof(path), "_%d", i); /* its parts need a path to name it by */
+            wgf_core_priv_format(path, sizeof(path), "_%d", i); /* its parts need a path to name it by */
             wgf_actor_set_name(top, path);
         }
-        snprintf(path, sizeof(path), "%s", wgf_actor_get_name(top));
+        wgf_core_priv_format(path, sizeof(path), "%s", wgf_actor_get_name(top));
         dump_actor(&out, top, path);
     }
     out.failed = out.failed || tops == NULL;

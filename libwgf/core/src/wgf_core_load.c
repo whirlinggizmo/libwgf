@@ -11,6 +11,7 @@
 #include "wgf_log.h"
 #include "wgf_core_thread_priv.h"
 #include "wgf_time.h"
+#include "wgf_core_format_priv.h"
 
 /* Workers never touch the request table: they see only two rings, jobs in and
  * results out, under one lock, and a job carries copies of what a prepare needs.
@@ -220,7 +221,7 @@ static void end_request(wgf_handle_t handle, request_t *request_ptr, bool failed
     }
     if (request_ptr->asked && wgf_core_priv_load_hooks.forget != NULL) wgf_core_priv_load_hooks.forget(handle);
     if (failed) {
-        snprintf(failed_loads.paths[failed_loads.count % FAILED_KEPT], WGF_CORE_PRIV_FS_PATH_MAX, "%s",
+        wgf_core_priv_format(failed_loads.paths[failed_loads.count % FAILED_KEPT], WGF_CORE_PRIV_FS_PATH_MAX, "%s",
                  request_ptr->path);
         failed_loads.count++;
         request_ptr->loader->fail(request_ptr->resource);
@@ -718,7 +719,7 @@ bool wgf_core_priv_load_set_lister(const char *extension, wgf_core_priv_load_lis
     for (i = 0; i < lister_count && strcmp(listers[i].extension, extension) != 0; i++) {
     }
     if (i == MAX_LISTERS) return false;
-    snprintf(listers[i].extension, sizeof(listers[i].extension), "%s", extension);
+    wgf_core_priv_format(listers[i].extension, sizeof(listers[i].extension), "%s", extension);
     listers[i].list = list;
     if (i == lister_count) lister_count++;
     return true;

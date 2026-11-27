@@ -26,6 +26,7 @@
 #include "wgf_resource.h"
 #include "wgf_sprite.h"
 #include "texture/wgf_gfx_texture_priv.h"
+#include "wgf_core_format_priv.h"
 
 #define CLIPS_MAX 64
 #define NAME_MAX 64
@@ -252,7 +253,7 @@ static bool read_frame(const wgf_core_priv_json_t *data, const char *name, const
     const wgf_core_priv_json_t *source = wgf_core_priv_json_get(data, "sourceSize");
     const double ms = wgf_core_priv_json_get_number(data, "duration", 0.0);
     memset(out, 0, sizeof(*out));
-    snprintf(out->name, sizeof(out->name), "%s", name);
+    wgf_core_priv_format(out->name, sizeof(out->name), "%s", name);
     if (!wgf_core_priv_json_is_object(rect)) {
         wgf_log_warn("wgf_sheet: %s: frame %s has no rectangle", path, name);
         return false;
@@ -291,7 +292,7 @@ static bool add_atlas_clip(atlas_t *a, const char *name, const int *frames, int 
     c->frames = (int *)malloc(sizeof(int) * (size_t)count);
     if (c->frames == NULL) return false;
     memcpy(c->frames, frames, sizeof(int) * (size_t)count);
-    snprintf(c->name, sizeof(c->name), "%s", name);
+    wgf_core_priv_format(c->name, sizeof(c->name), "%s", name);
     c->count = count;
     c->direction = direction;
     a->clip_count++;
@@ -360,8 +361,8 @@ static void numbered_clips(atlas_t *a)
 static void beside(const char *path, const char *name, char *out, size_t size)
 {
     const char *slash = strrchr(path, '/');
-    if (name[0] == '/' || slash == NULL) snprintf(out, size, "%s", name[0] == '/' ? name + 1 : name);
-    else snprintf(out, size, "%.*s/%s", (int)(slash - path), path, name);
+    if (name[0] == '/' || slash == NULL) wgf_core_priv_format(out, size, "%s", name[0] == '/' ? name + 1 : name);
+    else wgf_core_priv_format(out, size, "%.*s/%s", (int)(slash - path), path, name);
 }
 
 static void *prepare(const char *path)
@@ -393,7 +394,7 @@ static void *prepare(const char *path)
         const char *name = wgf_core_priv_json_is_array(frames) ? wgf_core_priv_json_get_string(entry, "filename")
                                                                : wgf_core_priv_json_key(entry);
         if (name[0] == '\0') {
-            snprintf(number, sizeof(number), "%d", i);
+            wgf_core_priv_format(number, sizeof(number), "%d", i);
             name = number;
         }
         if (!read_frame(entry, name, path, &a->frames[a->frame_count])) {
@@ -777,7 +778,7 @@ static int resolve(sheet_t *s, const player_t *p, const char *name)
     clip_t *c = NULL;
     if (p->facing[0] != '\0') {
         char faced[NAME_MAX + FACING_MAX + 1];
-        snprintf(faced, sizeof(faced), "%s_%s", name, p->facing);
+        wgf_core_priv_format(faced, sizeof(faced), "%s_%s", name, p->facing);
         c = clip_named(s, faced);
     }
     if (c == NULL) c = clip_named(s, name);
@@ -821,7 +822,7 @@ bool wgf_sprite_play_clip(wgf_actor_t sprite, const char *name, bool loop)
     i = resolve(s, p, name);
     if (i < 0) return false;
     p->loop = loop;
-    snprintf(p->asked, sizeof(p->asked), "%s", name);
+    wgf_core_priv_format(p->asked, sizeof(p->asked), "%s", name);
     if (p->clip == i && p->state == WGF_PLAY_STATE_PLAYING) return true; /* already playing: on it goes */
     if (!start(p, s, i, 0, 0.0f)) return false;
     p->state = WGF_PLAY_STATE_PLAYING;
@@ -907,7 +908,7 @@ bool wgf_sprite_set_clip_facing(wgf_actor_t sprite, const char *facing)
     sheet_t *s = p != NULL ? sheet_of(p->sheet) : NULL;
     int i;
     if (s == NULL || (facing != NULL && strlen(facing) >= FACING_MAX)) return false;
-    snprintf(p->facing, sizeof(p->facing), "%s", facing != NULL ? facing : "");
+    wgf_core_priv_format(p->facing, sizeof(p->facing), "%s", facing != NULL ? facing : "");
     if (p->clip < 0 || p->asked[0] == '\0') return true;
     i = resolve(s, p, p->asked);
     if (i >= 0 && i != p->clip && start(p, s, i, p->step, p->elapsed)) show(p, false); /* on from the same place */

@@ -9,6 +9,7 @@
 #include "wgf_core_thread_priv.h"
 #include "wgf_log.h"
 #include "wgf_time.h"
+#include "wgf_core_format_priv.h"
 
 /* Natively, files are on disk: a local host is the storage's root (wgf_fs.h), read where
  * it is. A file that has to be downloaded (under a URL host, a URL path, a fetch_url, a
@@ -39,13 +40,14 @@ static const char *cache_dir(void)
 {
     static char derived[512];
     if (native.cache_dir[0] != '\0') return native.cache_dir;
-    if (!wgf_core_priv_app_cache_dir(derived, sizeof(derived))) snprintf(derived, sizeof(derived), ".wgf-cache");
+    if (!wgf_core_priv_app_cache_dir(derived, sizeof(derived))) wgf_core_priv_format(derived, sizeof(derived),
+                                                                                     ".wgf-cache");
     return derived;
 }
 
 void wgf_asset_priv_platform_default_host(char *out, size_t out_size)
 {
-    snprintf(out, out_size, "%s", wgf_core_priv_fs_root());
+    wgf_core_priv_format(out, out_size, "%s", wgf_core_priv_fs_root());
 }
 
 void wgf_asset_priv_platform_install(void)
@@ -69,14 +71,15 @@ bool wgf_asset_priv_platform_set_host(char *host)
            thing here as on the web (Rob, 2026-10-04) */
         char local[512], joined[WGF_CORE_PRIV_FS_PATH_MAX];
         const char *root = local;
-        snprintf(local, sizeof(local), "%s", host);
+        wgf_core_priv_format(local, sizeof(local), "%s", host);
         if (strncmp(host, "file:", 5) == 0 &&
             !wgf_asset_priv_file_url_path(host, local, sizeof(local))) {
             wgf_log_warn("wgf_asset_set_host: %s isn't a file: URL naming a directory on this machine", host);
         }
         if (local[0] != '/' && local[0] != '\\' && !(local[0] != '\0' && local[1] == ':') &&
             wgf_core_priv_fs_platform_default_root()[0] != '\0') {
-            if (snprintf(joined, sizeof(joined), "%s/%s", wgf_core_priv_fs_platform_default_root(), local) >=
+            if (wgf_core_priv_format(joined, sizeof(joined), "%s/%s", wgf_core_priv_fs_platform_default_root(),
+                                                                                                             local) >=
                 (int)sizeof(joined)) {
                 wgf_log_warn("wgf_asset_set_host: %s is too long a path under the program's directory", local);
                 return false;
@@ -102,7 +105,8 @@ bool wgf_asset_priv_platform_evict(const char *logical)
 {
     char cached[WGF_ASSET_PRIV_PATH_MAX + 8];
     if (wgf_asset_priv_host_is_url()) return wgf_core_priv_fs_remove(logical); /* the cache is the root */
-    snprintf(cached, sizeof(cached), WGF_CORE_PRIV_FS_CACHE "%s", logical); /* a local host is only ever read */
+    wgf_core_priv_format(cached, sizeof(cached), WGF_CORE_PRIV_FS_CACHE "%s",
+                         logical); /* a local host is only ever read */
     return wgf_core_priv_fs_remove(cached);
 }
 
@@ -127,7 +131,7 @@ static void note_download(const char *path)
     } else if (!wgf_asset_priv_host_is_url()) {
         return; /* not a download: a local host is only ever read */
     }
-    snprintf(list, sizeof(list), "%s/" DOWNLOADS_LIST, cache_dir());
+    wgf_core_priv_format(list, sizeof(list), "%s/" DOWNLOADS_LIST, cache_dir());
     f = fopen(list, "ab");
     if (f == NULL) {
         wgf_log_warn("wgf_asset: couldn't note %s in %s; wgf_asset_clear_cache won't delete it", path, list);
@@ -143,7 +147,7 @@ static void remove_empty_parents(const char *root, const char *path)
     char full[1024];
     const size_t root_len = strlen(root);
     char *slash;
-    if ((size_t)snprintf(full, sizeof(full), "%s/%s", root, path) >= sizeof(full)) return;
+    if ((size_t)wgf_core_priv_format(full, sizeof(full), "%s/%s", root, path) >= sizeof(full)) return;
     while ((slash = strrchr(full, '/')) != NULL && (size_t)(slash - full) > root_len) {
         *slash = '\0';
         if (!wgf_core_priv_os_rmdir(full)) return; /* not empty: it and what is above it stay */
@@ -156,8 +160,8 @@ static int delete_downloads(void)
     char list[600], line[1024], relative[1024], file[1600], meta_root[600];
     FILE *f;
     int deleted = 0;
-    snprintf(list, sizeof(list), "%s/" DOWNLOADS_LIST, cache_dir());
-    snprintf(meta_root, sizeof(meta_root), "%s/.meta", cache_dir());
+    wgf_core_priv_format(list, sizeof(list), "%s/" DOWNLOADS_LIST, cache_dir());
+    wgf_core_priv_format(meta_root, sizeof(meta_root), "%s/.meta", cache_dir());
     f = fopen(list, "rb");
     if (f == NULL) return 0;
     while (fgets(line, sizeof(line), f) != NULL) {
@@ -175,9 +179,9 @@ static int delete_downloads(void)
             wgf_log_warn("wgf_asset_clear_cache: %s lists %s, which isn't under it; left alone", list, line);
             continue;
         }
-        if (snprintf(file, sizeof(file), "%s/%s", cache_dir(), relative) >= (int)sizeof(file)) continue;
+        if (wgf_core_priv_format(file, sizeof(file), "%s/%s", cache_dir(), relative) >= (int)sizeof(file)) continue;
         deleted += remove(file) == 0 ? 1 : 0; /* listed twice, or evicted since: already gone */
-        if (snprintf(file, sizeof(file), "%s/%s", meta_root, relative) < (int)sizeof(file)) remove(file);
+        if (wgf_core_priv_format(file, sizeof(file), "%s/%s", meta_root, relative) < (int)sizeof(file)) remove(file);
         remove_empty_parents(cache_dir(), relative);
         remove_empty_parents(meta_root, relative);
     }
@@ -261,7 +265,7 @@ static void downloaded(uint16_t slot)
     if (task_ptr->fetch_url[0] != '\0') { /* what a later ensure matches its own source against */
         wgf_core_priv_fs_meta_t meta;
         wgf_core_priv_fs_meta_get(task_ptr->path, &meta);
-        snprintf(meta.source, sizeof(meta.source), "%s", task_ptr->fetch_url);
+        wgf_core_priv_format(meta.source, sizeof(meta.source), "%s", task_ptr->fetch_url);
         wgf_core_priv_fs_meta_set(task_ptr->path, &meta);
     }
     note_download(task_ptr->path);
@@ -415,12 +419,13 @@ void wgf_asset_priv_platform_step(uint16_t slot)
         strncmp(task_ptr->path, WGF_CORE_PRIV_FS_CACHE, sizeof(WGF_CORE_PRIV_FS_CACHE) - 1) != 0 &&
         (task_ptr->caller_url || !wgf_core_priv_fs_exists(task_ptr->path))) {
         char cached[sizeof(task_ptr->path)];
-        if (snprintf(cached, sizeof(cached), WGF_CORE_PRIV_FS_CACHE "%s", task_ptr->path) >= (int)sizeof(cached)) {
+        if (wgf_core_priv_format(cached, sizeof(cached), WGF_CORE_PRIV_FS_CACHE "%s",
+                                 task_ptr->path) >= (int)sizeof(cached)) {
             wgf_log_warn("wgf_asset: %s is too long to keep in the cache", task_ptr->path);
             wgf_asset_priv_task_resolved(slot, false);
             return;
         }
-        snprintf(task_ptr->path, sizeof(task_ptr->path), "%s", cached);
+        wgf_core_priv_format(task_ptr->path, sizeof(task_ptr->path), "%s", cached);
     }
     {
         const bool have = wgf_core_priv_fs_exists(task_ptr->path);
@@ -506,7 +511,7 @@ void wgf_asset_priv_platform_ping(wgf_asset_priv_task_t *task_ptr, const char *h
 {
     char dir[512];
     (void)timeout_ms;
-    snprintf(dir, sizeof(dir), "%s", host);
+    wgf_core_priv_format(dir, sizeof(dir), "%s", host);
     if (strncmp(host, "file:", 5) == 0 && !wgf_asset_priv_file_url_path(host, dir, sizeof(dir))) {
         task_ptr->ping_ms = -1.0f; /* not a directory on this machine */
     } else if (strstr(host, "://") != NULL && strncmp(host, "file:", 5) != 0) {
@@ -518,7 +523,7 @@ void wgf_asset_priv_platform_ping(wgf_asset_priv_task_t *task_ptr, const char *h
             return;
         }
         /* the host's root; any answer counts */
-        snprintf(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s/", host);
+        wgf_core_priv_format(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s/", host);
         task_ptr->state = WGF_ASSET_PRIV_FETCHING; /* a ping request, for wgf_asset_fetch_next */
         task_ptr->fetch_taken = false;
         task_ptr->fetch_order = ++native.order;
@@ -545,7 +550,7 @@ bool wgf_asset_set_cache_dir(const char *dir)
         wgf_log_warn("wgf_asset_set_cache_dir: a directory (under 512 bytes) is needed");
         return false;
     }
-    snprintf(native.cache_dir, sizeof(native.cache_dir), "%s", dir);
+    wgf_core_priv_format(native.cache_dir, sizeof(native.cache_dir), "%s", dir);
     wgf_asset_priv_platform_host_set(wgf_asset_priv_host_is_url());
     return true;
 }
@@ -609,9 +614,10 @@ const char *wgf_asset_fetch_get_url(wgf_asset_task_t request)
     const wgf_asset_priv_task_t *task_ptr = request_of(request);
     if (task_ptr == NULL) return "";
     if (task_ptr->fetch_url[0] != '\0') { /* its own source wins, as on the web */
-        snprintf(url, sizeof(url), "%s", task_ptr->fetch_url);
+        wgf_core_priv_format(url, sizeof(url), "%s", task_ptr->fetch_url);
     } else {
-        if (snprintf(url, sizeof(url), "%s/%s", wgf_asset_priv_host(), task_ptr->path) >= (int)sizeof(url)) {
+        if (wgf_core_priv_format(url, sizeof(url), "%s/%s", wgf_asset_priv_host(),
+                                 task_ptr->path) >= (int)sizeof(url)) {
             return ""; /* too long a URL to hand out */
         }
     }

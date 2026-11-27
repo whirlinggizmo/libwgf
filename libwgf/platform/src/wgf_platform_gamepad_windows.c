@@ -5,6 +5,7 @@
 #include <windows.h>
 
 #include "wgf_gamepad.h"
+#include "wgf_core_format_priv.h"
 
 /* Gamepads on Windows, through XInput: the four slots XInput itself numbers, so a
  * pad's number is XInput's. XInput is loaded at runtime, from whichever of its DLLs
@@ -98,7 +99,7 @@ void wgf_platform_priv_gamepad_platform_poll(wgf_platform_priv_gamepad_t pads[WG
         }
         pads[i].connected = true;
         pads[i].rumble = xinput_set_state != NULL;
-        snprintf(pads[i].name, sizeof(pads[i].name), "XInput controller %d", i + 1);
+        wgf_core_priv_format(pads[i].name, sizeof(pads[i].name), "XInput controller %d", i + 1);
         for (b = 0; b < sizeof(map) / sizeof(map[0]); b++) {
             pads[i].buttons[map[b].button] = (state.gamepad.buttons & map[b].mask) != 0;
         }

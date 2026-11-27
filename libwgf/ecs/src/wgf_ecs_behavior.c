@@ -8,6 +8,7 @@
 #include "actor/wgf_gfx_actor_priv.h"
 #include "wgf_ecs_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Behaviors (wgf_behavior.h): a list on the actor's record, each its name, its parameters,
  * and its id; CREATED raised as one is added, DESTROYED as it is removed or its actor goes
@@ -263,7 +264,7 @@ double wgf_behavior_get_param_number(wgf_actor_t actor, int behavior, const char
     double value;
     if (text[0] == '\0') return 0.0;
     errno = 0;
-    value = strtod(text, &end);
+    value = wgf_core_priv_parse_double(text, &end);
     return errno == 0 && *end == '\0' && isfinite(value) ? value : 0.0;
 }
 

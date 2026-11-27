@@ -13,6 +13,7 @@
 #include "wgf_core_part_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Custom shaders, libwgt's wgt_gfx_shader.c (wgrender's wgr_shader): .wgfshader files from
  * tools/pack_shader.py (the format is written there), through core's load pipeline.
@@ -85,7 +86,7 @@ static bool next_line(reader_t *r, char *line, size_t size)
     if (r->at >= r->end) return false;
     nl = (const char *)memchr(r->at, '\n', (size_t)(r->end - r->at));
     n = (size_t)((nl != NULL ? nl : r->end) - r->at);
-    snprintf(line, size, "%.*s", (int)(n < size ? n : size - 1), r->at);
+    wgf_core_priv_format(line, size, "%.*s", (int)(n < size ? n : size - 1), r->at);
     r->at = nl != NULL ? nl + 1 : r->end;
     return true;
 }
@@ -122,7 +123,7 @@ typedef struct program_desc_t {
 static const char *keep_name(program_desc_t *p, const char *name)
 {
     if (strcmp(name, "-") == 0 || p->name_count >= NAMES_MAX) return NULL;
-    snprintf(p->names[p->name_count], GLSL_NAME_MAX, "%s", name);
+    wgf_core_priv_format(p->names[p->name_count], GLSL_NAME_MAX, "%s", name);
     return p->names[p->name_count++];
 }
 
@@ -133,13 +134,13 @@ static bool describe(program_desc_t *p, const char *line)
     int slot, n1, n2;
     sg_shader_desc *desc = &p->desc;
 
-    if (sscanf(line, "attr %d %127s", &slot, b) == 2) {
+    if (wgf_core_priv_scan(line, "attr %d %127s", &slot, b) == 2) {
         if (slot < 0 || slot >= SG_MAX_VERTEX_ATTRIBUTES) return false;
         desc->attrs[slot].base_type = SG_SHADERATTRBASETYPE_FLOAT;
         desc->attrs[slot].glsl_name = keep_name(p, b);
         return true;
     }
-    if (sscanf(line, "ub %d %63s %d %127s %d", &slot, a, &n1, b, &n2) == 5) {
+    if (wgf_core_priv_scan(line, "ub %d %63s %d %127s %d", &slot, a, &n1, b, &n2) == 5) {
         if (slot < 0 || slot >= WGF_GFX_PRIV_SHADER_BLOCK_COUNT || n1 <= 0) return false;
         desc->uniform_blocks[slot].stage = stage_of(a);
         desc->uniform_blocks[slot].layout = SG_UNIFORMLAYOUT_STD140;
@@ -152,7 +153,7 @@ static bool describe(program_desc_t *p, const char *line)
         p->has_block[slot] = true;
         return true;
     }
-    if (sscanf(line, "view %d %63s %127s %127s %63s", &slot, a, b, d, c) == 5) {
+    if (wgf_core_priv_scan(line, "view %d %63s %127s %127s %63s", &slot, a, b, d, c) == 5) {
         const bool cube = strcmp(d, "cube") == 0, array = strcmp(d, "array") == 0;
         const bool unfilterable = strcmp(c, "unfilterable_float") == 0, depth = strcmp(c, "depth") == 0;
         if (slot < 0 || slot >= SG_MAX_VIEW_BINDSLOTS || (!unfilterable && !depth && strcmp(c, "float") != 0) ||
@@ -164,10 +165,11 @@ static bool describe(program_desc_t *p, const char *line)
         desc->views[slot].texture.sample_type = unfilterable ? SG_IMAGESAMPLETYPE_UNFILTERABLE_FLOAT
                                                 : depth      ? SG_IMAGESAMPLETYPE_DEPTH
                                                              : SG_IMAGESAMPLETYPE_FLOAT;
-        snprintf(p->view_names[slot], WGF_GFX_PRIV_SHADER_NAME_MAX, "%.*s", WGF_GFX_PRIV_SHADER_NAME_MAX - 1, b);
+        wgf_core_priv_format(p->view_names[slot], WGF_GFX_PRIV_SHADER_NAME_MAX, "%.*s",
+                             WGF_GFX_PRIV_SHADER_NAME_MAX - 1, b);
         return true;
     }
-    if (sscanf(line, "sampler %d %63s %127s %63s", &slot, a, b, c) == 4) {
+    if (wgf_core_priv_scan(line, "sampler %d %63s %127s %63s", &slot, a, b, c) == 4) {
         if (slot < 0 || slot >= SG_MAX_SAMPLER_BINDSLOTS) return false;
         desc->samplers[slot].stage = stage_of(a);
         desc->samplers[slot].sampler_type = strcmp(c, "nonfiltering") == 0  ? SG_SAMPLERTYPE_NONFILTERING
@@ -175,7 +177,7 @@ static bool describe(program_desc_t *p, const char *line)
                                                                            : SG_SAMPLERTYPE_FILTERING;
         return true;
     }
-    if (sscanf(line, "pair %d %63s %d %d %127s", &slot, a, &n1, &n2, d) == 5) {
+    if (wgf_core_priv_scan(line, "pair %d %63s %d %d %127s", &slot, a, &n1, &n2, d) == 5) {
         if (slot < 0 || slot >= SG_MAX_TEXTURE_SAMPLER_PAIRS || n1 < 0 || n1 >= SG_MAX_VIEW_BINDSLOTS || n2 < 0 ||
             n2 >= SG_MAX_SAMPLER_BINDSLOTS || p->pair_count >= SG_MAX_TEXTURE_SAMPLER_PAIRS) {
             return false;
@@ -232,7 +234,7 @@ static bool parse(const unsigned char *bytes, size_t size, const char *slang, wg
 
     r.at = (const char *)bytes;
     r.end = (const char *)bytes + size;
-    if (!next_line(&r, line, sizeof(line)) || sscanf(line, "wgfshader %d", &version) != 1) {
+    if (!next_line(&r, line, sizeof(line)) || wgf_core_priv_scan(line, "wgfshader %d", &version) != 1) {
         *error = "not a .wgfshader file";
         return false;
     }
@@ -243,7 +245,7 @@ static bool parse(const unsigned char *bytes, size_t size, const char *slang, wg
     while (next_line(&r, line, sizeof(line))) {
         if (strcmp(line, "end") == 0) {
             break;
-        } else if (sscanf(line, "param %63s %63s %63s %d", a, b, c, &n) == 4) {
+        } else if (wgf_core_priv_scan(line, "param %63s %63s %63s %d", a, b, c, &n) == 4) {
             wgf_gfx_priv_shader_param_t *param = &out->params[out->param_count];
             int end;
             if (out->param_count >= WGF_GFX_PRIV_SHADER_MAX_PARAMS || strlen(a) >= WGF_GFX_PRIV_SHADER_NAME_MAX) {
@@ -261,22 +263,23 @@ static bool parse(const unsigned char *bytes, size_t size, const char *slang, wg
             end = (n + param_size(param->type) + 15) / 16 * 16;
             if (end > out->block_size[param->block]) out->block_size[param->block] = end;
             out->param_count++;
-        } else if (sscanf(line, "kind %63s", a) == 1 && (strcmp(a, "screen") == 0 || strcmp(a, "surface") == 0)) {
+        } else if (wgf_core_priv_scan(line, "kind %63s", a) == 1 && (strcmp(a, "screen") == 0 || strcmp(a,
+                                      "surface") == 0)) {
             out->screen = strcmp(a, "screen") == 0;
-        } else if (sscanf(line, "texture %63s", a) == 1) {
+        } else if (wgf_core_priv_scan(line, "texture %63s", a) == 1) {
             if (out->texture_count >= WGF_GFX_PRIV_SHADER_MAX_TEXTURES || strlen(a) >= WGF_GFX_PRIV_SHADER_NAME_MAX) {
                 *error = "too many textures, or a name too long";
                 return false;
             }
             memcpy(out->textures[out->texture_count++], a, strlen(a) + 1);
-        } else if (sscanf(line, "program %63s %63s", a, b) == 2) {
+        } else if (wgf_core_priv_scan(line, "program %63s %63s", a, b) == 2) {
             const int which = strcmp(a, "model") == 0           ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL
                               : strcmp(a, "model_skinned") == 0 ? WGF_GFX_PRIV_SHADER_PROGRAM_MODEL_SKINNED
                               : strcmp(a, "screen") == 0 ? WGF_GFX_PRIV_SHADER_PROGRAM_SCREEN
                                                          : -1;
             current = which >= 0 && strcmp(b, slang) == 0 ? &programs[which] : NULL;
             if (current != NULL) current->found = true;
-        } else if (sscanf(line, "source %63s %d", a, &n) == 2) {
+        } else if (wgf_core_priv_scan(line, "source %63s %d", a, &n) == 2) {
             if (n < 0 || (size_t)n > (size_t)(r.end - r.at)) {
                 *error = "a source is cut short";
                 return false;

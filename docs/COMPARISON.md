@@ -42,9 +42,9 @@ A page's code gzipped (the page, its JS, its wasm), as helix counts it, no asset
 | | libwgf | helix-raylib |
 |---|---:|---:|
 | the smallest program (a window cleared) | 70.6 KB (app-skeleton) | 35.5 KB (1-window, main, 2026-11-25) |
-| a game's features, one of each (helix's game rung, the same program on each) | 249.7 KB (game-rung: its wasm 207.6, the host's JS 24.9, the binding 4.2, the program 9.5, the page 3.4) | 142.0 KB (10-game, main) |
+| a game's features, one of each (helix's game rung, the same program on each) | 241.4 KB (game-rung: its wasm 199.3, the host's JS 24.9, the binding 4.2, the program 9.5, the page 3.4) | 142.0 KB (10-game, main) |
 | everything linked | not measured | 363.8 KB (11-everything, main) |
-| Asteroids (2D, UI, sound, particles) | 222.7 KB | not written |
+| Asteroids (2D, UI, sound, particles) | 216.5 KB | not written |
 | Wardens (the same spec on both) | 268.5 KB | **to measure** |
 | the racer (3D, Jolt) | 565.5 KB | not written |
 
@@ -129,7 +129,7 @@ Or draw the riders under `rlPushMatrix` with the platform's transform: that move
 
 ## Still to measure
 
-1. What the game rung's 207.6 KB of wasm is, part by part, against helix's 142.0 KB for the whole page.
+1. The game rung's wasm, taken apart (HISTORY.md, "Text formatted and read without the C library's printf"): what is left to cut, fonts rasterized by the browser next.
 2. Wardens' page on helix-raylib, beside libwgf's 268.5 KB.
 3. The robots again, in one session, once helix's culling is on its main.
 4. More worked examples: a menu with pad focus, a Tiled level, a skinned character with a blended run, a save.

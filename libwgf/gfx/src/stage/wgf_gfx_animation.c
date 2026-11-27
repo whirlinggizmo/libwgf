@@ -14,6 +14,7 @@
 #include "wgf_log.h"
 #include "wgf_quat.h"
 #include "wgf_resource.h"
+#include "wgf_core_format_priv.h"
 
 /* A glTF file's animations, played on its root (wgf_model.h): libwgt's player
  * (wgt_gfx_animation.c), its clip played as a voice plays a sound, advanced by a part once a
@@ -126,7 +127,7 @@ static void keep_name(char *out, const wgf_gfx_priv_mesh_record_t *record, int a
 {
     const wgf_gfx_priv_mesh_animation_t *clip = clip_of(record, animation);
     if (record == NULL || !wgf_core_priv_resource_reloads) return;
-    snprintf(out, 64, "%s", clip != NULL && clip->name != NULL ? clip->name : "");
+    wgf_core_priv_format(out, 64, "%s", clip != NULL && clip->name != NULL ? clip->name : "");
 }
 
 /* Where its clips come from: another file's (READY; NULL while it loads), or its own. */
@@ -945,7 +946,7 @@ bool wgf_model_play_layer_animation(wgf_actor_t model, int index, int animation,
     keep_name(layer->clip, clips, animation);
     layer->time = 0.0f;
     layer->loop = loop;
-    snprintf(layer->bone, sizeof(layer->bone), "%s", bone);
+    wgf_core_priv_format(layer->bone, sizeof(layer->bone), "%s", bone);
     layer->fade = fade > 0.0f ? fade : 0.0f;
     layer->target = 1.0f;
     layer->state = WGF_PLAY_STATE_PLAYING;

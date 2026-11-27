@@ -29,6 +29,7 @@
 #include "wgf_ui_skin_priv.h"
 #include "wgf_ui_text_priv.h"
 #include "wgf_window.h"
+#include "wgf_core_format_priv.h"
 
 /* The ui module: Clay lays out and hit-tests, this file describes each frame's UI to it,
  * answers widgets from the input, moves the focus, and draws Clay's commands through
@@ -349,7 +350,7 @@ bool wgf_ui_set_focus(const char *id)
 {
     if (id == NULL) id = "";
     if (strlen(id) >= ID_MAX) return false;
-    snprintf(ui.focus, sizeof(ui.focus), "%s", id);
+    wgf_core_priv_format(ui.focus, sizeof(ui.focus), "%s", id);
     ui.focus_visible = id[0] != '\0';
     ui.focus_fresh = true;
     ui.scroll.reveal_next = true;
@@ -425,7 +426,7 @@ static bool add_focusable(const char *id, uint32_t element, int arrows)
         ui.focusables = grown;
         ui.focusable_capacity = capacity;
     }
-    snprintf(ui.focusables[ui.focusable_count].id, ID_MAX, "%s", id);
+    wgf_core_priv_format(ui.focusables[ui.focusable_count].id, ID_MAX, "%s", id);
     ui.focusables[ui.focusable_count].element = element;
     ui.focusables[ui.focusable_count++].arrows = arrows;
     return true;
@@ -1164,7 +1165,7 @@ typedef struct answer_t {
 static void answer(const char *id, Clay_ElementId element, bool over, int arrows, bool drags, answer_t *out)
 {
     memset(out, 0, sizeof(*out));
-    snprintf(ui.last.id, sizeof(ui.last.id), "%s", id);
+    wgf_core_priv_format(ui.last.id, sizeof(ui.last.id), "%s", id);
     ui.last.element = element.id;
     ui.last.over = over;
     ui.last.activated = false;
@@ -1175,8 +1176,8 @@ static void answer(const char *id, Clay_ElementId element, bool over, int arrows
     out->over = over;
     if (over) ui.hovering = true;
     if (ui.pointer_pressed && over) {
-        snprintf(ui.pressed, sizeof(ui.pressed), "%s", id);
-        snprintf(ui.focus, sizeof(ui.focus), "%s", id);
+        wgf_core_priv_format(ui.pressed, sizeof(ui.pressed), "%s", id);
+        wgf_core_priv_format(ui.focus, sizeof(ui.focus), "%s", id);
         ui.focus_visible = false;
         ui.scroll.press_drags = drags;
     }
@@ -1621,7 +1622,7 @@ float wgf_ui_number(const char *id, float value, float min, float max, float ste
     while (decimals < 4 &&
            fabsf(step * powf(10.0f, (float)decimals) - roundf(step * powf(10.0f, (float)decimals))) > 1e-3f)
         decimals++;
-    snprintf(text, sizeof(text), "%.*f", decimals, (double)value);
+    wgf_core_priv_format(text, sizeof(text), "%.*f", decimals, (double)value);
     memset(&row, 0, sizeof(row));
     row.layout.layoutDirection = CLAY_LEFT_TO_RIGHT;
     row.layout.childGap = pixels(ui.values[WGF_UI_VALUE_GAP] * 0.5f);
@@ -2100,7 +2101,7 @@ static text_view_t *text_view_named(const char *id)
         ui.view_capacity = capacity;
     }
     memset(&ui.views[ui.view_count], 0, sizeof(text_view_t));
-    snprintf(ui.views[ui.view_count].id, sizeof(ui.views[0].id), "%s", id);
+    wgf_core_priv_format(ui.views[ui.view_count].id, sizeof(ui.views[0].id), "%s", id);
     ui.views[ui.view_count].version = -1; /* never broken */
     return &ui.views[ui.view_count++];
 }
@@ -2512,7 +2513,7 @@ int wgf_ui_dropdown(const char *id, const char *labels, int selected)
     ui.popups.dropdown.pointer[0] = ui.pointer_x;
     ui.popups.dropdown.pointer[1] = ui.pointer_y;
     if (open) {
-        snprintf(ui.popups.dropdown.owner, sizeof(ui.popups.dropdown.owner), "%s", id);
+        wgf_core_priv_format(ui.popups.dropdown.owner, sizeof(ui.popups.dropdown.owner), "%s", id);
         ui.popups.dropdown.seen = true;
     } else if (was_open) {
         ui.popups.dropdown.owner[0] = '\0';
@@ -2612,7 +2613,8 @@ bool wgf_ui_tooltip(const char *text)
     pointed = (ui.last.over && !ui.pointer_down) || (ui.focus_visible && strcmp(ui.focus, ui.last.id) == 0);
     if (!pointed) return true;
     if (strcmp(ui.popups.tip.id, ui.last.id) != 0) { /* waits from the next frame, unless another is already */
-        if (ui.popups.tip.next[0] == '\0') snprintf(ui.popups.tip.next, sizeof(ui.popups.tip.next), "%s", ui.last.id);
+        if (ui.popups.tip.next[0] == '\0') wgf_core_priv_format(ui.popups.tip.next, sizeof(ui.popups.tip.next), "%s",
+                                                                ui.last.id);
         return true;
     }
     ui.popups.tip.seen = true;
@@ -3042,7 +3044,7 @@ static void navigate(void)
         to = ui.keys.tab_next || ui.keys.tab_previous ? -1 : nearest(at, dx, dy, lo, hi);
         if (to < 0) to = lo + (at - lo + (next ? 1 : hi - lo - 1)) % (hi - lo);
     }
-    snprintf(ui.focus, sizeof(ui.focus), "%s", ui.focusables[to].id);
+    wgf_core_priv_format(ui.focus, sizeof(ui.focus), "%s", ui.focusables[to].id);
     ui.focus_visible = true;
     ui.scroll.reveal_next = true;
 }

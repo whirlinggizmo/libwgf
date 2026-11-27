@@ -10,6 +10,7 @@
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
 #include "wgf_time.h"
+#include "wgf_core_format_priv.h"
 
 /* The asset part: installed by the first resource made from a path or the first
  * wgf_asset_* call, it sets core's load hooks, so every load's file is made local here
@@ -52,7 +53,7 @@ static wgf_core_priv_locate_t locate(wgf_handle_t request, char *path, size_t pa
     task_ptr = wgf_asset_priv_task_at(slot);
     if (task_ptr == NULL) return WGF_CORE_PRIV_LOCATE_FAILED;
     if (task_ptr->state == WGF_ASSET_PRIV_DONE) {
-        snprintf(path, path_size, "%s", task_ptr->path);
+        wgf_core_priv_format(path, path_size, "%s", task_ptr->path);
         wgf_asset_priv_task_free(slot);
         return WGF_CORE_PRIV_LOCATE_LOCAL;
     }
@@ -61,7 +62,7 @@ static wgf_core_priv_locate_t locate(wgf_handle_t request, char *path, size_t pa
         return WGF_CORE_PRIV_LOCATE_FAILED;
     }
     if (arrival != NULL && wgf_asset_priv_platform_arriving(task_ptr)) { /* bytes have come: the loader's from here */
-        snprintf(path, path_size, "%s", task_ptr->path);
+        wgf_core_priv_format(path, path_size, "%s", task_ptr->path);
         task_ptr->request = 0;
         task_ptr->kept = true;
         task_ptr->arrival = true;
@@ -97,8 +98,8 @@ static void arrival_end(wgf_handle_t arrival)
 /* Where a file at `path` is fetched from: `fetch_url`, its own source, or the host's. */
 static bool source_url(const char *path, const char *fetch_url, char *url, size_t url_size)
 {
-    const int n = fetch_url[0] != '\0' ? snprintf(url, url_size, "%s", fetch_url)
-                                       : snprintf(url, url_size, "%s/%s", wgf_asset_priv_host(), path);
+    const int n = fetch_url[0] != '\0' ? wgf_core_priv_format(url, url_size, "%s", fetch_url)
+                                       : wgf_core_priv_format(url, url_size, "%s/%s", wgf_asset_priv_host(), path);
     return n >= 0 && (size_t)n < url_size;
 }
 
@@ -164,8 +165,8 @@ void wgf_asset_priv_note_named(const char *file, const char *named)
         names = grown;
         name_capacity = capacity;
     }
-    snprintf(names[name_count].file, sizeof(names[name_count].file), "%s", file);
-    snprintf(names[name_count].named, sizeof(names[name_count].named), "%s", named);
+    wgf_core_priv_format(names[name_count].file, sizeof(names[name_count].file), "%s", file);
+    wgf_core_priv_format(names[name_count].named, sizeof(names[name_count].named), "%s", named);
     name_count++;
 }
 
@@ -214,8 +215,8 @@ static void look(const char *load, const char *path, void *user)
         }
         w = &watch.at[watch.count++];
         memset(w, 0, sizeof(*w));
-        snprintf(w->path, sizeof(w->path), "%s", path);
-        snprintf(w->load, sizeof(w->load), "%s", load);
+        wgf_core_priv_format(w->path, sizeof(w->path), "%s", path);
+        wgf_core_priv_format(w->load, sizeof(w->load), "%s", load);
         w->modified = modified;
         w->size = size;
         w->seen = true;
@@ -236,7 +237,7 @@ static void look(const char *load, const char *path, void *user)
     w->modified = modified;
     w->size = size;
     if (watch.load_count < WATCH_LOADS_MAX) {
-        snprintf(watch.loads[watch.load_count++], WGF_ASSET_PRIV_PATH_MAX, "%s", load);
+        wgf_core_priv_format(watch.loads[watch.load_count++], WGF_ASSET_PRIV_PATH_MAX, "%s", load);
     }
 }
 
@@ -388,7 +389,7 @@ bool wgf_asset_set_host(const char *host)
         wgf_log_warn("wgf_asset_set_host: a host of 512 bytes or more");
         return false;
     }
-    snprintf(settings.host, sizeof(settings.host), "%s", host);
+    wgf_core_priv_format(settings.host, sizeof(settings.host), "%s", host);
     n = strlen(settings.host);
     while (n > 1 && settings.host[n - 1] == '/') settings.host[--n] = '\0';
     return wgf_asset_priv_platform_set_host(settings.host);

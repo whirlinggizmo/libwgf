@@ -23,6 +23,7 @@
 #include "wgf_log.h"
 #include "wgf_resource.h"
 #include "wgf_trig.h"
+#include "wgf_core_format_priv.h"
 
 #define MAX_SIDE 65536          /* a map's columns or rows */
 #define MAX_CELLS (1 << 24)     /* a map's cells */
@@ -136,14 +137,14 @@ static void number_text(double value, char *out, size_t size)
 {
     int precision;
     if (value == floor(value) && fabs(value) < 1e15) {
-        snprintf(out, size, "%.0f", value);
+        wgf_core_priv_format(out, size, "%.0f", value);
         return;
     }
     for (precision = 6; precision < 17; precision++) {
-        snprintf(out, size, "%.*g", precision, value);
-        if (strtod(out, NULL) == value) return;
+        wgf_core_priv_format(out, size, "%.*g", precision, value);
+        if (wgf_core_priv_parse_double(out, NULL) == value) return;
     }
-    snprintf(out, size, "%.17g", value);
+    wgf_core_priv_format(out, size, "%.17g", value);
 }
 
 /* A color as Tiled writes it ("#AARRGGBB", or "#RRGGBB" opaque) as 0xRRGGBBAA; 0 for anything
@@ -191,7 +192,7 @@ static bool read_properties(const wgf_core_priv_json_t *list, wgf_gfx_priv_tilem
             number_text(p->number, text, sizeof(text));
         } else if (p->type == WGF_TILEMAP_PROPERTY_TYPE_BOOL) {
             p->number = wgf_core_priv_json_truth(value) ? 1.0 : 0.0;
-            snprintf(text, sizeof(text), "%s", p->number != 0.0 ? "true" : "false");
+            wgf_core_priv_format(text, sizeof(text), "%s", p->number != 0.0 ? "true" : "false");
         } else if (wgf_core_priv_json_is_object(value) || wgf_core_priv_json_is_array(value)) {
             printed = wgf_core_priv_json_print(value);
         }

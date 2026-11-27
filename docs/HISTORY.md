@@ -1445,6 +1445,16 @@ Rob's, for the comparison with helix: size at a game's scale, not the bunnymark'
 
 `measure_sizes.py` measures it as a game's web export (`game:game-rung`: its trimmed host, 100 calls, the binding, the program), smoke-tested by its autopilot; fitted to helix's 800 by 450 with bars (the presentation). A page of 249.7 KB gzip, as helix counts one (its wasm 207.6, the host's JS 24.9, the binding 4.2, the program 9.5, the page 3.4), against helix-raylib's 142.0 on its main: 1.76 times. The bunnymark's page was 2 times helix's, a window cleared 2 times (70.6 against 35.5).
 
+## Text formatted and read without the C library's printf (2026-11-27)
+
+Rob's, from the game rung's wasm taken apart (docs/COMPARISON.md): about 12% of its code was the C library's, most of it printf's and scanf's float printing and parsing (`fmt_fp`, `__floatscan`, `decfloat`, its long doubles), linked by libwgf's own `snprintf`s, its log's `vsnprintf`, a shader file's `sscanf`s, and the `strtod`s of the scene, behavior, tilemap, cJSON, and cgltf readers. helix-raylib's page has JavaScript's for nothing.
+
+**What changed:** core has its own (`wgf_core_format.c`, `wgf_core_format_priv.h`): `wgf_core_priv_format` and `_vformat`, snprintf's for the conversions libwgf uses (d i u x X o c s p %, the flags, widths, precisions, lengths, and f e g); `wgf_core_priv_scan`, sscanf's for %d and a word; and `wgf_core_priv_parse_double`, strtod's for decimals. Floats are worked in double-doubles (a double and the part it rounded away, Dekker's products without fma), so %f, %e, and %g write the C library's digits, a half to the even one, and what %.17g writes reads back the same; numbers past 10^17 are written with %f as 17 digits and zeros. Every source in libwgf formats and reads through them (48 files); cJSON's `strtod` and cgltf's `atof` are taken by a macro in their implementation files, the vendored code as it comes; and the log writes its lines with `fputs`. `wgf_log.h`'s `wgf_log_format` formats with core's when `WGF_LIBRARY` is defined (each layer's own sources, `cmake/wgf_library.cmake`) and with `vsnprintf` in a program: no public call is variadic. RmlUi's adapter keeps the C library's, as RmlUi's parsers link its scanf anyway; Jolt and Box2D link its printf for their logs, so a program with either pays it once, as before.
+
+**Tested** (`wgf_core_format_test`): every format libwgf uses, and more, the same text as snprintf's; 2,000 scattered doubles written and read back; numbers read as strtod reads them, 2,000 scattered ones and the edges (the largest double, a subnormal, past either end); scan as sscanf for what the shader reader asks.
+
+**Measured** (wasm32-release, gzip): the game rung 246.3 to 238.0 KB, Asteroids 222.7 to 216.5, gfx-stage2d 148.1 to 141.3, ladder-7-physics3d 437.8 to 436.0; the C examples about the same, their logging through `wgf_log.h` in the program. The estimate was 15 to 20 KB: core's own takes back about 3. The size baseline re-recorded.
+
 ## The rest of the examples' list (2026-11-23)
 
 The last entries of the examples' friction list.

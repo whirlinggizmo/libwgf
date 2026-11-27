@@ -8,6 +8,7 @@
 
 #include "wgf_log.h"
 #include "wgf_time.h"
+#include "wgf_core_format_priv.h"
 
 /* On the web: a file in this visit's store is local; one in the cache (IndexedDB) is
  * read into it once the cache mode says it is current, else the host is asked first;
@@ -310,7 +311,7 @@ static void start_fetch(uint16_t slot, const wgf_core_priv_fs_meta_t *cached)
     if (task_ptr->fetch_url[0] != '\0') { /* its own source wins; else the host + its path */
         url = task_ptr->fetch_url;
     } else {
-        snprintf(joined, sizeof(joined), "%s/%s", wgf_asset_priv_host(), task_ptr->path);
+        wgf_core_priv_format(joined, sizeof(joined), "%s/%s", wgf_asset_priv_host(), task_ptr->path);
         url = joined;
     }
     fetching++;
@@ -473,7 +474,7 @@ EM_JS(double, wgf_asset_js_ping_poll, (int id), {
 void wgf_asset_priv_platform_ping(wgf_asset_priv_task_t *task_ptr, const char *host, int timeout_ms)
 {
     char url[600];
-    snprintf(url, sizeof(url), "%s/", host); /* the host's root; a 404 still answers */
+    wgf_core_priv_format(url, sizeof(url), "%s/", host); /* the host's root; a 404 still answers */
     task_ptr->ping_id = wgf_asset_js_ping_begin(url, timeout_ms);
     task_ptr->ping_ms = -2.0f;
 }

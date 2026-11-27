@@ -7,6 +7,7 @@
 #include "wgf_core_load_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* The resource core, ported from wgrender's wgr_resource.c (wgf_core_resource_priv.h). */
 
@@ -160,7 +161,7 @@ wgf_handle_t wgf_core_priv_resource_create_with(wgf_core_priv_handle_kind_t kind
     if (record == NULL) return 0;
     memcpy(record->path, key, sizeof(key));
     if (key[0] == '\0') {
-        snprintf(record->found, sizeof(record->found), "%s", request);
+        wgf_core_priv_format(record->found, sizeof(record->found), "%s", request);
     } else if (desc->map != NULL) {
         desc->map(key, record->found, sizeof(record->found));
     } else {
@@ -190,7 +191,7 @@ void wgf_core_priv_resource_loaded(wgf_handle_t resource, const char *found)
     if (record_ptr == NULL) return;
     record_ptr->status = WGF_RESOURCE_STATUS_READY;
     record_ptr->reloading = false;
-    if (found != NULL) snprintf(record_ptr->found, sizeof(record_ptr->found), "%s", found);
+    if (found != NULL) wgf_core_priv_format(record_ptr->found, sizeof(record_ptr->found), "%s", found);
 }
 
 void wgf_core_priv_resource_failed(wgf_handle_t resource)
@@ -352,5 +353,6 @@ float wgf_resource_get_load_budget(void)
 void wgf_core_priv_resource_set_found(wgf_handle_t resource, const char *found)
 {
     wgf_core_priv_resource_t *record_ptr = wgf_core_priv_resource_get(resource);
-    if (record_ptr != NULL && found != NULL) snprintf(record_ptr->found, sizeof(record_ptr->found), "%s", found);
+    if (record_ptr != NULL && found != NULL) wgf_core_priv_format(record_ptr->found, sizeof(record_ptr->found), "%s",
+                                                                  found);
 }

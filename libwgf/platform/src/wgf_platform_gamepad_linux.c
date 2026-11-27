@@ -14,6 +14,7 @@
 
 #include "wgf_gamepad.h"
 #include "wgf_time.h"
+#include "wgf_core_format_priv.h"
 
 /* Gamepads on Linux, through evdev: the /dev/input/event* devices that have gamepad
  * buttons, opened non-blocking, and checked for new ones every couple of seconds. A
@@ -191,7 +192,7 @@ static bool driver_is(const char *event_name, const char *driver)
     char link[320], target[256];
     const char *base;
     ssize_t n;
-    snprintf(link, sizeof(link), "/sys/class/input/%s/device/device/driver", event_name);
+    wgf_core_priv_format(link, sizeof(link), "/sys/class/input/%s/device/device/driver", event_name);
     n = readlink(link, target, sizeof(target) - 1);
     if (n <= 0) return false;
     target[n] = '\0';
@@ -214,7 +215,7 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
     device_t *dev;
     wgf_platform_priv_gamepad_t *pad;
 
-    snprintf(path, sizeof(path), "/dev/input/%s", event_name);
+    wgf_core_priv_format(path, sizeof(path), "/dev/input/%s", event_name);
     if (is_open(path)) return;
     for (i = 0; i < WGF_PLATFORM_PRIV_GAMEPADS && slot < 0; i++) {
         if (devices[i].fd < 0) slot = i;
@@ -249,7 +250,7 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
     memset(dev, 0, sizeof(*dev));
     memset(pad, 0, sizeof(*pad));
     dev->fd = fd;
-    snprintf(dev->path, sizeof(dev->path), "%s", path);
+    wgf_core_priv_format(dev->path, sizeof(dev->path), "%s", path);
     dev->xpad = driver_is(event_name, "xpad");
     dev->right_on_z = !HAS_BIT(abs_bits, ABS_RX) && HAS_BIT(abs_bits, ABS_Z) && HAS_BIT(abs_bits, ABS_RZ);
     dev->rumble = writable && ioctl(fd, EVIOCGBIT(EV_FF, sizeof(ff_bits)), ff_bits) >= 0 && HAS_BIT(ff_bits, FF_RUMBLE);
@@ -257,7 +258,8 @@ static void try_open(const char *event_name, wgf_platform_priv_gamepad_t pads[WG
     pad->rumble = dev->rumble;
     memcpy(pad->guid, guid_bytes, sizeof(pad->guid));
     raw_layout(dev, key_bits, abs_bits);
-    if (ioctl(fd, EVIOCGNAME(sizeof(pad->name)), pad->name) < 0) snprintf(pad->name, sizeof(pad->name), "gamepad");
+    if (ioctl(fd, EVIOCGNAME(sizeof(pad->name)), pad->name) < 0) wgf_core_priv_format(pad->name, sizeof(pad->name),
+                                                                                      "gamepad");
     pad->name[WGF_PLATFORM_PRIV_GAMEPAD_NAME_SIZE - 1] = '\0';
     for (code = 0; code <= ABS_MAX; code++) {
         if (HAS_BIT(abs_bits, code) && ioctl(fd, EVIOCGABS(code), &dev->abs[code]) == 0) {

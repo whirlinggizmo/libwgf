@@ -21,6 +21,7 @@
 #include "wgf_quat.h"
 #include "wgf_resource.h"
 #include "wgf_math_draw_trig_priv.h"
+#include "wgf_core_format_priv.h"
 
 /* physics3d (wgf_physics3d.h): the body and vehicle components, the ecs's through its hooks
  * for a part's components (wgf_ecs_priv.h), their data the store's; each tick, after the
@@ -379,7 +380,7 @@ static int numbers_of(const char *text, double *n, int most)
     for (;;) {
         char *end;
         if (count == most) return -1;
-        n[count++] = strtod(text, &end);
+        n[count++] = wgf_core_priv_parse_double(text, &end);
         if (end == text || !isfinite(n[count - 1])) return -1;
         if (*end == '\0') return count;
         if (*end != ',') return -1;
@@ -476,7 +477,7 @@ static void put(char *out, size_t size, const char *format, ...)
     const size_t used = strlen(out);
     if (used >= size) return;
     va_start(args, format);
-    vsnprintf(out + used, size - used, format, args);
+    wgf_core_priv_vformat(out + used, size - used, format, args);
     va_end(args);
 }
 

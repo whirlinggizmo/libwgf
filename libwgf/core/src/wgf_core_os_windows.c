@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <windows.h> /* MoveFileExA: rename there won't replace a file */
+#include "wgf_core_format_priv.h"
 
 bool wgf_core_priv_os_mkdir(const char *path)
 {
@@ -66,7 +67,7 @@ bool wgf_core_priv_os_list(const char *path, wgf_core_priv_names_t *names)
     struct _finddata_t entry;
     intptr_t find;
     bool ok = true;
-    if ((size_t)snprintf(pattern, sizeof(pattern), "%s/*", path) >= sizeof(pattern)) return false;
+    if ((size_t)wgf_core_priv_format(pattern, sizeof(pattern), "%s/*", path) >= sizeof(pattern)) return false;
     find = _findfirst(pattern, &entry);
     if (find == -1) return false;
     do {
@@ -83,13 +84,13 @@ bool wgf_core_priv_os_remove_tree(const char *path)
     struct _finddata_t entry;
     intptr_t find;
     bool ok = true;
-    if ((size_t)snprintf(pattern, sizeof(pattern), "%s/*", path) >= sizeof(pattern)) return false;
+    if ((size_t)wgf_core_priv_format(pattern, sizeof(pattern), "%s/*", path) >= sizeof(pattern)) return false;
     find = _findfirst(pattern, &entry);
     if (find == -1) return false;
     do {
         char child[1100];
         if (strcmp(entry.name, ".") == 0 || strcmp(entry.name, "..") == 0) continue;
-        if ((size_t)snprintf(child, sizeof(child), "%s/%s", path, entry.name) >= sizeof(child)) {
+        if ((size_t)wgf_core_priv_format(child, sizeof(child), "%s/%s", path, entry.name) >= sizeof(child)) {
             ok = false;
             continue;
         }
@@ -114,14 +115,14 @@ bool wgf_core_priv_os_user_cache_dir(char *out, size_t out_size)
 {
     char local[MAX_PATH];
     const DWORD n = GetEnvironmentVariableA("LOCALAPPDATA", local, (DWORD)sizeof(local));
-    return n > 0 && n < sizeof(local) && snprintf(out, out_size, "%s", local) < (int)out_size;
+    return n > 0 && n < sizeof(local) && wgf_core_priv_format(out, out_size, "%s", local) < (int)out_size;
 }
 
 bool wgf_core_priv_os_user_data_dir(char *out, size_t out_size)
 {
     char roaming[MAX_PATH];
     const DWORD n = GetEnvironmentVariableA("APPDATA", roaming, (DWORD)sizeof(roaming));
-    return n > 0 && n < sizeof(roaming) && snprintf(out, out_size, "%s", roaming) < (int)out_size;
+    return n > 0 && n < sizeof(roaming) && wgf_core_priv_format(out, out_size, "%s", roaming) < (int)out_size;
 }
 
 bool wgf_core_priv_os_executable_dir(char *out, size_t out_size)
@@ -135,7 +136,7 @@ bool wgf_core_priv_os_executable_dir(char *out, size_t out_size)
     }
     slash = strrchr(path, '/');
     if (slash == NULL) return false;
-    return snprintf(out, out_size, "%.*s", (int)(slash - path), path) < (int)out_size;
+    return wgf_core_priv_format(out, out_size, "%.*s", (int)(slash - path), path) < (int)out_size;
 }
 
 bool wgf_core_priv_os_chdir(const char *path)
@@ -153,7 +154,8 @@ bool wgf_core_priv_os_executable_name(char *out, size_t out_size)
     name = name != NULL ? name + 1 : path;
     dot = strrchr(name, '.');
     if (name[0] == '\0') return false;
-    return snprintf(out, out_size, "%.*s", dot != NULL && dot != name ? (int)(dot - name) : (int)strlen(name), name) <
+    return wgf_core_priv_format(out, out_size, "%.*s",
+                                dot != NULL && dot != name ? (int)(dot - name) : (int)strlen(name), name) <
            (int)out_size;
 }
 

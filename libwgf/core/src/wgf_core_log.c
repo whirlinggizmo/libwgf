@@ -8,6 +8,7 @@
 #include "wgf_core_os_priv.h"
 #include "wgf_core_priv.h"
 #include "wgf_core_thread_priv.h"
+#include "wgf_core_format_priv.h"
 
 static wgf_log_level_t log_level = WGF_LOG_LEVEL_INFO;
 
@@ -106,10 +107,10 @@ static void keep(wgf_log_level_t level, const char *file, int line, const char *
         if (history.count == history.capacity) history.first = (history.first + 1) % history.capacity;
         else history.count++;
         if (file != NULL && file[0] != '\0') {
-            snprintf(history.lines[at], LINE_MAX_BYTES, "%s:%d: %.*s", basename_of(file), line,
+            wgf_core_priv_format(history.lines[at], LINE_MAX_BYTES, "%s:%d: %.*s", basename_of(file), line,
                      (int)utf8_whole_length(text), text);
         } else {
-            snprintf(history.lines[at], LINE_MAX_BYTES, "%.*s", (int)utf8_whole_length(text), text);
+            wgf_core_priv_format(history.lines[at], LINE_MAX_BYTES, "%.*s", (int)utf8_whole_length(text), text);
         }
         history.levels[at] = level;
     }
@@ -192,11 +193,16 @@ static void emit(wgf_log_level_t level, const char *file, int line, const char *
         console_ready = true;
     }
 
-    if (file != NULL && file[0] != '\0') {
-        fprintf(stderr, "[%-5s] %s:%d: %.*s\n", level_name(level), basename_of(file), line,
-                (int)utf8_whole_length(text), text);
-    } else {
-        fprintf(stderr, "[%-5s] %.*s\n", level_name(level), (int)utf8_whole_length(text), text);
+    { /* its prefix formatted by core's formatter, the text written as it is: no printf */
+        char prefix[160];
+        if (file != NULL && file[0] != '\0') {
+            wgf_core_priv_format(prefix, sizeof(prefix), "[%-5s] %s:%d: ", level_name(level), basename_of(file), line);
+        } else {
+            wgf_core_priv_format(prefix, sizeof(prefix), "[%-5s] ", level_name(level));
+        }
+        fputs(prefix, stderr);
+        fwrite(text, 1, utf8_whole_length(text), stderr);
+        fputc('\n', stderr);
     }
 }
 

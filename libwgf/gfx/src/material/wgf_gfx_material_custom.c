@@ -10,6 +10,7 @@
 #include "texture/wgf_gfx_texture_priv.h"
 #include "wgf_core_handle_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Custom materials, libwgt's (wgrender's): a material drawn by a shader of its own
  * (wgf_shader.h), its values and textures kept by the shader's names. Set before the
@@ -187,7 +188,7 @@ static float *value(wgf_gfx_priv_material_t *material_ptr, const char *name, wgf
             return NULL;
         }
         at = custom->value_count++;
-        snprintf(custom->values[at].name, sizeof(custom->values[at].name), "%s", name);
+        wgf_core_priv_format(custom->values[at].name, sizeof(custom->values[at].name), "%s", name);
     }
     custom->values[at].kind = kind;
     memset(custom->values[at].values, 0, sizeof(custom->values[at].values));
@@ -234,7 +235,7 @@ static wgf_gfx_priv_material_texture_t *texture(wgf_gfx_priv_material_t *materia
         return NULL;
     }
     at = custom->texture_count++;
-    snprintf(custom->texture_names[at], sizeof(custom->texture_names[at]), "%s", name);
+    wgf_core_priv_format(custom->texture_names[at], sizeof(custom->texture_names[at]), "%s", name);
     memset(&custom->textures[at], 0, sizeof(custom->textures[at]));
     custom->textures[at].scale[0] = custom->textures[at].scale[1] = 1.0f;
     custom->textures[at].mipmaps = true;

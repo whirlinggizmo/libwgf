@@ -25,6 +25,7 @@
 #include "wgf_render.h"
 #include "text/wgf_gfx_glyph_priv.h"
 #include "wgf_asset_priv.h" /* a resource made from a path: the asset part locates it */
+#include "wgf_core_format_priv.h"
 
 /* Fonts: a resource loaded on create, its bytes read on a worker and handed to
  * fontstash on the main thread. fontstash can't let go of a font, so a font
@@ -183,7 +184,7 @@ static void park(const char *path, int fons_id, unsigned char *bytes)
         }
     }
     if (parked_count < parked_capacity) {
-        snprintf(parked[parked_count].path, sizeof(parked[parked_count].path), "%s", path);
+        wgf_core_priv_format(parked[parked_count].path, sizeof(parked[parked_count].path), "%s", path);
         parked[parked_count].fons_id = fons_id;
         parked[parked_count].bytes = bytes;
         parked_count++;
@@ -403,7 +404,7 @@ static void *prepare_bitmap(const char *path)
         free(loaded);
         return NULL;
     }
-    snprintf(loaded->path, sizeof(loaded->path), "%s", path);
+    wgf_core_priv_format(loaded->path, sizeof(loaded->path), "%s", path);
     if (!wgf_core_priv_fs_read(path, &bytes, &size)) {
         free(loaded);
         return NULL;

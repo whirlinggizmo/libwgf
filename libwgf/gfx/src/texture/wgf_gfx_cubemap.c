@@ -16,6 +16,7 @@
 #include "wgf_core_part_priv.h"
 #include "wgf_core_resource_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Cubemaps, raylib's LoadTextureCubemap: six square faces on the GPU, an RGBA8 cube image
  * with its mipmaps, which a custom shader samples as samplerCube. From one image in a layout
@@ -294,7 +295,7 @@ static void *prepare(const char *path, wgf_cubemap_layout_t layout)
     prepared = (prepared_t *)calloc(1, sizeof(prepared_t));
     if (prepared != NULL) {
         prepared->layout = layout;
-        snprintf(prepared->path, sizeof(prepared->path), "%s", path);
+        wgf_core_priv_format(prepared->path, sizeof(prepared->path), "%s", path);
         prepared->decoded = wgf_gfx_priv_texture_decode_base(bytes, size, path);
     } else {
         wgf_log_warn("wgf_gfx_cubemap: %s: out of memory", path);
@@ -635,7 +636,7 @@ static int reload(wgf_handle_t cubemap, void *record, const char *key, bool go)
     cubemap_ptr->resource.reloading = true;
     for (f = 0; f < 6; f++) {
         char face[WGF_CORE_PRIV_FS_PATH_MAX];
-        snprintf(face, sizeof(face), "%s", cubemap_of(cubemap)->faces->paths[f]);
+        wgf_core_priv_format(face, sizeof(face), "%s", cubemap_of(cubemap)->faces->paths[f]);
         if (!wgf_core_priv_load_request_reload(&face_loaders[f], face, cubemap)) {
             wgf_log_warn("wgf_asset_reload: %s: nothing to load it with", face);
             cubemap_ptr = cubemap_of(cubemap); /* the requests made may have moved nothing, but ask again */
@@ -760,7 +761,7 @@ wgf_cubemap_t wgf_cubemap_create_faces(const char *positive_x, const char *negat
         free(faces);
         return 0;
     }
-    for (f = 0; f < 6; f++) snprintf(faces->paths[f], sizeof(faces->paths[f]), "%s", paths[f]);
+    for (f = 0; f < 6; f++) wgf_core_priv_format(faces->paths[f], sizeof(faces->paths[f]), "%s", paths[f]);
     cubemap_ptr->faces = faces;
     cubemap_ptr->made = true;
     cubemap_ptr->layout = WGF_CUBEMAP_LAYOUT_FACES;

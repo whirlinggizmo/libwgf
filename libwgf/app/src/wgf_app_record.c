@@ -9,6 +9,7 @@
 #include "wgf_log.h"
 #include "wgf_mouse.h"
 #include "wgf_platform_priv.h"
+#include "wgf_core_format_priv.h"
 
 /* Writing the window's events as an autopilot (wgf_app_autopilot_priv.h; BUILDING.md,
  * "Autopilot files"): what a program built to record writes to its file
@@ -27,7 +28,7 @@ void wgf_app_priv_writer_line(wgf_app_priv_writer_t *writer, const char *format,
     int n;
     if (writer->failed) return;
     va_start(args, format);
-    n = vsnprintf(line, sizeof(line), format, args);
+    n = wgf_core_priv_vformat(line, sizeof(line), format, args);
     va_end(args);
     if (n < 0) return;
     if ((size_t)n >= sizeof(line)) n = (int)sizeof(line) - 1;

@@ -20,6 +20,7 @@
 #include "wgf_probe.h"
 #include "wgf_random.h"
 #include "wgf_time.h"
+#include "wgf_core_format_priv.h"
 
 /* An autopilot run (wgf_app_autopilot_priv.h): the autopilot parsed whole first, each line
  * checked, into commands sorted by frame, then played a frame at a time. */
@@ -736,7 +737,7 @@ static void play_input(wgf_app_priv_script_t *script, const command_t *command)
             memset(pad, 0, sizeof(*pad));
             pad->connected = command->kind == CMD_PAD_CONNECT;
             if (pad->connected) {
-                snprintf(pad->name, sizeof(pad->name), "%s", script->real ? "wgf_autopilot" : "wgf_replay");
+                wgf_core_priv_format(pad->name, sizeof(pad->name), "%s", script->real ? "wgf_autopilot" : "wgf_replay");
             }
             pads_changed(script, command->pad);
             break;

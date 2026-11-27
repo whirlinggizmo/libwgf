@@ -6,6 +6,7 @@
 
 #include "wgf_platform_input_priv.h"
 #include "wgf_touch.h"
+#include "wgf_core_format_priv.h"
 
 /* Input actions (wgf_action.h): a table of names, each with its bindings, read through
  * the public input calls when asked. What a discrete binding can't say -- whether an
@@ -511,13 +512,13 @@ static const char *key_text(int key, char *out, size_t size)
         if (names[i].key == key) return names[i].text;
     }
     if (key >= WGF_KEY_F1 && key <= WGF_KEY_F25) {
-        snprintf(out, size, "F%d", key - WGF_KEY_F1 + 1);
+        wgf_core_priv_format(out, size, "F%d", key - WGF_KEY_F1 + 1);
     } else if (key >= WGF_KEY_KP_0 && key <= WGF_KEY_KP_9) {
-        snprintf(out, size, "Keypad %d", key - WGF_KEY_KP_0);
+        wgf_core_priv_format(out, size, "Keypad %d", key - WGF_KEY_KP_0);
     } else if (key > 32 && key < 127) {
-        snprintf(out, size, "%c", (char)key); /* letters, digits, and the marks: as printed on the key */
+        wgf_core_priv_format(out, size, "%c", (char)key); /* letters, digits, and the marks: as printed on the key */
     } else {
-        snprintf(out, size, "Key %d", key);
+        wgf_core_priv_format(out, size, "Key %d", key);
     }
     return out;
 }
@@ -537,19 +538,21 @@ const char *wgf_action_get_binding_text(const char *action, int index)
     if (a == NULL || index < 0 || index >= a->binding_count) return "";
     b = &a->bindings[index];
     switch (b->kind) {
-        case KEY: snprintf(table.text, sizeof(table.text), "%s", key_text(b->a, one, sizeof(one))); break;
+        case KEY: wgf_core_priv_format(table.text, sizeof(table.text), "%s", key_text(b->a, one, sizeof(one))); break;
         case KEYS:
-            snprintf(table.text, sizeof(table.text), "%s / %s", key_text(b->a, one, sizeof(one)),
+            wgf_core_priv_format(table.text, sizeof(table.text), "%s / %s", key_text(b->a, one, sizeof(one)),
                      key_text(b->b, two, sizeof(two)));
             break;
-        case PAD_BUTTON: snprintf(table.text, sizeof(table.text), "%s", buttons[b->a]); break;
-        case PAD_BUTTONS: snprintf(table.text, sizeof(table.text), "%s / %s", buttons[b->a], buttons[b->b]); break;
+        case PAD_BUTTON: wgf_core_priv_format(table.text, sizeof(table.text), "%s", buttons[b->a]); break;
+        case PAD_BUTTONS: wgf_core_priv_format(table.text, sizeof(table.text), "%s / %s", buttons[b->a],
+                                               buttons[b->b]); break;
         case PAD_AXIS:
-            snprintf(table.text, sizeof(table.text), "%s%s", axes[b->a],
+            wgf_core_priv_format(table.text, sizeof(table.text), "%s%s", axes[b->a],
                      b->direction < 0 ? " -" : (b->direction > 0 && b->a < WGF_GAMEPAD_AXIS_LEFT_TRIGGER ? " +" : ""));
             break;
-        case STICK: snprintf(table.text, sizeof(table.text), "Touch stick %s", b->part == 0 ? "X" : "Y"); break;
-        default: snprintf(table.text, sizeof(table.text), "Touch"); break;
+        case STICK: wgf_core_priv_format(table.text, sizeof(table.text), "Touch stick %s",
+                                         b->part == 0 ? "X" : "Y"); break;
+        default: wgf_core_priv_format(table.text, sizeof(table.text), "Touch"); break;
     }
     return table.text;
 }

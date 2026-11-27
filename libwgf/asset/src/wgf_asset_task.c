@@ -6,6 +6,7 @@
 
 #include "wgf_core_load_priv.h"
 #include "wgf_log.h"
+#include "wgf_core_format_priv.h"
 
 /* Tasks (wgf_asset.h): a file made local, a group of them, or a ping, ported from
  * wgrender's wgr_asset.c. A load's file is a task too, not kept, which core's locate
@@ -80,11 +81,11 @@ uint16_t wgf_asset_priv_task_new(const char *path, const char *fetch_url, bool l
     const uint16_t slot = new_slot();
     wgf_asset_priv_task_t *task_ptr = wgf_asset_priv_task_at(slot);
     if (task_ptr == NULL) return 0;
-    snprintf(task_ptr->origin, sizeof(task_ptr->origin), "%s", path);
+    wgf_core_priv_format(task_ptr->origin, sizeof(task_ptr->origin), "%s", path);
     task_ptr->flags = flags;
     if (fetch_url != NULL) { /* the caller chose the file: no redirects */
-        snprintf(task_ptr->path, sizeof(task_ptr->path), "%s", local ? fetch_url : path);
-        snprintf(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s", local ? "" : fetch_url);
+        wgf_core_priv_format(task_ptr->path, sizeof(task_ptr->path), "%s", local ? fetch_url : path);
+        wgf_core_priv_format(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s", local ? "" : fetch_url);
         task_ptr->caller_url = true;
         return slot;
     }
@@ -93,11 +94,11 @@ uint16_t wgf_asset_priv_task_new(const char *path, const char *fetch_url, bool l
         wgf_asset_priv_candidate_t *list = wgf_asset_priv_plan(path, &count);
         if (list == NULL || count == 0) { /* out of memory: the path as it is */
             free(list);
-            snprintf(task_ptr->path, sizeof(task_ptr->path), "%s", path);
+            wgf_core_priv_format(task_ptr->path, sizeof(task_ptr->path), "%s", path);
             return slot;
         }
-        snprintf(task_ptr->path, sizeof(task_ptr->path), "%s", list[0].path);
-        snprintf(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s", list[0].url);
+        wgf_core_priv_format(task_ptr->path, sizeof(task_ptr->path), "%s", list[0].path);
+        wgf_core_priv_format(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s", list[0].url);
         task_ptr->overlay = list[0].overlay;
         if (count > 1) { /* the rest wait, in the same buffer */
             memmove(list, &list[1], sizeof(*list) * (size_t)(count - 1));
@@ -115,8 +116,8 @@ uint16_t wgf_asset_priv_task_new_direct(const char *path)
     const uint16_t slot = new_slot();
     wgf_asset_priv_task_t *task_ptr = wgf_asset_priv_task_at(slot);
     if (task_ptr == NULL) return 0;
-    snprintf(task_ptr->origin, sizeof(task_ptr->origin), "%s", path);
-    snprintf(task_ptr->path, sizeof(task_ptr->path), "%s", path);
+    wgf_core_priv_format(task_ptr->origin, sizeof(task_ptr->origin), "%s", path);
+    wgf_core_priv_format(task_ptr->path, sizeof(task_ptr->path), "%s", path);
     return slot;
 }
 
@@ -135,8 +136,8 @@ static bool use_fallback(wgf_asset_priv_task_t *task_ptr)
     } else {
         wgf_log_warn("wgf_asset: %s not found; trying %s", task_ptr->path, next->path);
     }
-    snprintf(task_ptr->path, sizeof(task_ptr->path), "%s", next->path);
-    snprintf(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s", next->url);
+    wgf_core_priv_format(task_ptr->path, sizeof(task_ptr->path), "%s", next->path);
+    wgf_core_priv_format(task_ptr->fetch_url, sizeof(task_ptr->fetch_url), "%s", next->url);
     task_ptr->overlay = next->overlay;
     task_ptr->state = WGF_ASSET_PRIV_NEW;
     task_ptr->fetch_result = WGF_ASSET_PRIV_FETCH_PENDING;
@@ -170,8 +171,8 @@ static void record_found(const char *key, const char *at)
         founds = grown;
         found_capacity = capacity;
     }
-    snprintf(founds[i].key, sizeof(founds[i].key), "%s", key);
-    snprintf(founds[i].at, sizeof(founds[i].at), "%s", at);
+    wgf_core_priv_format(founds[i].key, sizeof(founds[i].key), "%s", key);
+    wgf_core_priv_format(founds[i].at, sizeof(founds[i].at), "%s", at);
     if (i == found_count) found_count++;
 }
 
@@ -274,7 +275,8 @@ static void add_dependency(const char *uri, const char *fallback_uri, bool requi
         /* a file fetched from the caller's URL: what it names comes from next to it */
         const char *slash = strrchr(parent_ptr->fetch_url, '/');
         if (parent_ptr->fetch_url[0] != '\0' && slash != NULL) {
-            snprintf(url, sizeof(url), "%.*s%s", (int)(slash - parent_ptr->fetch_url) + 1, parent_ptr->fetch_url, uri);
+            wgf_core_priv_format(url, sizeof(url), "%.*s%s", (int)(slash - parent_ptr->fetch_url) + 1,
+                                 parent_ptr->fetch_url, uri);
         }
         child = url[0] != '\0' ? wgf_asset_priv_task_new(path, url, false, parent_ptr->flags)
                                  : wgf_asset_priv_task_new_direct(path);
@@ -296,10 +298,10 @@ static void add_dependency(const char *uri, const char *fallback_uri, bool requi
         if (grown != NULL) {
             wgf_asset_priv_candidate_t *c = &grown[child_ptr->candidate_count];
             memset(c, 0, sizeof(*c));
-            snprintf(c->path, sizeof(c->path), "%s", fallback);
+            wgf_core_priv_format(c->path, sizeof(c->path), "%s", fallback);
             if (url[0] != '\0') {
                 const char *slash = strrchr(parent_ptr->fetch_url, '/');
-                snprintf(c->url, sizeof(c->url), "%.*s%s", (int)(slash - parent_ptr->fetch_url) + 1,
+                wgf_core_priv_format(c->url, sizeof(c->url), "%.*s%s", (int)(slash - parent_ptr->fetch_url) + 1,
                          parent_ptr->fetch_url, fallback_uri);
             }
             child_ptr->candidates = grown;
@@ -581,7 +583,7 @@ wgf_asset_task_t wgf_asset_ping_host(const char *host, int timeout_ms)
     tasks[slot].kept = true;
     tasks[slot].state = WGF_ASSET_PRIV_WAITING; /* answered at the next update at the soonest */
     if (host == NULL) host = wgf_asset_priv_host();
-    snprintf(tasks[slot].path, sizeof(tasks[slot].path), "%s", host);
+    wgf_core_priv_format(tasks[slot].path, sizeof(tasks[slot].path), "%s", host);
     wgf_asset_priv_platform_ping(&tasks[slot], host, timeout_ms > 0 ? timeout_ms : 5000);
     return wgf_core_priv_handle_pool_handle_from_index(&pool, slot);
 }

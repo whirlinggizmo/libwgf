@@ -14,6 +14,7 @@ endif()
 wgf_layer(core
     SOURCES
         src/wgf_core.c
+        src/wgf_core_format.c
         src/wgf_core_fs.c
         src/wgf_core_handle.c
         src/wgf_core_identity.c
@@ -47,6 +48,7 @@ if(WGF_TESTS)
     wgf_test(core wgf_core_part_test)
     wgf_test(core wgf_core_probe_test)
     wgf_test(core wgf_core_random_test)
+    wgf_test(core wgf_core_format_test)
     wgf_test(core wgf_core_lifecycle_test)
     wgf_test(core wgf_core_fs_test)
     wgf_test(core wgf_core_thread_test)
