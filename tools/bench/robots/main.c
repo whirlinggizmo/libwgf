@@ -39,9 +39,11 @@
  * animation, its frames taken at 60 a second as raylib samples a glTF's, drawn unlit. Skinned
  * on the GPU (wgf_model.h).
  *
- * Option, from the page's query (natively --count=N): count=N (default 50). It draws 120
- * frames to warm up once the file is READY, then times 600 frame to frame, prints helix's
- * JSON line (mean_ms, median_ms, p95_ms), and logs "robots: done". */
+ * Options, from the page's query (natively --count=N and so on): count=N (default 50), and
+ * culling=0 to draw every robot without the stage's frustum culling (wgf_stage3d_set_culling),
+ * as a renderer that doesn't cull draws them: here every robot is in view, so culling only
+ * costs. It draws 120 frames to warm up once the file is READY, then times 600 frame to
+ * frame, prints helix's JSON line (mean_ms, median_ms, p95_ms), and logs "robots: done". */
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -52,6 +54,7 @@
 static struct {
     wgf_actor_t stage, camera, *robots;
     int count, frame_count, frame, ndeltas;
+    bool culling;
     bool started, done;
     double last, deltas[WARMUP + TIMED];
 } r;
@@ -105,6 +108,7 @@ static void init(void *user)
     wgf_actor_set_parent(r.camera, r.stage);
     wgf_stage3d_set_camera(r.stage, r.camera);
     wgf_stage3d_set_ambient(r.stage, 0xFFFFFFFFu, 1.0f);
+    wgf_stage3d_set_culling(r.stage, r.culling);
     mesh = wgf_mesh_create("models/robot.glb");
     r.robots = (wgf_actor_t *)calloc((size_t)r.count, sizeof(wgf_actor_t));
     for (i = 0; r.robots != NULL && i < r.count; i++) {
@@ -167,6 +171,7 @@ static void frame(void *user)
 int main(void)
 {
     r.count = wgf_app_get_option_int("count", 50);
+    r.culling = wgf_app_get_option_int("culling", 1) != 0;
     if (r.count < 1) r.count = 1;
     wgf_window_set_title("libwgf robots");
     wgf_window_set_size(WIDTH, HEIGHT);
