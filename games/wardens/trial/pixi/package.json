@@ -1,0 +1,1 @@
+{"name": "wardens-pixi", "private": true, "dependencies": {"pixi.js": "8.23.0", "@pixi/3d": "0.1.0", "esbuild": "0.25.0"}}

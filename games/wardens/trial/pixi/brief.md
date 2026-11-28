@@ -1,0 +1,10 @@
+Build the game in `{DIR}/spec.md` for the browser, using **PixiJS 8.23 and PixiJS 3D 0.1** (`pixi.js` and `@pixi/3d`).
+
+- **Language:** JavaScript or TypeScript, as you choose. The game starts at `src/main.js` or `src/main.ts` and may import other files under `src/`.
+- **Libraries:** `pixi.js` 8.23.0 and `@pixi/3d` 0.1.0 are installed in `{DIR}/node_modules`. You may add packages from npm (`npm install <package>`).
+- **Docs:** PixiJS's docs for agents are in `{DIR}/docs/`. Start at `docs/llms.txt`, PixiJS's index of them: a line a page, linking each page's Markdown, with `docs/3d/llms.txt` the index for PixiJS 3D. The packages' own files are in `{DIR}/node_modules/`. Read them as you need. Read nothing else: no other documentation, no web.
+- **Assets:** the game's files are in `{DIR}/assets/`, served beside `index.html`. The game names them by their paths from this directory, as `"assets/characters/Adventurer_Body.glb"`.
+- **Building and running:** in `{DIR}`, `node run.cjs` bundles the game with esbuild into `dist/app.js` (a build error is printed and nothing runs) and opens `index.html` in a headless Chromium of its own, 1280 x 720, with no sound, for 5 seconds. It prints the page's console and errors, and saves a screenshot of the last frame as `shots/shot-5.png`. Options: `--query='?enemies=50&seed=1'` (the spec's run options come from the page's query), `--seconds=N`, and `--shots=1,3,5` for a screenshot at each of those seconds. Look at the screenshots to see the game. What the game saves stays from one run to the next. Run it as often as you like.
+- **Touch:** the browser here has no touch screen, so the touch controls can't be tried. Write them as the spec says.
+- **Writing:** write to `{DIR}` only: the game's files under `src/`, then `NOTES.md` with each build or runtime error you hit, in order, and what you changed for it; each place PixiJS had nothing for what the spec asks and what you did instead; each place you were left guessing and what you guessed; and anything you expect not to work.
+- **Budget:** stop at 3 hours or when the spec is met, whichever comes first, and reply with one line saying which.

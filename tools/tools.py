@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FOLDERS = ['tools/*.py', 'tools/bench/*.py', 'tools/wgf/*.py', 'bindings/*/tools/*.py']
-MODULES = {'tools/binding.py', 'tools/browser.py', 'tools/examples.py', 'tools/gltf.py', 'tools/headers.py', 'tools/hxcpp.py', 'tools/jsbinding.py', 'tools/mapping.py',
+MODULES = {'tools/binding.py', 'tools/browser.py', 'tools/examples.py', 'tools/gltf.py', 'tools/headers.py', 'tools/hxcpp.py', 'tools/jsbinding.py', 'tools/llms.py', 'tools/mapping.py',
            'tools/server.py', 'tools/spirv.py', 'tools/tools.py', 'tools/usercache.py', 'tools/variants.py', 'tools/webhost.py', 'tools/zencbinding.py',
            'tools/wine.py', 'tools/wgf/cli.py', 'tools/wgf/devserver.py', 'tools/wgf/features.py', 'tools/wgf/game.py'}
 

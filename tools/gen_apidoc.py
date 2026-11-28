@@ -22,6 +22,9 @@ the bindings take it, or, where that is a member's above it on the page, a link 
                      member's TypeScript signature (the handle first, as the raw call takes it)
                      and its raw name (wgf.js), for plain JS and TypeScript alike
 
+llms.txt, at the root, is an index for agents (tools/llms.py's): a line a Haxe type, by
+layer, and a line a C example, each linking its page or its source.
+
 The root's index.html opens the three and searches every one of them by name, in the page,
 with no server (api-index.json); each language's index searches its own. The out directory
 (default build/apidoc/) also holds api.css and api.js; tools/build_pages.py puts it in the
@@ -38,7 +41,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # an embedded Python (Windows) doesn't add it
 import headers  # noqa: E402
 import jsbinding  # noqa: E402
+import llms  # noqa: E402
 import mapping  # noqa: E402
+from llms import layer_of, layer_order  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = 'https://github.com/whirlinggizmo/libwgf'
@@ -152,16 +157,6 @@ def doc_html(text):
         else:
             out.append(f'<p>{inline(" ".join(line.strip() for line in lines))}</p>')
     return '<div class="doc">' + ''.join(out) + '</div>' if out else ''
-
-
-def layer_of(header):
-    """libwgf/gfx/include/wgf_model.h -> 'gfx'; include/wgf.h -> 'libwgf'."""
-    parts = Path(header).parts
-    return parts[1] if len(parts) > 3 and parts[0] == headers.LAYER_ROOT else 'libwgf'
-
-
-def layer_order():
-    return ['libwgf'] + list(headers.LAYERS)
 
 
 def c_page(header):
@@ -468,6 +463,10 @@ def main():
         f'<a href="{key}/index.html">{html.escape(name)}</a>' for key, name in LANGUAGES.items()) + '</div></nav>'
     (out / 'index.html').write_text(page('libwgf API', nav, body, 'api.css', 'api.js'), encoding='utf-8')
     (out / 'api-index.json').write_text(json.dumps(ref.index, separators=(',', ':')), encoding='utf-8')
+    source = f'{REPOSITORY}/blob/main/'
+    (out / 'llms.txt').write_text(llms.index(
+        api, lambda name: (source + f'bindings/haxe/src/wgf/{name}.hx' if name in llms.HAND_WRITTEN else f'haxe/{name}.html'),
+        lambda name: source + f'examples/c/{name}/main.c'), encoding='utf-8')
     (out / 'api.css').write_text(CSS, encoding='utf-8')
     (out / 'api.js').write_text(JS, encoding='utf-8')
     names = sum(1 for i in ref.index if i['lang'] == 'c')
