@@ -2,7 +2,7 @@
 // libwgf's JS binding (bindings/js/README.md): every exported call under its C name.
 
 /** The libwgf this binding was generated from: wgf_app_run compares the host's with it. */
-export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "c063f7a7dbf14cde" });
+export const BUILT_VERSION = Object.freeze({ "major": 0, "minor": 1, "patch": 0, "headers": "0c9bc9f9a17ef64a" });
 
 // The JS binding's runtime: how a call crosses into libwgf's wasm host and back.
 // Written by hand; tools/gen_binding.py puts it at the top of wgf.js, whose calls are
@@ -19491,6 +19491,58 @@ export function wgf_ui_separator() {
  */
 export function wgf_ui_image(texture, width, height) {
     const value = host["_wgf_ui_image"](texture, width, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_sheet_image
+/**
+ * wgf_ui_image, wgf_ui_icon_button, and wgf_ui_tile, each showing one frame of a sheet
+ * (wgf_sheet.h) for its texture: an icon or a picture cut from an atlas, such as a grid of
+ * icons in one texture (wgf_sheet_create_grid).
+ *
+ * - The frame is the sheet's frame `frame`, by index (wgf_sheet_find_frame finds one by
+ *   name).
+ * - It is read as the call is made. Until the sheet has that frame (its texture loading, or
+ *   an index past its frames), the widget is laid out as it would be, with its picture
+ *   empty: 0 by 0 for sheet_image's own size.
+ * - sheet_image is wgf_ui_image's, sheet_icon_button wgf_ui_icon_button's (as wide as the
+ *   frame's shape keeps), and sheet_tile wgf_ui_tile's.
+ *
+ * Each also returns false for a handle that isn't a sheet, or a `frame` below 0, and as its
+ * texture's call does.
+ */
+export function wgf_ui_sheet_image(sheet, frame, width, height) {
+    const value = host["_wgf_ui_sheet_image"](sheet, frame, width, height);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_sheet_icon_button
+/**
+ * wgf_ui_image, wgf_ui_icon_button, and wgf_ui_tile, each showing one frame of a sheet
+ * (wgf_sheet.h) for its texture: an icon or a picture cut from an atlas, such as a grid of
+ * icons in one texture (wgf_sheet_create_grid).
+ *
+ * See wgf_ui_sheet_image for the rest.
+ */
+export function wgf_ui_sheet_icon_button(id, sheet, frame, text) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_sheet_icon_button"](cstr(id), sheet, frame, cstr(text));
+    host["stackRestore"](mark);
+    return value !== 0;
+}
+
+// wgf: call wgf_ui_sheet_tile
+/**
+ * wgf_ui_image, wgf_ui_icon_button, and wgf_ui_tile, each showing one frame of a sheet
+ * (wgf_sheet.h) for its texture: an icon or a picture cut from an atlas, such as a grid of
+ * icons in one texture (wgf_sheet_create_grid).
+ *
+ * See wgf_ui_sheet_image for the rest.
+ */
+export function wgf_ui_sheet_tile(id, sheet, frame, text) {
+    const mark = host["stackSave"]();
+    const value = host["_wgf_ui_sheet_tile"](cstr(id), sheet, frame, cstr(text));
+    host["stackRestore"](mark);
     return value !== 0;
 }
 

@@ -2925,6 +2925,12 @@ export const Ui = Object.freeze({
     separator: raw.wgf_ui_separator,
     // wgf: call wgf_ui_image
     image: raw.wgf_ui_image,
+    // wgf: call wgf_ui_sheet_image
+    sheetImage: raw.wgf_ui_sheet_image,
+    // wgf: call wgf_ui_sheet_icon_button
+    sheetIconButton: raw.wgf_ui_sheet_icon_button,
+    // wgf: call wgf_ui_sheet_tile
+    sheetTile: raw.wgf_ui_sheet_tile,
     // wgf: call wgf_ui_custom
     custom: raw.wgf_ui_custom,
     // wgf: call wgf_ui_get_bounds

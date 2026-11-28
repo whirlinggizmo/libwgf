@@ -67,6 +67,8 @@ struct piece_t {
     float value; /* a progress bar's or slider's, 0 to 1; how far a scroll bar's thumb is along */
     float size;  /* a scroll bar's share in view, 0 to 1 */
     wgf_texture_t texture, pressed;
+    bool framed;     /* an image of a sheet's frame: `frame` its region of `texture`, none while it is 0 by 0 */
+    wgf_vec4_t frame;
     const wgf_ui_priv_field_t *field; /* a text field's: drawn as it is at the frame's end */
     const char *placeholder;          /* the frame's copy; NULL for none */
     bool masked, invalid, focused;
@@ -1073,6 +1075,13 @@ static bool is_kind(wgf_handle_t handle, int kind)
 
 static void draw_image(const piece_t *piece, Clay_BoundingBox box);
 
+/* The sheet's frame the next image element shows, set by a call given a sheet and taken by
+ * that image (the sheet_ calls'). */
+static struct {
+    bool set;
+    wgf_vec4_t frame;
+} next_frame;
+
 /* An image's element, `widget` the widget it is part of (-1: none), `width` by `height`. */
 static void image_element(wgf_texture_t texture, int widget, int state, float width, float height)
 {
@@ -1082,7 +1091,12 @@ static void image_element(wgf_texture_t texture, int widget, int state, float wi
     fixed(&declaration, width, height);
     declaration.custom.customData = add_piece(draw_image, widget, state);
     piece = piece_at(declaration.custom.customData);
-    if (piece != NULL) piece->texture = texture;
+    if (piece != NULL) {
+        piece->texture = texture;
+        piece->framed = next_frame.set;
+        piece->frame = next_frame.frame;
+    }
+    next_frame.set = false;
     Clay__OpenElement();
     Clay__ConfigureOpenElement(declaration);
     Clay__CloseElement();
@@ -1093,6 +1107,29 @@ bool wgf_ui_image(wgf_texture_t texture, float width, float height)
     if (!is_kind(texture, WGF_CORE_PRIV_HANDLE_KIND_TEXTURE) || !child("wgf_ui_image")) return false;
     if (!(width > 0.0f) || !isfinite(width)) width = (float)wgf_texture_get_width(texture);
     if (!(height > 0.0f) || !isfinite(height)) height = (float)wgf_texture_get_height(texture);
+    image_element(texture, -1, ui.disabled ? WGF_UI_STATE_DISABLED : WGF_UI_STATE_NORMAL, width, height);
+    return true;
+}
+
+/* The texture of `sheet`'s frame `frame`, its region taken by the next image element: 0 for a
+ * handle that isn't a sheet, or a frame below 0. A frame the sheet hasn't (yet) is 0 by 0,
+ * drawn as nothing. */
+static wgf_texture_t sheet_frame(wgf_sheet_t sheet, int frame)
+{
+    if (!is_kind(sheet, WGF_CORE_PRIV_HANDLE_KIND_SHEET) || frame < 0) return 0;
+    next_frame.frame = wgf_sheet_get_frame(sheet, frame);
+    next_frame.set = true;
+    return wgf_sheet_get_texture(sheet);
+}
+
+bool wgf_ui_sheet_image(wgf_sheet_t sheet, int frame, float width, float height)
+{
+    wgf_texture_t texture;
+    if (!child("wgf_ui_sheet_image")) return false;
+    texture = sheet_frame(sheet, frame);
+    if (texture == 0) return false;
+    if (!(width > 0.0f) || !isfinite(width)) width = next_frame.frame.z;
+    if (!(height > 0.0f) || !isfinite(height)) height = next_frame.frame.w;
     image_element(texture, -1, ui.disabled ? WGF_UI_STATE_DISABLED : WGF_UI_STATE_NORMAL, width, height);
     return true;
 }
@@ -1216,8 +1253,9 @@ static void draw_face(const piece_t *piece, Clay_BoundingBox box);
 static void icon_element(wgf_texture_t icon, int widget, int state)
 {
     const float height = ui.values[WGF_UI_VALUE_TEXT_SIZE];
-    const int w = wgf_texture_get_width(icon), h = wgf_texture_get_height(icon);
-    image_element(icon, widget, state, w > 0 && h > 0 ? height * (float)w / (float)h : height, height);
+    const float w = next_frame.set ? next_frame.frame.z : (float)wgf_texture_get_width(icon);
+    const float h = next_frame.set ? next_frame.frame.w : (float)wgf_texture_get_height(icon);
+    image_element(icon, widget, state, w > 0.0f && h > 0.0f ? height * w / h : height, height);
 }
 
 typedef void (*icon_t)(wgf_texture_t icon, int widget, int state);
@@ -1273,6 +1311,16 @@ bool wgf_ui_icon_button(const char *id, wgf_texture_t icon, const char *text)
     bool activated;
     return face("wgf_ui_icon_button", id, WGF_UI_WIDGET_BUTTON, icon, icon_element, text, false, &activated) &&
            activated;
+}
+
+bool wgf_ui_sheet_icon_button(const char *id, wgf_sheet_t sheet, int frame, const char *text)
+{
+    bool activated, shown;
+    const wgf_texture_t icon = sheet_frame(sheet, frame);
+    if (icon == 0) return false;
+    shown = face("wgf_ui_sheet_icon_button", id, WGF_UI_WIDGET_BUTTON, icon, icon_element, text, false, &activated);
+    next_frame.set = false; /* refused before its icon */
+    return shown && activated;
 }
 
 bool wgf_ui_toggle(const char *id, const char *text, bool on)
@@ -1686,6 +1734,16 @@ bool wgf_ui_tile(const char *id, wgf_texture_t picture, const char *text)
         text_element(text, 0.0f, dim(ui.colors[WGF_UI_COLOR_BUTTON_TEXT], answered.state), CLAY_TEXT_WRAP_NONE, piece);
     Clay__CloseElement();
     return ui.last.activated = answered.activated;
+}
+
+bool wgf_ui_sheet_tile(const char *id, wgf_sheet_t sheet, int frame, const char *text)
+{
+    bool activated;
+    const wgf_texture_t picture = sheet_frame(sheet, frame);
+    if (picture == 0) return false;
+    activated = wgf_ui_tile(id, picture, text);
+    next_frame.set = false; /* refused before its picture */
+    return activated;
 }
 
 /* ---- scrolling ---------------------------------------------------------------------- */
@@ -3176,7 +3234,12 @@ static void draw_image(const piece_t *piece, Clay_BoundingBox box)
         box.x += x;
         box.y += y;
     }
-    stretched(piece->texture, box, piece->state);
+    if (!piece->framed) {
+        stretched(piece->texture, box, piece->state);
+    } else if (piece->frame.z > 0.0f && piece->frame.w > 0.0f) {
+        wgf_draw_texture_region(piece->texture, piece->frame.x, piece->frame.y, piece->frame.z, piece->frame.w, box.x,
+                                box.y, box.width, box.height, faded(dim(WGF_COLOR_WHITE, piece->state)));
+    }
 }
 
 static void draw_image_button(const piece_t *piece, Clay_BoundingBox box)

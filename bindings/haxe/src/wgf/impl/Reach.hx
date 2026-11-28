@@ -1349,6 +1349,9 @@ class Reach {
 		"wgf_ui_set_style_value",
 		"wgf_ui_set_text_offset",
 		"wgf_ui_set_width",
+		"wgf_ui_sheet_icon_button",
+		"wgf_ui_sheet_image",
+		"wgf_ui_sheet_tile",
 		"wgf_ui_slider",
 		"wgf_ui_spacer",
 		"wgf_ui_tabs",
@@ -1478,7 +1481,7 @@ class Reach {
 		"wgf_world_take_events",
 	];
 
-	static final counts:Array<Int> = [for (_ in 0...1469) 0];
+	static final counts:Array<Int> = [for (_ in 0...1472) 0];
 
 	public static inline function hit(index:Int):Void
 		counts[index]++;

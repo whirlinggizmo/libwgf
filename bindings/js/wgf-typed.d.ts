@@ -11997,6 +11997,39 @@ export declare const Ui: {
      */
     readonly image: typeof raw.wgf_ui_image;
     /**
+     * wgf_ui_image, wgf_ui_icon_button, and wgf_ui_tile, each showing one frame of a sheet
+     * (wgf_sheet.h) for its texture: an icon or a picture cut from an atlas, such as a grid of
+     * icons in one texture (wgf_sheet_create_grid).
+     *
+     * - The frame is the sheet's frame `frame`, by index (wgf_sheet_find_frame finds one by
+     *   name).
+     * - It is read as the call is made. Until the sheet has that frame (its texture loading, or
+     *   an index past its frames), the widget is laid out as it would be, with its picture
+     *   empty: 0 by 0 for sheet_image's own size.
+     * - sheet_image is wgf_ui_image's, sheet_icon_button wgf_ui_icon_button's (as wide as the
+     *   frame's shape keeps), and sheet_tile wgf_ui_tile's.
+     *
+     * Each also returns false for a handle that isn't a sheet, or a `frame` below 0, and as its
+     * texture's call does.
+     */
+    readonly sheetImage: typeof raw.wgf_ui_sheet_image;
+    /**
+     * wgf_ui_image, wgf_ui_icon_button, and wgf_ui_tile, each showing one frame of a sheet
+     * (wgf_sheet.h) for its texture: an icon or a picture cut from an atlas, such as a grid of
+     * icons in one texture (wgf_sheet_create_grid).
+     *
+     * See Ui.sheetImage for the rest.
+     */
+    readonly sheetIconButton: typeof raw.wgf_ui_sheet_icon_button;
+    /**
+     * wgf_ui_image, wgf_ui_icon_button, and wgf_ui_tile, each showing one frame of a sheet
+     * (wgf_sheet.h) for its texture: an icon or a picture cut from an atlas, such as a grid of
+     * icons in one texture (wgf_sheet_create_grid).
+     *
+     * See Ui.sheetImage for the rest.
+     */
+    readonly sheetTile: typeof raw.wgf_ui_sheet_tile;
+    /**
      * Adds room `width` by `height` logical pixels that your game draws in itself (wgf_draw.h).
      * Draw where wgf_ui_get_bounds says it was laid out. Use it for what no widget draws. Also
      * returns false for no id, or a size below 0.

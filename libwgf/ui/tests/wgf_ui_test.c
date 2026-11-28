@@ -346,6 +346,47 @@ static void on_frame(void *user)
     case 19: /* the frame's end dropped it, logged: the next frame's UI is whole */
         expect(wgf_ui_begin() && wgf_ui_label("after", 0) && wgf_ui_end(),
                "after a UI left unended, the next frame's begins and ends balanced");
+        { /* a sheet's frame for a picture: a strip of two square frames */
+            const wgf_texture_t strip = wgf_texture_create_blank(32, 16);
+            const wgf_sheet_t icons = wgf_sheet_create_grid(strip, 16, 16, 0, 0, 0);
+            wgf_vec4_t whole, framed, whole_icon, framed_icon, tile;
+            int drawn, none;
+            expect(wgf_sheet_get_frame_count(icons) == 2, "the strip cut in two");
+            wgf_ui_set_style_value(WGF_UI_VALUE_BUTTON_WIDTH, 0); /* buttons as wide as what they show */
+            expect(wgf_ui_begin() && wgf_ui_begin_box("whole", WGF_UI_DIRECTION_ROW) && wgf_ui_image(strip, 0, 0) &&
+                       wgf_ui_end_box() && wgf_ui_begin_box("framed", WGF_UI_DIRECTION_ROW) &&
+                       wgf_ui_sheet_image(icons, 1, 0, 0) && wgf_ui_end_box() &&
+                       !wgf_ui_icon_button("whole icon", strip, "Go") &&
+                       !wgf_ui_sheet_icon_button("framed icon", icons, 0, "Go") &&
+                       !wgf_ui_sheet_tile("tile", icons, 1, "Gun") && wgf_ui_end(),
+                   "a sheet's frame as an image, an icon button's icon, and a tile's picture");
+            whole = wgf_ui_get_bounds("whole");
+            framed = wgf_ui_get_bounds("framed");
+            whole_icon = wgf_ui_get_bounds("whole icon");
+            framed_icon = wgf_ui_get_bounds("framed icon");
+            tile = wgf_ui_get_bounds("tile");
+            expect(whole.z - framed.z == 16.0f && whole.w == framed.w,
+                   "an image the frame's own size, not its texture's");
+            expect(whole_icon.z - framed_icon.z == wgf_ui_get_style_value(WGF_UI_VALUE_TEXT_SIZE),
+                   "an icon as wide as its frame's shape keeps: half the strip's");
+            expect(tile.z == wgf_ui_get_style_value(WGF_UI_VALUE_TILE_SIZE), "a tile laid out with it");
+            drawn = sgl_num_vertices();
+            expect(wgf_ui_begin() && wgf_ui_sheet_image(icons, 1, 20, 20) && wgf_ui_end(), "a frame drawn");
+            drawn = sgl_num_vertices() - drawn;
+            none = sgl_num_vertices();
+            expect(wgf_ui_begin() && wgf_ui_sheet_image(icons, 7, 20, 20) && wgf_ui_end(),
+                   "a frame the sheet hasn't: laid out");
+            none = sgl_num_vertices() - none;
+            expect(drawn > none, "and drawn as nothing");
+            expect(wgf_ui_begin() && !wgf_ui_sheet_image(strip, 0, 0, 0) && !wgf_ui_sheet_image(icons, -1, 0, 0) &&
+                       !wgf_ui_sheet_icon_button("refused", 12345, 0, "x") &&
+                       !wgf_ui_sheet_tile("refused", icons, -1, "x") && !wgf_ui_sheet_tile("", icons, 0, "x") &&
+                       wgf_ui_end(),
+                   "a texture for a sheet, a handle that isn't one, a frame below 0, no id: refused");
+            wgf_ui_reset_style();
+            wgf_sheet_destroy(icons);
+            wgf_resource_release(strip);
+        }
         wgf_app_quit();
         break;
     default: break;

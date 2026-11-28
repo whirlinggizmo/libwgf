@@ -41,6 +41,7 @@ class Main {
 	static var car:Model = 0; // a section type starts as none, as a handle does
 	static var robot:Model = 0; // a skinned, animated glTF file's root
 	static var gems:Sheet = 0; // an atlas, TexturePacker's hash
+	static var uiIcons:Sheet = 0; // a grid over tiles, its frames the UI's pictures
 	static var island:Tilemap = 0; // a Tiled map, gfx-tilemap's
 	static var font:Font;
 	static var pixelFont:Font = 0; // a bitmap font, a BMFont's .fnt and its page
@@ -1296,14 +1297,19 @@ class Main {
 			expect(near(Ui.slider("slider", 3, 0, 10), 3), "a slider, untouched");
 			expect(Ui.setDisabled(true) && Ui.isDisabled(), "disabled from here");
 			expect(!Ui.iconButton("icon", tiles, "Icon"), "a disabled icon button");
+			if (uiIcons == 0)
+				uiIcons = Sheet.createGrid(tiles, 16, 16, 0, 0, 0);
+			expect(!Ui.sheetIconButton("sheet icon", uiIcons, 1, "Icon"), "a disabled icon button, its icon a sheet's frame");
 			expect(!Ui.imageButton("picture", tiles, 0, picture), "a disabled image button, its mask an image");
 			Ui.setDisabled(false);
-			expect(Ui.beginGroup("group", "Group") && Ui.separator() && Ui.image(tiles, 16, 16) && Ui.custom("room", 20, 10)
+			expect(Ui.beginGroup("group", "Group") && Ui.separator() && Ui.image(tiles, 16, 16) && Ui.sheetImage(uiIcons, 1, 16, 16)
+				&& Ui.custom("room", 20, 10)
 				&& Ui.endGroup(), "a group of a separator, an image, and a room of the program's");
 			expect(Ui.tabs("tabs", "One\nTwo", 1) == 1 && Ui.choice("choice", "A\nB\nC", 2) == 2 && Ui.combo("combo", "X\nY", 0) == 0,
 				"tabs, a choice, and a combo, untouched");
 			expect(near(Ui.number("number", 0.5, 0, 1, 0.1), 0.5), "a number, untouched");
-			expect(Ui.beginGrid("grid", 2) && !Ui.tile("tile", tiles, "Tile") && Ui.endGrid(), "a grid of a tile");
+			expect(Ui.beginGrid("grid", 2) && !Ui.tile("tile", tiles, "Tile") && !Ui.sheetTile("sheet tile", uiIcons, 2, "Tile")
+				&& Ui.endGrid(), "a grid of a tile, and of one of a sheet's frame");
 			expect(Ui.beginScroll("scroll", 120, 40) && Ui.label("A\nB\nC\nD", 0) && Ui.endScroll(), "a scroll area");
 			expect(Ui.list("list", "One\nTwo\nThree", 1, 2) == 1 && !Ui.isActivated(), "a list, untouched, its item not activated");
 			expect(Ui.dropdown("dropdown", "Low\nHigh", 1) == 1 && Ui.tooltip("Its quality"), "a dropdown, untouched, and a tooltip");
