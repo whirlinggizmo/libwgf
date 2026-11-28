@@ -9352,7 +9352,8 @@ export declare const Spline: {
 /** A handle of kind wgf_actor_t: the raw binding's branded type. */
 export type Sprite = raw.wgf_actor_t;
 /**
- * A sprite: an actor that shows a texture, or a region of one, on a 2D or 3D stage.
+ * A sprite: an actor that shows a texture, or a region of one, on a 2D stage, or on a 3D
+ * stage as a billboard facing the camera.
  *
  * Sprites are actors (wgf_actor.h): place, turn, scale, parent, and destroy them with the
  * actor calls. A sprite holds a reference to its texture. It drops that reference when it is
@@ -9364,7 +9365,8 @@ export type Sprite = raw.wgf_actor_t;
  * On a 2D stage, a sprite is drawn in the stage's units through immediate mode.
  *
  * On a 3D stage, a sprite is a quad in the stage's units. Its size defaults to 1 by 1 (a size
- * of 0, the default). It faces as its facing says, and is scaled by its actor. It is culled
+ * of 0, the default). It faces as its facing says, by default the camera (a billboard: a
+ * coin, a glow, a health bar over a head), and is scaled by its actor. It is culled
  * by the box its quad can reach. Sprites are drawn instanced:
  * - OPAQUE and MASK sprites are drawn with the opaque models. Sprites that are alike go up
  *   as one draw.
