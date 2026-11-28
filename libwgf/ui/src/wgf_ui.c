@@ -527,7 +527,8 @@ static void stop(void)
         free(block);
         block = next;
     }
-    if (ui.font != 0) wgf_resource_release(ui.font);
+    /* the font may have gone with text, which stops first */
+    if (ui.font != 0 && wgf_resource_get_status(ui.font) != WGF_RESOURCE_STATUS_NONE) wgf_resource_release(ui.font);
     if (skins != NULL) skins->reset();
     if (text_hooks != NULL) text_hooks->stop();
     free(ui.memory);

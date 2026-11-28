@@ -283,6 +283,9 @@ static void before_ready(void)
                    "a document names its style sheet and its image, and no URL");
         }
         font = wgf_font_create("doc_test/mono.ttf");
+        /* the immediate UI's style holding it too, to the end: let go of at stop without a
+           warning, though text stops first and takes every font with it */
+        expect(wgf_ui_set_style_font(font) && wgf_ui_begin() && wgf_ui_end(), "the immediate UI's style font");
         expect(wgf_ui_set_document_font("  'Mono' ", font) && wgf_ui_get_document_font("mono") == font,
                "a family's font, matched without case or quotes");
         expect(!wgf_ui_set_document_font("", font) && !wgf_ui_set_document_font(NULL, font) &&
@@ -643,7 +646,14 @@ int main(void)
 {
     wgf_font_enable_bitmaps(); /* the Pixel family's bitmap font */
     wgf_window_set_size(800, 600);
+    wgf_log_set_history(1024);
     wgf_app_run(on_init, NULL, on_frame, NULL, NULL);
     expect(ready_frame >= 0 && frame_number - ready_frame >= 22, "every frame ran");
+    {
+        int i, released = 0;
+        for (i = 0; i < wgf_log_get_history_count(); i++)
+            if (strstr(wgf_log_get_history_line(i), "isn't a resource") != NULL) released++;
+        expect(released == 0, "nothing let go of twice as the program ended");
+    }
     return failures == 0 ? 0 : 1;
 }
